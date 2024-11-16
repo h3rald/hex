@@ -42,6 +42,11 @@ int dictCount = 0;
 
 void free_element(StackElement element);
 
+void fail(char *message)
+{
+    fprintf(stderr, "%s\n", message);
+}
+
 // Function to add a variable to the dictionary
 void set_variable(const char *key, StackElement value)
 {
@@ -59,8 +64,7 @@ void set_variable(const char *key, StackElement value)
 
     if (dictCount >= DICTIONARY_SIZE)
     {
-        fprintf(stderr, "Error: Dictionary overflow\n");
-        exit(EXIT_FAILURE);
+        fail("Dictionary overflow");
     }
 
     dictionary[dictCount].key = strdup(key);
@@ -92,8 +96,7 @@ void push(StackElement element)
 {
     if (top >= STACK_SIZE - 1)
     {
-        fprintf(stderr, "Error: Stack overflow\n");
-        exit(EXIT_FAILURE);
+        fail("Stack overflow");
     }
     stack[++top] = element;
 }
@@ -121,8 +124,7 @@ StackElement pop()
 {
     if (top < 0)
     {
-        fprintf(stderr, "Error: Stack underflow\n");
-        exit(EXIT_FAILURE);
+        fail("Stack underflow");
     }
     return stack[top--];
 }
@@ -214,8 +216,7 @@ Token *next_token(const char **input)
 
         if (*ptr != '"')
         {
-            fprintf(stderr, "Error: Unterminated string\n");
-            exit(EXIT_FAILURE);
+            fail("Unterminated string");
         }
 
         token->value = (char *)malloc(len + 1);
@@ -301,8 +302,7 @@ StackElement **parse_array(const char **input, size_t *size)
     array = (StackElement **)malloc(capacity * sizeof(StackElement *));
     if (!array)
     {
-        fprintf(stderr, "Error: Memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        fail("Memory allocation failed");
     }
 
     Token *token;
@@ -320,8 +320,7 @@ StackElement **parse_array(const char **input, size_t *size)
             array = (StackElement **)realloc(array, capacity * sizeof(StackElement *));
             if (!array)
             {
-                fprintf(stderr, "Error: Memory allocation failed\n");
-                exit(EXIT_FAILURE);
+                fail("Memory allocation failed");
             }
         }
 
@@ -343,8 +342,7 @@ StackElement **parse_array(const char **input, size_t *size)
         }
         else
         {
-            fprintf(stderr, "Error: Unexpected token in array\n");
-            exit(EXIT_FAILURE);
+            fail("Unexpected token in array");
         }
 
         array[*size] = element;
@@ -353,6 +351,45 @@ StackElement **parse_array(const char **input, size_t *size)
     }
 
     return array;
+}
+
+char *itoa(int num)
+{
+    static char str[20];
+    int i = 0;
+    int base = 16;
+
+    // Handle 0 explicitly, otherwise empty string is printed
+    if (num == 0)
+    {
+        str[i++] = '0';
+        str[i] = '\0';
+        return str;
+    }
+
+    // Process each digit
+    while (num != 0)
+    {
+        int rem = num % base;
+        str[i++] = (rem > 9) ? (rem - 10) + 'a' : rem + '0';
+        num = num / base;
+    }
+
+    str[i] = '\0'; // Null-terminate string
+
+    // Reverse the string
+    int start = 0;
+    int end = i - 1;
+    while (start < end)
+    {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+        start++;
+        end--;
+    }
+
+    return str;
 }
 
 void print_element(FILE *stream, StackElement element)
@@ -378,15 +415,8 @@ void print_element(FILE *stream, StackElement element)
         break;
     }
     default:
-        fprintf(stderr, "Error: Unknown element type\n");
-        exit(EXIT_FAILURE);
+        fail("Unknown element type");
     }
-}
-
-void fail(char *message)
-{
-    fprintf(stderr, "ERROR: %s\n", message);
-    exit(EXIT_FAILURE);
 }
 
 int is_operator(Token *token, char *value)
@@ -400,8 +430,7 @@ void operator_define()
     StackElement value = pop();
     if (name.type != TYPE_STRING)
     {
-        fprintf(stderr, "Error: Variable name must be a string\n");
-        exit(EXIT_FAILURE);
+        fail("Variable name must be a string");
     }
     set_variable(name.data.strValue, value);
     free_element(name);
@@ -446,8 +475,7 @@ void operator_gets()
     }
     else
     {
-        fprintf(stderr, "Error: Failed to read input\n");
-        exit(EXIT_FAILURE);
+        fail("Failed to read input");
     }
 }
 
@@ -462,8 +490,7 @@ void operator_add()
     }
     else
     {
-        fprintf(stderr, "Error: '+' operator requires two integers\n");
-        exit(EXIT_FAILURE);
+        fail("'+' operator requires two integers");
     }
     free_element(a);
     free_element(b);
@@ -479,8 +506,7 @@ void operator_subtract()
     }
     else
     {
-        fprintf(stderr, "Error: '-' operator requires two integers\n");
-        exit(EXIT_FAILURE);
+        fail("'-' operator requires two integers");
     }
     free_element(a);
     free_element(b);
@@ -496,8 +522,7 @@ void operator_multiply()
     }
     else
     {
-        fprintf(stderr, "Error: '*' operator requires two integers\n");
-        exit(EXIT_FAILURE);
+        fail("'*' operator requires two integers");
     }
     free_element(a);
     free_element(b);
@@ -511,15 +536,13 @@ void operator_divide()
     {
         if (b.data.intValue == 0)
         {
-            fprintf(stderr, "Error: Division by zero\n");
-            exit(EXIT_FAILURE);
+            fail("Division by zero");
         }
         push_int(a.data.intValue / b.data.intValue);
     }
     else
     {
-        fprintf(stderr, "Error: '/' operator requires two integers\n");
-        exit(EXIT_FAILURE);
+        fail("'/' operator requires two integers");
     }
     free_element(a);
     free_element(b);
@@ -531,6 +554,32 @@ void operator_int()
     StackElement a = pop();
     if (a.type == TYPE_ARRAY)
     {
+        fail("Cannot convert a quotation to an integer");
+    }
+    else if (a.type == TYPE_INTEGER)
+    {
+        push_int(a.data.intValue);
+    }
+    else if (a.type == TYPE_STRING)
+    {
+        push_int(strtol(a.data.strValue, NULL, 16));
+    }
+}
+
+void operator_str()
+{
+    StackElement a = pop();
+    if (a.type == TYPE_ARRAY)
+    {
+        fail("Cannot convert a quotation to a string");
+    }
+    else if (a.type == TYPE_INTEGER)
+    {
+        push_string(itoa(a.data.intValue));
+    }
+    else if (a.type == TYPE_STRING)
+    {
+        push_string(a.data.strValue);
     }
 }
 
@@ -576,21 +625,29 @@ void process(const char *code)
             {
                 operator_gets();
             }
-            else if (strcmp(token->value, "-") == 0)
+            else if (is_operator(token, "-"))
             {
                 operator_subtract();
             }
-            else if (strcmp(token->value, "*") == 0)
+            else if (is_operator(token, "*"))
             {
                 operator_multiply();
             }
-            else if (strcmp(token->value, "/") == 0)
+            else if (is_operator(token, "/"))
             {
                 operator_divide();
             }
+            else if (is_operator(token, "int"))
+            {
+                operator_int();
+            }
+            else if (is_operator(token, "str"))
+            {
+                operator_str();
+            }
             else
             {
-                fprintf(stderr, "Error: Unknown operator: %s\n", token->value);
+                fprintf(stderr, "Unknown operator: %s\n", token->value);
                 exit(EXIT_FAILURE);
             }
         }
@@ -610,7 +667,7 @@ char *read_file(const char *filename)
     FILE *file = fopen(filename, "r");
     if (!file)
     {
-        fprintf(stderr, "Error: Could not open file: %s\n", filename);
+        fprintf(stderr, "Could not open file: %s\n", filename);
         exit(EXIT_FAILURE);
     }
 
@@ -621,8 +678,7 @@ char *read_file(const char *filename)
     char *buffer = (char *)malloc(length + 1);
     if (!buffer)
     {
-        fprintf(stderr, "Error: Memory allocation failed\n");
-        exit(EXIT_FAILURE);
+        fail("Memory allocation failed");
     }
 
     fread(buffer, 1, length, file);
@@ -636,7 +692,6 @@ int main(int argc, char *argv[])
     if (argc != 2)
     {
         fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
-        exit(EXIT_FAILURE);
     }
 
     char *code = read_file(argv[1]);
