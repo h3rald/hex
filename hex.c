@@ -698,6 +698,8 @@ char *read_file(const char *filename)
     return buffer;
 }
 
+volatile sig_atomic_t keep_running = 1;
+
 void repl() {
     char line[1024];
     printf("hex Interactive REPL. Type 'exit' to quit or press Ctrl+C.\n");
@@ -718,11 +720,10 @@ void repl() {
         }
 
         // Tokenize and process the input
-        tokenize_and_process(line);
+        process(line);
     }
 }
 
-volatile sig_atomic_t keep_running = 1;
 
 void handle_sigint(int sig) {
     (void)sig;  // Suppress unused warning
@@ -739,7 +740,7 @@ void process_stdin() {
     }
 
     buffer[bytesRead] = '\0';  // Null-terminate the input
-    tokenize_and_process(buffer);
+    process(buffer);
 }
 
 int main(int argc, char *argv[]) {
@@ -754,7 +755,7 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
-        tokenize_and_process(fileContent);
+        process(fileContent);
         free(fileContent);  // Free the allocated memory
     } else if (!isatty(fileno(stdin))) {
         // Process piped input from stdin
