@@ -3,6 +3,17 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <signal.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <io.h>
+int isatty(int fd) {
+    HANDLE h = (HANDLE)_get_osfhandle(fd);
+    return (GetFileType(h) == FILE_TYPE_CHAR);
+}
+#else
+#include <unistd.h>
+#endif
 
 // Enum to represent the type of stack elements
 typedef enum
@@ -687,23 +698,73 @@ char *read_file(const char *filename)
     return buffer;
 }
 
-int main(int argc, char *argv[])
-{
-    if (argc != 2)
-    {
-        fprintf(stderr, "Usage: %s <filename>\n", argv[0]);
+void repl() {
+    char line[1024];
+    printf("hex Interactive REPL. Type 'exit' to quit or press Ctrl+C.\n");
+
+    while (keep_running) {
+        printf("> ");  // Prompt
+        if (fgets(line, sizeof(line), stdin) == NULL) {
+            printf("\n");  // Handle EOF (Ctrl+D)
+            break;
+        }
+
+        // Normalize line endings (remove trailing \r\n or \n)
+        line[strcspn(line, "\r\n")] = '\0';
+
+        // Exit command
+        if (strcmp(line, "exit") == 0) {
+            break;
+        }
+
+        // Tokenize and process the input
+        tokenize_and_process(line);
     }
-
-    char *code = read_file(argv[1]);
-    process(code);
-    free(code);
-
-    // Cleanup dictionary
-    for (int i = 0; i < dictCount; i++)
-    {
-        free(dictionary[i].key);
-        free_element(dictionary[i].value);
-    }
-
-    return 0;
 }
+
+volatile sig_atomic_t keep_running = 1;
+
+void handle_sigint(int sig) {
+    (void)sig;  // Suppress unused warning
+    keep_running = 0;
+    printf("\nExiting hex REPL. Goodbye!\n");
+}
+
+void process_stdin() {
+    char buffer[8192];  // Adjust buffer size as needed
+    size_t bytesRead = fread(buffer, 1, sizeof(buffer) - 1, stdin);
+    if (bytesRead == 0) {
+        fprintf(stderr, "Error: No input provided via stdin.\n");
+        return;
+    }
+
+    buffer[bytesRead] = '\0';  // Null-terminate the input
+    tokenize_and_process(buffer);
+}
+
+int main(int argc, char *argv[]) {
+    // Register SIGINT (Ctrl+C) signal handler
+    signal(SIGINT, handle_sigint);
+
+    if (argc == 2) {
+        // Process a file
+        const char *filename = argv[1];
+        char *fileContent = read_file(filename);
+        if (!fileContent) {
+            return EXIT_FAILURE;
+        }
+
+        tokenize_and_process(fileContent);
+        free(fileContent);  // Free the allocated memory
+    } else if (!isatty(fileno(stdin))) {
+        // Process piped input from stdin
+        process_stdin();
+    } else {
+        // Start REPL
+        repl();
+    }
+
+    return EXIT_SUCCESS;
+}
+
+
