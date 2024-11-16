@@ -559,6 +559,79 @@ void operator_divide()
     free_element(b);
 }
 
+// Bit operators
+
+void operator_bitand()
+{
+    StackElement right = pop();  // Pop the second operand
+    StackElement left = pop();   // Pop the first operand
+    if (left.type == TYPE_INTEGER && right.type == TYPE_INTEGER) {
+        int result = left.data.intValue & right.data.intValue;  // Bitwise AND
+        push_int(result);  // Push the result back onto the stack
+    } else {
+        fail("Bitwise AND requires two integers");
+    }
+}
+
+void operator_bitor()
+{
+    StackElement right = pop();
+    StackElement left = pop();
+    if (left.type == TYPE_INTEGER && right.type == TYPE_INTEGER) {
+        int result = left.data.intValue | right.data.intValue;  // Bitwise OR
+        push_int(result);
+    } else {
+        fail("Bitwise OR requires two integers");
+    }
+}
+
+void operator_bitxor()
+{
+    StackElement right = pop();
+    StackElement left = pop();
+    if (left.type == TYPE_INTEGER && right.type == TYPE_INTEGER) {
+        int result = left.data.intValue ^ right.data.intValue;  // Bitwise XOR
+        push_int(result);
+    } else {
+        fail("Bitwise XOR requires two integers");
+    }
+}
+
+void operator_shiftleft()
+{
+    StackElement right = pop();  // The number of positions to shift
+    StackElement left = pop();   // The value to shift
+    if (left.type == TYPE_INTEGER && right.type == TYPE_INTEGER) {
+        int result = left.data.intValue << right.data.intValue;  // Left shift
+        push_int(result);
+    } else {
+        fail("Left shift requires two integers");
+    }
+}
+
+void operator_shiftright()
+{
+    StackElement right = pop();  // The number of positions to shift
+    StackElement left = pop();   // The value to shift
+    if (left.type == TYPE_INTEGER && right.type == TYPE_INTEGER) {
+        int result = left.data.intValue >> right.data.intValue;  // Right shift
+        push_int(result);
+    } else {
+        fail("Right shift requires two integers");
+    }
+}
+
+void operator_bitnot()
+{
+    StackElement element = pop();  // Only one operand for bitwise NOT
+    if (element.type == TYPE_INTEGER) {
+        int result = ~element.data.intValue;  // Bitwise NOT (complement)
+        push_int(result);
+    } else {
+        fail("Bitwise NOT requires one integer");
+    }
+}
+
 // Converter operators
 void operator_int()
 {
@@ -635,6 +708,30 @@ void process(const char *code)
             else if (is_operator(token, "gets"))
             {
                 operator_gets();
+            }
+            else if (is_operator(token, "&"))
+            {
+                operator_bitand();
+            }
+            else if (is_operator(token, "|"))
+            {
+                operator_bitor();
+            }
+            else if (is_operator(token, "^"))
+            {
+                operator_bitxor();
+            }
+            else if (is_operator(token, "~"))
+            {
+                operator_bitnot();
+            }
+            else if (is_operator(token, "<<"))
+            {
+                operator_shiftleft();
+            }
+            else if (is_operator(token, ">>"))
+            {
+                operator_shiftright();
             }
             else if (is_operator(token, "-"))
             {
