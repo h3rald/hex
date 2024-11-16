@@ -9,7 +9,7 @@ typedef enum
 {
     TYPE_INTEGER,
     TYPE_STRING,
-    TYPE_ARRAY
+    TYPE_QUOTATION
 } ElementType;
 
 // Unified Stack Element
@@ -20,9 +20,9 @@ typedef struct StackElement
     {
         int intValue;                     // For integers
         char *strValue;                   // For strings
-        struct StackElement **arrayValue; // For arrays
+        struct StackElement **quotationValue; // For quotations
     } data;
-    size_t arraySize; // Size of the array (valid for TYPE_ARRAY)
+    size_t quotationSize; // Size of the quotation (valid for TYPE_QUOTATION)
 } StackElement;
 
 // Dictionary Entry
@@ -113,9 +113,9 @@ void push_string(const char *value)
     push(element);
 }
 
-void push_array(StackElement **array, size_t size)
+void push_quotation(StackElement **quotation, size_t size)
 {
-    StackElement element = {.type = TYPE_ARRAY, .data.arrayValue = array, .arraySize = size};
+    StackElement element = {.type = TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
     push(element);
 }
 
@@ -136,14 +136,14 @@ void free_element(StackElement element)
     {
         free(element.data.strValue);
     }
-    else if (element.type == TYPE_ARRAY)
+    else if (element.type == TYPE_QUOTATION)
     {
-        for (size_t i = 0; i < element.arraySize; i++)
+        for (size_t i = 0; i < element.quotationSize; i++)
         {
-            free_element(*element.data.arrayValue[i]);
-            free(element.data.arrayValue[i]);
+            free_element(*element.data.quotationValue[i]);
+            free(element.data.quotationValue[i]);
         }
-        free(element.data.arrayValue);
+        free(element.data.quotationValue);
     }
 }
 
@@ -153,8 +153,8 @@ typedef enum
     TOKEN_NUMBER,
     TOKEN_STRING,
     TOKEN_OPERATOR,
-    TOKEN_ARRAY_START,
-    TOKEN_ARRAY_END
+    TOKEN_QUOTATION_START,
+    TOKEN_QUOTATION_END
 } TokenType;
 
 typedef struct
@@ -256,12 +256,12 @@ Token *next_token(const char **input)
     }
     else if (*ptr == '(')
     {
-        token->type = TOKEN_ARRAY_START;
+        token->type = TOKEN_QUOTATION_START;
         ptr++;
     }
     else if (*ptr == ')')
     {
-        token->type = TOKEN_ARRAY_END;
+        token->type = TOKEN_QUOTATION_END;
         ptr++;
     }
     else
@@ -292,15 +292,15 @@ void free_token(Token *token)
     }
 }
 
-// Recursive array parsing
-StackElement **parse_array(const char **input, size_t *size)
+// Recursive quotation parsing
+StackElement **parse_quotation(const char **input, size_t *size)
 {
-    StackElement **array = NULL;
+    StackElement **quotation = NULL;
     size_t capacity = 2;
     *size = 0;
 
-    array = (StackElement **)malloc(capacity * sizeof(StackElement *));
-    if (!array)
+    quotation = (StackElement **)malloc(capacity * sizeof(StackElement *));
+    if (!quotation)
     {
         fail("Memory allocation failed");
     }
@@ -308,7 +308,7 @@ StackElement **parse_array(const char **input, size_t *size)
     Token *token;
     while ((token = next_token(input)) != NULL)
     {
-        if (token->type == TOKEN_ARRAY_END)
+        if (token->type == TOKEN_QUOTATION_END)
         {
             free_token(token);
             break;
@@ -317,8 +317,8 @@ StackElement **parse_array(const char **input, size_t *size)
         if (*size >= capacity)
         {
             capacity *= 2;
-            array = (StackElement **)realloc(array, capacity * sizeof(StackElement *));
-            if (!array)
+            quotation = (StackElement **)realloc(quotation, capacity * sizeof(StackElement *));
+            if (!quotation)
             {
                 fail("Memory allocation failed");
             }
@@ -335,22 +335,22 @@ StackElement **parse_array(const char **input, size_t *size)
             element->type = TYPE_STRING;
             element->data.strValue = strdup(token->value);
         }
-        else if (token->type == TOKEN_ARRAY_START)
+        else if (token->type == TOKEN_QUOTATION_START)
         {
-            element->type = TYPE_ARRAY;
-            element->data.arrayValue = parse_array(input, &element->arraySize);
+            element->type = TYPE_QUOTATION;
+            element->data.quotationValue = parse_quotation(input, &element->quotationSize);
         }
         else
         {
-            fail("Unexpected token in array");
+            fail("Unexpected token in quotation");
         }
 
-        array[*size] = element;
+        quotation[*size] = element;
         (*size)++;
         free_token(token);
     }
 
-    return array;
+    return quotation;
 }
 
 char *itoa(int num)
@@ -402,14 +402,14 @@ void print_element(FILE *stream, StackElement element)
     case TYPE_STRING:
         fprintf(stream, "\"%s\"", element.data.strValue);
         break;
-    case TYPE_ARRAY:
+    case TYPE_QUOTATION:
     {
         fprintf(stream, "(");
-        for (size_t i = 0; i < element.arraySize; i++)
+        for (size_t i = 0; i < element.quotationSize; i++)
         {
             if (i > 0)
                 fprintf(stream, " "); // Add space between elements
-            print_element(stream, *element.data.arrayValue[i]);
+            print_element(stream, *element.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
@@ -552,7 +552,7 @@ void operator_divide()
 void operator_int()
 {
     StackElement a = pop();
-    if (a.type == TYPE_ARRAY)
+    if (a.type == TYPE_QUOTATION)
     {
         fail("Cannot convert a quotation to an integer");
     }
@@ -569,7 +569,7 @@ void operator_int()
 void operator_str()
 {
     StackElement a = pop();
-    if (a.type == TYPE_ARRAY)
+    if (a.type == TYPE_QUOTATION)
     {
         fail("Cannot convert a quotation to a string");
     }
@@ -651,11 +651,11 @@ void process(const char *code)
                 exit(EXIT_FAILURE);
             }
         }
-        else if (token->type == TOKEN_ARRAY_START)
+        else if (token->type == TOKEN_QUOTATION_START)
         {
-            size_t arraySize;
-            StackElement **array = parse_array(&input, &arraySize);
-            push_array(array, arraySize);
+            size_t quotationSize;
+            StackElement **quotation = parse_quotation(&input, &quotationSize);
+            push_quotation(quotation, quotationSize);
         }
         free_token(token);
     }
