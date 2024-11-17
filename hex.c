@@ -15,12 +15,14 @@ int isatty(int fd) {
 #include <unistd.h>
 #endif
 
+
 // Enum to represent the type of stack elements
 typedef enum
 {
     TYPE_INTEGER,
     TYPE_STRING,
     TYPE_QUOTATION
+    TYPE_FUNCTION
 } ElementType;
 
 // Unified Stack Element
@@ -29,9 +31,10 @@ typedef struct StackElement
     ElementType type;
     union
     {
-        int intValue;                     // For integers
-        char *strValue;                   // For strings
-        struct StackElement **quotationValue; // For quotations
+        int intValue;                     
+        char *strValue;                   
+        void (*functionPointer)()
+        struct StackElement **quotationValue;
     } data;
     size_t quotationSize; // Size of the quotation (valid for TYPE_QUOTATION)
 } StackElement;
@@ -47,7 +50,7 @@ typedef struct
 #define STDIN_BUFFER_SIZE 256
 
 // Global Dictionary for Variables
-#define DICTIONARY_SIZE 100
+#define DICTIONARY_SIZE 1024
 DictionaryEntry dictionary[DICTIONARY_SIZE];
 int dictCount = 0;
 
@@ -59,28 +62,44 @@ void fail(char *message)
 }
 
 // Function to add a variable to the dictionary
-void set_variable(const char *key, StackElement value)
+int set_variable(const char *key, StackElement value)
 {
     for (int i = 0; i < dictCount; i++)
     {
         if (strcmp(dictionary[i].key, key) == 0)
         {
+            if (dictionary[i].value.type == TYPE_FUNCTION){
+                fprintf(stderr, "Cannot overwrite native symbol %s", key);
+                return 0;
+            }
             free(dictionary[i].key);
             free_element(dictionary[i].value);
             dictionary[i].key = strdup(key);
             dictionary[i].value = value;
-            return;
+            return 0;
         }
     }
 
     if (dictCount >= DICTIONARY_SIZE)
     {
         fail("Dictionary overflow");
+        return 1;
     }
 
     dictionary[dictCount].key = strdup(key);
     dictionary[dictCount].value = value;
     dictCount++;
+    return 1;
+}
+
+void add_function(const char *name, void (*func)()) {
+    StackElement funcElement;
+    funcElement.type = TYPE_FUNCTION;
+    funcElement.data.functionPointer = func;
+
+    if (!add_variable(name, funcElement)) {
+        fprintf(stderr, "Error: Failed to register function '%s'.\n", name);
+    }
 }
 
 // Function to get a variable value from the dictionary
@@ -413,6 +432,9 @@ void print_element(FILE *stream, StackElement element)
     case TYPE_STRING:
         fprintf(stream, "\"%s\"", element.data.strValue);
         break;
+    case TYPE_FUNCTION:
+        fprintf(stream, "<native>")
+        break;
     case TYPE_QUOTATION:
     {
         fprintf(stream, "(");
@@ -443,7 +465,7 @@ void operator_define()
     {
         fail("Variable name must be a string");
     }
-    set_variable(name.data.strValue, value);
+    if (set_variable(name.data.strValue, value)) {}
     free_element(name);
 }
 
