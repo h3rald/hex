@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <stdbool.h>
 #include <signal.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -21,7 +20,7 @@ typedef enum
 {
     TYPE_INTEGER,
     TYPE_STRING,
-    TYPE_QUOTATION
+    TYPE_QUOTATION,
     TYPE_FUNCTION
 } ElementType;
 
@@ -33,7 +32,7 @@ typedef struct StackElement
     {
         int intValue;                     
         char *strValue;                   
-        void (*functionPointer)()
+        void (*functionPointer)();
         struct StackElement **quotationValue;
     } data;
     size_t quotationSize; // Size of the quotation (valid for TYPE_QUOTATION)
@@ -92,28 +91,29 @@ int set_variable(const char *key, StackElement value)
     return 1;
 }
 
-void add_function(const char *name, void (*func)()) {
+void register_symbol(const char *name, void (*func)())
+{
     StackElement funcElement;
     funcElement.type = TYPE_FUNCTION;
     funcElement.data.functionPointer = func;
 
-    if (!add_variable(name, funcElement)) {
-        fprintf(stderr, "Error: Failed to register function '%s'.\n", name);
+    if (!set_variable(name, funcElement)) {
+        fprintf(stderr, "Error: Failed to register native symbol '%s'.\n", name);
     }
 }
 
 // Function to get a variable value from the dictionary
-bool get_variable(const char *key, StackElement *result)
+int get_variable(const char *key, StackElement *result)
 {
     for (int i = 0; i < dictCount; i++)
     {
         if (strcmp(dictionary[i].key, key) == 0)
         {
             *result = dictionary[i].value;
-            return true;
+            return 1;
         }
     }
-    return false;
+    return 0;
 }
 
 // Stack Definition
@@ -433,7 +433,7 @@ void print_element(FILE *stream, StackElement element)
         fprintf(stream, "\"%s\"", element.data.strValue);
         break;
     case TYPE_FUNCTION:
-        fprintf(stream, "<native>")
+        fprintf(stream, "<native>");
         break;
     case TYPE_QUOTATION:
     {
