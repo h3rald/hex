@@ -1285,7 +1285,7 @@ int hex_symbol_xor()
 // Quotation/String symbols                      //
 ////////////////////////////////////////
 
-int hex_symbol_append()
+int hex_symbol_join()
 {
     HEX_StackElement value = hex_pop();
     HEX_StackElement list = hex_pop();
@@ -1327,57 +1327,6 @@ int hex_symbol_append()
     else
     {
         hex_error("Symbol 'append' requires a quotation or a string");
-        result = 1;
-    }
-    return result;
-}
-
-int hex_symbol_prepend()
-{
-    HEX_StackElement value = hex_pop();
-    HEX_StackElement list = hex_pop();
-    int result = 0;
-    if (list.type == HEX_TYPE_QUOTATION)
-    {
-        size_t newSize = list.quotationSize + 1;
-        HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
-        if (!newQuotation)
-        {
-            hex_error("Memory allocation failed");
-            result = 1;
-        }
-        else
-        {
-            for (size_t i = newSize - 1; i > 0; i--)
-            {
-                newQuotation[i] = newQuotation[i - 1];
-            }
-            HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            *element = value;
-            newQuotation[0] = element;
-            list.data.quotationValue = newQuotation;
-            list.quotationSize = newSize;
-            result = hex_push_quotation(list.data.quotationValue, newSize);
-        }
-    }
-    else if (list.type == HEX_TYPE_STRING)
-    {
-        char *newStr = (char *)malloc(strlen(list.data.strValue) + strlen(value.data.strValue) + 1);
-        if (!newStr)
-        {
-            hex_error("Memory allocation failed");
-            result = 1;
-        }
-        else
-        {
-            strcpy(newStr, value.data.strValue);
-            strcat(newStr, list.data.strValue);
-            result = hex_push_string(newStr);
-        }
-    }
-    else
-    {
-        hex_error("Symbol 'prepend' requires a quotation or a string");
         result = 1;
     }
     return result;
@@ -1649,8 +1598,7 @@ void hex_register_symbols()
     hex_set_native_symbol("or", hex_symbol_or);
     hex_set_native_symbol("not", hex_symbol_not);
     hex_set_native_symbol("xor", hex_symbol_xor);
-    hex_set_native_symbol("append", hex_symbol_append);
-    hex_set_native_symbol("prepend", hex_symbol_prepend);
+    hex_set_native_symbol("join", hex_symbol_join);
     hex_set_native_symbol("slice", hex_symbol_slice);
     hex_set_native_symbol("len", hex_symbol_len);
     hex_set_native_symbol("get", hex_symbol_get);
