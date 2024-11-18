@@ -3,10 +3,11 @@
 #include <string.h>
 #include <ctype.h>
 #include <signal.h>
+#include <stdarg.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
-int hex_isatty(int fd)
+int isatty(int fd)
 {
     HANDLE h = (HANDLE)_get_osfhandle(fd);
     return (GetFileType(h) == FILE_TYPE_CHAR);
@@ -606,10 +607,10 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
         fprintf(stream, "\"%s\"", element.data.strValue);
         break;
     case HEX_TYPE_USER_SYMBOL:
-        fprintf(stream, element.symbolName);
+        fprintf(stream, "%s", element.symbolName);
         break;
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, element.symbolName);
+        fprintf(stream, "%s",  element.symbolName);
         break;
     case HEX_TYPE_QUOTATION:
     {
@@ -1790,7 +1791,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-    if (!hex_isatty(fileno(stdin)))
+    if (!isatty(fileno(stdin)))
     {
         // Process piped input from stdin
         hex_process_stdin();
