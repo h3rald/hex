@@ -372,7 +372,7 @@ HEX_Token *hex_next_token(const char **input)
     else
     {
         const char *start = ptr;
-        while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';')
+        while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';' && *ptr != '(' && *ptr != ')' && *ptr != '"')
         {
             ptr++;
         }
@@ -439,6 +439,12 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
         {
             element->type = HEX_TYPE_STRING;
             element->data.strValue = strdup(token->value);
+        }
+        // TODO: check if non-native symbols are handled correctly
+        else if (token->type == HEX_TOKEN_SYMBOL)
+        {
+            element->type = HEX_TYPE_FUNCTION;
+            element->symbolName = strdup(token->value);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
@@ -539,13 +545,15 @@ int hex_is_symbol(HEX_Token *token, char *value)
 // Native Symbol Implementations      //
 ////////////////////////////////////////
 
+// Definition symbols
+
 int hex_symbol_store()
 {
     HEX_StackElement name = hex_pop();
     HEX_StackElement value = hex_pop();
     if (name.type != HEX_TYPE_STRING)
     {
-        hex_error("Variable name must be a string");
+        hex_error("Symbol name must be a string");
         return 1;
     }
     if (hex_set_symbol(name.data.strValue, value, 0))
@@ -555,6 +563,73 @@ int hex_symbol_store()
     }
     hex_free_element(name);
     return 0;
+}
+
+int hex_symbol_free()
+{
+    HEX_StackElement element = hex_pop();
+    if (element.type != HEX_TYPE_STRING)
+    {
+        hex_error("Variable name must be a string");
+        return 1;
+    }
+    for (int i = 0; i < hex_dictCount; i++)
+    {
+        if (strcmp(hex_registry[i].key, element.data.strValue) == 0)
+        {
+            free(hex_registry[i].key);
+            hex_free_element(hex_registry[i].value);
+            for (int j = i; j < hex_dictCount - 1; j++)
+            {
+                hex_registry[j] = hex_registry[j + 1];
+            }
+            hex_dictCount--;
+            hex_free_element(element);
+            return 0;
+        }
+    }
+    hex_free_element(element);
+    return 0;
+}
+
+// Evaluation symbols
+
+int hex_symbol_i()
+{
+    HEX_StackElement element = hex_pop();
+    int result = 0;
+    if (element.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'i' symbol requires a quotation");
+        result = 1;
+    }
+    for (size_t i = 0; i < element.quotationSize; i++)
+    {
+        if (hex_push(*element.data.quotationValue[i]) != 0)
+        {
+            result = 1;
+            break;
+        }
+    }
+    hex_free_element(element);
+    return 0;
+}
+
+int hex_interpret(const char *code);
+
+// evaluate a string
+int hex_symbol_eval()
+{
+    HEX_StackElement element = hex_pop();
+    int result = 0;
+    if (element.type != HEX_TYPE_STRING)
+    {
+        hex_error("'eval' symbol requires a string");
+        result = 1;
+    }
+    result = hex_interpret(element.data.strValue);
+    hex_free_element(element);
+    return result;
 }
 
 // IO Symbols
@@ -848,7 +923,7 @@ int hex_symbol_str()
     return result;
 }
 
-// Boolean symbols
+// Comparison symbols
 
 int hex_symbol_equal()
 {
@@ -988,7 +1063,7 @@ int hex_symbol_lessequal()
     return result;
 }
 
-// Logical symbols
+// Boolean symbols
 
 int hex_symbol_and()
 {
@@ -1071,6 +1146,7 @@ int hex_symbol_xor()
 void hex_register_symbols()
 {
     hex_register_symbol("store", hex_symbol_store);
+    hex_register_symbol("free", hex_symbol_free);
     hex_register_symbol("puts", hex_symbol_puts);
     hex_register_symbol("warn", hex_symbol_warn);
     hex_register_symbol("print", hex_symbol_print);
@@ -1214,6 +1290,12 @@ void hex_repl()
 
         // Tokenize and process the input
         hex_interpret(line);
+        // Print the top element of the stack
+        if (hex_top >= 0)
+        {
+            hex_print_element(stdout, hex_stack[hex_top]);
+            printf("\n");
+        }
     }
 }
 
