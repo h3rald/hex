@@ -38,56 +38,56 @@ typedef struct HEX_StackElement
     size_t quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
-// Dictionary Entry
+// Registry Entry
 typedef struct
 {
     char *key;
     HEX_StackElement value;
-} HEX_DictionaryEntry;
+} HEX_RegistryEntry;
 
-// Size of STDIN buffer (gets operator)
+// Size of STDIN buffer (gets symbol)
 #define HEX_STDIN_BUFFER_SIZE 256
 
-// Global Dictionary for Variables
-#define HEX_DICTIONARY_SIZE 1024
-HEX_DictionaryEntry hex_dictionary[HEX_DICTIONARY_SIZE];
+// Global Registry for Variables
+#define HEX_REGISTRY_SIZE 1024
+HEX_RegistryEntry hex_registry[HEX_REGISTRY_SIZE];
 int hex_dictCount = 0;
 
 void hex_free_element(HEX_StackElement element);
 
-void hex_fail(char *message)
+void hex_error(char *message)
 {
     fprintf(stderr, "%s\n", message);
 }
 
-// Function to add a variable to the dictionary
-int hex_set_variable(const char *key, HEX_StackElement value)
+// Function to add a symbol to the registry
+int hex_set_symbol(const char *key, HEX_StackElement value)
 {
     for (int i = 0; i < hex_dictCount; i++)
     {
-        if (strcmp(hex_dictionary[i].key, key) == 0)
+        if (strcmp(hex_registry[i].key, key) == 0)
         {
-            if (hex_dictionary[i].value.type == HEX_TYPE_FUNCTION)
+            if (hex_registry[i].value.type == HEX_TYPE_FUNCTION)
             {
                 fprintf(stderr, "Cannot overwrite native symbol %s", key);
                 return 0;
             }
-            free(hex_dictionary[i].key);
-            hex_free_element(hex_dictionary[i].value);
-            hex_dictionary[i].key = strdup(key);
-            hex_dictionary[i].value = value;
+            free(hex_registry[i].key);
+            hex_free_element(hex_registry[i].value);
+            hex_registry[i].key = strdup(key);
+            hex_registry[i].value = value;
             return 0;
         }
     }
 
-    if (hex_dictCount >= HEX_DICTIONARY_SIZE)
+    if (hex_dictCount >= HEX_REGISTRY_SIZE)
     {
-        hex_fail("Dictionary overflow");
+        hex_error("Registry overflow");
         return 1;
     }
 
-    hex_dictionary[hex_dictCount].key = strdup(key);
-    hex_dictionary[hex_dictCount].value = value;
+    hex_registry[hex_dictCount].key = strdup(key);
+    hex_registry[hex_dictCount].value = value;
     hex_dictCount++;
     return 1;
 }
@@ -98,20 +98,20 @@ void hex_register_symbol(const char *name, void (*func)())
     funcElement.type = HEX_TYPE_FUNCTION;
     funcElement.data.functionPointer = func;
 
-    if (!hex_set_variable(name, funcElement))
+    if (!hex_set_symbol(name, funcElement))
     {
         fprintf(stderr, "Error: Failed to register native symbol '%s'.\n", name);
     }
 }
 
-// Function to get a variable value from the dictionary
-int hex_get_variable(const char *key, HEX_StackElement *result)
+// Function to get a symbol value from the registry
+int hex_get_symbol(const char *key, HEX_StackElement *result)
 {
     for (int i = 0; i < hex_dictCount; i++)
     {
-        if (strcmp(hex_dictionary[i].key, key) == 0)
+        if (strcmp(hex_registry[i].key, key) == 0)
         {
-            *result = hex_dictionary[i].value;
+            *result = hex_registry[i].value;
             return 1;
         }
     }
@@ -128,7 +128,7 @@ void hex_push(HEX_StackElement element)
 {
     if (hex_top >= HEX_STACK_SIZE - 1)
     {
-        hex_fail("Stack overflow");
+        hex_error("Stack overflow");
     }
     hex_stack[++hex_top] = element;
 }
@@ -151,12 +151,32 @@ void hex_push_quotation(HEX_StackElement **quotation, size_t size)
     hex_push(element);
 }
 
+void hex_push_symbol(const char *name)
+{
+    HEX_StackElement value;
+    if (hex_get_symbol(name, &value))
+    {
+        if (value.type == HEX_TYPE_FUNCTION)
+        {
+            value.data.functionPointer();
+        }
+        else
+        {
+            hex_push(value);
+        }
+    }
+    else
+    {
+        hex_error("Undefined symbol");
+    }
+}
+
 // Pop function
 HEX_StackElement hex_pop()
 {
     if (hex_top < 0)
     {
-        hex_fail("Stack underflow");
+        hex_error("Stack underflow");
     }
     return hex_stack[hex_top--];
 }
@@ -184,7 +204,7 @@ typedef enum
 {
     HEX_TOKEN_NUMBER,
     HEX_TOKEN_STRING,
-    HEX_TOKEN_OPERATOR,
+    HEX_TOKEN_SYMBOL,
     HEX_TOKEN_QUOTATION_START,
     HEX_TOKEN_QUOTATION_END
 } HEX_TokenType;
@@ -248,7 +268,7 @@ HEX_Token *hex_next_token(const char **input)
 
         if (*ptr != '"')
         {
-            hex_fail("Unterminated string");
+            hex_error("Unterminated string");
         }
 
         token->value = (char *)malloc(len + 1);
@@ -307,7 +327,7 @@ HEX_Token *hex_next_token(const char **input)
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
-        token->type = HEX_TOKEN_OPERATOR;
+        token->type = HEX_TOKEN_SYMBOL;
     }
 
     *input = ptr;
@@ -334,7 +354,7 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
     quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
     if (!quotation)
     {
-        hex_fail("Memory allocation failed");
+        hex_error("Memory allocation failed");
     }
 
     HEX_Token *token;
@@ -352,7 +372,7 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
             quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
             if (!quotation)
             {
-                hex_fail("Memory allocation failed");
+                hex_error("Memory allocation failed");
             }
         }
 
@@ -374,7 +394,7 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
         }
         else
         {
-            hex_fail("Unexpected token in quotation");
+            hex_error("Unexpected token in quotation");
         }
 
         quotation[*size] = element;
@@ -450,32 +470,36 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
         break;
     }
     default:
-        hex_fail("Unknown element type");
+        hex_error("Unknown element type");
     }
 }
 
-int hex_is_operator(HEX_Token *token, char *value)
+int hex_is_symbol(HEX_Token *token, char *value)
 {
     return strcmp(token->value, value) == 0;
 }
 
-void hex_operator_define()
+////////////////////////////////////////
+// Native Symbol Implementations      //
+////////////////////////////////////////
+
+void hex_symbol_store()
 {
     HEX_StackElement name = hex_pop();
     HEX_StackElement value = hex_pop();
     if (name.type != HEX_TYPE_STRING)
     {
-        hex_fail("Variable name must be a string");
+        hex_error("Variable name must be a string");
     }
-    if (hex_set_variable(name.data.strValue, value))
+    if (hex_set_symbol(name.data.strValue, value))
     {
     }
     hex_free_element(name);
 }
 
-// IO Operators
+// IO Symbols
 
-void hex_operator_puts()
+void hex_symbol_puts()
 {
     HEX_StackElement element = hex_pop();
     hex_print_element(stdout, element);
@@ -483,7 +507,7 @@ void hex_operator_puts()
     hex_free_element(element);
 }
 
-void hex_operator_warn()
+void hex_symbol_warn()
 {
     HEX_StackElement element = hex_pop();
     hex_print_element(stderr, element);
@@ -491,14 +515,14 @@ void hex_operator_warn()
     hex_free_element(element);
 }
 
-void hex_operator_print()
+void hex_symbol_print()
 {
     HEX_StackElement element = hex_pop();
     hex_print_element(stdout, element);
     hex_free_element(element);
 }
 
-void hex_operator_gets()
+void hex_symbol_gets()
 {
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
 
@@ -512,12 +536,12 @@ void hex_operator_gets()
     }
     else
     {
-        hex_fail("Failed to read input");
+        hex_error("Failed to read input");
     }
 }
 
-// Mathematical operators
-void hex_operator_add()
+// Mathematical symbols
+void hex_symbol_add()
 {
     HEX_StackElement b = hex_pop();
     HEX_StackElement a = hex_pop();
@@ -527,13 +551,13 @@ void hex_operator_add()
     }
     else
     {
-        hex_fail("'+' operator requires two integers");
+        hex_error("'+' symbol requires two integers");
     }
     hex_free_element(a);
     hex_free_element(b);
 }
 
-void hex_operator_subtract()
+void hex_symbol_subtract()
 {
     HEX_StackElement b = hex_pop();
     HEX_StackElement a = hex_pop();
@@ -543,13 +567,13 @@ void hex_operator_subtract()
     }
     else
     {
-        hex_fail("'-' operator requires two integers");
+        hex_error("'-' symbol requires two integers");
     }
     hex_free_element(a);
     hex_free_element(b);
 }
 
-void hex_operator_multiply()
+void hex_symbol_multiply()
 {
     HEX_StackElement b = hex_pop();
     HEX_StackElement a = hex_pop();
@@ -559,13 +583,13 @@ void hex_operator_multiply()
     }
     else
     {
-        hex_fail("'*' operator requires two integers");
+        hex_error("'*' symbol requires two integers");
     }
     hex_free_element(a);
     hex_free_element(b);
 }
 
-void hex_operator_divide()
+void hex_symbol_divide()
 {
     HEX_StackElement b = hex_pop();
     HEX_StackElement a = hex_pop();
@@ -573,21 +597,21 @@ void hex_operator_divide()
     {
         if (b.data.intValue == 0)
         {
-            hex_fail("Division by zero");
+            hex_error("Division by zero");
         }
         hex_push_int(a.data.intValue / b.data.intValue);
     }
     else
     {
-        hex_fail("'/' operator requires two integers");
+        hex_error("'/' symbol requires two integers");
     }
     hex_free_element(a);
     hex_free_element(b);
 }
 
-// Bit operators
+// Bit symbols
 
-void hex_operator_bitand()
+void hex_symbol_bitand()
 {
     HEX_StackElement right = hex_pop(); // Pop the second operand
     HEX_StackElement left = hex_pop();  // Pop the first operand
@@ -598,11 +622,11 @@ void hex_operator_bitand()
     }
     else
     {
-        hex_fail("Bitwise AND requires two integers");
+        hex_error("Bitwise AND requires two integers");
     }
 }
 
-void hex_operator_bitor()
+void hex_symbol_bitor()
 {
     HEX_StackElement right = hex_pop();
     HEX_StackElement left = hex_pop();
@@ -613,11 +637,11 @@ void hex_operator_bitor()
     }
     else
     {
-        hex_fail("Bitwise OR requires two integers");
+        hex_error("Bitwise OR requires two integers");
     }
 }
 
-void hex_operator_bitxor()
+void hex_symbol_bitxor()
 {
     HEX_StackElement right = hex_pop();
     HEX_StackElement left = hex_pop();
@@ -628,11 +652,11 @@ void hex_operator_bitxor()
     }
     else
     {
-        hex_fail("Bitwise XOR requires two integers");
+        hex_error("Bitwise XOR requires two integers");
     }
 }
 
-void hex_operator_shiftleft()
+void hex_symbol_shiftleft()
 {
     HEX_StackElement right = hex_pop(); // The number of positions to shift
     HEX_StackElement left = hex_pop();  // The value to shift
@@ -643,11 +667,11 @@ void hex_operator_shiftleft()
     }
     else
     {
-        hex_fail("Left shift requires two integers");
+        hex_error("Left shift requires two integers");
     }
 }
 
-void hex_operator_shiftright()
+void hex_symbol_shiftright()
 {
     HEX_StackElement right = hex_pop(); // The number of positions to shift
     HEX_StackElement left = hex_pop();  // The value to shift
@@ -658,11 +682,11 @@ void hex_operator_shiftright()
     }
     else
     {
-        hex_fail("Right shift requires two integers");
+        hex_error("Right shift requires two integers");
     }
 }
 
-void hex_operator_bitnot()
+void hex_symbol_bitnot()
 {
     HEX_StackElement element = hex_pop(); // Only one operand for bitwise NOT
     if (element.type == HEX_TYPE_INTEGER)
@@ -672,17 +696,17 @@ void hex_operator_bitnot()
     }
     else
     {
-        hex_fail("Bitwise NOT requires one integer");
+        hex_error("Bitwise NOT requires one integer");
     }
 }
 
-// Converter operators
-void hex_operator_int()
+// Converter symbols
+void hex_symbol_int()
 {
     HEX_StackElement a = hex_pop();
     if (a.type == HEX_TYPE_QUOTATION)
     {
-        hex_fail("Cannot convert a quotation to an integer");
+        hex_error("Cannot convert a quotation to an integer");
     }
     else if (a.type == HEX_TYPE_INTEGER)
     {
@@ -694,12 +718,12 @@ void hex_operator_int()
     }
 }
 
-void hex_operator_str()
+void hex_symbol_str()
 {
     HEX_StackElement a = hex_pop();
     if (a.type == HEX_TYPE_QUOTATION)
     {
-        hex_fail("Cannot convert a quotation to a string");
+        hex_error("Cannot convert a quotation to a string");
     }
     else if (a.type == HEX_TYPE_INTEGER)
     {
@@ -710,6 +734,35 @@ void hex_operator_str()
         hex_push_string(a.data.strValue);
     }
 }
+
+////////////////////////////////////////
+// Native Symbol Registration         //
+////////////////////////////////////////
+
+void hex_register_symbols()
+{
+    hex_register_symbol("store", hex_symbol_store);
+    hex_register_symbol("puts", hex_symbol_puts);
+    hex_register_symbol("warn", hex_symbol_warn);
+    hex_register_symbol("print", hex_symbol_print);
+    hex_register_symbol("gets", hex_symbol_gets);
+    hex_register_symbol("+", hex_symbol_add);
+    hex_register_symbol("-", hex_symbol_subtract);
+    hex_register_symbol("*", hex_symbol_multiply);
+    hex_register_symbol("/", hex_symbol_divide);
+    hex_register_symbol("&", hex_symbol_bitand);
+    hex_register_symbol("|", hex_symbol_bitor);
+    hex_register_symbol("^", hex_symbol_bitxor);
+    hex_register_symbol("~", hex_symbol_bitnot);
+    hex_register_symbol("<<", hex_symbol_shiftleft);
+    hex_register_symbol(">>", hex_symbol_shiftright);
+    hex_register_symbol("int", hex_symbol_int);
+    hex_register_symbol("str", hex_symbol_str);
+}
+
+////////////////////////////////////////
+// Hex Interpreter Implementation     //
+////////////////////////////////////////
 
 void hex_process(const char *code)
 {
@@ -724,83 +777,19 @@ void hex_process(const char *code)
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
-            HEX_StackElement variableValue;
-            if (hex_get_variable(token->value, &variableValue))
+            HEX_StackElement symbolValue;
+            if (hex_get_symbol(token->value, &symbolValue))
             {
-                hex_push(variableValue);
+                hex_push(symbolValue);
             }
             else
             {
                 hex_push_string(token->value);
             }
         }
-        else if (token->type == HEX_TOKEN_OPERATOR)
+        else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            if (strcmp(token->value, "define") == 0)
-            {
-                hex_operator_define();
-            }
-            else if (hex_is_operator(token, "+"))
-            {
-                hex_operator_add();
-            }
-            else if (hex_is_operator(token, "puts"))
-            {
-                hex_operator_puts();
-            }
-            else if (hex_is_operator(token, "gets"))
-            {
-                hex_operator_gets();
-            }
-            else if (hex_is_operator(token, "&"))
-            {
-                hex_operator_bitand();
-            }
-            else if (hex_is_operator(token, "|"))
-            {
-                hex_operator_bitor();
-            }
-            else if (hex_is_operator(token, "^"))
-            {
-                hex_operator_bitxor();
-            }
-            else if (hex_is_operator(token, "~"))
-            {
-                hex_operator_bitnot();
-            }
-            else if (hex_is_operator(token, "<<"))
-            {
-                hex_operator_shiftleft();
-            }
-            else if (hex_is_operator(token, ">>"))
-            {
-                hex_operator_shiftright();
-            }
-            else if (hex_is_operator(token, "-"))
-            {
-                hex_operator_subtract();
-            }
-            else if (hex_is_operator(token, "*"))
-            {
-                hex_operator_multiply();
-            }
-            else if (hex_is_operator(token, "/"))
-            {
-                hex_operator_divide();
-            }
-            else if (hex_is_operator(token, "int"))
-            {
-                hex_operator_int();
-            }
-            else if (hex_is_operator(token, "str"))
-            {
-                hex_operator_str();
-            }
-            else
-            {
-                fprintf(stderr, "Unknown operator: %s\n", token->value);
-                exit(EXIT_FAILURE);
-            }
+            hex_push_symbol(token->value);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
@@ -829,7 +818,7 @@ char *hex_read_file(const char *filename)
     char *buffer = (char *)malloc(length + 1);
     if (!buffer)
     {
-        hex_fail("Memory allocation failed");
+        hex_error("Memory allocation failed");
     }
 
     fread(buffer, 1, length, file);
@@ -893,6 +882,8 @@ int main(int argc, char *argv[])
 {
     // Register SIGINT (Ctrl+C) signal handler
     signal(SIGINT, hex_handle_sigint);
+
+    hex_register_symbols();
 
     if (argc == 2)
     {
