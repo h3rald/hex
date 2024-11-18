@@ -22,7 +22,8 @@ int hex_isatty(int fd)
 // Stack Definition
 #define HEX_STACK_SIZE 100
 
-// Error function
+int HEX_DEBUG = 0;
+
 void hex_error(const char *format, ...)
 {
     va_list args;
@@ -38,8 +39,8 @@ typedef enum
     HEX_TYPE_INTEGER,
     HEX_TYPE_STRING,
     HEX_TYPE_QUOTATION,
-    HEX_TYPE_FUNCTION,
-    HEX_TYPE_SYMBOL
+    HEX_TYPE_NATIVE_SYMBOL,
+    HEX_TYPE_USER_SYMBOL
 } HEX_ElementType;
 
 // Unified Stack Element
@@ -53,7 +54,7 @@ typedef struct HEX_StackElement
         int (*functionPointer)();
         struct HEX_StackElement **quotationValue;
     } data;
-    char *symbolName;     // Symbol name (valid for HEX_TYPE_FUNCTION and HEX_TYPE_SYMBOL)
+    char *symbolName;     // Symbol name (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
     size_t quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
@@ -109,7 +110,7 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
     {
         if (strcmp(hex_registry[i].key, key) == 0)
         {
-            if (hex_registry[i].value.type == HEX_TYPE_FUNCTION)
+            if (hex_registry[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
                 hex_error("Cannot overwrite native symbol %s", key);
                 return 1;
@@ -139,7 +140,7 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
 void hex_set_native_symbol(const char *name, int (*func)())
 {
     HEX_StackElement funcElement;
-    funcElement.type = HEX_TYPE_FUNCTION;
+    funcElement.type = HEX_TYPE_NATIVE_SYMBOL;
     funcElement.data.functionPointer = func;
     funcElement.symbolName = strdup(name);
 
@@ -167,6 +168,8 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 // Stack Implementation               //
 ////////////////////////////////////////
 
+void hex_debug_element(const char *message, HEX_StackElement element);
+
 HEX_StackElement hex_stack[HEX_STACK_SIZE];
 int hex_top = -1;
 
@@ -178,13 +181,14 @@ int hex_push(HEX_StackElement element)
         hex_error("Stack overflow");
         return 1;
     }
-    if (element.type == HEX_TYPE_SYMBOL)
+    hex_debug_element("Pushing element", element);
+    if (element.type == HEX_TYPE_USER_SYMBOL)
     {
         HEX_StackElement value;
         int result = 0;
         if (hex_get_symbol(element.symbolName, &value))
         {
-            if (value.type == HEX_TYPE_FUNCTION)
+            if (value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
                 result = value.data.functionPointer();
             }
@@ -198,8 +202,12 @@ int hex_push(HEX_StackElement element)
             hex_error("Undefined symbol: %s", element.symbolName);
             result = 1;
         }
-        hex_free_element(element);
+        hex_free_element(value);
         return result;
+    }
+    else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
+    {
+        return element.data.functionPointer();
     }
     hex_stack[++hex_top] = element;
     return 0;
@@ -262,6 +270,55 @@ void hex_free_element(HEX_StackElement element)
             free(element.data.quotationValue[i]);
         }
         free(element.data.quotationValue);
+    }
+}
+
+////////////////////////////////////////
+// Debugging                          //
+////////////////////////////////////////
+
+void hex_debug(const char *format, ...)
+{
+    if (HEX_DEBUG)
+    {
+        va_list args;
+        va_start(args, format);
+        fprintf(stdout, "*** ");
+        vfprintf(stdout, format, args);
+        fprintf(stdout, "\n");
+        va_end(args);
+    }
+}
+
+void hex_print_element(FILE *stream, HEX_StackElement element);
+
+void hex_debug_element(const char *message, HEX_StackElement element)
+{
+    if (HEX_DEBUG)
+    {
+        fprintf(stdout, "*** %s: ", message);
+        hex_print_element(stdout, element);
+        switch (element.type)
+        {
+        case HEX_TYPE_NATIVE_SYMBOL:
+            printf(" [native symbol]");
+            break;
+        case HEX_TYPE_USER_SYMBOL:
+            printf(" [user symbol]");
+            break;
+        case HEX_TYPE_QUOTATION:
+            printf(" [quotation]");
+            break;
+        case HEX_TYPE_INTEGER:
+            printf(" [integer]");
+            break;
+        case HEX_TYPE_STRING:
+            printf(" [string]");
+            break;
+        default:
+            break;
+        }
+        fprintf(stdout, "\n");
     }
 }
 
@@ -460,7 +517,7 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
         // TODO: check if non-native symbols are handled correctly
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            element->type = HEX_TYPE_SYMBOL;
+            element->type = HEX_TYPE_USER_SYMBOL;
             element->symbolName = strdup(token->value);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
@@ -534,7 +591,10 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     case HEX_TYPE_STRING:
         fprintf(stream, "\"%s\"", element.data.strValue);
         break;
-    case HEX_TYPE_SYMBOL:
+    case HEX_TYPE_USER_SYMBOL:
+        fprintf(stream, element.symbolName);
+        break;
+    case HEX_TYPE_NATIVE_SYMBOL:
         fprintf(stream, element.symbolName);
         break;
     case HEX_TYPE_QUOTATION:
@@ -620,7 +680,7 @@ int hex_symbol_i()
         hex_error("'i' symbol requires a quotation");
         result = 1;
     }
-    for (size_t i = 0; i < element.quotationSize; i++)
+    for (int i = 0; i < element.quotationSize; i++)
     {
         if (hex_push(*element.data.quotationValue[i]) != 0)
         {
@@ -629,7 +689,7 @@ int hex_symbol_i()
         }
     }
     hex_free_element(element);
-    return 0;
+    return result;
 }
 
 int hex_interpret(const char *code);
@@ -1287,6 +1347,7 @@ volatile sig_atomic_t hex_keep_running = 1;
 void hex_repl()
 {
     char line[1024];
+
     printf("hex Interactive REPL. Type 'exit' to quit or press Ctrl+C.\n");
 
     while (hex_keep_running)
@@ -1351,20 +1412,33 @@ int main(int argc, char *argv[])
 
     hex_register_symbols();
 
-    if (argc == 2)
+    if (argc > 1)
     {
-        // Process a file
-        const char *filename = argv[1];
-        char *fileContent = hex_read_file(filename);
-        if (!fileContent)
+        for (int i = 1; i < argc; i++)
         {
-            return 1;
-        }
+            // Set HEX_DEBUG to 1 if -d or --debug flag is provided
+            if ((strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0))
+            {
+                HEX_DEBUG = 1;
+                printf("*** Debug mode enabled ***\n");
+            }
+            else
+            {
+                // Process a file
+                const char *filename = argv[i];
+                char *fileContent = hex_read_file(filename);
+                if (!fileContent)
+                {
+                    return 1;
+                }
 
-        hex_interpret(fileContent);
-        free(fileContent); // Free the allocated memory
+                hex_interpret(fileContent);
+                free(fileContent); // Free the allocated memory
+                return 0;
+            }
+        }
     }
-    else if (!hex_isatty(fileno(stdin)))
+    if (!hex_isatty(fileno(stdin)))
     {
         // Process piped input from stdin
         hex_process_stdin();
