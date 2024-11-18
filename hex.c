@@ -40,7 +40,8 @@ typedef enum
     HEX_TYPE_STRING,
     HEX_TYPE_QUOTATION,
     HEX_TYPE_NATIVE_SYMBOL,
-    HEX_TYPE_USER_SYMBOL
+    HEX_TYPE_USER_SYMBOL,
+    HEX_TYPE_INVALID
 } HEX_ElementType;
 
 // Unified Stack Element
@@ -251,6 +252,7 @@ HEX_StackElement hex_pop()
     if (hex_top < 0)
     {
         hex_error("Insufficient elements on the stack");
+        return (HEX_StackElement){.type = HEX_TYPE_INVALID};
     }
     return hex_stack[hex_top--];
 }
@@ -292,32 +294,34 @@ void hex_debug(const char *format, ...)
 
 void hex_print_element(FILE *stream, HEX_StackElement element);
 
+char *hex_type(HEX_ElementType type)
+{
+    switch (type)
+    {
+    case HEX_TYPE_INTEGER:
+        return "integer";
+    case HEX_TYPE_STRING:
+        return "string";
+    case HEX_TYPE_QUOTATION:
+        return "quotation";
+    case HEX_TYPE_NATIVE_SYMBOL:
+        return "native symbol";
+    case HEX_TYPE_USER_SYMBOL:
+        return "user symbol";
+    case HEX_TYPE_INVALID:
+        return "invalid";
+    default:
+        return "unknown";
+    }
+}
+
 void hex_debug_element(const char *message, HEX_StackElement element)
 {
     if (HEX_DEBUG)
     {
         fprintf(stdout, "*** %s: ", message);
         hex_print_element(stdout, element);
-        switch (element.type)
-        {
-        case HEX_TYPE_NATIVE_SYMBOL:
-            printf(" [native symbol]");
-            break;
-        case HEX_TYPE_USER_SYMBOL:
-            printf(" [user symbol]");
-            break;
-        case HEX_TYPE_QUOTATION:
-            printf(" [quotation]");
-            break;
-        case HEX_TYPE_INTEGER:
-            printf(" [integer]");
-            break;
-        case HEX_TYPE_STRING:
-            printf(" [string]");
-            break;
-        default:
-            break;
-        }
+        printf(" [%s]", hex_type(element.type));
         fprintf(stdout, "\n");
     }
 }
@@ -542,11 +546,10 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
 // Helper Functions                   //
 ////////////////////////////////////////
 
-char *hex_itoa(int num)
+char *hex_itoa(int num, int base)
 {
     static char str[20];
     int i = 0;
-    int base = 16;
 
     // Handle 0 explicitly, otherwise empty string is printed
     if (num == 0)
@@ -579,6 +582,16 @@ char *hex_itoa(int num)
     }
 
     return str;
+}
+
+char *hex_itoa_dec(int num)
+{
+    return hex_itoa(num, 10);
+}
+
+char *hex_itoa_hex(int num)
+{
+    return hex_itoa(num, 16);
 }
 
 void hex_print_element(FILE *stream, HEX_StackElement element)
@@ -667,6 +680,15 @@ int hex_symbol_free()
     }
     hex_free_element(element);
     return 0;
+}
+
+int hex_symbol_type()
+{
+    HEX_StackElement element = hex_pop();
+    int result = 0;
+    result = hex_push_string(hex_type(element.type));
+    hex_free_element(element);
+    return result;
 }
 
 // Evaluation symbols
@@ -990,11 +1012,28 @@ int hex_symbol_str()
     }
     else if (a.type == HEX_TYPE_INTEGER)
     {
-        result = hex_push_string(hex_itoa(a.data.intValue));
+        result = hex_push_string(hex_itoa_hex(a.data.intValue));
     }
     else if (a.type == HEX_TYPE_STRING)
     {
         result = hex_push_string(a.data.strValue);
+    }
+    hex_free_element(a);
+    return result;
+}
+
+int hex_symbol_dec()
+{
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_string(hex_itoa_dec(a.data.intValue));
+    }
+    else
+    {
+        hex_error("An integer is required");
+        result = 1;
     }
     hex_free_element(a);
     return result;
@@ -1217,6 +1256,108 @@ int hex_symbol_xor()
 }
 
 ////////////////////////////////////////
+// Quotation/String symbols                      //
+////////////////////////////////////////
+
+int hex_symbol_append()
+{
+    HEX_StackElement value = hex_pop();
+    HEX_StackElement list = hex_pop();
+    int result = 0;
+    if (list.type == HEX_TYPE_QUOTATION)
+    {
+        size_t newSize = list.quotationSize + 1;
+        HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
+        if (!newQuotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            *element = value;
+            newQuotation[newSize - 1] = element;
+            list.data.quotationValue = newQuotation;
+            list.quotationSize = newSize;
+            result = hex_push_quotation(list.data.quotationValue, newSize);
+        }
+    }
+    else if (list.type == HEX_TYPE_STRING)
+    {
+        char *newStr = (char *)malloc(strlen(list.data.strValue) + strlen(value.data.strValue) + 1);
+        if (!newStr)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            strcpy(newStr, list.data.strValue);
+            strcat(newStr, value.data.strValue);
+            result = hex_push_string(newStr);
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'append' requires a quotation or a string");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_prepend()
+{
+    HEX_StackElement value = hex_pop();
+    HEX_StackElement list = hex_pop();
+    int result = 0;
+    if (list.type == HEX_TYPE_QUOTATION)
+    {
+        size_t newSize = list.quotationSize + 1;
+        HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
+        if (!newQuotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            for (size_t i = newSize - 1; i > 0; i--)
+            {
+                newQuotation[i] = newQuotation[i - 1];
+            }
+            HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            *element = value;
+            newQuotation[0] = element;
+            list.data.quotationValue = newQuotation;
+            list.quotationSize = newSize;
+            result = hex_push_quotation(list.data.quotationValue, newSize);
+        }
+    }
+    else if (list.type == HEX_TYPE_STRING)
+    {
+        char *newStr = (char *)malloc(strlen(list.data.strValue) + strlen(value.data.strValue) + 1);
+        if (!newStr)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            strcpy(newStr, value.data.strValue);
+            strcat(newStr, list.data.strValue);
+            result = hex_push_string(newStr);
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'prepend' requires a quotation or a string");
+        result = 1;
+    }
+    return result;
+}
+
+////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
 
@@ -1224,6 +1365,7 @@ void hex_register_symbols()
 {
     hex_set_native_symbol("store", hex_symbol_store);
     hex_set_native_symbol("free", hex_symbol_free);
+    hex_set_native_symbol("type", hex_symbol_type);
     hex_set_native_symbol("i", hex_symbol_i);
     hex_set_native_symbol("eval", hex_symbol_eval);
     hex_set_native_symbol("puts", hex_symbol_puts);
@@ -1242,6 +1384,7 @@ void hex_register_symbols()
     hex_set_native_symbol(">>", hex_symbol_shiftright);
     hex_set_native_symbol("int", hex_symbol_int);
     hex_set_native_symbol("str", hex_symbol_str);
+    hex_set_native_symbol("dec", hex_symbol_dec);
     hex_set_native_symbol("==", hex_symbol_equal);
     hex_set_native_symbol("!=", hex_symbol_notequal);
     hex_set_native_symbol(">", hex_symbol_greater);
@@ -1252,6 +1395,8 @@ void hex_register_symbols()
     hex_set_native_symbol("or", hex_symbol_or);
     hex_set_native_symbol("not", hex_symbol_not);
     hex_set_native_symbol("xor", hex_symbol_xor);
+    hex_set_native_symbol("append", hex_symbol_append);
+    hex_set_native_symbol("prepend", hex_symbol_prepend);
 }
 
 ////////////////////////////////////////
