@@ -38,7 +38,8 @@ typedef enum
     HEX_TYPE_INTEGER,
     HEX_TYPE_STRING,
     HEX_TYPE_QUOTATION,
-    HEX_TYPE_FUNCTION
+    HEX_TYPE_FUNCTION,
+    HEX_TYPE_SYMBOL
 } HEX_ElementType;
 
 // Unified Stack Element
@@ -52,7 +53,7 @@ typedef struct HEX_StackElement
         int (*functionPointer)();
         struct HEX_StackElement **quotationValue;
     } data;
-    char *symbolName;     // Symbol name (valid for HEX_TYPE_FUNCTION)
+    char *symbolName;     // Symbol name (valid for HEX_TYPE_FUNCTION and HEX_TYPE_SYMBOL)
     size_t quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
@@ -135,7 +136,7 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
 }
 
 // Register a native symbol
-void hex_register_symbol(const char *name, int (*func)())
+void hex_set_native_symbol(const char *name, int (*func)())
 {
     HEX_StackElement funcElement;
     funcElement.type = HEX_TYPE_FUNCTION;
@@ -177,6 +178,29 @@ int hex_push(HEX_StackElement element)
         hex_error("Stack overflow");
         return 1;
     }
+    if (element.type == HEX_TYPE_SYMBOL)
+    {
+        HEX_StackElement value;
+        int result = 0;
+        if (hex_get_symbol(element.symbolName, &value))
+        {
+            if (value.type == HEX_TYPE_FUNCTION)
+            {
+                result = value.data.functionPointer();
+            }
+            else
+            {
+                result = hex_push(value);
+            }
+        }
+        else
+        {
+            hex_error("Undefined symbol: %s", element.symbolName);
+            result = 1;
+        }
+        hex_free_element(element);
+        return result;
+    }
     hex_stack[++hex_top] = element;
     return 0;
 }
@@ -204,14 +228,7 @@ int hex_push_symbol(const char *name)
     HEX_StackElement value;
     if (hex_get_symbol(name, &value))
     {
-        if (value.type == HEX_TYPE_FUNCTION)
-        {
-            return value.data.functionPointer();
-        }
-        else
-        {
-            return hex_push(value);
-        }
+        return hex_push(value);
     }
     else
     {
@@ -443,7 +460,7 @@ HEX_StackElement **hex_parse_quotation(const char **input, size_t *size)
         // TODO: check if non-native symbols are handled correctly
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            element->type = HEX_TYPE_FUNCTION;
+            element->type = HEX_TYPE_SYMBOL;
             element->symbolName = strdup(token->value);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
@@ -517,7 +534,7 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     case HEX_TYPE_STRING:
         fprintf(stream, "\"%s\"", element.data.strValue);
         break;
-    case HEX_TYPE_FUNCTION:
+    case HEX_TYPE_SYMBOL:
         fprintf(stream, element.symbolName);
         break;
     case HEX_TYPE_QUOTATION:
@@ -1145,34 +1162,36 @@ int hex_symbol_xor()
 
 void hex_register_symbols()
 {
-    hex_register_symbol("store", hex_symbol_store);
-    hex_register_symbol("free", hex_symbol_free);
-    hex_register_symbol("puts", hex_symbol_puts);
-    hex_register_symbol("warn", hex_symbol_warn);
-    hex_register_symbol("print", hex_symbol_print);
-    hex_register_symbol("gets", hex_symbol_gets);
-    hex_register_symbol("+", hex_symbol_add);
-    hex_register_symbol("-", hex_symbol_subtract);
-    hex_register_symbol("*", hex_symbol_multiply);
-    hex_register_symbol("/", hex_symbol_divide);
-    hex_register_symbol("&", hex_symbol_bitand);
-    hex_register_symbol("|", hex_symbol_bitor);
-    hex_register_symbol("^", hex_symbol_bitxor);
-    hex_register_symbol("~", hex_symbol_bitnot);
-    hex_register_symbol("<<", hex_symbol_shiftleft);
-    hex_register_symbol(">>", hex_symbol_shiftright);
-    hex_register_symbol("int", hex_symbol_int);
-    hex_register_symbol("str", hex_symbol_str);
-    hex_register_symbol("==", hex_symbol_equal);
-    hex_register_symbol("!=", hex_symbol_notequal);
-    hex_register_symbol(">", hex_symbol_greater);
-    hex_register_symbol("<", hex_symbol_less);
-    hex_register_symbol(">=", hex_symbol_greaterequal);
-    hex_register_symbol("<=", hex_symbol_lessequal);
-    hex_register_symbol("and", hex_symbol_and);
-    hex_register_symbol("or", hex_symbol_or);
-    hex_register_symbol("not", hex_symbol_not);
-    hex_register_symbol("xor", hex_symbol_xor);
+    hex_set_native_symbol("store", hex_symbol_store);
+    hex_set_native_symbol("free", hex_symbol_free);
+    hex_set_native_symbol("i", hex_symbol_i);
+    hex_set_native_symbol("eval", hex_symbol_eval);
+    hex_set_native_symbol("puts", hex_symbol_puts);
+    hex_set_native_symbol("warn", hex_symbol_warn);
+    hex_set_native_symbol("print", hex_symbol_print);
+    hex_set_native_symbol("gets", hex_symbol_gets);
+    hex_set_native_symbol("+", hex_symbol_add);
+    hex_set_native_symbol("-", hex_symbol_subtract);
+    hex_set_native_symbol("*", hex_symbol_multiply);
+    hex_set_native_symbol("/", hex_symbol_divide);
+    hex_set_native_symbol("&", hex_symbol_bitand);
+    hex_set_native_symbol("|", hex_symbol_bitor);
+    hex_set_native_symbol("^", hex_symbol_bitxor);
+    hex_set_native_symbol("~", hex_symbol_bitnot);
+    hex_set_native_symbol("<<", hex_symbol_shiftleft);
+    hex_set_native_symbol(">>", hex_symbol_shiftright);
+    hex_set_native_symbol("int", hex_symbol_int);
+    hex_set_native_symbol("str", hex_symbol_str);
+    hex_set_native_symbol("==", hex_symbol_equal);
+    hex_set_native_symbol("!=", hex_symbol_notequal);
+    hex_set_native_symbol(">", hex_symbol_greater);
+    hex_set_native_symbol("<", hex_symbol_less);
+    hex_set_native_symbol(">=", hex_symbol_greaterequal);
+    hex_set_native_symbol("<=", hex_symbol_lessequal);
+    hex_set_native_symbol("and", hex_symbol_and);
+    hex_set_native_symbol("or", hex_symbol_or);
+    hex_set_native_symbol("not", hex_symbol_not);
+    hex_set_native_symbol("xor", hex_symbol_xor);
 }
 
 ////////////////////////////////////////
