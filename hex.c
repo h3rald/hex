@@ -28,6 +28,7 @@ void hex_error(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
+    fprintf(stderr, "[error] ");
     vfprintf(stderr, format, args);
     fprintf(stderr, "\n");
     va_end(args);
@@ -1041,22 +1042,51 @@ int hex_symbol_dec()
 
 // Comparison symbols
 
+int hex_equal(HEX_StackElement a, HEX_StackElement b)
+{
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = a.data.intValue == b.data.intValue;
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = (strcmp(a.data.strValue, b.data.strValue) == 0);
+    }
+    else if (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION)
+    {
+        if (a.quotationSize != b.quotationSize)
+        {
+            result = 0;
+        }
+        else
+        {
+            result = 1;
+            for (size_t i = 0; i < a.quotationSize; i++)
+            {
+                if (a.data.quotationValue[i] != b.data.quotationValue[i])
+                {
+                    result = 0;
+                    break;
+                }
+            }
+        }
+    }
+    return result;
+}
+
 int hex_symbol_equal()
 {
     HEX_StackElement b = hex_pop();
     HEX_StackElement a = hex_pop();
     int result = 0;
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if ((a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER) || (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING) || (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION))
     {
-        result = hex_push_int(a.data.intValue == b.data.intValue);
-    }
-    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
-    {
-        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) == 0);
+        result = hex_push_int(hex_equal(a, b));
     }
     else
     {
-        hex_error("'==' symbol requires two integers or two strings");
+        hex_error("'==' symbol requires two integers, two strings, or two quotations");
         result = 1;
     }
     hex_free_element(a);
@@ -1069,17 +1099,13 @@ int hex_symbol_notequal()
     HEX_StackElement b = hex_pop();
     HEX_StackElement a = hex_pop();
     int result = 0;
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if ((a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER) || (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING) || (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION))
     {
-        result = hex_push_int(a.data.intValue != b.data.intValue);
-    }
-    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
-    {
-        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) != 0);
+        result = hex_push_int(!hex_equal(a, b));
     }
     else
     {
-        hex_error("'!=' symbol requires two integers or two strings");
+        hex_error("'!=' symbol requires two integers, two strings, or two quotations");
         result = 1;
     }
     hex_free_element(a);
@@ -1357,6 +1383,234 @@ int hex_symbol_prepend()
     return result;
 }
 
+int hex_symbol_slice()
+{
+    HEX_StackElement end = hex_pop();
+    HEX_StackElement start = hex_pop();
+    HEX_StackElement list = hex_pop();
+    int result = 0;
+    if (list.type == HEX_TYPE_QUOTATION)
+    {
+        if (start.type != HEX_TYPE_INTEGER || end.type != HEX_TYPE_INTEGER)
+        {
+            hex_error("Slice indices must be integers");
+            result = 1;
+        }
+        else if (start.data.intValue < 0 || start.data.intValue >= list.quotationSize || end.data.intValue < 0 || end.data.intValue >= list.quotationSize)
+        {
+            hex_error("Slice indices out of range");
+            result = 1;
+        }
+        else
+        {
+            size_t newSize = end.data.intValue - start.data.intValue + 1;
+            HEX_StackElement **newQuotation = (HEX_StackElement **)malloc(newSize * sizeof(HEX_StackElement *));
+            if (!newQuotation)
+            {
+                hex_error("Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                for (size_t i = 0; i < newSize; i++)
+                {
+                    newQuotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                    *newQuotation[i] = *list.data.quotationValue[start.data.intValue + i];
+                }
+                result = hex_push_quotation(newQuotation, newSize);
+            }
+        }
+    }
+    else if (list.type == HEX_TYPE_STRING)
+    {
+        if (start.type != HEX_TYPE_INTEGER || end.type != HEX_TYPE_INTEGER)
+        {
+            hex_error("Slice indices must be integers");
+            result = 1;
+        }
+        else if (start.data.intValue < 0 || start.data.intValue >= strlen(list.data.strValue) || end.data.intValue < 0 || end.data.intValue >= strlen(list.data.strValue))
+        {
+            hex_error("Slice indices out of range");
+            result = 1;
+        }
+        else
+        {
+            size_t newSize = end.data.intValue - start.data.intValue + 1;
+            char *newStr = (char *)malloc(newSize + 1);
+            if (!newStr)
+            {
+                hex_error("Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                strncpy(newStr, list.data.strValue + start.data.intValue, newSize);
+                newStr[newSize] = '\0';
+                result = hex_push_string(newStr);
+            }
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'slice' requires a quotation or a string");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_len()
+{
+    HEX_StackElement element = hex_pop();
+    int result = 0;
+    if (element.type == HEX_TYPE_QUOTATION)
+    {
+        result = hex_push_int(element.quotationSize);
+    }
+    else if (element.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strlen(element.data.strValue));
+    }
+    else
+    {
+        hex_error("Symbol 'len' requires a quotation or a string");
+        result = 1;
+    }
+    hex_free_element(element);
+    return result;
+}
+
+int hex_symbol_get()
+{
+    HEX_StackElement index = hex_pop();
+    HEX_StackElement list = hex_pop();
+    int result = 0;
+    if (list.type == HEX_TYPE_QUOTATION)
+    {
+        if (index.type != HEX_TYPE_INTEGER)
+        {
+            hex_error("Index must be an integer");
+            result = 1;
+        }
+        else if (index.data.intValue < 0 || index.data.intValue >= list.quotationSize)
+        {
+            hex_error("Index out of range");
+            result = 1;
+        }
+        else
+        {
+            result = hex_push(*list.data.quotationValue[index.data.intValue]);
+        }
+    }
+    else if (list.type == HEX_TYPE_STRING)
+    {
+        if (index.type != HEX_TYPE_INTEGER)
+        {
+            hex_error("Index must be an integer");
+            result = 1;
+        }
+        else if (index.data.intValue < 0 || index.data.intValue >= strlen(list.data.strValue))
+        {
+            hex_error("Index out of range");
+            result = 1;
+        }
+        else
+        {
+            char str[2] = {list.data.strValue[index.data.intValue], '\0'};
+            result = hex_push_string(str);
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'get' requires a quotation or a string");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_set()
+{
+    HEX_StackElement value = hex_pop();
+    HEX_StackElement index = hex_pop();
+    HEX_StackElement list = hex_pop();
+    int result = 0;
+    if (list.type == HEX_TYPE_QUOTATION)
+    {
+        if (index.type != HEX_TYPE_INTEGER)
+        {
+            hex_error("Index must be an integer");
+            result = 1;
+        }
+        else if (index.data.intValue < 0 || index.data.intValue >= list.quotationSize)
+        {
+            hex_error("Index out of range");
+            result = 1;
+        }
+        else
+        {
+            hex_free_element(*list.data.quotationValue[index.data.intValue]);
+            *list.data.quotationValue[index.data.intValue] = value;
+            result = 0;
+        }
+    }
+    else if (list.type == HEX_TYPE_STRING)
+    {
+        if (index.type != HEX_TYPE_INTEGER)
+        {
+            hex_error("Index must be an integer");
+            result = 1;
+        }
+        else if (index.data.intValue < 0 || index.data.intValue >= strlen(list.data.strValue))
+        {
+            hex_error("Index out of range");
+            result = 1;
+        }
+        else
+        {
+            list.data.strValue[index.data.intValue] = value.data.strValue[0];
+            result = 0;
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'set' requires a quotation or a string");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_index()
+{
+    HEX_StackElement element = hex_pop();
+    HEX_StackElement list = hex_pop();
+    int result = -1;
+    if (list.type == HEX_TYPE_QUOTATION)
+    {
+        for (int i = 0; i < list.quotationSize; i++)
+        {
+            if (hex_equal(*list.data.quotationValue[i], element))
+            {
+                result = i;
+                break;
+            }
+        }
+    }
+    else if (list.type == HEX_TYPE_STRING)
+    {
+        char *ptr = strstr(list.data.strValue, element.data.strValue);
+        if (ptr)
+        {
+            result = ptr - list.data.strValue;
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'index' requires a quotation or a string");
+    }
+    hex_free_element(element);
+    hex_free_element(list);
+    return hex_push_int(result);
+}
+
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -1397,6 +1651,11 @@ void hex_register_symbols()
     hex_set_native_symbol("xor", hex_symbol_xor);
     hex_set_native_symbol("append", hex_symbol_append);
     hex_set_native_symbol("prepend", hex_symbol_prepend);
+    hex_set_native_symbol("slice", hex_symbol_slice);
+    hex_set_native_symbol("len", hex_symbol_len);
+    hex_set_native_symbol("get", hex_symbol_get);
+    hex_set_native_symbol("set", hex_symbol_set);
+    hex_set_native_symbol("index", hex_symbol_index);
 }
 
 ////////////////////////////////////////
