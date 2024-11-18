@@ -848,6 +848,146 @@ int hex_symbol_str()
     return result;
 }
 
+// Boolean symbols
+
+int hex_symbol_equal()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue == b.data.intValue);
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) == 0);
+    }
+    else
+    {
+        hex_error("'==' symbol requires two integers or two strings");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_notequal()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue != b.data.intValue);
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) != 0);
+    }
+    else
+    {
+        hex_error("'!=' symbol requires two integers or two strings");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_greater()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue > b.data.intValue);
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) > 0);
+    }
+    else
+    {
+        hex_error("'>' symbol requires two integers or two strings");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_less()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue < b.data.intValue);
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) < 0);
+    }
+    else
+    {
+        hex_error("'<' symbol requires two integers or two strings");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_greaterequal()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue >= b.data.intValue);
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) >= 0);
+    }
+    else
+    {
+        hex_error("'>=' symbol requires two integers or two strings");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_lessequal()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue <= b.data.intValue);
+    }
+    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    {
+        result = hex_push_int(strcmp(a.data.strValue, b.data.strValue) <= 0);
+    }
+    else
+    {
+        hex_error("'<=' symbol requires two integers or two strings");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -871,6 +1011,12 @@ void hex_register_symbols()
     hex_register_symbol(">>", hex_symbol_shiftright);
     hex_register_symbol("int", hex_symbol_int);
     hex_register_symbol("str", hex_symbol_str);
+    hex_register_symbol("==", hex_symbol_equal);
+    hex_register_symbol("!=", hex_symbol_notequal);
+    hex_register_symbol(">", hex_symbol_greater);
+    hex_register_symbol("<", hex_symbol_less);
+    hex_register_symbol(">=", hex_symbol_greaterequal);
+    hex_register_symbol("<=", hex_symbol_lessequal);
 }
 
 ////////////////////////////////////////
