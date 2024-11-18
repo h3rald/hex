@@ -988,6 +988,82 @@ int hex_symbol_lessequal()
     return result;
 }
 
+// Logical symbols
+
+int hex_symbol_and()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue && b.data.intValue);
+    }
+    else
+    {
+        hex_error("'and' symbol requires two integers");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_or()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue || b.data.intValue);
+    }
+    else
+    {
+        hex_error("'or' symbol requires two integers");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_not()
+{
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(!a.data.intValue);
+    }
+    else
+    {
+        hex_error("'not' symbol requires an integer");
+        result = 1;
+    }
+    hex_free_element(a);
+    return result;
+}
+
+int hex_symbol_xor()
+{
+    HEX_StackElement b = hex_pop();
+    HEX_StackElement a = hex_pop();
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        result = hex_push_int(a.data.intValue ^ b.data.intValue);
+    }
+    else
+    {
+        hex_error("'xor' symbol requires two integers");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -1017,6 +1093,10 @@ void hex_register_symbols()
     hex_register_symbol("<", hex_symbol_less);
     hex_register_symbol(">=", hex_symbol_greaterequal);
     hex_register_symbol("<=", hex_symbol_lessequal);
+    hex_register_symbol("and", hex_symbol_and);
+    hex_register_symbol("or", hex_symbol_or);
+    hex_register_symbol("not", hex_symbol_not);
+    hex_register_symbol("xor", hex_symbol_xor);
 }
 
 ////////////////////////////////////////
