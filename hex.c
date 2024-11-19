@@ -14,6 +14,7 @@ int isatty(int fd)
 }
 #else
 #include <unistd.h>
+#include <sys/wait.h>
 #endif
 
 #define HEX_STDIN_BUFFER_SIZE 256
