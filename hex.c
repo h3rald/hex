@@ -24,13 +24,18 @@ int isatty(int fd)
 #define HEX_STACK_SIZE 100
 
 int HEX_DEBUG = 0;
+char HEX_ERROR[256] = "";
+char **HEX_ARGV;
+int HEX_ARGC = 0;
+volatile sig_atomic_t hex_keep_running = 1;
 
 void hex_error(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
     fprintf(stderr, "[error] ");
-    vfprintf(stderr, format, args);
+    vsnprintf(HEX_ERROR, sizeof(HEX_ERROR), format, args);
+    fprintf(stderr, "%s\n", HEX_ERROR);
     fprintf(stderr, "\n");
     va_end(args);
 }
@@ -954,6 +959,40 @@ int hex_symbol_divide()
     return result;
 }
 
+int hex_symbol_modulo()
+{
+    HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
+    HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
+    int result = 0;
+    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    {
+        if (b.data.intValue == 0)
+        {
+            hex_error("Division by zero");
+        }
+        result = hex_push_int(a.data.intValue % b.data.intValue);
+    }
+    else
+    {
+        hex_error("'%%' symbol requires two integers");
+        result = 1;
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
 // Bit symbols
 
 int hex_symbol_bitand()
@@ -1559,7 +1598,7 @@ int hex_symbol_xor()
 // Quotation/String symbols           //
 ////////////////////////////////////////
 
-int hex_symbol_join()
+int hex_symbol_concat()
 {
     HEX_StackElement value = hex_pop();
     if (value.type == HEX_TYPE_INVALID)
@@ -1909,6 +1948,481 @@ int hex_symbol_index()
 }
 
 ////////////////////////////////////////
+// String symbols                     //
+////////////////////////////////////////
+
+int hex_symbol_split()
+{
+    HEX_StackElement separator = hex_pop();
+    if (separator.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(separator);
+        return 1;
+    }
+    HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(separator);
+        return 1;
+    }
+    int result = 0;
+    if (list.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
+    {
+        char *str = list.data.strValue;
+        char *sep = separator.data.strValue;
+        char *token = strtok(str, sep);
+        while (token)
+        {
+            result = hex_push_string(token);
+            if (result != 0)
+            {
+                break;
+            }
+            token = strtok(NULL, sep);
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'split' requires two strings");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_replace()
+{
+    HEX_StackElement replacement = hex_pop();
+    if (replacement.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(replacement);
+        return 1;
+    }
+    HEX_StackElement search = hex_pop();
+    if (search.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(search);
+        hex_free_element(replacement);
+        return 1;
+    }
+    HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(search);
+        hex_free_element(replacement);
+        return 1;
+    }
+    int result = 0;
+    if (list.type == HEX_TYPE_STRING && search.type == HEX_TYPE_STRING && replacement.type == HEX_TYPE_STRING)
+    {
+        char *str = list.data.strValue;
+        char *find = search.data.strValue;
+        char *replace = replacement.data.strValue;
+        char *ptr = strstr(str, find);
+        if (ptr)
+        {
+            size_t findLen = strlen(find);
+            size_t replaceLen = strlen(replace);
+            size_t newLen = strlen(str) - findLen + replaceLen + 1;
+            char *newStr = (char *)malloc(newLen);
+            if (!newStr)
+            {
+                hex_error("Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                strncpy(newStr, str, ptr - str);
+                strcpy(newStr + (ptr - str), replace);
+                strcpy(newStr + (ptr - str) + replaceLen, ptr + findLen);
+                result = hex_push_string(newStr);
+            }
+        }
+        else
+        {
+            result = hex_push_string(str);
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'replace' requires three strings");
+        result = 1;
+    }
+    return result;
+}
+
+////////////////////////////////////////
+// File symbols                       //
+////////////////////////////////////////
+
+int hex_symbol_read()
+{
+    HEX_StackElement filename = hex_pop();
+    if (filename.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(filename);
+        return 1;
+    }
+    int result = 0;
+    if (filename.type == HEX_TYPE_STRING)
+    {
+        FILE *file = fopen(filename.data.strValue, "r");
+        if (!file)
+        {
+            hex_error("Could not open file: %s", filename.data.strValue);
+            result = 1;
+        }
+        else
+        {
+            fseek(file, 0, SEEK_END);
+            long length = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            char *buffer = (char *)malloc(length + 1);
+            if (!buffer)
+            {
+                hex_error("Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                fread(buffer, 1, length, file);
+                buffer[length] = '\0';
+                result = hex_push_string(buffer);
+                free(buffer);
+            }
+            fclose(file);
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'read' requires a string");
+        result = 1;
+    }
+    hex_free_element(filename);
+    return result;
+}
+
+int hex_symbol_write()
+{
+    HEX_StackElement filename = hex_pop();
+    if (filename.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(filename);
+        return 1;
+    }
+    HEX_StackElement data = hex_pop();
+    if (data.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(data);
+        hex_free_element(filename);
+        return 1;
+    }
+    int result = 0;
+    if (filename.type == HEX_TYPE_STRING)
+    {
+        if (data.type == HEX_TYPE_STRING)
+        {
+            FILE *file = fopen(filename.data.strValue, "w");
+            if (file)
+            {
+                fputs(data.data.strValue, file);
+                fclose(file);
+                result = 0;
+            }
+            else
+            {
+                hex_error("Could not open file for writing: %s", filename.data.strValue);
+                result = 1;
+            }
+        }
+        else
+        {
+            hex_error("Symbol 'write' requires a string");
+            result = 1;
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'write' requires a string");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_append()
+{
+    HEX_StackElement filename = hex_pop();
+    if (filename.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(filename);
+        return 1;
+    }
+    HEX_StackElement data = hex_pop();
+    if (data.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(data);
+        hex_free_element(filename);
+        return 1;
+    }
+    int result = 0;
+    if (filename.type == HEX_TYPE_STRING)
+    {
+        if (data.type == HEX_TYPE_STRING)
+        {
+            FILE *file = fopen(filename.data.strValue, "a");
+            if (file)
+            {
+                fputs(data.data.strValue, file);
+                fclose(file);
+                result = 0;
+            }
+            else
+            {
+                hex_error("Could not open file for appending: %s", filename.data.strValue);
+                result = 1;
+            }
+        }
+        else
+        {
+            hex_error("Symbol 'append' requires a string");
+            result = 1;
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'append' requires a string");
+        result = 1;
+    }
+    return result;
+}
+
+////////////////////////////////////////
+// Shell symbols                      //
+////////////////////////////////////////
+
+int hex_symbol_args()
+{
+    int result = 0;
+    if (HEX_ARGV)
+    {
+        HEX_StackElement **quotation = (HEX_StackElement **)malloc(HEX_ARGC * sizeof(HEX_StackElement *));
+        if (!quotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            for (int i = 0; i < HEX_ARGC; i++)
+            {
+                quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                quotation[i]->type = HEX_TYPE_STRING;
+                quotation[i]->data.strValue = HEX_ARGV[i];
+            }
+            result = hex_push_quotation(quotation, HEX_ARGC);
+        }
+    }
+    else
+    {
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_exit()
+{
+    hex_keep_running = 0;
+    return 0;
+}
+
+int hex_symbol_exec()
+{
+    HEX_StackElement command = hex_pop();
+    if (command.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(command);
+        return 1;
+    }
+    int result = 0;
+    if (command.type == HEX_TYPE_STRING)
+    {
+        int status = system(command.data.strValue);
+        result = hex_push_int(status);
+    }
+    else
+    {
+        hex_error("Symbol 'exec' requires a string");
+        result = 1;
+    }
+    return result;
+}
+
+int hex_symbol_run()
+{
+    HEX_StackElement command = hex_pop();
+    if (command.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(command);
+        return 1;
+    }
+    if (command.type != HEX_TYPE_STRING)
+    {
+        hex_error("Symbol 'run' requires a string");
+        hex_free_element(command);
+        return 1;
+    }
+
+    FILE *fp;
+    char path[1035];
+    char output[8192] = "";
+    char error[8192] = "";
+    int return_code = 0;
+
+#ifdef _WIN32
+    // Windows implementation
+    HANDLE hOutputRead, hOutputWrite;
+    HANDLE hErrorRead, hErrorWrite;
+    SECURITY_ATTRIBUTES sa;
+    PROCESS_INFORMATION pi;
+    STARTUPINFO si;
+    DWORD exitCode;
+
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+
+    // Create pipes for capturing stdout and stderr
+    if (!CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0) || !CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0))
+    {
+        hex_error("Failed to create pipes");
+        hex_free_element(command);
+        return 1;
+    }
+
+    // Set up STARTUPINFO structure
+    ZeroMemory(&si, sizeof(STARTUPINFO));
+    si.cb = sizeof(STARTUPINFO);
+    si.hStdOutput = hOutputWrite;
+    si.hStdError = hErrorWrite;
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    // Create the child process
+    if (!CreateProcess(NULL, command.data.strValue, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+    {
+        hex_error("Failed to create process");
+        hex_free_element(command);
+        return 1;
+    }
+
+    // Close write ends of the pipes
+    CloseHandle(hOutputWrite);
+    CloseHandle(hErrorWrite);
+
+    // Read stdout
+    DWORD bytesRead;
+    char buffer[1024];
+    while (ReadFile(hOutputRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0)
+    {
+        buffer[bytesRead] = '\0';
+        strcat(output, buffer);
+    }
+
+    // Read stderr
+    while (ReadFile(hErrorRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0)
+    {
+        buffer[bytesRead] = '\0';
+        strcat(error, buffer);
+    }
+
+    // Wait for the child process to finish and get the return code
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    GetExitCodeProcess(pi.hProcess, &exitCode);
+    return_code = exitCode;
+
+    // Close handles
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    CloseHandle(hOutputRead);
+    CloseHandle(hErrorRead);
+
+#else
+    // POSIX implementation (Linux/macOS)
+    int stdout_pipe[2];
+    int stderr_pipe[2];
+    if (pipe(stdout_pipe) != 0 || pipe(stderr_pipe) != 0)
+    {
+        hex_error("Failed to create pipes");
+        hex_free_element(command);
+        return 1;
+    }
+
+    pid_t pid = fork();
+    if (pid == -1)
+    {
+        hex_error("Failed to fork process");
+        hex_free_element(command);
+        return 1;
+    }
+    else if (pid == 0)
+    {
+        // Child process
+        close(stdout_pipe[0]);
+        close(stderr_pipe[0]);
+        dup2(stdout_pipe[1], STDOUT_FILENO);
+        dup2(stderr_pipe[1], STDERR_FILENO);
+        execl("/bin/sh", "sh", "-c", command.data.strValue, (char *)NULL);
+        exit(1);
+    }
+    else
+    {
+        // Parent process
+        close(stdout_pipe[1]);
+        close(stderr_pipe[1]);
+
+        // Read stdout
+        FILE *stdout_fp = fdopen(stdout_pipe[0], "r");
+        while (fgets(path, sizeof(path), stdout_fp) != NULL)
+        {
+            strcat(output, path);
+        }
+        fclose(stdout_fp);
+
+        // Read stderr
+        FILE *stderr_fp = fdopen(stderr_pipe[0], "r");
+        while (fgets(path, sizeof(path), stderr_fp) != NULL)
+        {
+            strcat(error, path);
+        }
+        fclose(stderr_fp);
+
+        // Wait for child process to finish and get the return code
+        int status;
+        waitpid(pid, &status, 0);
+        return_code = WEXITSTATUS(status);
+    }
+#endif
+
+    // Push the return code, output, and error as a quotation
+    HEX_StackElement **quotation = (HEX_StackElement **)malloc(3 * sizeof(HEX_StackElement *));
+    quotation[0] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    quotation[0]->type = HEX_TYPE_INTEGER;
+    quotation[0]->data.intValue = return_code;
+
+    quotation[1] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    quotation[1]->type = HEX_TYPE_STRING;
+    quotation[1]->data.strValue = strdup(output);
+
+    quotation[2] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    quotation[2]->type = HEX_TYPE_STRING;
+    quotation[2]->data.strValue = strdup(error);
+
+    hex_free_element(command);
+    return hex_push_quotation(quotation, 3);
+}
+
+////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
 
@@ -1927,6 +2441,7 @@ void hex_register_symbols()
     hex_set_native_symbol("-", hex_symbol_subtract);
     hex_set_native_symbol("*", hex_symbol_multiply);
     hex_set_native_symbol("/", hex_symbol_divide);
+    hex_set_native_symbol("%", hex_symbol_modulo);
     hex_set_native_symbol("&", hex_symbol_bitand);
     hex_set_native_symbol("|", hex_symbol_bitor);
     hex_set_native_symbol("^", hex_symbol_bitxor);
@@ -1946,12 +2461,17 @@ void hex_register_symbols()
     hex_set_native_symbol("or", hex_symbol_or);
     hex_set_native_symbol("not", hex_symbol_not);
     hex_set_native_symbol("xor", hex_symbol_xor);
-    hex_set_native_symbol("join", hex_symbol_join);
+    hex_set_native_symbol("concat", hex_symbol_concat);
     hex_set_native_symbol("slice", hex_symbol_slice);
     hex_set_native_symbol("len", hex_symbol_len);
     hex_set_native_symbol("get", hex_symbol_get);
     hex_set_native_symbol("set", hex_symbol_set);
     hex_set_native_symbol("index", hex_symbol_index);
+    hex_set_native_symbol("split", hex_symbol_split);
+    hex_set_native_symbol("replace", hex_symbol_replace);
+    // hex_set_native_symbol("filter", hex_symbol_filter);
+    // hex_set_native_symbol("map", hex_symbol_map);
+    // hex_set_native_symbol("each", hex_symbol_each);
 }
 
 ////////////////////////////////////////
@@ -2041,8 +2561,6 @@ char *hex_read_file(const char *filename)
     return buffer;
 }
 
-volatile sig_atomic_t hex_keep_running = 1;
-
 // REPL implementation
 void hex_repl()
 {
@@ -2107,6 +2625,9 @@ void hex_process_stdin()
 
 int main(int argc, char *argv[])
 {
+    // store argv to global variable
+    HEX_ARGV = argv;
+    HEX_ARGC = argc;
     // Register SIGINT (Ctrl+C) signal handler
     signal(SIGINT, hex_handle_sigint);
 
