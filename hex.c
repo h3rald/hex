@@ -28,15 +28,18 @@ char HEX_ERROR[256] = "";
 char **HEX_ARGV;
 int HEX_ARGC = 0;
 volatile sig_atomic_t hex_keep_running = 1;
+int HEX_ERRORS = 1;
 
 void hex_error(const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    fprintf(stderr, "[error] ");
     vsnprintf(HEX_ERROR, sizeof(HEX_ERROR), format, args);
-    fprintf(stderr, "%s\n", HEX_ERROR);
-    fprintf(stderr, "\n");
+    if (HEX_ERRORS)
+    {
+        fprintf(stderr, "[error] ");
+        fprintf(stderr, "%s\n", HEX_ERROR);
+    }
     va_end(args);
 }
 
@@ -189,7 +192,8 @@ int hex_push(HEX_StackElement element)
         hex_error("Stack overflow");
         return 1;
     }
-    hex_debug_element("Pushing element", element);
+    hex_debug_element("PUSH", element);
+    // Note: from a parser perspective, there is no way to determine if a symbol is a native symbol or a user symbol
     if (element.type == HEX_TYPE_USER_SYMBOL)
     {
         HEX_StackElement value;
@@ -261,6 +265,7 @@ HEX_StackElement hex_pop()
         hex_error("Insufficient elements on the stack");
         return (HEX_StackElement){.type = HEX_TYPE_INVALID};
     }
+    hex_debug_element(" POP", hex_stack[hex_top]);
     return hex_stack[hex_top--];
 }
 
@@ -312,9 +317,9 @@ char *hex_type(HEX_ElementType type)
     case HEX_TYPE_QUOTATION:
         return "quotation";
     case HEX_TYPE_NATIVE_SYMBOL:
-        return "native symbol";
+        return "symbol";
     case HEX_TYPE_USER_SYMBOL:
-        return "user symbol";
+        return "symbol";
     case HEX_TYPE_INVALID:
         return "invalid";
     default:
@@ -328,7 +333,7 @@ void hex_debug_element(const char *message, HEX_StackElement element)
     {
         fprintf(stdout, "*** %s: ", message);
         hex_print_element(stdout, element);
-        printf(" [%s]", hex_type(element.type));
+        // printf(" [%s]", hex_type(element.type));
         fprintf(stdout, "\n");
     }
 }
@@ -733,7 +738,6 @@ int hex_symbol_i()
     int result = 0;
     if (element.type != HEX_TYPE_QUOTATION)
     {
-        hex_free_element(element);
         hex_error("'i' symbol requires a quotation");
         result = 1;
     }
@@ -741,7 +745,6 @@ int hex_symbol_i()
     {
         if (hex_push(*element.data.quotationValue[i]) != 0)
         {
-            hex_free_element(element);
             result = 1;
             break;
         }
@@ -758,13 +761,11 @@ int hex_symbol_eval()
     HEX_StackElement element = hex_pop();
     if (element.type == HEX_TYPE_INVALID)
     {
-        hex_free_element(element);
         return 1;
     }
     int result = 0;
     if (element.type != HEX_TYPE_STRING)
     {
-        hex_free_element(element);
         hex_error("'eval' symbol requires a string");
         result = 1;
     }
@@ -785,7 +786,6 @@ int hex_symbol_puts()
     }
     hex_print_element(stdout, element);
     printf("\n");
-    hex_free_element(element);
     return 0;
 }
 
@@ -1246,6 +1246,29 @@ int hex_symbol_dec()
         result = 1;
     }
     hex_free_element(a);
+    return result;
+}
+
+int hex_symbol_hex()
+{
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
+    int result = 0;
+    if (element.type == HEX_TYPE_STRING)
+    {
+        int value = strtol(element.data.strValue, NULL, 10);
+        result = hex_push_int(value);
+    }
+    else
+    {
+        hex_error("'hex' symbol requires a string representing a decimal integer");
+        result = 1;
+    }
+    hex_free_element(element);
     return result;
 }
 
@@ -1746,6 +1769,9 @@ int hex_symbol_slice()
         hex_error("Symbol 'slice' requires a quotation or a string");
         result = 1;
     }
+    hex_free_element(list);
+    hex_free_element(start);
+    hex_free_element(end);
     return result;
 }
 
@@ -1831,6 +1857,8 @@ int hex_symbol_get()
         hex_error("Symbol 'get' requires a quotation or a string");
         result = 1;
     }
+    hex_free_element(list);
+    hex_free_element(index);
     return result;
 }
 
@@ -1900,6 +1928,9 @@ int hex_symbol_set()
         hex_error("Symbol 'set' requires a quotation or a string");
         result = 1;
     }
+    hex_free_element(list);
+    hex_free_element(index);
+    hex_free_element(value);
     return result;
 }
 
@@ -1987,6 +2018,8 @@ int hex_symbol_split()
         hex_error("Symbol 'split' requires two strings");
         result = 1;
     }
+    hex_free_element(list);
+    hex_free_element(separator);
     return result;
 }
 
@@ -2049,6 +2082,9 @@ int hex_symbol_replace()
         hex_error("Symbol 'replace' requires three strings");
         result = 1;
     }
+    hex_free_element(list);
+    hex_free_element(search);
+    hex_free_element(replacement);
     return result;
 }
 
@@ -2148,6 +2184,8 @@ int hex_symbol_write()
         hex_error("Symbol 'write' requires a string");
         result = 1;
     }
+    hex_free_element(data);
+    hex_free_element(filename);
     return result;
 }
 
@@ -2195,6 +2233,8 @@ int hex_symbol_append()
         hex_error("Symbol 'append' requires a string");
         result = 1;
     }
+    hex_free_element(data);
+    hex_free_element(filename);
     return result;
 }
 
@@ -2256,6 +2296,7 @@ int hex_symbol_exec()
         hex_error("Symbol 'exec' requires a string");
         result = 1;
     }
+    hex_free_element(command);
     return result;
 }
 
@@ -2423,6 +2464,529 @@ int hex_symbol_run()
 }
 
 ////////////////////////////////////////
+// Control flow symbols               //
+////////////////////////////////////////
+
+int hex_symbol_when()
+{
+
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        return 1;
+    }
+    HEX_StackElement condition = hex_pop();
+    if (condition.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(condition);
+        return 1;
+    }
+    int result = 0;
+    if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'when' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        for (size_t i = 0; i < condition.quotationSize; i++)
+        {
+            if (hex_push(*condition.data.quotationValue[i]) != 0)
+            {
+                result = 1;
+                break; // Break if pushing the element failed
+            }
+        }
+        HEX_StackElement evalResult = hex_pop();
+        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+        {
+            for (size_t i = 0; i < action.quotationSize; i++)
+            {
+                if (hex_push(*action.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+        hex_free_element(evalResult);
+    }
+    hex_free_element(condition);
+    hex_free_element(action);
+    return result;
+}
+
+int hex_symbol_unless()
+{
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        return 1;
+    }
+    HEX_StackElement condition = hex_pop();
+    if (condition.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(condition);
+        return 1;
+    }
+    int result = 0;
+    if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'unless' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        for (size_t i = 0; i < condition.quotationSize; i++)
+        {
+            if (hex_push(*condition.data.quotationValue[i]) != 0)
+            {
+                result = 1;
+                break; // Break if pushing the element failed
+            }
+        }
+        HEX_StackElement evalResult = hex_pop();
+        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue == 0)
+        {
+            for (size_t i = 0; i < action.quotationSize; i++)
+            {
+                if (hex_push(*action.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+        hex_free_element(evalResult);
+    }
+    hex_free_element(condition);
+    hex_free_element(action);
+    return result;
+}
+
+int hex_symbol_while()
+{
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        return 1;
+    }
+    HEX_StackElement condition = hex_pop();
+    if (condition.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(condition);
+        return 1;
+    }
+    int result = 0;
+    if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'while' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        while (1)
+        {
+            for (size_t i = 0; i < condition.quotationSize; i++)
+            {
+                if (hex_push(*condition.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break; // Break if pushing the element failed
+                }
+            }
+            HEX_StackElement evalResult = hex_pop();
+            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue == 0)
+            {
+                break;
+            }
+            for (size_t i = 0; i < action.quotationSize; i++)
+            {
+                if (hex_push(*action.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+            hex_free_element(evalResult);
+        }
+    }
+    hex_free_element(condition);
+    hex_free_element(action);
+    return result;
+}
+
+int hex_symbol_each()
+{
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        return 1;
+    }
+    HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(list);
+        return 1;
+    }
+    int result = 0;
+    if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'each' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        for (size_t i = 0; i < list.quotationSize; i++)
+        {
+            if (hex_push(*list.data.quotationValue[i]) != 0)
+            {
+                result = 1;
+                break; // Break if pushing the element failed
+            }
+            for (size_t j = 0; j < action.quotationSize; j++)
+            {
+                if (hex_push(*action.data.quotationValue[j]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+    }
+    hex_free_element(list);
+    hex_free_element(action);
+    return result;
+}
+
+int hex_symbol_times()
+{
+    HEX_StackElement count = hex_pop();
+    if (count.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(count);
+        return 1;
+    }
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(count);
+        return 1;
+    }
+    int result = 0;
+    if (count.type != HEX_TYPE_INTEGER || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'times' symbol requires an integer and a quotation");
+        result = 1;
+    }
+    else
+    {
+        for (int i = 0; i < count.data.intValue; i++)
+        {
+            for (size_t j = 0; j < action.quotationSize; j++)
+            {
+                if (hex_push(*action.data.quotationValue[j]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+    }
+    hex_free_element(count);
+    hex_free_element(action);
+    return result;
+}
+
+int hex_symbol_error()
+{
+    char *message = strdup(HEX_ERROR);
+    HEX_ERROR[0] = '\0';
+    return hex_push_string(message);
+}
+
+int hex_symbol_try()
+{
+    HEX_StackElement tryBlock = hex_pop();
+    if (tryBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(tryBlock);
+        return 1;
+    }
+    HEX_StackElement catchBlock = hex_pop();
+    if (catchBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(catchBlock);
+        hex_free_element(tryBlock);
+        return 1;
+    }
+    int result = 0;
+    if (tryBlock.type != HEX_TYPE_QUOTATION || catchBlock.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'try' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        char prevError[256];
+        strncpy(prevError, HEX_ERROR, sizeof(HEX_ERROR));
+        HEX_ERROR[0] = '\0';
+
+        HEX_ERRORS = 0;
+        for (size_t i = 0; i < tryBlock.quotationSize; i++)
+        {
+            if (hex_push(*tryBlock.data.quotationValue[i]) != 0)
+            {
+                result = 1;
+                break;
+            }
+        }
+        HEX_ERRORS = 1;
+
+        if (HEX_ERROR != "")
+        {
+            for (size_t i = 0; i < catchBlock.quotationSize; i++)
+            {
+                if (hex_push(*catchBlock.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+
+        strncpy(HEX_ERROR, prevError, sizeof(HEX_ERROR));
+    }
+    hex_free_element(tryBlock);
+    hex_free_element(catchBlock);
+    return result;
+}
+
+////////////////////////////////////////
+// List symbols                       //
+////////////////////////////////////////
+
+int hex_symbol_map()
+{
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        return 1;
+    }
+    HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(list);
+        return 1;
+    }
+    int result = 0;
+    if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'map' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        HEX_StackElement **quotation = (HEX_StackElement **)malloc(list.quotationSize * sizeof(HEX_StackElement *));
+        if (!quotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            for (size_t i = 0; i < list.quotationSize; i++)
+            {
+                if (hex_push(*list.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+                for (size_t j = 0; j < action.quotationSize; j++)
+                {
+                    if (hex_push(*action.data.quotationValue[j]) != 0)
+                    {
+                        result = 1;
+                        break;
+                    }
+                }
+                quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                *quotation[i] = hex_pop();
+            }
+            result = hex_push_quotation(quotation, list.quotationSize);
+        }
+    }
+    hex_free_element(list);
+    hex_free_element(action);
+    return result;
+}
+
+int hex_symbol_filter()
+{
+    HEX_StackElement action = hex_pop();
+    if (action.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        return 1;
+    }
+    HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(action);
+        hex_free_element(list);
+        return 1;
+    }
+    int result = 0;
+    if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'filter' symbol requires two quotations");
+        result = 1;
+    }
+    else
+    {
+        HEX_StackElement **quotation = (HEX_StackElement **)malloc(list.quotationSize * sizeof(HEX_StackElement *));
+        if (!quotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            size_t count = 0;
+            for (size_t i = 0; i < list.quotationSize; i++)
+            {
+                if (hex_push(*list.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+                for (size_t j = 0; j < action.quotationSize; j++)
+                {
+                    if (hex_push(*action.data.quotationValue[j]) != 0)
+                    {
+                        result = 1;
+                        break;
+                    }
+                }
+                HEX_StackElement evalResult = hex_pop();
+                if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+                {
+                    quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                    *quotation[count] = *list.data.quotationValue[i];
+                    count++;
+                }
+                hex_free_element(evalResult);
+            }
+            result = hex_push_quotation(quotation, count);
+        }
+    }
+    hex_free_element(list);
+    hex_free_element(action);
+    return result;
+}
+
+////////////////////////////////////////
+// Stack manipulation symbols         //
+////////////////////////////////////////
+
+int hex_symbol_swap()
+{
+    HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        return 1;
+    }
+    HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        hex_free_element(a);
+        return 1;
+    }
+    int result = hex_push(a);
+    if (result == 0)
+    {
+        result = hex_push(b);
+    }
+    hex_free_element(a);
+    hex_free_element(b);
+    return result;
+}
+
+int hex_symbol_dup()
+{
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
+    int result = hex_push(element);
+    if (result == 0)
+    {
+        result = hex_push(element);
+    }
+    hex_free_element(element);
+    return result;
+}
+
+int hex_symbol_stack()
+{
+    HEX_StackElement **quotation = (HEX_StackElement **)malloc((hex_top + 1) * sizeof(HEX_StackElement *));
+    if (!quotation)
+    {
+        hex_error("Memory allocation failed");
+        return 1;
+    }
+
+    for (int i = 0; i <= hex_top; i++)
+    {
+        quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+        if (!quotation[i])
+        {
+            hex_error("Memory allocation failed");
+            return 1;
+        }
+        *quotation[i] = hex_stack[i];
+    }
+
+    return hex_push_quotation(quotation, hex_top + 1);
+}
+
+int hex_symbol_clear()
+{
+    while (hex_top >= 0)
+    {
+        hex_free_element(hex_stack[hex_top--]);
+    }
+    return 0;
+}
+
+int hex_symbol_pop()
+{
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
+    hex_free_element(element);
+    return 0;
+}
+
+////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
 
@@ -2451,6 +3015,7 @@ void hex_register_symbols()
     hex_set_native_symbol("int", hex_symbol_int);
     hex_set_native_symbol("str", hex_symbol_str);
     hex_set_native_symbol("dec", hex_symbol_dec);
+    hex_set_native_symbol("hex", hex_symbol_hex);
     hex_set_native_symbol("==", hex_symbol_equal);
     hex_set_native_symbol("!=", hex_symbol_notequal);
     hex_set_native_symbol(">", hex_symbol_greater);
@@ -2469,9 +3034,6 @@ void hex_register_symbols()
     hex_set_native_symbol("index", hex_symbol_index);
     hex_set_native_symbol("split", hex_symbol_split);
     hex_set_native_symbol("replace", hex_symbol_replace);
-    // hex_set_native_symbol("filter", hex_symbol_filter);
-    // hex_set_native_symbol("map", hex_symbol_map);
-    // hex_set_native_symbol("each", hex_symbol_each);
     hex_set_native_symbol("read", hex_symbol_read);
     hex_set_native_symbol("write", hex_symbol_write);
     hex_set_native_symbol("append", hex_symbol_append);
@@ -2479,6 +3041,19 @@ void hex_register_symbols()
     hex_set_native_symbol("exit", hex_symbol_exit);
     hex_set_native_symbol("exec", hex_symbol_exec);
     hex_set_native_symbol("run", hex_symbol_run);
+    hex_set_native_symbol("when", hex_symbol_when);
+    hex_set_native_symbol("unless", hex_symbol_unless);
+    hex_set_native_symbol("while", hex_symbol_while);
+    hex_set_native_symbol("each", hex_symbol_each);
+    hex_set_native_symbol("times", hex_symbol_times);
+    hex_set_native_symbol("error", hex_symbol_error);
+    hex_set_native_symbol("try", hex_symbol_try);
+    hex_set_native_symbol("map", hex_symbol_map);
+    hex_set_native_symbol("filter", hex_symbol_filter);
+    hex_set_native_symbol("swap", hex_symbol_swap);
+    hex_set_native_symbol("dup", hex_symbol_dup);
+    hex_set_native_symbol("stack", hex_symbol_stack);
+    hex_set_native_symbol("clear", hex_symbol_clear);
 }
 
 ////////////////////////////////////////
