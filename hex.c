@@ -359,58 +359,51 @@ typedef struct
 } HEX_Token;
 
 // Process a token from the input
-HEX_Token *hex_next_token(const char **input)
-{
+HEX_Token *hex_next_token(const char **input) {
     const char *ptr = *input;
 
+    // Static balance counter to track nested quotations
+    static int quotation_balance = 0;
+
     // Skip whitespace and comments
-    while (isspace(*ptr) || *ptr == ';')
-    {
-        if (*ptr == ';')
-        {
-            while (*ptr != '\0' && *ptr != '\n')
-            {
+    while (isspace(*ptr) || *ptr == ';') {
+        if (*ptr == ';') {
+            while (*ptr != '\0' && *ptr != '\n') {
                 ptr++;
             }
         }
         ptr++;
     }
 
-    if (*ptr == '\0')
-    {
+    if (*ptr == '\0') {
+        if (quotation_balance != 0) {
+            hex_error("Unbalanced quotations at end of input");
+        }
         return NULL; // End of input
     }
 
     HEX_Token *token = (HEX_Token *)malloc(sizeof(HEX_Token));
     token->value = NULL;
 
-    if (*ptr == '"')
-    {
+    if (*ptr == '"') {
         // String token
         ptr++;
         const char *start = ptr;
         size_t len = 0;
 
-        while (*ptr != '\0')
-        {
-            if (*ptr == '\\' && *(ptr + 1) == '"')
-            {
+        while (*ptr != '\0') {
+            if (*ptr == '\\' && *(ptr + 1) == '"') {
                 ptr += 2;
                 len++;
-            }
-            else if (*ptr == '"')
-            {
+            } else if (*ptr == '"') {
                 break;
-            }
-            else
-            {
+            } else {
                 ptr++;
                 len++;
             }
         }
 
-        if (*ptr != '"')
-        {
+        if (*ptr != '"') {
             hex_error("Unterminated string");
             token->type = HEX_TOKEN_INVALID;
             return token;
@@ -420,29 +413,22 @@ HEX_Token *hex_next_token(const char **input)
         char *dst = token->value;
 
         ptr = start;
-        while (*ptr != '\0' && *ptr != '"')
-        {
-            if (*ptr == '\\' && *(ptr + 1) == '"')
-            {
+        while (*ptr != '\0' && *ptr != '"') {
+            if (*ptr == '\\' && *(ptr + 1) == '"') {
                 *dst++ = '"';
                 ptr += 2;
-            }
-            else
-            {
+            } else {
                 *dst++ = *ptr++;
             }
         }
         *dst = '\0';
         ptr++;
         token->type = HEX_TOKEN_STRING;
-    }
-    else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0)
-    {
+    } else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0) {
         // Hexadecimal integer token
         const char *start = ptr;
         ptr += 2; // Skip the "0x" prefix
-        while (isxdigit(*ptr))
-        {
+        while (isxdigit(*ptr)) {
             ptr++;
         }
         size_t len = ptr - start;
@@ -450,19 +436,25 @@ HEX_Token *hex_next_token(const char **input)
         strncpy(token->value, start, len);
         token->value[len] = '\0';
         token->type = HEX_TOKEN_NUMBER;
-    }
-    else if (*ptr == '(') {
+    } else if (*ptr == '(') {
+        // Quotation start
+        quotation_balance++;
         token->type = HEX_TOKEN_QUOTATION_START;
         ptr++;
     } else if (*ptr == ')') {
+        // Quotation end
+        if (quotation_balance == 0) {
+            hex_error("Unexpected closing parenthesis");
+            token->type = HEX_TOKEN_INVALID;
+            return token;
+        }
+        quotation_balance--;
         token->type = HEX_TOKEN_QUOTATION_END;
         ptr++;
-    }
-    else
-    {
+    } else {
+        // Symbol token
         const char *start = ptr;
-        while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';' && *ptr != '(' && *ptr != ')' && *ptr != '"')
-        {
+        while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';' && *ptr != '(' && *ptr != ')' && *ptr != '"') {
             ptr++;
         }
         size_t len = ptr - start;
@@ -500,13 +492,14 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
     HEX_Token *token;
     while ((token = hex_next_token(input)) != NULL) {
         if (token->type == HEX_TOKEN_QUOTATION_END) {
-            hex_free_token(token);
             balance--;
             if (balance < 0) {
-                hex_error("Unexpected quotation end");
+                hex_error("Unexpected closing parenthesis");
+                hex_free_token(token);
                 free(quotation);
                 return 1;
             }
+            hex_free_token(token);
             break;
         }
 
@@ -530,8 +523,8 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
             element->type = HEX_TYPE_USER_SYMBOL;
             element->symbolName = strdup(token->value);
         } else if (token->type == HEX_TOKEN_QUOTATION_START) {
-            element->type = HEX_TYPE_QUOTATION;
             balance++;
+            element->type = HEX_TYPE_QUOTATION;
             if (hex_parse_quotation(input, element, balance) != 0) {
                 hex_free_token(token);
                 free(quotation);
@@ -550,7 +543,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
     }
 
     if (balance != 0) {
-        hex_error("Unbalanced quotation");
+        hex_error("Unbalanced parentheses at end of quotation");
         free(quotation);
         return 1;
     }
@@ -3112,13 +3105,13 @@ int hex_interpret(const char *code)
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            HEX_StackElement quotationElement;
+            HEX_StackElement *quotationElement =                       (HEX_StackElement *)malloc(sizeof(HEX_StackElement));    
             if (hex_parse_quotation(&input, quotationElement, 1) != 0) {
                 hex_error("Failed to parse quotation");
                 return 1;
             }
-            HEX_StackElement **quotation = quotationElement.data.quotationValue;
-            size_t quotationSize = quotationElement.quotationSize;
+            HEX_StackElement **quotation = quotationElement->data.quotationValue;
+            size_t quotationSize = quotationElement->quotationSize;
             if (hex_push_quotation(quotation, quotationSize) != 0)
             {
                 hex_free_token(token);
