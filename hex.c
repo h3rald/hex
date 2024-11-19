@@ -451,21 +451,10 @@ HEX_Token *hex_next_token(const char **input)
         token->value[len] = '\0';
         token->type = HEX_TOKEN_NUMBER;
     }
-    else if (*ptr == '(')
-    {
-        HEX_QUOTATION_BALANCE++;
+    else if (*ptr == '(') {
         token->type = HEX_TOKEN_QUOTATION_START;
         ptr++;
-    }
-    else if (*ptr == ')')
-    {
-        HEX_QUOTATION_BALANCE--;
-        if (HEX_QUOTATION_BALANCE < 0)
-        {
-            hex_error("Unexpected quotation end");
-            token->type = HEX_TOKEN_INVALID;
-            return token;
-        }
+    } else if (*ptr == ')') {
         token->type = HEX_TOKEN_QUOTATION_END;
         ptr++;
     }
@@ -497,68 +486,61 @@ void hex_free_token(HEX_Token *token)
     }
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result)
-{
+int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance) {
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
     size_t size = 0;
 
     quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
-    if (!quotation)
-    {
+    if (!quotation) {
         hex_error("Memory allocation failed");
         return 1;
     }
 
     HEX_Token *token;
-    while ((token = hex_next_token(input)) != NULL)
-    {
-        if (token->type == HEX_TOKEN_QUOTATION_END)
-        {
+    while ((token = hex_next_token(input)) != NULL) {
+        if (token->type == HEX_TOKEN_QUOTATION_END) {
             hex_free_token(token);
+            balance--;
+            if (balance < 0) {
+                hex_error("Unexpected quotation end");
+                free(quotation);
+                return 1;
+            }
             break;
         }
 
-        if (size >= capacity)
-        {
+        if (size >= capacity) {
             capacity *= 2;
             quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
-            if (!quotation)
-            {
+            if (!quotation) {
                 hex_error("Memory allocation failed");
                 return 1;
             }
         }
 
         HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-        if (token->type == HEX_TOKEN_NUMBER)
-        {
+        if (token->type == HEX_TOKEN_NUMBER) {
             element->type = HEX_TYPE_INTEGER;
             element->data.intValue = (int)strtol(token->value, NULL, 16);
-        }
-        else if (token->type == HEX_TOKEN_STRING)
-        {
+        } else if (token->type == HEX_TOKEN_STRING) {
             element->type = HEX_TYPE_STRING;
             element->data.strValue = strdup(token->value);
-        }
-        else if (token->type == HEX_TOKEN_SYMBOL)
-        {
+        } else if (token->type == HEX_TOKEN_SYMBOL) {
             element->type = HEX_TYPE_USER_SYMBOL;
             element->symbolName = strdup(token->value);
-        }
-        else if (token->type == HEX_TOKEN_QUOTATION_START)
-        {
+        } else if (token->type == HEX_TOKEN_QUOTATION_START) {
             element->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(input, element) != 0)
-            {
+            balance++;
+            if (hex_parse_quotation(input, element, balance) != 0) {
                 hex_free_token(token);
+                free(quotation);
                 return 1;
             }
-        }
-        else
-        {
+        } else {
             hex_error("Unexpected token in quotation");
             hex_free_token(token);
+            free(quotation);
             return 1;
         }
 
@@ -567,9 +549,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result)
         hex_free_token(token);
     }
 
-    if (HEX_QUOTATION_BALANCE != 0)
-    {
+    if (balance != 0) {
         hex_error("Unbalanced quotation");
+        free(quotation);
         return 1;
     }
 
@@ -577,76 +559,6 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result)
     result->data.quotationValue = quotation;
     result->quotationSize = size;
     return 0;
-}
-// Recursive quotation parsing
-HEX_StackElement **hex___parse_quotation(const char **input, size_t *size)
-{
-    HEX_StackElement **quotation = NULL;
-    size_t capacity = 2;
-    *size = 0;
-
-    quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
-    if (!quotation)
-    {
-        hex_error("Memory allocation failed");
-    }
-
-    HEX_Token *token;
-    while ((token = hex_next_token(input)) != NULL)
-    {
-        if (token->type == HEX_TOKEN_QUOTATION_END)
-        {
-            hex_free_token(token);
-            break;
-        }
-
-        if (*size >= capacity)
-        {
-            capacity *= 2;
-            quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
-            if (!quotation)
-            {
-                hex_error("Memory allocation failed");
-            }
-        }
-
-        HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-        if (token->type == HEX_TOKEN_NUMBER)
-        {
-            element->type = HEX_TYPE_INTEGER;
-            element->data.intValue = (int)strtol(token->value, NULL, 16);
-        }
-        else if (token->type == HEX_TOKEN_STRING)
-        {
-            element->type = HEX_TYPE_STRING;
-            element->data.strValue = strdup(token->value);
-        }
-        // TODO: check if non-native symbols are handled correctly
-        else if (token->type == HEX_TOKEN_SYMBOL)
-        {
-            element->type = HEX_TYPE_USER_SYMBOL;
-            element->symbolName = strdup(token->value);
-        }
-        else if (token->type == HEX_TOKEN_QUOTATION_START)
-        {
-            element->type = HEX_TYPE_QUOTATION;
-            element->data.quotationValue = hex___parse_quotation(input, &element->quotationSize);
-        }
-        else
-        {
-            hex_error("Unexpected token in quotation");
-        }
-
-        quotation[*size] = element;
-        (*size)++;
-        hex_free_token(token);
-    }
-    if (HEX_QUOTATION_BALANCE != 0)
-    {
-        hex_error("Unbalanced quotation");
-    }
-
-    return quotation;
 }
 
 ////////////////////////////////////////
@@ -3201,14 +3113,12 @@ int hex_interpret(const char *code)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             HEX_StackElement quotationElement;
-            if (hex_parse_quotation(&input, &quotationElement) != 0)
-            {
-                hex_free_token(token);
+            if (hex_parse_quotation(&input, quotationElement, 1) != 0) {
+                hex_error("Failed to parse quotation");
                 return 1;
             }
             HEX_StackElement **quotation = quotationElement.data.quotationValue;
             size_t quotationSize = quotationElement.quotationSize;
-            // HEX_StackElement **quotation = hex_parse_quotation(&input, &quotationSize);
             if (hex_push_quotation(quotation, quotationSize) != 0)
             {
                 hex_free_token(token);
