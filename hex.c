@@ -2472,6 +2472,13 @@ void hex_register_symbols()
     // hex_set_native_symbol("filter", hex_symbol_filter);
     // hex_set_native_symbol("map", hex_symbol_map);
     // hex_set_native_symbol("each", hex_symbol_each);
+    hex_set_native_symbol("read", hex_symbol_read);
+    hex_set_native_symbol("write", hex_symbol_write);
+    hex_set_native_symbol("append", hex_symbol_append);
+    hex_set_native_symbol("args", hex_symbol_args);
+    hex_set_native_symbol("exit", hex_symbol_exit);
+    hex_set_native_symbol("exec", hex_symbol_exec);
+    hex_set_native_symbol("run", hex_symbol_run);
 }
 
 ////////////////////////////////////////
