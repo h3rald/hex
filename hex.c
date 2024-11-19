@@ -16,18 +16,15 @@ int isatty(int fd)
 #include <unistd.h>
 #endif
 
-// Size of STDIN buffer (gets symbol)
 #define HEX_STDIN_BUFFER_SIZE 256
-// Global Registry for Variables
 #define HEX_REGISTRY_SIZE 1024
-// Stack Definition
 #define HEX_STACK_SIZE 100
 
 int HEX_DEBUG = 0;
 char HEX_ERROR[256] = "";
 char **HEX_ARGV;
 int HEX_ARGC = 0;
-volatile sig_atomic_t hex_keep_running = 1;
+volatile sig_atomic_t HEX_KEEP_RUNNING = 1;
 int HEX_ERRORS = 1;
 
 void hex_error(const char *format, ...)
@@ -349,7 +346,8 @@ typedef enum
     HEX_TOKEN_STRING,
     HEX_TOKEN_SYMBOL,
     HEX_TOKEN_QUOTATION_START,
-    HEX_TOKEN_QUOTATION_END
+    HEX_TOKEN_QUOTATION_END,
+    HEX_TOKEN_INVALID
 } HEX_TokenType;
 
 typedef struct
@@ -412,6 +410,8 @@ HEX_Token *hex_next_token(const char **input)
         if (*ptr != '"')
         {
             hex_error("Unterminated string");
+            token->type = HEX_TOKEN_INVALID;
+            return token;
         }
 
         token->value = (char *)malloc(len + 1);
@@ -2273,7 +2273,7 @@ int hex_symbol_args()
 
 int hex_symbol_exit()
 {
-    hex_keep_running = 0;
+    HEX_KEEP_RUNNING = 0;
     return 0;
 }
 
@@ -3063,9 +3063,9 @@ void hex_register_symbols()
 int hex_interpret(const char *code)
 {
     const char *input = code;
-    HEX_Token *token;
+    HEX_Token *token = hex_next_token(&input);
 
-    while ((token = hex_next_token(&input)) != NULL)
+    while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
         if (token->type == HEX_TOKEN_NUMBER)
         {
@@ -3113,8 +3113,9 @@ int hex_interpret(const char *code)
                 return 1;
             }
         }
-        hex_free_token(token);
+        token = hex_next_token(&input);
     }
+    hex_free_token(token);
 }
 
 // Read a file into a buffer
@@ -3150,7 +3151,7 @@ void hex_repl()
 
     printf("hex Interactive REPL. Type 'exit' to quit or press Ctrl+C.\n");
 
-    while (hex_keep_running)
+    while (HEX_KEEP_RUNNING)
     {
         printf("> "); // Prompt
         if (fgets(line, sizeof(line), stdin) == NULL)
@@ -3182,7 +3183,7 @@ void hex_repl()
 void hex_handle_sigint(int sig)
 {
     (void)sig; // Suppress unused warning
-    hex_keep_running = 0;
+    HEX_KEEP_RUNNING = 0;
     printf("\nExiting hex REPL. Goodbye!\n");
 }
 
