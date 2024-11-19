@@ -610,7 +610,7 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
         fprintf(stream, "%s", element.symbolName);
         break;
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s",  element.symbolName);
+        fprintf(stream, "%s", element.symbolName);
         break;
     case HEX_TYPE_QUOTATION:
     {
@@ -642,26 +642,43 @@ int hex_is_symbol(HEX_Token *token, char *value)
 int hex_symbol_store()
 {
     HEX_StackElement name = hex_pop();
+    if (name.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(name);
+        return 1;
+    }
+    int result = 0;
     HEX_StackElement value = hex_pop();
-    if (name.type != HEX_TYPE_STRING)
+    if (value.type == HEX_TYPE_INVALID)
+    {
+        result = 1;
+    }
+    else if (name.type != HEX_TYPE_STRING)
     {
         hex_error("Symbol name must be a string");
-        return 1;
+        result = 1;
     }
-    if (hex_set_symbol(name.data.strValue, value, 0))
+    else if (hex_set_symbol(name.data.strValue, value, 0) != 0)
     {
         hex_error("Failed to store variable");
-        return 1;
+        result = 1;
     }
     hex_free_element(name);
-    return 0;
+    hex_free_element(value);
+    return result;
 }
 
 int hex_symbol_free()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     if (element.type != HEX_TYPE_STRING)
     {
+        hex_free_element(element);
         hex_error("Variable name must be a string");
         return 1;
     }
@@ -687,6 +704,11 @@ int hex_symbol_free()
 int hex_symbol_type()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     int result = 0;
     result = hex_push_string(hex_type(element.type));
     hex_free_element(element);
@@ -698,9 +720,15 @@ int hex_symbol_type()
 int hex_symbol_i()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     int result = 0;
     if (element.type != HEX_TYPE_QUOTATION)
     {
+        hex_free_element(element);
         hex_error("'i' symbol requires a quotation");
         result = 1;
     }
@@ -708,6 +736,7 @@ int hex_symbol_i()
     {
         if (hex_push(*element.data.quotationValue[i]) != 0)
         {
+            hex_free_element(element);
             result = 1;
             break;
         }
@@ -722,9 +751,15 @@ int hex_interpret(const char *code);
 int hex_symbol_eval()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     int result = 0;
     if (element.type != HEX_TYPE_STRING)
     {
+        hex_free_element(element);
         hex_error("'eval' symbol requires a string");
         result = 1;
     }
@@ -738,6 +773,11 @@ int hex_symbol_eval()
 int hex_symbol_puts()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     hex_print_element(stdout, element);
     printf("\n");
     hex_free_element(element);
@@ -747,6 +787,11 @@ int hex_symbol_puts()
 int hex_symbol_warn()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     hex_print_element(stderr, element);
     printf("\n");
     hex_free_element(element);
@@ -756,6 +801,11 @@ int hex_symbol_warn()
 int hex_symbol_print()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     hex_print_element(stdout, element);
     hex_free_element(element);
     return 0;
@@ -784,7 +834,18 @@ int hex_symbol_gets()
 int hex_symbol_add()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -803,7 +864,18 @@ int hex_symbol_add()
 int hex_symbol_subtract()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -822,7 +894,18 @@ int hex_symbol_subtract()
 int hex_symbol_multiply()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -840,7 +923,18 @@ int hex_symbol_multiply()
 int hex_symbol_divide()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -864,13 +958,24 @@ int hex_symbol_divide()
 
 int hex_symbol_bitand()
 {
-    HEX_StackElement right = hex_pop(); // Pop the second operand
-    HEX_StackElement left = hex_pop();  // Pop the first operand
+    HEX_StackElement right = hex_pop();
+    if (right.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(right);
+        return 1;
+    }
+    HEX_StackElement left = hex_pop();
+    if (left.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(left);
+        hex_free_element(right);
+        return 1;
+    }
     int result = 0;
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        int value = left.data.intValue & right.data.intValue; // Bitwise AND
-        result = hex_push_int(value);                         // Push the result back onto the stack
+        int value = left.data.intValue & right.data.intValue;
+        result = hex_push_int(value);
     }
     else
     {
@@ -885,11 +990,22 @@ int hex_symbol_bitand()
 int hex_symbol_bitor()
 {
     HEX_StackElement right = hex_pop();
+    if (right.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(right);
+        return 1;
+    }
     HEX_StackElement left = hex_pop();
+    if (left.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(left);
+        hex_free_element(right);
+        return 1;
+    }
     int result = 0;
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        int value = left.data.intValue | right.data.intValue; // Bitwise OR
+        int value = left.data.intValue | right.data.intValue;
         result = hex_push_int(value);
     }
     else
@@ -905,11 +1021,22 @@ int hex_symbol_bitor()
 int hex_symbol_bitxor()
 {
     HEX_StackElement right = hex_pop();
+    if (right.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(right);
+        return 1;
+    }
     HEX_StackElement left = hex_pop();
+    if (left.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(left);
+        hex_free_element(right);
+        return 1;
+    }
     int result = 0;
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        int value = left.data.intValue ^ right.data.intValue; // Bitwise XOR
+        int value = left.data.intValue ^ right.data.intValue;
         result = hex_push_int(value);
     }
     else
@@ -924,12 +1051,23 @@ int hex_symbol_bitxor()
 
 int hex_symbol_shiftleft()
 {
-    HEX_StackElement right = hex_pop(); // The number of positions to shift
-    HEX_StackElement left = hex_pop();  // The value to shift
+    HEX_StackElement right = hex_pop();
+    if (right.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(right);
+        return 1;
+    }
+    HEX_StackElement left = hex_pop();
+    if (left.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(left);
+        hex_free_element(right);
+        return 1;
+    }
     int result = 0;
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        int value = left.data.intValue << right.data.intValue; // Left shift
+        int value = left.data.intValue << right.data.intValue;
         result = hex_push_int(value);
     }
     else
@@ -944,12 +1082,23 @@ int hex_symbol_shiftleft()
 
 int hex_symbol_shiftright()
 {
-    HEX_StackElement right = hex_pop(); // The number of positions to shift
-    HEX_StackElement left = hex_pop();  // The value to shift
+    HEX_StackElement right = hex_pop();
+    if (right.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(right);
+        return 1;
+    }
+    HEX_StackElement left = hex_pop();
+    if (left.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(left);
+        hex_free_element(right);
+        return 1;
+    }
     int result = 0;
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        int value = left.data.intValue >> right.data.intValue; // Right shift
+        int value = left.data.intValue >> right.data.intValue;
         result = hex_push_int(value);
     }
     else
@@ -964,11 +1113,16 @@ int hex_symbol_shiftright()
 
 int hex_symbol_bitnot()
 {
-    HEX_StackElement element = hex_pop(); // Only one operand for bitwise NOT
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     int result = 0;
     if (element.type == HEX_TYPE_INTEGER)
     {
-        int value = ~element.data.intValue; // Bitwise NOT (complement)
+        int value = ~element.data.intValue;
         result = hex_push_int(value);
     }
     else
@@ -985,6 +1139,11 @@ int hex_symbol_bitnot()
 int hex_symbol_int()
 {
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_QUOTATION)
     {
@@ -1006,6 +1165,11 @@ int hex_symbol_int()
 int hex_symbol_str()
 {
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_QUOTATION)
     {
@@ -1027,6 +1191,11 @@ int hex_symbol_str()
 int hex_symbol_dec()
 {
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER)
     {
@@ -1079,7 +1248,18 @@ int hex_equal(HEX_StackElement a, HEX_StackElement b)
 int hex_symbol_equal()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if ((a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER) || (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING) || (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION))
     {
@@ -1098,7 +1278,18 @@ int hex_symbol_equal()
 int hex_symbol_notequal()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if ((a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER) || (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING) || (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION))
     {
@@ -1117,7 +1308,18 @@ int hex_symbol_notequal()
 int hex_symbol_greater()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1140,7 +1342,18 @@ int hex_symbol_greater()
 int hex_symbol_less()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1163,7 +1376,18 @@ int hex_symbol_less()
 int hex_symbol_greaterequal()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1186,7 +1410,18 @@ int hex_symbol_greaterequal()
 int hex_symbol_lessequal()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1211,7 +1446,18 @@ int hex_symbol_lessequal()
 int hex_symbol_and()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1230,7 +1476,18 @@ int hex_symbol_and()
 int hex_symbol_or()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1249,6 +1506,11 @@ int hex_symbol_or()
 int hex_symbol_not()
 {
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER)
     {
@@ -1266,7 +1528,18 @@ int hex_symbol_not()
 int hex_symbol_xor()
 {
     HEX_StackElement b = hex_pop();
+    if (b.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(b);
+        return 1;
+    }
     HEX_StackElement a = hex_pop();
+    if (a.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(a);
+        hex_free_element(b);
+        return 1;
+    }
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
@@ -1283,13 +1556,24 @@ int hex_symbol_xor()
 }
 
 ////////////////////////////////////////
-// Quotation/String symbols                      //
+// Quotation/String symbols           //
 ////////////////////////////////////////
 
 int hex_symbol_join()
 {
     HEX_StackElement value = hex_pop();
+    if (value.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(value);
+        return 1;
+    }
     HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(value);
+        return 1;
+    }
     int result = 0;
     if (list.type == HEX_TYPE_QUOTATION)
     {
@@ -1336,8 +1620,26 @@ int hex_symbol_join()
 int hex_symbol_slice()
 {
     HEX_StackElement end = hex_pop();
+    if (end.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(end);
+        return 1;
+    }
     HEX_StackElement start = hex_pop();
+    if (start.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(start);
+        hex_free_element(end);
+        return 1;
+    }
     HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(start);
+        hex_free_element(end);
+        return 1;
+    }
     int result = 0;
     if (list.type == HEX_TYPE_QUOTATION)
     {
@@ -1411,6 +1713,11 @@ int hex_symbol_slice()
 int hex_symbol_len()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     int result = 0;
     if (element.type == HEX_TYPE_QUOTATION)
     {
@@ -1432,7 +1739,18 @@ int hex_symbol_len()
 int hex_symbol_get()
 {
     HEX_StackElement index = hex_pop();
+    if (index.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(index);
+        return 1;
+    }
     HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(index);
+        return 1;
+    }
     int result = 0;
     if (list.type == HEX_TYPE_QUOTATION)
     {
@@ -1480,8 +1798,26 @@ int hex_symbol_get()
 int hex_symbol_set()
 {
     HEX_StackElement value = hex_pop();
+    if (value.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(value);
+        return 1;
+    }
     HEX_StackElement index = hex_pop();
+    if (index.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(index);
+        hex_free_element(value);
+        return 1;
+    }
     HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(index);
+        hex_free_element(value);
+        return 1;
+    }
     int result = 0;
     if (list.type == HEX_TYPE_QUOTATION)
     {
@@ -1531,7 +1867,18 @@ int hex_symbol_set()
 int hex_symbol_index()
 {
     HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
     HEX_StackElement list = hex_pop();
+    if (list.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(list);
+        hex_free_element(element);
+        return 1;
+    }
     int result = -1;
     if (list.type == HEX_TYPE_QUOTATION)
     {
