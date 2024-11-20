@@ -289,14 +289,14 @@ int hex_push_int(int value)
     return hex_push(element);
 }
 
-int hex_push_string(const char *value)
+char *hex_process_string(const char *value)
 {
     size_t len = strlen(value);
     char *processedStr = (char *)malloc(len + 1);
     if (!processedStr)
     {
         hex_error("Memory allocation failed");
-        return 1;
+        return (char *)value;
     }
 
     char *dst = processedStr;
@@ -345,7 +345,12 @@ int hex_push_string(const char *value)
         src++;
     }
     *dst = '\0';
+    return processedStr;
+}
 
+int hex_push_string(const char *value)
+{
+    char *processedStr = hex_process_string(value);
     HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
     return hex_push(element);
 }
@@ -717,8 +722,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
+            char *processedStr = hex_process_string(token->value);
             element->type = HEX_TYPE_STRING;
-            element->data.strValue = strdup(token->value);
+            element->data.strValue = strdup(processedStr);
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
