@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <time.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
@@ -333,7 +334,6 @@ void hex_debug_element(const char *message, HEX_StackElement element)
     {
         fprintf(stdout, "*** %s: ", message);
         hex_print_element(stdout, element);
-        // printf(" [%s]", hex_type(element.type));
         fprintf(stdout, "\n");
     }
 }
@@ -739,28 +739,72 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     case HEX_TYPE_INTEGER:
         fprintf(stream, "0x%x", element.data.intValue);
         break;
+
     case HEX_TYPE_STRING:
-        fprintf(stream, "\"%s\"", element.data.strValue);
+        fprintf(stream, "\"");
+        for (char *c = element.data.strValue; *c != '\0'; c++)
+        {
+            switch (*c)
+            {
+            case '\n':
+                fprintf(stream, "\\n");
+                break;
+            case '\t':
+                fprintf(stream, "\\t");
+                break;
+            case '\r':
+                fprintf(stream, "\\r");
+                break;
+            case '\b':
+                fprintf(stream, "\\b");
+                break;
+            case '\f':
+                fprintf(stream, "\\f");
+                break;
+            case '\v':
+                fprintf(stream, "\\v");
+                break;
+            case '\\':
+                fprintf(stream, "\\\\");
+                break;
+            case '\"':
+                fprintf(stream, "\\\"");
+                break;
+            default:
+                if ((unsigned char)*c < 32 || (unsigned char)*c > 126)
+                {
+                    // Escape non-printable characters as hex (e.g., \x1F)
+                    fprintf(stream, "\\x%02x", (unsigned char)*c);
+                }
+                else
+                {
+                    fputc(*c, stream);
+                }
+                break;
+            }
+        }
+        fprintf(stream, "\"");
         break;
+
     case HEX_TYPE_USER_SYMBOL:
-        fprintf(stream, "%s", element.symbolName);
-        break;
     case HEX_TYPE_NATIVE_SYMBOL:
         fprintf(stream, "%s", element.symbolName);
         break;
+
     case HEX_TYPE_QUOTATION:
-    {
         fprintf(stream, "(");
         for (size_t i = 0; i < element.quotationSize; i++)
         {
             if (i > 0)
-                fprintf(stream, " "); // Add space between elements
+                fprintf(stream, " ");
             hex_print_element(stream, *element.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
-    }
+
     default:
+        fprintf(stream, "<unknown>");
+        break;
     }
 }
 
@@ -2108,7 +2152,7 @@ int hex_symbol_index()
 // String symbols                     //
 ////////////////////////////////////////
 
-int hex_symbol_split()
+int hex_symbol_join()
 {
     HEX_StackElement separator = hex_pop();
     if (separator.type == HEX_TYPE_INVALID)
@@ -2124,19 +2168,108 @@ int hex_symbol_split()
         return 1;
     }
     int result = 0;
-    if (list.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
+    if (list.type == HEX_TYPE_QUOTATION && separator.type == HEX_TYPE_STRING)
     {
-        char *str = list.data.strValue;
-        char *sep = separator.data.strValue;
-        char *token = strtok(str, sep);
-        while (token)
+        size_t length = 0;
+        for (size_t i = 0; i < list.quotationSize; i++)
         {
-            result = hex_push_string(token);
-            if (result != 0)
+            if (list.data.quotationValue[i]->type == HEX_TYPE_STRING)
             {
+                length += strlen(list.data.quotationValue[i]->data.strValue);
+            }
+            else
+            {
+                hex_error("Quotation must contain only strings");
+                result = 1;
                 break;
             }
-            token = strtok(NULL, sep);
+        }
+        if (result == 0)
+        {
+            length += (list.quotationSize - 1) * strlen(separator.data.strValue);
+            char *newStr = (char *)malloc(length + 1);
+            if (!newStr)
+            {
+                hex_error("Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                newStr[0] = '\0';
+                for (size_t i = 0; i < list.quotationSize; i++)
+                {
+                    strcat(newStr, list.data.quotationValue[i]->data.strValue);
+                    if (i < list.quotationSize - 1)
+                    {
+                        strcat(newStr, separator.data.strValue);
+                    }
+                }
+                result = hex_push_string(newStr);
+            }
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'join' requires a quotation and a string");
+        result = 1;
+    }
+    hex_free_element(list);
+    hex_free_element(separator);
+    return result;
+}
+
+int hex_symbol_split()
+{
+    HEX_StackElement separator = hex_pop();
+    if (separator.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(separator);
+        return 1;
+    }
+    HEX_StackElement str = hex_pop();
+    if (str.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(str);
+        hex_free_element(separator);
+        return 1;
+    }
+    int result = 0;
+    if (str.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
+    {
+        char *token = strtok(str.data.strValue, separator.data.strValue);
+        size_t capacity = 2;
+        size_t size = 0;
+        HEX_StackElement **quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
+        if (!quotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            while (token)
+            {
+                if (size >= capacity)
+                {
+                    capacity *= 2;
+                    quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
+                    if (!quotation)
+                    {
+                        hex_error("Memory allocation failed");
+                        result = 1;
+                        break;
+                    }
+                }
+                quotation[size] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                quotation[size]->type = HEX_TYPE_STRING;
+                quotation[size]->data.strValue = strdup(token);
+                size++;
+                token = strtok(NULL, separator.data.strValue);
+            }
+            if (result == 0)
+            {
+                result = hex_push_quotation(quotation, size);
+            }
         }
     }
     else
@@ -2144,7 +2277,7 @@ int hex_symbol_split()
         hex_error("Symbol 'split' requires two strings");
         result = 1;
     }
-    hex_free_element(list);
+    hex_free_element(str);
     hex_free_element(separator);
     return result;
 }
@@ -2592,6 +2725,76 @@ int hex_symbol_run()
 ////////////////////////////////////////
 // Control flow symbols               //
 ////////////////////////////////////////
+
+int hex_symbol_if()
+{
+    HEX_StackElement elseBlock = hex_pop();
+    if (elseBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(elseBlock);
+        return 1;
+    }
+    HEX_StackElement thenBlock = hex_pop();
+    if (thenBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(elseBlock);
+        hex_free_element(thenBlock);
+        return 1;
+    }
+    HEX_StackElement condition = hex_pop();
+    if (condition.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(elseBlock);
+        hex_free_element(thenBlock);
+        hex_free_element(condition);
+        return 1;
+    }
+    int result = 0;
+    if (condition.type != HEX_TYPE_QUOTATION || thenBlock.type != HEX_TYPE_QUOTATION || elseBlock.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'if' symbol requires three quotations");
+        result = 1;
+    }
+    else
+    {
+        for (size_t i = 0; i < condition.quotationSize; i++)
+        {
+            if (hex_push(*condition.data.quotationValue[i]) != 0)
+            {
+                result = 1;
+                break;
+            }
+        }
+        HEX_StackElement evalResult = hex_pop();
+        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+        {
+            for (size_t i = 0; i < thenBlock.quotationSize; i++)
+            {
+                if (hex_push(*thenBlock.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < elseBlock.quotationSize; i++)
+            {
+                if (hex_push(*elseBlock.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+        hex_free_element(evalResult);
+    }
+    hex_free_element(condition);
+    hex_free_element(thenBlock);
+    hex_free_element(elseBlock);
+    return result;
+}
 
 int hex_symbol_when()
 {
@@ -3113,6 +3316,15 @@ int hex_symbol_pop()
 }
 
 ////////////////////////////////////////
+// Time symbols                       //
+////////////////////////////////////////
+
+int hex_symbol_timestamp()
+{
+    return hex_push_int((int)time(NULL));
+}
+
+////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
 
@@ -3158,6 +3370,7 @@ void hex_register_symbols()
     hex_set_native_symbol("get", hex_symbol_get);
     hex_set_native_symbol("set", hex_symbol_set);
     hex_set_native_symbol("index", hex_symbol_index);
+    hex_set_native_symbol("join", hex_symbol_join);
     hex_set_native_symbol("split", hex_symbol_split);
     hex_set_native_symbol("replace", hex_symbol_replace);
     hex_set_native_symbol("read", hex_symbol_read);
@@ -3167,6 +3380,7 @@ void hex_register_symbols()
     hex_set_native_symbol("exit", hex_symbol_exit);
     hex_set_native_symbol("exec", hex_symbol_exec);
     hex_set_native_symbol("run", hex_symbol_run);
+    hex_set_native_symbol("if", hex_symbol_if);
     hex_set_native_symbol("when", hex_symbol_when);
     hex_set_native_symbol("unless", hex_symbol_unless);
     hex_set_native_symbol("while", hex_symbol_while);
@@ -3180,6 +3394,8 @@ void hex_register_symbols()
     hex_set_native_symbol("dup", hex_symbol_dup);
     hex_set_native_symbol("stack", hex_symbol_stack);
     hex_set_native_symbol("clear", hex_symbol_clear);
+    hex_set_native_symbol("pop", hex_symbol_pop);
+    hex_set_native_symbol("timestamp", hex_symbol_timestamp);
 }
 
 ////////////////////////////////////////
