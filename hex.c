@@ -247,12 +247,12 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 void hex_debug_element(const char *message, HEX_StackElement element);
 
 HEX_StackElement hex_stack[HEX_STACK_SIZE];
-int hex_top = -1;
+int HEX_TOP = -1;
 
 // Push functions
 int hex_push(HEX_StackElement element)
 {
-    if (hex_top >= HEX_STACK_SIZE - 1)
+    if (HEX_TOP >= HEX_STACK_SIZE - 1)
     {
         hex_error("Stack overflow");
         return 1;
@@ -279,7 +279,7 @@ int hex_push(HEX_StackElement element)
     {
         return element.data.functionPointer();
     }
-    hex_stack[++hex_top] = element;
+    hex_stack[++HEX_TOP] = element;
     return 0;
 }
 
@@ -378,13 +378,13 @@ int hex_push_symbol(const char *name)
 // Pop function
 HEX_StackElement hex_pop()
 {
-    if (hex_top < 0)
+    if (HEX_TOP < 0)
     {
         hex_error("Insufficient elements on the stack");
         return (HEX_StackElement){.type = HEX_TYPE_INVALID};
     }
-    hex_debug_element(" POP", hex_stack[hex_top]);
-    return hex_stack[hex_top--];
+    hex_debug_element(" POP", hex_stack[HEX_TOP]);
+    return hex_stack[HEX_TOP--];
 }
 
 // Free a stack element
@@ -3361,14 +3361,14 @@ int hex_symbol_dup()
 
 int hex_symbol_stack()
 {
-    HEX_StackElement **quotation = (HEX_StackElement **)malloc((hex_top + 1) * sizeof(HEX_StackElement *));
+    HEX_StackElement **quotation = (HEX_StackElement **)malloc((HEX_TOP + 1) * sizeof(HEX_StackElement *));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
         return 1;
     }
 
-    for (int i = 0; i <= hex_top; i++)
+    for (int i = 0; i <= HEX_TOP; i++)
     {
         quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
         if (!quotation[i])
@@ -3379,14 +3379,14 @@ int hex_symbol_stack()
         *quotation[i] = hex_stack[i];
     }
 
-    return hex_push_quotation(quotation, hex_top + 1);
+    return hex_push_quotation(quotation, HEX_TOP + 1);
 }
 
 int hex_symbol_clear()
 {
-    while (hex_top >= 0)
+    while (HEX_TOP >= 0)
     {
-        hex_free_element(hex_stack[hex_top--]);
+        hex_free_element(hex_stack[HEX_TOP--]);
     }
     return 0;
 }
@@ -3585,9 +3585,9 @@ void hex_repl()
         // Tokenize and process the input
         hex_interpret(line, "<repl>", 1, 1);
         // Print the top element of the stack
-        if (hex_top >= 0)
+        if (HEX_TOP >= 0)
         {
-            hex_print_element(stdout, hex_stack[hex_top]);
+            hex_print_element(stdout, hex_stack[HEX_TOP]);
             printf("\n");
         }
     }
