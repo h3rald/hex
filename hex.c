@@ -4,7 +4,6 @@
 #include <ctype.h>
 #include <signal.h>
 #include <stdarg.h>
-#include <time.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
@@ -29,7 +28,72 @@ char **HEX_ARGV;
 int HEX_ARGC = 0;
 volatile sig_atomic_t HEX_KEEP_RUNNING = 1;
 int HEX_ERRORS = 1;
-int HEX_QUOTATION_BALANCE = 0;
+
+char *HEX_NATIVE_SYMBOLS[] = {
+    "store",
+    "free",
+    "type",
+    "i",
+    "eval",
+    "puts",
+    "warn",
+    "print",
+    "gets",
+    "+",
+    "-",
+    "*",
+    "/",
+    "%",
+    "&",
+    "|",
+    "^",
+    "~",
+    "<<",
+    ">>",
+    "int",
+    "str",
+    "dec",
+    "hex",
+    "==",
+    "!=",
+    ">",
+    "<",
+    ">=",
+    "<=",
+    "and",
+    "or",
+    "not",
+    "xor",
+    "concat",
+    "slice",
+    "len",
+    "get",
+    "set",
+    "index",
+    "join",
+    "split",
+    "replace",
+    "read",
+    "write",
+    "append",
+    "args",
+    "exit",
+    "exec",
+    "run",
+    "when",
+    "unless",
+    "while",
+    "each",
+    "times",
+    "error",
+    "try",
+    "map",
+    "filter",
+    "swap",
+    "dup",
+    "stack",
+    "clear",
+    "pop"};
 
 void hex_error(const char *format, ...)
 {
@@ -54,14 +118,6 @@ typedef enum
     HEX_TYPE_USER_SYMBOL,
     HEX_TYPE_INVALID
 } HEX_ElementType;
-
-char *HEX_TOKEN_TYPES[] = {
-    "integer",
-    "string",
-    "quotation",
-    "native symbol",
-    "user symbol",
-    "invalid"};
 
 // Unified Stack Element
 typedef struct HEX_StackElement
@@ -94,35 +150,35 @@ int hex_dictCount = 0;
 
 void hex_free_element(HEX_StackElement element);
 
-int hex_valid_symbol(const char *symbol)
+int hex_valid_user_symbol(const char *symbol)
 {
     // Check that key starts with a letter, or underscore
     // and subsequent characters (if any) are letters, numbers, or underscores
     if (strlen(symbol) == 0)
     {
         hex_error("Symbol name cannot be an empty string");
-        return 1;
+        return 0;
     }
     if (!isalpha(symbol[0]) && symbol[0] != '_')
     {
-        hex_error("Invalid symbol name: %s", symbol);
-        return 1;
+        hex_error("Invalid symbol: %s", symbol);
+        return 0;
     }
     for (int j = 1; j < strlen(symbol); j++)
     {
         if (!isalnum(symbol[j]) && symbol[j] != '_')
         {
-            hex_error("Invalid symbol name: %s", symbol);
-            return 1;
+            hex_error("Invalid symbol: %s", symbol);
+            return 0;
         }
     }
-    return 0;
+    return 1;
 }
 
 // Add a symbol to the registry
 int hex_set_symbol(const char *key, HEX_StackElement value, int native)
 {
-    if (!native && hex_valid_symbol(key) != 0)
+    if (!native && hex_valid_user_symbol(key) == 0)
     {
         return 1;
     }
@@ -209,14 +265,7 @@ int hex_push(HEX_StackElement element)
         int result = 0;
         if (hex_get_symbol(element.symbolName, &value))
         {
-            if (value.type == HEX_TYPE_NATIVE_SYMBOL)
-            {
-                result = value.data.functionPointer();
-            }
-            else
-            {
-                result = hex_push(value);
-            }
+            result = hex_push(value);
         }
         else
         {
@@ -326,9 +375,9 @@ char *hex_type(HEX_ElementType type)
     case HEX_TYPE_QUOTATION:
         return "quotation";
     case HEX_TYPE_NATIVE_SYMBOL:
-        return "symbol";
+        return "native symbol";
     case HEX_TYPE_USER_SYMBOL:
-        return "symbol";
+        return "user symbol";
     case HEX_TYPE_INVALID:
         return "invalid";
     default:
@@ -371,6 +420,8 @@ typedef struct
 } HEX_Token;
 
 void add_to_stack_trace(HEX_Token *token);
+
+int hex_valid_native_symbol(char *symbol);
 
 // Process a token from the input
 HEX_Token *hex_next_token(const char **input, int *line, int *column)
@@ -521,11 +572,19 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
             ptr++;
             (*column)++;
         }
+
         size_t len = ptr - start;
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
-        token->type = HEX_TOKEN_SYMBOL;
+        if (hex_valid_native_symbol(token->value) || hex_valid_user_symbol(token->value))
+        {
+            token->type = HEX_TOKEN_SYMBOL;
+        }
+        else
+        {
+            token->type = HEX_TOKEN_INVALID;
+        }
     }
 
     *input = ptr;
@@ -540,6 +599,18 @@ void hex_free_token(HEX_Token *token)
         free(token->value);
         free(token);
     }
+}
+
+int hex_valid_native_symbol(char *symbol)
+{
+    for (size_t i = 0; i < sizeof(HEX_NATIVE_SYMBOLS) / sizeof(HEX_NATIVE_SYMBOLS[0]); i++)
+    {
+        if (strcmp(symbol, HEX_NATIVE_SYMBOLS[i]) == 0)
+        {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, const char *filename, int *line, int *column)
@@ -596,7 +667,14 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            element->type = HEX_TYPE_USER_SYMBOL;
+            if (hex_valid_native_symbol(token->value))
+            {
+                element->type = HEX_TYPE_NATIVE_SYMBOL;
+            }
+            else
+            {
+                element->type = HEX_TYPE_USER_SYMBOL;
+            }
             element->symbolName = strdup(token->value);
             token->filename = strdup(filename);
             add_to_stack_trace(token);
@@ -2738,76 +2816,6 @@ int hex_symbol_run()
 // Control flow symbols               //
 ////////////////////////////////////////
 
-int hex_symbol_if()
-{
-    HEX_StackElement elseBlock = hex_pop();
-    if (elseBlock.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(elseBlock);
-        return 1;
-    }
-    HEX_StackElement thenBlock = hex_pop();
-    if (thenBlock.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(elseBlock);
-        hex_free_element(thenBlock);
-        return 1;
-    }
-    HEX_StackElement condition = hex_pop();
-    if (condition.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(elseBlock);
-        hex_free_element(thenBlock);
-        hex_free_element(condition);
-        return 1;
-    }
-    int result = 0;
-    if (condition.type != HEX_TYPE_QUOTATION || thenBlock.type != HEX_TYPE_QUOTATION || elseBlock.type != HEX_TYPE_QUOTATION)
-    {
-        hex_error("'if' symbol requires three quotations");
-        result = 1;
-    }
-    else
-    {
-        for (size_t i = 0; i < condition.quotationSize; i++)
-        {
-            if (hex_push(*condition.data.quotationValue[i]) != 0)
-            {
-                result = 1;
-                break;
-            }
-        }
-        HEX_StackElement evalResult = hex_pop();
-        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
-        {
-            for (size_t i = 0; i < thenBlock.quotationSize; i++)
-            {
-                if (hex_push(*thenBlock.data.quotationValue[i]) != 0)
-                {
-                    result = 1;
-                    break;
-                }
-            }
-        }
-        else
-        {
-            for (size_t i = 0; i < elseBlock.quotationSize; i++)
-            {
-                if (hex_push(*elseBlock.data.quotationValue[i]) != 0)
-                {
-                    result = 1;
-                    break;
-                }
-            }
-        }
-        hex_free_element(evalResult);
-    }
-    hex_free_element(condition);
-    hex_free_element(thenBlock);
-    hex_free_element(elseBlock);
-    return result;
-}
-
 int hex_symbol_when()
 {
 
@@ -3335,15 +3343,6 @@ int hex_symbol_pop()
 }
 
 ////////////////////////////////////////
-// Time symbols                       //
-////////////////////////////////////////
-
-int hex_symbol_timestamp()
-{
-    return hex_push_int((int)time(NULL));
-}
-
-////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
 
@@ -3399,7 +3398,6 @@ void hex_register_symbols()
     hex_set_native_symbol("exit", hex_symbol_exit);
     hex_set_native_symbol("exec", hex_symbol_exec);
     hex_set_native_symbol("run", hex_symbol_run);
-    hex_set_native_symbol("if", hex_symbol_if);
     hex_set_native_symbol("when", hex_symbol_when);
     hex_set_native_symbol("unless", hex_symbol_unless);
     hex_set_native_symbol("while", hex_symbol_while);
@@ -3414,7 +3412,6 @@ void hex_register_symbols()
     hex_set_native_symbol("stack", hex_symbol_stack);
     hex_set_native_symbol("clear", hex_symbol_clear);
     hex_set_native_symbol("pop", hex_symbol_pop);
-    hex_set_native_symbol("timestamp", hex_symbol_timestamp);
 }
 
 ////////////////////////////////////////
