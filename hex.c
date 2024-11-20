@@ -291,7 +291,62 @@ int hex_push_int(int value)
 
 int hex_push_string(const char *value)
 {
-    HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = strdup(value)};
+    size_t len = strlen(value);
+    char *processedStr = (char *)malloc(len + 1);
+    if (!processedStr)
+    {
+        hex_error("Memory allocation failed");
+        return 1;
+    }
+
+    char *dst = processedStr;
+    const char *src = value;
+    while (*src)
+    {
+        if (*src == '\\' && *(src + 1))
+        {
+            src++;
+            switch (*src)
+            {
+            case 'n':
+                *dst++ = '\n';
+                break;
+            case 't':
+                *dst++ = '\t';
+                break;
+            case 'r':
+                *dst++ = '\r';
+                break;
+            case 'b':
+                *dst++ = '\b';
+                break;
+            case 'f':
+                *dst++ = '\f';
+                break;
+            case 'v':
+                *dst++ = '\v';
+                break;
+            case '\\':
+                *dst++ = '\\';
+                break;
+            case '\"':
+                *dst++ = '\"';
+                break;
+            default:
+                *dst++ = '\\';
+                *dst++ = *src;
+                break;
+            }
+        }
+        else
+        {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+
+    HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
     return hex_push(element);
 }
 
