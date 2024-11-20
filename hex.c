@@ -19,7 +19,8 @@ int isatty(int fd)
 
 #define HEX_STDIN_BUFFER_SIZE 256
 #define HEX_REGISTRY_SIZE 1024
-#define HEX_STACK_SIZE 100
+#define HEX_STACK_SIZE 128
+#define HEX_STACK_TRACE_SIZE 16
 
 int HEX_DEBUG = 0;
 char HEX_ERROR[256] = "";
@@ -356,27 +357,47 @@ typedef struct
 {
     HEX_TokenType type;
     char *value;
+    char *filename;
+    int line;
+    int column;
 } HEX_Token;
 
 // Process a token from the input
-HEX_Token *hex_next_token(const char **input) {
+HEX_Token *hex_next_token(const char **input, int *line, int *column)
+{
     const char *ptr = *input;
 
     // Static balance counter to track nested quotations
     static int quotation_balance = 0;
 
     // Skip whitespace and comments
-    while (isspace(*ptr) || *ptr == ';') {
-        if (*ptr == ';') {
-            while (*ptr != '\0' && *ptr != '\n') {
+    while (isspace(*ptr) || *ptr == ';')
+    {
+        if (*ptr == '\n')
+        {
+            (*line)++;
+            *column = 1;
+        }
+        else
+        {
+            (*column)++;
+        }
+
+        if (*ptr == ';')
+        {
+            while (*ptr != '\0' && *ptr != '\n')
+            {
                 ptr++;
+                (*column)++;
             }
         }
         ptr++;
     }
 
-    if (*ptr == '\0') {
-        if (quotation_balance != 0) {
+    if (*ptr == '\0')
+    {
+        if (quotation_balance != 0)
+        {
             hex_error("Unbalanced quotations at end of input");
         }
         return NULL; // End of input
@@ -384,26 +405,38 @@ HEX_Token *hex_next_token(const char **input) {
 
     HEX_Token *token = (HEX_Token *)malloc(sizeof(HEX_Token));
     token->value = NULL;
+    token->line = *line;
+    token->column = *column;
 
-    if (*ptr == '"') {
+    if (*ptr == '"')
+    {
         // String token
         ptr++;
         const char *start = ptr;
         size_t len = 0;
 
-        while (*ptr != '\0') {
-            if (*ptr == '\\' && *(ptr + 1) == '"') {
+        while (*ptr != '\0')
+        {
+            if (*ptr == '\\' && *(ptr + 1) == '"')
+            {
                 ptr += 2;
                 len++;
-            } else if (*ptr == '"') {
+                (*column) += 2;
+            }
+            else if (*ptr == '"')
+            {
                 break;
-            } else {
+            }
+            else
+            {
                 ptr++;
                 len++;
+                (*column)++;
             }
         }
 
-        if (*ptr != '"') {
+        if (*ptr != '"')
+        {
             hex_error("Unterminated string");
             token->type = HEX_TOKEN_INVALID;
             return token;
@@ -413,37 +446,53 @@ HEX_Token *hex_next_token(const char **input) {
         char *dst = token->value;
 
         ptr = start;
-        while (*ptr != '\0' && *ptr != '"') {
-            if (*ptr == '\\' && *(ptr + 1) == '"') {
+        while (*ptr != '\0' && *ptr != '"')
+        {
+            if (*ptr == '\\' && *(ptr + 1) == '"')
+            {
                 *dst++ = '"';
                 ptr += 2;
-            } else {
+            }
+            else
+            {
                 *dst++ = *ptr++;
             }
         }
         *dst = '\0';
         ptr++;
+        (*column)++;
         token->type = HEX_TOKEN_STRING;
-    } else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0) {
+    }
+    else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0)
+    {
         // Hexadecimal integer token
         const char *start = ptr;
         ptr += 2; // Skip the "0x" prefix
-        while (isxdigit(*ptr)) {
+        (*column) += 2;
+        while (isxdigit(*ptr))
+        {
             ptr++;
+            (*column)++;
         }
         size_t len = ptr - start;
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
         token->type = HEX_TOKEN_NUMBER;
-    } else if (*ptr == '(') {
+    }
+    else if (*ptr == '(')
+    {
         // Quotation start
         quotation_balance++;
         token->type = HEX_TOKEN_QUOTATION_START;
         ptr++;
-    } else if (*ptr == ')') {
+        (*column)++;
+    }
+    else if (*ptr == ')')
+    {
         // Quotation end
-        if (quotation_balance == 0) {
+        if (quotation_balance == 0)
+        {
             hex_error("Unexpected closing parenthesis");
             token->type = HEX_TOKEN_INVALID;
             return token;
@@ -451,11 +500,16 @@ HEX_Token *hex_next_token(const char **input) {
         quotation_balance--;
         token->type = HEX_TOKEN_QUOTATION_END;
         ptr++;
-    } else {
+        (*column)++;
+    }
+    else
+    {
         // Symbol token
         const char *start = ptr;
-        while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';' && *ptr != '(' && *ptr != ')' && *ptr != '"') {
+        while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';' && *ptr != '(' && *ptr != ')' && *ptr != '"')
+        {
             ptr++;
+            (*column)++;
         }
         size_t len = ptr - start;
         token->value = (char *)malloc(len + 1);
@@ -478,22 +532,27 @@ void hex_free_token(HEX_Token *token)
     }
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance) {
+int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, int *line, int *column)
+{
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
     size_t size = 0;
 
     quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
-    if (!quotation) {
+    if (!quotation)
+    {
         hex_error("Memory allocation failed");
         return 1;
     }
 
     HEX_Token *token;
-    while ((token = hex_next_token(input)) != NULL) {
-        if (token->type == HEX_TOKEN_QUOTATION_END) {
+    while ((token = hex_next_token(input, line, column)) != NULL)
+    {
+        if (token->type == HEX_TOKEN_QUOTATION_END)
+        {
             balance--;
-            if (balance < 0) {
+            if (balance < 0)
+            {
                 hex_error("Unexpected closing parenthesis");
                 hex_free_token(token);
                 free(quotation);
@@ -503,34 +562,46 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
             break;
         }
 
-        if (size >= capacity) {
+        if (size >= capacity)
+        {
             capacity *= 2;
             quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
-            if (!quotation) {
+            if (!quotation)
+            {
                 hex_error("Memory allocation failed");
                 return 1;
             }
         }
 
         HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-        if (token->type == HEX_TOKEN_NUMBER) {
+        if (token->type == HEX_TOKEN_NUMBER)
+        {
             element->type = HEX_TYPE_INTEGER;
             element->data.intValue = (int)strtol(token->value, NULL, 16);
-        } else if (token->type == HEX_TOKEN_STRING) {
+        }
+        else if (token->type == HEX_TOKEN_STRING)
+        {
             element->type = HEX_TYPE_STRING;
             element->data.strValue = strdup(token->value);
-        } else if (token->type == HEX_TOKEN_SYMBOL) {
+        }
+        else if (token->type == HEX_TOKEN_SYMBOL)
+        {
             element->type = HEX_TYPE_USER_SYMBOL;
             element->symbolName = strdup(token->value);
-        } else if (token->type == HEX_TOKEN_QUOTATION_START) {
+        }
+        else if (token->type == HEX_TOKEN_QUOTATION_START)
+        {
             balance++;
             element->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(input, element, balance) != 0) {
+            if (hex_parse_quotation(input, element, balance, line, column) != 0)
+            {
                 hex_free_token(token);
                 free(quotation);
                 return 1;
             }
-        } else {
+        }
+        else
+        {
             hex_error("Unexpected token in quotation");
             hex_free_token(token);
             free(quotation);
@@ -542,7 +613,8 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         hex_free_token(token);
     }
 
-    if (balance != 0) {
+    if (balance != 0)
+    {
         hex_error("Unbalanced parentheses at end of quotation");
         free(quotation);
         return 1;
@@ -552,6 +624,60 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
     result->data.quotationValue = quotation;
     result->quotationSize = size;
     return 0;
+}
+
+////////////////////////////////////////
+// Stack trace implementation         //
+////////////////////////////////////////
+
+void hex_print_element(FILE *stream, HEX_StackElement element);
+
+// Stack trace entry with token information
+typedef struct
+{
+    HEX_Token token;
+} HEX_StackTraceEntry;
+
+// Circular buffer structure
+typedef struct
+{
+    HEX_StackTraceEntry entries[HEX_STACK_TRACE_SIZE];
+    size_t start; // Index of the oldest element
+    size_t size;  // Current number of elements in the buffer
+} CircularStackTrace;
+
+CircularStackTrace stackTrace = {.start = 0, .size = 0};
+
+// Add an entry to the circular stack trace
+void add_to_stack_trace(HEX_Token *token)
+{
+    size_t index = (stackTrace.start + stackTrace.size) % HEX_STACK_TRACE_SIZE;
+
+    if (stackTrace.size < HEX_STACK_TRACE_SIZE)
+    {
+        // Buffer is not full; add element
+        stackTrace.entries[index].token = *token;
+        stackTrace.size++;
+    }
+    else
+    {
+        // Buffer is full; overwrite the oldest element
+        stackTrace.entries[index].token = *token;
+        stackTrace.start = (stackTrace.start + 1) % HEX_STACK_TRACE_SIZE;
+    }
+}
+
+// Print the stack trace
+void print_stack_trace()
+{
+    fprintf(stderr, "[stack trace] (most recent symbol first):\n");
+
+    for (size_t i = 0; i < stackTrace.size; i++)
+    {
+        size_t index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
+        HEX_Token token = stackTrace.entries[index].token;
+        fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.filename, token.line, token.column);
+    }
 }
 
 ////////////////////////////////////////
@@ -753,7 +879,7 @@ int hex_symbol_i()
     return result;
 }
 
-int hex_interpret(const char *code);
+int hex_interpret(const char *code, const char *filename, int line, int column);
 
 // evaluate a string
 int hex_symbol_eval()
@@ -769,7 +895,7 @@ int hex_symbol_eval()
         hex_error("'eval' symbol requires a string");
         result = 1;
     }
-    result = hex_interpret(element.data.strValue);
+    result = hex_interpret(element.data.strValue, "<eval>", 1, 1);
     hex_free_element(element);
     return result;
 }
@@ -3060,67 +3186,56 @@ void hex_register_symbols()
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
 
-int hex_interpret(const char *code)
+int hex_interpret(const char *code, const char *filename, int line, int column)
 {
     const char *input = code;
-    HEX_Token *token = hex_next_token(&input);
+    HEX_Token *token = hex_next_token(&input, &line, &column);
 
     while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
+        int result = 0;
         if (token->type == HEX_TOKEN_NUMBER)
         {
-            if (hex_push_int((int)strtol(token->value, NULL, 16)) != 0)
-            {
-                hex_free_token(token);
-                return 1;
-            }
+            result = hex_push_int((int)strtol(token->value, NULL, 16));
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
-            HEX_StackElement symbolValue;
-            if (hex_get_symbol(token->value, &symbolValue))
-            {
-                if (hex_push(symbolValue) != 0)
-                {
-                    hex_free_token(token);
-                    return 1;
-                }
-            }
-            else
-            {
-                if (hex_push_string(token->value) != 0)
-                {
-                    hex_free_token(token);
-                    return 1;
-                }
-            }
+            result = hex_push_string(token->value);
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            if (hex_push_symbol(token->value) != 0)
-            {
-                hex_free_token(token);
-                return 1;
-            }
+            result = hex_push_symbol(token->value);
+            token->filename = strdup(filename);
+            add_to_stack_trace(token);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            HEX_StackElement *quotationElement =                       (HEX_StackElement *)malloc(sizeof(HEX_StackElement));    
-            if (hex_parse_quotation(&input, quotationElement, 1) != 0) {
-                hex_error("Failed to parse quotation");
-                return 1;
-            }
-            HEX_StackElement **quotation = quotationElement->data.quotationValue;
-            size_t quotationSize = quotationElement->quotationSize;
-            if (hex_push_quotation(quotation, quotationSize) != 0)
+            HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            if (hex_parse_quotation(&input, quotationElement, 1, &line, &column) != 0)
             {
-                hex_free_token(token);
-                return 1;
+                hex_error("Failed to parse quotation");
+                result = 1;
             }
+            else
+            {
+                HEX_StackElement **quotation = quotationElement->data.quotationValue;
+                size_t quotationSize = quotationElement->quotationSize;
+                result = hex_push_quotation(quotation, quotationSize);
+            }
+            free(quotationElement);
         }
-        token = hex_next_token(&input);
+
+        if (result != 0)
+        {
+            hex_free_token(token);
+            print_stack_trace();
+            return result;
+        }
+
+        token = hex_next_token(&input, &line, &column);
     }
     hex_free_token(token);
+    return 0;
 }
 
 // Read a file into a buffer
@@ -3175,7 +3290,7 @@ void hex_repl()
         }
 
         // Tokenize and process the input
-        hex_interpret(line);
+        hex_interpret(line, "<repl>", 1, 1);
         // Print the top element of the stack
         if (hex_top >= 0)
         {
@@ -3204,7 +3319,7 @@ void hex_process_stdin()
     }
 
     buffer[bytesRead] = '\0'; // Null-terminate the input
-    hex_interpret(buffer);
+    hex_interpret(buffer, "<stdin>", 1, 1);
 }
 
 ////////////////////////////////////////
@@ -3241,7 +3356,7 @@ int main(int argc, char *argv[])
                     return 1;
                 }
 
-                hex_interpret(fileContent);
+                hex_interpret(fileContent, filename, 1, 1);
                 free(fileContent); // Free the allocated memory
                 return 0;
             }
