@@ -55,6 +55,14 @@ typedef enum
     HEX_TYPE_INVALID
 } HEX_ElementType;
 
+char *HEX_TOKEN_TYPES[] = {
+    "integer",
+    "string",
+    "quotation",
+    "native symbol",
+    "user symbol",
+    "invalid"};
+
 // Unified Stack Element
 typedef struct HEX_StackElement
 {
@@ -362,6 +370,8 @@ typedef struct
     int column;
 } HEX_Token;
 
+void add_to_stack_trace(HEX_Token *token);
+
 // Process a token from the input
 HEX_Token *hex_next_token(const char **input, int *line, int *column)
 {
@@ -532,7 +542,7 @@ void hex_free_token(HEX_Token *token)
     }
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, int *line, int *column)
+int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, const char *filename, int *line, int *column)
 {
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
@@ -588,12 +598,14 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         {
             element->type = HEX_TYPE_USER_SYMBOL;
             element->symbolName = strdup(token->value);
+            token->filename = strdup(filename);
+            add_to_stack_trace(token);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             balance++;
             element->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(input, element, balance, line, column) != 0)
+            if (hex_parse_quotation(input, element, balance, filename, line, column) != 0)
             {
                 hex_free_token(token);
                 free(quotation);
@@ -3150,10 +3162,17 @@ int hex_symbol_map()
                         break;
                     }
                 }
+                if (result != 0)
+                {
+                    break;
+                }
                 quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
                 *quotation[i] = hex_pop();
             }
-            result = hex_push_quotation(quotation, list.quotationSize);
+            if (result == 0)
+            {
+                result = hex_push_quotation(quotation, list.quotationSize);
+            }
         }
     }
     hex_free_element(list);
@@ -3427,7 +3446,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            if (hex_parse_quotation(&input, quotationElement, 1, &line, &column) != 0)
+            if (hex_parse_quotation(&input, quotationElement, 1, filename, &line, &column) != 0)
             {
                 hex_error("Failed to parse quotation");
                 result = 1;
