@@ -28,7 +28,72 @@ char **HEX_ARGV;
 int HEX_ARGC = 0;
 volatile sig_atomic_t HEX_KEEP_RUNNING = 1;
 int HEX_ERRORS = 1;
-int HEX_QUOTATION_BALANCE = 0;
+
+char *HEX_NATIVE_SYMBOLS[] = {
+    "store",
+    "free",
+    "type",
+    "i",
+    "eval",
+    "puts",
+    "warn",
+    "print",
+    "gets",
+    "+",
+    "-",
+    "*",
+    "/",
+    "%",
+    "&",
+    "|",
+    "^",
+    "~",
+    "<<",
+    ">>",
+    "int",
+    "str",
+    "dec",
+    "hex",
+    "==",
+    "!=",
+    ">",
+    "<",
+    ">=",
+    "<=",
+    "and",
+    "or",
+    "not",
+    "xor",
+    "concat",
+    "slice",
+    "len",
+    "get",
+    "set",
+    "index",
+    "join",
+    "split",
+    "replace",
+    "read",
+    "write",
+    "append",
+    "args",
+    "exit",
+    "exec",
+    "run",
+    "when",
+    "unless",
+    "while",
+    "each",
+    "times",
+    "error",
+    "try",
+    "map",
+    "filter",
+    "swap",
+    "dup",
+    "stack",
+    "clear",
+    "pop"};
 
 void hex_error(const char *format, ...)
 {
@@ -85,35 +150,35 @@ int hex_dictCount = 0;
 
 void hex_free_element(HEX_StackElement element);
 
-int hex_valid_symbol(const char *symbol)
+int hex_valid_user_symbol(const char *symbol)
 {
     // Check that key starts with a letter, or underscore
     // and subsequent characters (if any) are letters, numbers, or underscores
     if (strlen(symbol) == 0)
     {
         hex_error("Symbol name cannot be an empty string");
-        return 1;
+        return 0;
     }
     if (!isalpha(symbol[0]) && symbol[0] != '_')
     {
-        hex_error("Invalid symbol name: %s", symbol);
-        return 1;
+        hex_error("Invalid symbol: %s", symbol);
+        return 0;
     }
     for (int j = 1; j < strlen(symbol); j++)
     {
         if (!isalnum(symbol[j]) && symbol[j] != '_')
         {
-            hex_error("Invalid symbol name: %s", symbol);
-            return 1;
+            hex_error("Invalid symbol: %s", symbol);
+            return 0;
         }
     }
-    return 0;
+    return 1;
 }
 
 // Add a symbol to the registry
 int hex_set_symbol(const char *key, HEX_StackElement value, int native)
 {
-    if (!native && hex_valid_symbol(key) != 0)
+    if (!native && hex_valid_user_symbol(key) == 0)
     {
         return 1;
     }
@@ -182,12 +247,12 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 void hex_debug_element(const char *message, HEX_StackElement element);
 
 HEX_StackElement hex_stack[HEX_STACK_SIZE];
-int hex_top = -1;
+int HEX_TOP = -1;
 
 // Push functions
 int hex_push(HEX_StackElement element)
 {
-    if (hex_top >= HEX_STACK_SIZE - 1)
+    if (HEX_TOP >= HEX_STACK_SIZE - 1)
     {
         hex_error("Stack overflow");
         return 1;
@@ -200,14 +265,7 @@ int hex_push(HEX_StackElement element)
         int result = 0;
         if (hex_get_symbol(element.symbolName, &value))
         {
-            if (value.type == HEX_TYPE_NATIVE_SYMBOL)
-            {
-                result = value.data.functionPointer();
-            }
-            else
-            {
-                result = hex_push(value);
-            }
+            result = hex_push(value);
         }
         else
         {
@@ -221,7 +279,7 @@ int hex_push(HEX_StackElement element)
     {
         return element.data.functionPointer();
     }
-    hex_stack[++hex_top] = element;
+    hex_stack[++HEX_TOP] = element;
     return 0;
 }
 
@@ -231,9 +289,69 @@ int hex_push_int(int value)
     return hex_push(element);
 }
 
+char *hex_process_string(const char *value)
+{
+    size_t len = strlen(value);
+    char *processedStr = (char *)malloc(len + 1);
+    if (!processedStr)
+    {
+        hex_error("Memory allocation failed");
+        return (char *)value;
+    }
+
+    char *dst = processedStr;
+    const char *src = value;
+    while (*src)
+    {
+        if (*src == '\\' && *(src + 1))
+        {
+            src++;
+            switch (*src)
+            {
+            case 'n':
+                *dst++ = '\n';
+                break;
+            case 't':
+                *dst++ = '\t';
+                break;
+            case 'r':
+                *dst++ = '\r';
+                break;
+            case 'b':
+                *dst++ = '\b';
+                break;
+            case 'f':
+                *dst++ = '\f';
+                break;
+            case 'v':
+                *dst++ = '\v';
+                break;
+            case '\\':
+                *dst++ = '\\';
+                break;
+            case '\"':
+                *dst++ = '\"';
+                break;
+            default:
+                *dst++ = '\\';
+                *dst++ = *src;
+                break;
+            }
+        }
+        else
+        {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+    return processedStr;
+}
+
 int hex_push_string(const char *value)
 {
-    HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = strdup(value)};
+    char *processedStr = hex_process_string(value);
+    HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
     return hex_push(element);
 }
 
@@ -260,13 +378,13 @@ int hex_push_symbol(const char *name)
 // Pop function
 HEX_StackElement hex_pop()
 {
-    if (hex_top < 0)
+    if (HEX_TOP < 0)
     {
         hex_error("Insufficient elements on the stack");
         return (HEX_StackElement){.type = HEX_TYPE_INVALID};
     }
-    hex_debug_element(" POP", hex_stack[hex_top]);
-    return hex_stack[hex_top--];
+    hex_debug_element(" POP", hex_stack[HEX_TOP]);
+    return hex_stack[HEX_TOP--];
 }
 
 // Free a stack element
@@ -317,9 +435,9 @@ char *hex_type(HEX_ElementType type)
     case HEX_TYPE_QUOTATION:
         return "quotation";
     case HEX_TYPE_NATIVE_SYMBOL:
-        return "symbol";
+        return "native symbol";
     case HEX_TYPE_USER_SYMBOL:
-        return "symbol";
+        return "user symbol";
     case HEX_TYPE_INVALID:
         return "invalid";
     default:
@@ -333,7 +451,6 @@ void hex_debug_element(const char *message, HEX_StackElement element)
     {
         fprintf(stdout, "*** %s: ", message);
         hex_print_element(stdout, element);
-        // printf(" [%s]", hex_type(element.type));
         fprintf(stdout, "\n");
     }
 }
@@ -361,6 +478,10 @@ typedef struct
     int line;
     int column;
 } HEX_Token;
+
+void add_to_stack_trace(HEX_Token *token);
+
+int hex_valid_native_symbol(char *symbol);
 
 // Process a token from the input
 HEX_Token *hex_next_token(const char **input, int *line, int *column)
@@ -511,11 +632,19 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
             ptr++;
             (*column)++;
         }
+
         size_t len = ptr - start;
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
-        token->type = HEX_TOKEN_SYMBOL;
+        if (hex_valid_native_symbol(token->value) || hex_valid_user_symbol(token->value))
+        {
+            token->type = HEX_TOKEN_SYMBOL;
+        }
+        else
+        {
+            token->type = HEX_TOKEN_INVALID;
+        }
     }
 
     *input = ptr;
@@ -532,7 +661,19 @@ void hex_free_token(HEX_Token *token)
     }
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, int *line, int *column)
+int hex_valid_native_symbol(char *symbol)
+{
+    for (size_t i = 0; i < sizeof(HEX_NATIVE_SYMBOLS) / sizeof(HEX_NATIVE_SYMBOLS[0]); i++)
+    {
+        if (strcmp(symbol, HEX_NATIVE_SYMBOLS[i]) == 0)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, const char *filename, int *line, int *column)
 {
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
@@ -581,19 +722,29 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
+            char *processedStr = hex_process_string(token->value);
             element->type = HEX_TYPE_STRING;
-            element->data.strValue = strdup(token->value);
+            element->data.strValue = strdup(processedStr);
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            element->type = HEX_TYPE_USER_SYMBOL;
+            if (hex_valid_native_symbol(token->value))
+            {
+                element->type = HEX_TYPE_NATIVE_SYMBOL;
+            }
+            else
+            {
+                element->type = HEX_TYPE_USER_SYMBOL;
+            }
             element->symbolName = strdup(token->value);
+            token->filename = strdup(filename);
+            add_to_stack_trace(token);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             balance++;
             element->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(input, element, balance, line, column) != 0)
+            if (hex_parse_quotation(input, element, balance, filename, line, column) != 0)
             {
                 hex_free_token(token);
                 free(quotation);
@@ -739,28 +890,72 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     case HEX_TYPE_INTEGER:
         fprintf(stream, "0x%x", element.data.intValue);
         break;
+
     case HEX_TYPE_STRING:
-        fprintf(stream, "\"%s\"", element.data.strValue);
+        fprintf(stream, "\"");
+        for (char *c = element.data.strValue; *c != '\0'; c++)
+        {
+            switch (*c)
+            {
+            case '\n':
+                fprintf(stream, "\\n");
+                break;
+            case '\t':
+                fprintf(stream, "\\t");
+                break;
+            case '\r':
+                fprintf(stream, "\\r");
+                break;
+            case '\b':
+                fprintf(stream, "\\b");
+                break;
+            case '\f':
+                fprintf(stream, "\\f");
+                break;
+            case '\v':
+                fprintf(stream, "\\v");
+                break;
+            case '\\':
+                fprintf(stream, "\\\\");
+                break;
+            case '\"':
+                fprintf(stream, "\\\"");
+                break;
+            default:
+                if ((unsigned char)*c < 32 || (unsigned char)*c > 126)
+                {
+                    // Escape non-printable characters as hex (e.g., \x1F)
+                    fprintf(stream, "\\x%02x", (unsigned char)*c);
+                }
+                else
+                {
+                    fputc(*c, stream);
+                }
+                break;
+            }
+        }
+        fprintf(stream, "\"");
         break;
+
     case HEX_TYPE_USER_SYMBOL:
-        fprintf(stream, "%s", element.symbolName);
-        break;
     case HEX_TYPE_NATIVE_SYMBOL:
         fprintf(stream, "%s", element.symbolName);
         break;
+
     case HEX_TYPE_QUOTATION:
-    {
         fprintf(stream, "(");
         for (size_t i = 0; i < element.quotationSize; i++)
         {
             if (i > 0)
-                fprintf(stream, " "); // Add space between elements
+                fprintf(stream, " ");
             hex_print_element(stream, *element.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
-    }
+
     default:
+        fprintf(stream, "<unknown>");
+        break;
     }
 }
 
@@ -2108,7 +2303,7 @@ int hex_symbol_index()
 // String symbols                     //
 ////////////////////////////////////////
 
-int hex_symbol_split()
+int hex_symbol_join()
 {
     HEX_StackElement separator = hex_pop();
     if (separator.type == HEX_TYPE_INVALID)
@@ -2124,19 +2319,108 @@ int hex_symbol_split()
         return 1;
     }
     int result = 0;
-    if (list.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
+    if (list.type == HEX_TYPE_QUOTATION && separator.type == HEX_TYPE_STRING)
     {
-        char *str = list.data.strValue;
-        char *sep = separator.data.strValue;
-        char *token = strtok(str, sep);
-        while (token)
+        size_t length = 0;
+        for (size_t i = 0; i < list.quotationSize; i++)
         {
-            result = hex_push_string(token);
-            if (result != 0)
+            if (list.data.quotationValue[i]->type == HEX_TYPE_STRING)
             {
+                length += strlen(list.data.quotationValue[i]->data.strValue);
+            }
+            else
+            {
+                hex_error("Quotation must contain only strings");
+                result = 1;
                 break;
             }
-            token = strtok(NULL, sep);
+        }
+        if (result == 0)
+        {
+            length += (list.quotationSize - 1) * strlen(separator.data.strValue);
+            char *newStr = (char *)malloc(length + 1);
+            if (!newStr)
+            {
+                hex_error("Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                newStr[0] = '\0';
+                for (size_t i = 0; i < list.quotationSize; i++)
+                {
+                    strcat(newStr, list.data.quotationValue[i]->data.strValue);
+                    if (i < list.quotationSize - 1)
+                    {
+                        strcat(newStr, separator.data.strValue);
+                    }
+                }
+                result = hex_push_string(newStr);
+            }
+        }
+    }
+    else
+    {
+        hex_error("Symbol 'join' requires a quotation and a string");
+        result = 1;
+    }
+    hex_free_element(list);
+    hex_free_element(separator);
+    return result;
+}
+
+int hex_symbol_split()
+{
+    HEX_StackElement separator = hex_pop();
+    if (separator.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(separator);
+        return 1;
+    }
+    HEX_StackElement str = hex_pop();
+    if (str.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(str);
+        hex_free_element(separator);
+        return 1;
+    }
+    int result = 0;
+    if (str.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
+    {
+        char *token = strtok(str.data.strValue, separator.data.strValue);
+        size_t capacity = 2;
+        size_t size = 0;
+        HEX_StackElement **quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
+        if (!quotation)
+        {
+            hex_error("Memory allocation failed");
+            result = 1;
+        }
+        else
+        {
+            while (token)
+            {
+                if (size >= capacity)
+                {
+                    capacity *= 2;
+                    quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
+                    if (!quotation)
+                    {
+                        hex_error("Memory allocation failed");
+                        result = 1;
+                        break;
+                    }
+                }
+                quotation[size] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                quotation[size]->type = HEX_TYPE_STRING;
+                quotation[size]->data.strValue = strdup(token);
+                size++;
+                token = strtok(NULL, separator.data.strValue);
+            }
+            if (result == 0)
+            {
+                result = hex_push_quotation(quotation, size);
+            }
         }
     }
     else
@@ -2144,7 +2428,7 @@ int hex_symbol_split()
         hex_error("Symbol 'split' requires two strings");
         result = 1;
     }
-    hex_free_element(list);
+    hex_free_element(str);
     hex_free_element(separator);
     return result;
 }
@@ -2947,10 +3231,17 @@ int hex_symbol_map()
                         break;
                     }
                 }
+                if (result != 0)
+                {
+                    break;
+                }
                 quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
                 *quotation[i] = hex_pop();
             }
-            result = hex_push_quotation(quotation, list.quotationSize);
+            if (result == 0)
+            {
+                result = hex_push_quotation(quotation, list.quotationSize);
+            }
         }
     }
     hex_free_element(list);
@@ -3070,14 +3361,14 @@ int hex_symbol_dup()
 
 int hex_symbol_stack()
 {
-    HEX_StackElement **quotation = (HEX_StackElement **)malloc((hex_top + 1) * sizeof(HEX_StackElement *));
+    HEX_StackElement **quotation = (HEX_StackElement **)malloc((HEX_TOP + 1) * sizeof(HEX_StackElement *));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
         return 1;
     }
 
-    for (int i = 0; i <= hex_top; i++)
+    for (int i = 0; i <= HEX_TOP; i++)
     {
         quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
         if (!quotation[i])
@@ -3088,14 +3379,14 @@ int hex_symbol_stack()
         *quotation[i] = hex_stack[i];
     }
 
-    return hex_push_quotation(quotation, hex_top + 1);
+    return hex_push_quotation(quotation, HEX_TOP + 1);
 }
 
 int hex_symbol_clear()
 {
-    while (hex_top >= 0)
+    while (HEX_TOP >= 0)
     {
-        hex_free_element(hex_stack[hex_top--]);
+        hex_free_element(hex_stack[HEX_TOP--]);
     }
     return 0;
 }
@@ -3158,6 +3449,7 @@ void hex_register_symbols()
     hex_set_native_symbol("get", hex_symbol_get);
     hex_set_native_symbol("set", hex_symbol_set);
     hex_set_native_symbol("index", hex_symbol_index);
+    hex_set_native_symbol("join", hex_symbol_join);
     hex_set_native_symbol("split", hex_symbol_split);
     hex_set_native_symbol("replace", hex_symbol_replace);
     hex_set_native_symbol("read", hex_symbol_read);
@@ -3180,6 +3472,7 @@ void hex_register_symbols()
     hex_set_native_symbol("dup", hex_symbol_dup);
     hex_set_native_symbol("stack", hex_symbol_stack);
     hex_set_native_symbol("clear", hex_symbol_clear);
+    hex_set_native_symbol("pop", hex_symbol_pop);
 }
 
 ////////////////////////////////////////
@@ -3211,7 +3504,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            if (hex_parse_quotation(&input, quotationElement, 1, &line, &column) != 0)
+            if (hex_parse_quotation(&input, quotationElement, 1, filename, &line, &column) != 0)
             {
                 hex_error("Failed to parse quotation");
                 result = 1;
@@ -3292,9 +3585,9 @@ void hex_repl()
         // Tokenize and process the input
         hex_interpret(line, "<repl>", 1, 1);
         // Print the top element of the stack
-        if (hex_top >= 0)
+        if (HEX_TOP >= 0)
         {
-            hex_print_element(stdout, hex_stack[hex_top]);
+            hex_print_element(stdout, hex_stack[HEX_TOP]);
             printf("\n");
         }
     }
