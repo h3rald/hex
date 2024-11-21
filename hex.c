@@ -513,9 +513,6 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
 {
     const char *ptr = *input;
 
-    // Static balance counter to track nested quotations
-    static int quotation_balance = 0;
-
     // Skip whitespace and comments
     while (isspace(*ptr) || *ptr == ';')
     {
@@ -542,10 +539,6 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
 
     if (*ptr == '\0')
     {
-        if (quotation_balance != 0)
-        {
-            hex_error("Unbalanced quotations at end of input");
-        }
         return NULL; // End of input
     }
 
@@ -628,22 +621,12 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
     }
     else if (*ptr == '(')
     {
-        // Quotation start
-        quotation_balance++;
         token->type = HEX_TOKEN_QUOTATION_START;
         ptr++;
         (*column)++;
     }
     else if (*ptr == ')')
     {
-        // Quotation end
-        if (quotation_balance == 0)
-        {
-            hex_error("Unexpected closing parenthesis");
-            token->type = HEX_TOKEN_INVALID;
-            return token;
-        }
-        quotation_balance--;
         token->type = HEX_TOKEN_QUOTATION_END;
         ptr++;
         (*column)++;
@@ -700,9 +683,11 @@ int hex_valid_native_symbol(char *symbol)
 
 int hex_parse_quotation(const char **input, HEX_StackElement *result, int *balance, const char *filename, int *line, int *column)
 {
+    printf("init: %d\n", *balance);
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
     size_t size = 0;
+    int terminated = 0;
 
     quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
     if (!quotation)
@@ -714,10 +699,12 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int *balan
     HEX_Token *token;
     while ((token = hex_next_token(input, line, column)) != NULL)
     {
+        printf("looping: %d\n", *balance);
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-            *balance--;
-            printf("balance1: %d\n", *balance);
+            terminated = 1;
+            (*balance)--;
+            printf("): %d\n", *balance);
             if (*balance < 0)
             {
                 hex_error("Unexpected closing parenthesis");
@@ -781,8 +768,8 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int *balan
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            *balance++;
-            printf("balance2: %d\n", *balance);
+            (*balance)++;
+            printf("(: %d\n", *balance);
             element->type = HEX_TYPE_QUOTATION;
             if (hex_parse_quotation(input, element, balance, filename, line, column) != 0)
             {
@@ -803,10 +790,11 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int *balan
         size++;
         hex_free_token(token);
     }
+    printf("end looping: %d\n", *balance);
 
-    if (*balance != 0)
+    if (!terminated)
     {
-        printf("balance3: %d\n", *balance);
+        printf("end: %d\n", *balance);
         hex_error("Unbalanced parentheses at end of quotation");
         free(quotation);
         return 1;
