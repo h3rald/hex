@@ -17,6 +17,7 @@ int isatty(int fd)
 #include <sys/wait.h>
 #endif
 
+#define HEX_VERSION "0.1.0"
 #define HEX_STDIN_BUFFER_SIZE 256
 #define HEX_REGISTRY_SIZE 1024
 #define HEX_STACK_SIZE 128
@@ -145,8 +146,8 @@ typedef struct
     HEX_StackElement value;
 } HEX_RegistryEntry;
 
-HEX_RegistryEntry hex_registry[HEX_REGISTRY_SIZE];
-int hex_dictCount = 0;
+HEX_RegistryEntry HEX_REGISTRY[HEX_REGISTRY_SIZE];
+int HEX_REGISTRY_COUNT = 0;
 
 void hex_free_element(HEX_StackElement element);
 
@@ -166,7 +167,7 @@ int hex_valid_user_symbol(const char *symbol)
     }
     for (int j = 1; j < strlen(symbol); j++)
     {
-        if (!isalnum(symbol[j]) && symbol[j] != '_')
+        if (!isalnum(symbol[j]) && symbol[j] != '_' && symbol[j] != '-')
         {
             hex_error("Invalid symbol: %s", symbol);
             return 0;
@@ -182,33 +183,34 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
     {
         return 1;
     }
-    for (int i = 0; i < hex_dictCount; i++)
+    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
-        if (strcmp(hex_registry[i].key, key) == 0)
+        if (strcmp(HEX_REGISTRY[i].key, key) == 0)
         {
-            if (hex_registry[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
+            if (HEX_REGISTRY[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
                 hex_error("Cannot overwrite native symbol %s", key);
                 return 1;
             }
-            free(hex_registry[i].key);
-            hex_free_element(hex_registry[i].value);
+            free(HEX_REGISTRY[i].key);
+            hex_free_element(HEX_REGISTRY[i].value);
             value.symbolName = strdup(key);
-            hex_registry[i].key = strdup(key);
-            hex_registry[i].value = value;
+            HEX_REGISTRY[i].key = strdup(key);
+            HEX_REGISTRY[i].value = value;
             return 0;
         }
     }
 
-    if (hex_dictCount >= HEX_REGISTRY_SIZE)
+    if (HEX_REGISTRY_COUNT >= HEX_REGISTRY_SIZE)
     {
         hex_error("Registry overflow");
+        free(value.symbolName);
         return 1;
     }
 
-    hex_registry[hex_dictCount].key = strdup(key);
-    hex_registry[hex_dictCount].value = value;
-    hex_dictCount++;
+    HEX_REGISTRY[HEX_REGISTRY_COUNT].key = strdup(key);
+    HEX_REGISTRY[HEX_REGISTRY_COUNT].value = value;
+    HEX_REGISTRY_COUNT++;
     return 0;
 }
 
@@ -229,11 +231,11 @@ void hex_set_native_symbol(const char *name, int (*func)())
 // Get a symbol value from the registry
 int hex_get_symbol(const char *key, HEX_StackElement *result)
 {
-    for (int i = 0; i < hex_dictCount; i++)
+    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
-        if (strcmp(hex_registry[i].key, key) == 0)
+        if (strcmp(HEX_REGISTRY[i].key, key) == 0)
         {
-            *result = hex_registry[i].value;
+            *result = HEX_REGISTRY[i].value;
             return 1;
         }
     }
@@ -246,7 +248,7 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 
 void hex_debug_element(const char *message, HEX_StackElement element);
 
-HEX_StackElement hex_stack[HEX_STACK_SIZE];
+HEX_StackElement HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
 
 // Push functions
@@ -277,9 +279,10 @@ int hex_push(HEX_StackElement element)
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
     {
+        hex_debug_element("CALL", element);
         return element.data.functionPointer();
     }
-    hex_stack[++HEX_TOP] = element;
+    HEX_STACK[++HEX_TOP] = element;
     return 0;
 }
 
@@ -296,7 +299,7 @@ char *hex_process_string(const char *value)
     if (!processedStr)
     {
         hex_error("Memory allocation failed");
-        return (char *)value;
+        return NULL;
     }
 
     char *dst = processedStr;
@@ -383,25 +386,47 @@ HEX_StackElement hex_pop()
         hex_error("Insufficient elements on the stack");
         return (HEX_StackElement){.type = HEX_TYPE_INVALID};
     }
-    hex_debug_element(" POP", hex_stack[HEX_TOP]);
-    return hex_stack[HEX_TOP--];
+    hex_debug_element(" POP", HEX_STACK[HEX_TOP]);
+    return HEX_STACK[HEX_TOP--];
 }
+
+void hex_debug(const char *format, ...);
+char *hex_type(HEX_ElementType type);
 
 // Free a stack element
 void hex_free_element(HEX_StackElement element)
 {
-    if (element.type == HEX_TYPE_STRING)
+    hex_debug_element("FREE", element);
+    if (element.type == HEX_TYPE_STRING && element.data.strValue != NULL)
     {
         free(element.data.strValue);
+        element.data.strValue = NULL;
     }
-    else if (element.type == HEX_TYPE_QUOTATION)
+    else if (element.type == HEX_TYPE_QUOTATION && element.data.quotationValue != NULL)
     {
         for (size_t i = 0; i < element.quotationSize; i++)
         {
-            hex_free_element(*element.data.quotationValue[i]);
-            free(element.data.quotationValue[i]);
+            if (element.data.quotationValue[i] != NULL)
+            {
+                // TODO: review this
+                // Uncommmenting the following line causes repl to crash
+                // hex_free_element(*element.data.quotationValue[i]);
+                free(element.data.quotationValue[i]);
+                element.data.quotationValue[i] = NULL;
+            }
         }
         free(element.data.quotationValue);
+        element.data.quotationValue = NULL;
+    }
+    else if (element.type == HEX_TYPE_NATIVE_SYMBOL && element.symbolName != NULL)
+    {
+        free(element.symbolName);
+        element.symbolName = NULL;
+    }
+    else if (element.type == HEX_TYPE_USER_SYMBOL && element.symbolName != NULL)
+    {
+        free(element.symbolName);
+        element.symbolName = NULL;
     }
 }
 
@@ -673,7 +698,7 @@ int hex_valid_native_symbol(char *symbol)
     return 0;
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, const char *filename, int *line, int *column)
+int hex_parse_quotation(const char **input, HEX_StackElement *result, int *balance, const char *filename, int *line, int *column)
 {
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
@@ -691,8 +716,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
     {
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-            balance--;
-            if (balance < 0)
+            *balance--;
+            printf("balance1: %d\n", *balance);
+            if (*balance < 0)
             {
                 hex_error("Unexpected closing parenthesis");
                 hex_free_token(token);
@@ -731,6 +757,19 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
             if (hex_valid_native_symbol(token->value))
             {
                 element->type = HEX_TYPE_NATIVE_SYMBOL;
+                HEX_StackElement value;
+                if (hex_get_symbol(token->value, &value))
+                {
+                    element->type = HEX_TYPE_NATIVE_SYMBOL;
+                    element->data.functionPointer = value.data.functionPointer;
+                }
+                else
+                {
+                    hex_error("Unable to reference native symbol: %s", token->value);
+                    hex_free_token(token);
+                    free(quotation);
+                    return 1;
+                }
             }
             else
             {
@@ -742,7 +781,8 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            balance++;
+            *balance++;
+            printf("balance2: %d\n", *balance);
             element->type = HEX_TYPE_QUOTATION;
             if (hex_parse_quotation(input, element, balance, filename, line, column) != 0)
             {
@@ -764,8 +804,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         hex_free_token(token);
     }
 
-    if (balance != 0)
+    if (*balance != 0)
     {
+        printf("balance3: %d\n", *balance);
         hex_error("Unbalanced parentheses at end of quotation");
         free(quotation);
         return 1;
@@ -1013,17 +1054,17 @@ int hex_symbol_free()
         hex_error("Variable name must be a string");
         return 1;
     }
-    for (int i = 0; i < hex_dictCount; i++)
+    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
-        if (strcmp(hex_registry[i].key, element.data.strValue) == 0)
+        if (strcmp(HEX_REGISTRY[i].key, element.data.strValue) == 0)
         {
-            free(hex_registry[i].key);
-            hex_free_element(hex_registry[i].value);
-            for (int j = i; j < hex_dictCount - 1; j++)
+            free(HEX_REGISTRY[i].key);
+            hex_free_element(HEX_REGISTRY[i].value);
+            for (int j = i; j < HEX_REGISTRY_COUNT - 1; j++)
             {
-                hex_registry[j] = hex_registry[j + 1];
+                HEX_REGISTRY[j] = HEX_REGISTRY[j + 1];
             }
-            hex_dictCount--;
+            HEX_REGISTRY_COUNT--;
             hex_free_element(element);
             return 0;
         }
@@ -2683,8 +2724,22 @@ int hex_symbol_args()
 
 int hex_symbol_exit()
 {
-    HEX_KEEP_RUNNING = 0;
-    return 0;
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
+    if (element.type != HEX_TYPE_INTEGER)
+    {
+        hex_error("Exit status must be an integer");
+        hex_free_element(element);
+        return 1;
+    }
+    int exit_status = element.data.intValue;
+    hex_free_element(element);
+    exit(exit_status);
+    return 0; // This line will never be reached, but it's here to satisfy the return type
 }
 
 int hex_symbol_exec()
@@ -3300,12 +3355,30 @@ int hex_symbol_filter()
                 if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
                 {
                     quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                    if (!quotation[count])
+                    {
+                        hex_error("Memory allocation failed");
+                        result = 1;
+                        break;
+                    }
                     *quotation[count] = *list.data.quotationValue[i];
                     count++;
                 }
                 hex_free_element(evalResult);
             }
-            result = hex_push_quotation(quotation, count);
+            if (result == 0)
+            {
+                result = hex_push_quotation(quotation, count);
+            }
+            else
+            {
+                hex_error("An error occurred while filtering the list");
+                result = 1;
+                for (size_t i = 0; i < count; i++)
+                {
+                    hex_free_element(*quotation[i]);
+                }
+            }
         }
     }
     hex_free_element(list);
@@ -3376,7 +3449,7 @@ int hex_symbol_stack()
             hex_error("Memory allocation failed");
             return 1;
         }
-        *quotation[i] = hex_stack[i];
+        *quotation[i] = HEX_STACK[i];
     }
 
     return hex_push_quotation(quotation, HEX_TOP + 1);
@@ -3386,8 +3459,9 @@ int hex_symbol_clear()
 {
     while (HEX_TOP >= 0)
     {
-        hex_free_element(hex_stack[HEX_TOP--]);
+        hex_free_element(HEX_STACK[HEX_TOP--]);
     }
+    HEX_TOP = -1;
     return 0;
 }
 
@@ -3504,7 +3578,8 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            if (hex_parse_quotation(&input, quotationElement, 1, filename, &line, &column) != 0)
+            int balance = 1;
+            if (hex_parse_quotation(&input, quotationElement, &balance, filename, &line, &column) != 0)
             {
                 hex_error("Failed to parse quotation");
                 result = 1;
@@ -3562,7 +3637,7 @@ void hex_repl()
 {
     char line[1024];
 
-    printf("hex Interactive REPL. Type 'exit' to quit or press Ctrl+C.\n");
+    printf("hex v%s. Press Ctrl+C to exit.\n", HEX_VERSION);
 
     while (HEX_KEEP_RUNNING)
     {
@@ -3576,18 +3651,12 @@ void hex_repl()
         // Normalize line endings (remove trailing \r\n or \n)
         line[strcspn(line, "\r\n")] = '\0';
 
-        // Exit command
-        if (strcmp(line, "exit") == 0)
-        {
-            break;
-        }
-
         // Tokenize and process the input
         hex_interpret(line, "<repl>", 1, 1);
         // Print the top element of the stack
         if (HEX_TOP >= 0)
         {
-            hex_print_element(stdout, hex_stack[HEX_TOP]);
+            hex_print_element(stdout, HEX_STACK[HEX_TOP]);
             printf("\n");
         }
     }
@@ -3597,7 +3666,6 @@ void hex_handle_sigint(int sig)
 {
     (void)sig; // Suppress unused warning
     HEX_KEEP_RUNNING = 0;
-    printf("\nExiting hex REPL. Goodbye!\n");
 }
 
 // Process piped input from stdin
