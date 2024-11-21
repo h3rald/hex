@@ -167,7 +167,7 @@ int hex_valid_user_symbol(const char *symbol)
     }
     for (int j = 1; j < strlen(symbol); j++)
     {
-        if (!isalnum(symbol[j]) && symbol[j] != '_')
+        if (!isalnum(symbol[j]) && symbol[j] != '_' && symbol[j] != '-')
         {
             hex_error("Invalid symbol: %s", symbol);
             return 0;
@@ -698,7 +698,7 @@ int hex_valid_native_symbol(char *symbol)
     return 0;
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result, int balance, const char *filename, int *line, int *column)
+int hex_parse_quotation(const char **input, HEX_StackElement *result, int *balance, const char *filename, int *line, int *column)
 {
     HEX_StackElement **quotation = NULL;
     size_t capacity = 2;
@@ -716,8 +716,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
     {
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-            balance--;
-            if (balance < 0)
+            *balance--;
+            printf("balance1: %d\n", *balance);
+            if (*balance < 0)
             {
                 hex_error("Unexpected closing parenthesis");
                 hex_free_token(token);
@@ -780,7 +781,8 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            balance++;
+            *balance++;
+            printf("balance2: %d\n", *balance);
             element->type = HEX_TYPE_QUOTATION;
             if (hex_parse_quotation(input, element, balance, filename, line, column) != 0)
             {
@@ -802,8 +804,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
         hex_free_token(token);
     }
 
-    if (balance != 0)
+    if (*balance != 0)
     {
+        printf("balance3: %d\n", *balance);
         hex_error("Unbalanced parentheses at end of quotation");
         free(quotation);
         return 1;
@@ -3575,7 +3578,8 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            if (hex_parse_quotation(&input, quotationElement, 1, filename, &line, &column) != 0)
+            int balance = 1;
+            if (hex_parse_quotation(&input, quotationElement, &balance, filename, &line, &column) != 0)
             {
                 hex_error("Failed to parse quotation");
                 result = 1;

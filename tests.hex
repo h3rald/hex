@@ -1,0 +1,12 @@
+(
+    "current-test" store
+    (concurrent-test i 0x0 >)   
+        ("Test Failed: " print concurrent-test puts)
+    unless
+    (concurrent-test i 0x0 >)
+        ("." print)
+    when
+) "test" store
+
+
+(0x1 "a1" store a1 0x1 == "a1" free) test i
