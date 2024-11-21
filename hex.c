@@ -755,6 +755,19 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, int balanc
             if (hex_valid_native_symbol(token->value))
             {
                 element->type = HEX_TYPE_NATIVE_SYMBOL;
+                HEX_StackElement value;
+                if (hex_get_symbol(token->value, &value))
+                {
+                    element->type = HEX_TYPE_NATIVE_SYMBOL;
+                    element->data.functionPointer = value.data.functionPointer;
+                }
+                else
+                {
+                    hex_error("Unable to reference native symbol: %s", token->value);
+                    hex_free_token(token);
+                    free(quotation);
+                    return 1;
+                }
             }
             else
             {
