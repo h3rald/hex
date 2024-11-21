@@ -17,6 +17,7 @@ int isatty(int fd)
 #include <sys/wait.h>
 #endif
 
+#define HEX_VERSION "0.1.0"
 #define HEX_STDIN_BUFFER_SIZE 256
 #define HEX_REGISTRY_SIZE 1024
 #define HEX_STACK_SIZE 128
@@ -2720,8 +2721,22 @@ int hex_symbol_args()
 
 int hex_symbol_exit()
 {
-    HEX_KEEP_RUNNING = 0;
-    return 0;
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
+    if (element.type != HEX_TYPE_INTEGER)
+    {
+        hex_error("Exit status must be an integer");
+        hex_free_element(element);
+        return 1;
+    }
+    int exit_status = element.data.intValue;
+    hex_free_element(element);
+    exit(exit_status);
+    return 0; // This line will never be reached, but it's here to satisfy the return type
 }
 
 int hex_symbol_exec()
@@ -3618,7 +3633,7 @@ void hex_repl()
 {
     char line[1024];
 
-    printf("hex Interactive REPL. Type 'exit' to quit or press Ctrl+C.\n");
+    printf("hex v%s. Press Ctrl+C to exit.\n", HEX_VERSION);
 
     while (HEX_KEEP_RUNNING)
     {
@@ -3631,12 +3646,6 @@ void hex_repl()
 
         // Normalize line endings (remove trailing \r\n or \n)
         line[strcspn(line, "\r\n")] = '\0';
-
-        // Exit command
-        if (strcmp(line, "exit") == 0)
-        {
-            break;
-        }
 
         // Tokenize and process the input
         hex_interpret(line, "<repl>", 1, 1);
@@ -3653,7 +3662,6 @@ void hex_handle_sigint(int sig)
 {
     (void)sig; // Suppress unused warning
     HEX_KEEP_RUNNING = 0;
-    printf("\nExiting hex REPL. Goodbye!\n");
 }
 
 // Process piped input from stdin
