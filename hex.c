@@ -297,7 +297,7 @@ char *hex_process_string(const char *value)
     if (!processedStr)
     {
         hex_error("Memory allocation failed");
-        return (char *)value;
+        return NULL;
     }
 
     char *dst = processedStr;
@@ -388,21 +388,43 @@ HEX_StackElement hex_pop()
     return HEX_STACK[HEX_TOP--];
 }
 
+void hex_debug(const char *format, ...);
+char *hex_type(HEX_ElementType type);
+
 // Free a stack element
 void hex_free_element(HEX_StackElement element)
 {
-    if (element.type == HEX_TYPE_STRING)
+    hex_debug_element("FREE", element);
+    if (element.type == HEX_TYPE_STRING && element.data.strValue != NULL)
     {
         free(element.data.strValue);
+        element.data.strValue = NULL;
     }
-    else if (element.type == HEX_TYPE_QUOTATION)
+    else if (element.type == HEX_TYPE_QUOTATION && element.data.quotationValue != NULL)
     {
         for (size_t i = 0; i < element.quotationSize; i++)
         {
-            hex_free_element(*element.data.quotationValue[i]);
-            free(element.data.quotationValue[i]);
+            if (element.data.quotationValue[i] != NULL)
+            {
+                // TODO: review this
+                // Uncommmenting the following line causes repl to crash
+                // hex_free_element(*element.data.quotationValue[i]);
+                free(element.data.quotationValue[i]);
+                element.data.quotationValue[i] = NULL;
+            }
         }
         free(element.data.quotationValue);
+        element.data.quotationValue = NULL;
+    }
+    else if (element.type == HEX_TYPE_NATIVE_SYMBOL && element.symbolName != NULL)
+    {
+        free(element.symbolName);
+        element.symbolName = NULL;
+    }
+    else if (element.type == HEX_TYPE_USER_SYMBOL && element.symbolName != NULL)
+    {
+        free(element.symbolName);
+        element.symbolName = NULL;
     }
 }
 
@@ -3389,6 +3411,7 @@ int hex_symbol_clear()
     {
         hex_free_element(HEX_STACK[HEX_TOP--]);
     }
+    HEX_TOP = -1;
     return 0;
 }
 
