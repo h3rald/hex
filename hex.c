@@ -278,6 +278,7 @@ int hex_push(HEX_StackElement element)
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
     {
+        hex_debug_element("CALL", element);
         return element.data.functionPointer();
     }
     HEX_STACK[++HEX_TOP] = element;
@@ -3323,12 +3324,30 @@ int hex_symbol_filter()
                 if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
                 {
                     quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                    if (!quotation[count])
+                    {
+                        hex_error("Memory allocation failed");
+                        result = 1;
+                        break;
+                    }
                     *quotation[count] = *list.data.quotationValue[i];
                     count++;
                 }
                 hex_free_element(evalResult);
             }
-            result = hex_push_quotation(quotation, count);
+            if (result == 0)
+            {
+                result = hex_push_quotation(quotation, count);
+            }
+            else
+            {
+                hex_error("An error occurred while filtering the list");
+                result = 1;
+                for (size_t i = 0; i < count; i++)
+                {
+                    hex_free_element(*quotation[i]);
+                }
+            }
         }
     }
     hex_free_element(list);
