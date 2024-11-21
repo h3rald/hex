@@ -145,8 +145,8 @@ typedef struct
     HEX_StackElement value;
 } HEX_RegistryEntry;
 
-HEX_RegistryEntry hex_registry[HEX_REGISTRY_SIZE];
-int hex_dictCount = 0;
+HEX_RegistryEntry HEX_REGISTRY[HEX_REGISTRY_SIZE];
+int HEX_REGISTRY_COUNT = 0;
 
 void hex_free_element(HEX_StackElement element);
 
@@ -182,33 +182,34 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
     {
         return 1;
     }
-    for (int i = 0; i < hex_dictCount; i++)
+    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
-        if (strcmp(hex_registry[i].key, key) == 0)
+        if (strcmp(HEX_REGISTRY[i].key, key) == 0)
         {
-            if (hex_registry[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
+            if (HEX_REGISTRY[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
                 hex_error("Cannot overwrite native symbol %s", key);
                 return 1;
             }
-            free(hex_registry[i].key);
-            hex_free_element(hex_registry[i].value);
+            free(HEX_REGISTRY[i].key);
+            hex_free_element(HEX_REGISTRY[i].value);
             value.symbolName = strdup(key);
-            hex_registry[i].key = strdup(key);
-            hex_registry[i].value = value;
+            HEX_REGISTRY[i].key = strdup(key);
+            HEX_REGISTRY[i].value = value;
             return 0;
         }
     }
 
-    if (hex_dictCount >= HEX_REGISTRY_SIZE)
+    if (HEX_REGISTRY_COUNT >= HEX_REGISTRY_SIZE)
     {
         hex_error("Registry overflow");
+        free(value.symbolName);
         return 1;
     }
 
-    hex_registry[hex_dictCount].key = strdup(key);
-    hex_registry[hex_dictCount].value = value;
-    hex_dictCount++;
+    HEX_REGISTRY[HEX_REGISTRY_COUNT].key = strdup(key);
+    HEX_REGISTRY[HEX_REGISTRY_COUNT].value = value;
+    HEX_REGISTRY_COUNT++;
     return 0;
 }
 
@@ -229,11 +230,11 @@ void hex_set_native_symbol(const char *name, int (*func)())
 // Get a symbol value from the registry
 int hex_get_symbol(const char *key, HEX_StackElement *result)
 {
-    for (int i = 0; i < hex_dictCount; i++)
+    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
-        if (strcmp(hex_registry[i].key, key) == 0)
+        if (strcmp(HEX_REGISTRY[i].key, key) == 0)
         {
-            *result = hex_registry[i].value;
+            *result = HEX_REGISTRY[i].value;
             return 1;
         }
     }
@@ -246,7 +247,7 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 
 void hex_debug_element(const char *message, HEX_StackElement element);
 
-HEX_StackElement hex_stack[HEX_STACK_SIZE];
+HEX_StackElement HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
 
 // Push functions
@@ -279,7 +280,7 @@ int hex_push(HEX_StackElement element)
     {
         return element.data.functionPointer();
     }
-    hex_stack[++HEX_TOP] = element;
+    HEX_STACK[++HEX_TOP] = element;
     return 0;
 }
 
@@ -383,8 +384,8 @@ HEX_StackElement hex_pop()
         hex_error("Insufficient elements on the stack");
         return (HEX_StackElement){.type = HEX_TYPE_INVALID};
     }
-    hex_debug_element(" POP", hex_stack[HEX_TOP]);
-    return hex_stack[HEX_TOP--];
+    hex_debug_element(" POP", HEX_STACK[HEX_TOP]);
+    return HEX_STACK[HEX_TOP--];
 }
 
 // Free a stack element
@@ -1013,17 +1014,17 @@ int hex_symbol_free()
         hex_error("Variable name must be a string");
         return 1;
     }
-    for (int i = 0; i < hex_dictCount; i++)
+    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
-        if (strcmp(hex_registry[i].key, element.data.strValue) == 0)
+        if (strcmp(HEX_REGISTRY[i].key, element.data.strValue) == 0)
         {
-            free(hex_registry[i].key);
-            hex_free_element(hex_registry[i].value);
-            for (int j = i; j < hex_dictCount - 1; j++)
+            free(HEX_REGISTRY[i].key);
+            hex_free_element(HEX_REGISTRY[i].value);
+            for (int j = i; j < HEX_REGISTRY_COUNT - 1; j++)
             {
-                hex_registry[j] = hex_registry[j + 1];
+                HEX_REGISTRY[j] = HEX_REGISTRY[j + 1];
             }
-            hex_dictCount--;
+            HEX_REGISTRY_COUNT--;
             hex_free_element(element);
             return 0;
         }
@@ -3376,7 +3377,7 @@ int hex_symbol_stack()
             hex_error("Memory allocation failed");
             return 1;
         }
-        *quotation[i] = hex_stack[i];
+        *quotation[i] = HEX_STACK[i];
     }
 
     return hex_push_quotation(quotation, HEX_TOP + 1);
@@ -3386,7 +3387,7 @@ int hex_symbol_clear()
 {
     while (HEX_TOP >= 0)
     {
-        hex_free_element(hex_stack[HEX_TOP--]);
+        hex_free_element(HEX_STACK[HEX_TOP--]);
     }
     return 0;
 }
@@ -3587,7 +3588,7 @@ void hex_repl()
         // Print the top element of the stack
         if (HEX_TOP >= 0)
         {
-            hex_print_element(stdout, hex_stack[HEX_TOP]);
+            hex_print_element(stdout, HEX_STACK[HEX_TOP]);
             printf("\n");
         }
     }
