@@ -1,11 +1,21 @@
+0x0 "successes" store
+0x0 "failures" store
+
 (
     "current-test" store
     (current-test i)
-        ("." print)
-        ("\nTest Failed: " print current-test print "\n" print)
+        (
+            "." print 
+            successes 0x1 + "successes" store
+        )
+        (
+            "x" print
+            failures 0x1 + "failures" store
+        )
     if
 ) "test" store
 
-(0x1 0x1 ==) test i
-(0x1 0x1 ==) test i
-"" puts
+(0x1 "a1" store a1 0x1 == "a1" free) test i
+(0x1 0x2 ==) test i
+
+"\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts

@@ -489,6 +489,7 @@ typedef enum
     HEX_TOKEN_SYMBOL,
     HEX_TOKEN_QUOTATION_START,
     HEX_TOKEN_QUOTATION_END,
+    HEX_TOKEN_COMMENT,
     HEX_TOKEN_INVALID
 } HEX_TokenType;
 
@@ -510,8 +511,8 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
 {
     const char *ptr = *input;
 
-    // Skip whitespace and comments
-    while (isspace(*ptr) || *ptr == ';')
+    // Skip whitespace
+    while (isspace(*ptr))
     {
         if (*ptr == '\n')
         {
@@ -521,15 +522,6 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         else
         {
             (*column)++;
-        }
-
-        if (*ptr == ';')
-        {
-            while (*ptr != '\0' && *ptr != '\n')
-            {
-                ptr++;
-                (*column)++;
-            }
         }
         ptr++;
     }
@@ -544,7 +536,22 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
     token->line = *line;
     token->column = *column;
 
-    if (*ptr == '"')
+    if (*ptr == ';')
+    {
+        // Comment token
+        const char *start = ptr;
+        while (*ptr != '\0' && *ptr != '\n')
+        {
+            ptr++;
+            (*column)++;
+        }
+        size_t len = ptr - start;
+        token->value = (char *)malloc(len + 1);
+        strncpy(token->value, start, len);
+        token->value[len] = '\0';
+        token->type = HEX_TOKEN_COMMENT;
+    }
+    else if (*ptr == '"')
     {
         // String token
         ptr++;
