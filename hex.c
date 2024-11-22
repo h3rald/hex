@@ -272,9 +272,9 @@ int hex_push(HEX_StackElement element)
         else
         {
             hex_error("Undefined user symbol: %s", element.symbolName);
+            hex_free_element(value);
             result = 1;
         }
-        // hex_free_element(value);
         return result;
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
@@ -408,11 +408,9 @@ void hex_free_element(HEX_StackElement element)
         {
             if (element.data.quotationValue[i] != NULL)
             {
-                // TODO: review this
-                // Uncommmenting the following line causes repl to crash
-                // hex_free_element(*element.data.quotationValue[i]);
-                free(element.data.quotationValue[i]);
-                element.data.quotationValue[i] = NULL;
+                hex_free_element(*element.data.quotationValue[i]);
+                // free(element.data.quotationValue[i]);
+                // element.data.quotationValue[i] = NULL;
             }
         }
         free(element.data.quotationValue);
@@ -546,7 +544,6 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
     token->value = NULL;
     token->line = *line;
     token->column = *column;
-    printf("Token: >%s<\n", ptr);
 
     if (*ptr == '"')
     {
@@ -646,7 +643,6 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
-        printf("Token value: >%s<\n", token->value);
         if (hex_valid_native_symbol(token->value) || hex_valid_user_symbol(token->value))
         {
             token->type = HEX_TOKEN_SYMBOL;
@@ -703,7 +699,6 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
             balanced--;
-            // hex_free_token(token);
             break;
         }
 
@@ -777,12 +772,12 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
 
         quotation[size] = element;
         size++;
-        // hex_free_token(token);
     }
 
     if (balanced != 0)
     {
         hex_error("Unterminated quotation");
+        hex_free_token(token);
         free(quotation);
         return 1;
     }
@@ -790,6 +785,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
     result->type = HEX_TYPE_QUOTATION;
     result->data.quotationValue = quotation;
     result->quotationSize = size;
+    hex_free_token(token);
     return 0;
 }
 
@@ -963,12 +959,17 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
         for (size_t i = 0; i < element.quotationSize; i++)
         {
             if (i > 0)
+            {
                 fprintf(stream, " ");
+            }
             hex_print_element(stream, *element.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
 
+    case HEX_TYPE_INVALID:
+        fprintf(stream, "<invalid>");
+        break;
     default:
         fprintf(stream, "<unknown>");
         break;
@@ -1010,8 +1011,6 @@ int hex_symbol_store()
         hex_error("Failed to store variable");
         result = 1;
     }
-    // hex_free_element(name);
-    // hex_free_element(value);
     return result;
 }
 
@@ -1058,7 +1057,6 @@ int hex_symbol_type()
     }
     int result = 0;
     result = hex_push_string(hex_type(element.type));
-    hex_free_element(element);
     return result;
 }
 
@@ -1086,7 +1084,6 @@ int hex_symbol_i()
             break;
         }
     }
-    // hex_free_element(element);
     return result;
 }
 
@@ -1098,6 +1095,7 @@ int hex_symbol_eval()
     HEX_StackElement element = hex_pop();
     if (element.type == HEX_TYPE_INVALID)
     {
+        hex_free_element(element);
         return 1;
     }
     int result = 0;
@@ -1107,7 +1105,6 @@ int hex_symbol_eval()
         result = 1;
     }
     result = hex_interpret(element.data.strValue, "<eval>", 1, 1);
-    hex_free_element(element);
     return result;
 }
 
@@ -1196,8 +1193,6 @@ int hex_symbol_add()
         hex_error("'+' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1226,8 +1221,6 @@ int hex_symbol_subtract()
         hex_error("'-' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1255,8 +1248,6 @@ int hex_symbol_multiply()
     {
         hex_error("'*' symbol requires two integers");
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1289,8 +1280,6 @@ int hex_symbol_divide()
         hex_error("'/' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1323,8 +1312,6 @@ int hex_symbol_modulo()
         hex_error("'%%' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1356,8 +1343,6 @@ int hex_symbol_bitand()
         hex_error("Bitwise AND requires two integers");
         result = 1;
     }
-    hex_free_element(left);
-    hex_free_element(right);
     return result;
 }
 
@@ -1387,8 +1372,6 @@ int hex_symbol_bitor()
         hex_error("Bitwise OR requires two integers");
         result = 1;
     }
-    hex_free_element(left);
-    hex_free_element(right);
     return result;
 }
 
@@ -1418,8 +1401,6 @@ int hex_symbol_bitxor()
         hex_error("Bitwise XOR requires two integers");
         result = 1;
     }
-    hex_free_element(left);
-    hex_free_element(right);
     return result;
 }
 
@@ -1449,8 +1430,6 @@ int hex_symbol_shiftleft()
         hex_error("Left shift requires two integers");
         result = 1;
     }
-    hex_free_element(left);
-    hex_free_element(right);
     return result;
 }
 
@@ -1480,8 +1459,6 @@ int hex_symbol_shiftright()
         hex_error("Right shift requires two integers");
         result = 1;
     }
-    hex_free_element(left);
-    hex_free_element(right);
     return result;
 }
 
@@ -1504,7 +1481,6 @@ int hex_symbol_bitnot()
         hex_error("Bitwise NOT requires one integer");
         result = 1;
     }
-    hex_free_element(element);
     return result;
 }
 
@@ -1532,7 +1508,6 @@ int hex_symbol_int()
     {
         result = hex_push_int(strtol(a.data.strValue, NULL, 16));
     }
-    hex_free_element(a);
     return result;
 }
 
@@ -1558,7 +1533,6 @@ int hex_symbol_str()
     {
         result = hex_push_string(a.data.strValue);
     }
-    hex_free_element(a);
     return result;
 }
 
@@ -1580,7 +1554,6 @@ int hex_symbol_dec()
         hex_error("An integer is required");
         result = 1;
     }
-    hex_free_element(a);
     return result;
 }
 
@@ -1603,7 +1576,6 @@ int hex_symbol_hex()
         hex_error("'hex' symbol requires a string representing a decimal integer");
         result = 1;
     }
-    hex_free_element(element);
     return result;
 }
 
@@ -1667,8 +1639,6 @@ int hex_symbol_equal()
         hex_error("'==' symbol requires two integers, two strings, or two quotations");
         result = 1;
     }
-    // hex_free_element(a);
-    // hex_free_element(b);
     return result;
 }
 
@@ -1697,8 +1667,6 @@ int hex_symbol_notequal()
         hex_error("'!=' symbol requires two integers, two strings, or two quotations");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1731,8 +1699,6 @@ int hex_symbol_greater()
         hex_error("'>' symbol requires two integers or two strings");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1765,8 +1731,6 @@ int hex_symbol_less()
         hex_error("'<' symbol requires two integers or two strings");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1799,8 +1763,6 @@ int hex_symbol_greaterequal()
         hex_error("'>=' symbol requires two integers or two strings");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1833,8 +1795,6 @@ int hex_symbol_lessequal()
         hex_error("'<=' symbol requires two integers or two strings");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1865,8 +1825,6 @@ int hex_symbol_and()
         hex_error("'and' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1895,8 +1853,6 @@ int hex_symbol_or()
         hex_error("'or' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -1947,8 +1903,6 @@ int hex_symbol_xor()
         hex_error("'xor' symbol requires two integers");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -2104,9 +2058,6 @@ int hex_symbol_slice()
         hex_error("Symbol 'slice' requires a quotation or a string");
         result = 1;
     }
-    hex_free_element(list);
-    hex_free_element(start);
-    hex_free_element(end);
     return result;
 }
 
@@ -2132,7 +2083,6 @@ int hex_symbol_len()
         hex_error("Symbol 'len' requires a quotation or a string");
         result = 1;
     }
-    hex_free_element(element);
     return result;
 }
 
@@ -2192,8 +2142,6 @@ int hex_symbol_get()
         hex_error("Symbol 'get' requires a quotation or a string");
         result = 1;
     }
-    hex_free_element(list);
-    hex_free_element(index);
     return result;
 }
 
@@ -2263,9 +2211,6 @@ int hex_symbol_set()
         hex_error("Symbol 'set' requires a quotation or a string");
         result = 1;
     }
-    hex_free_element(list);
-    hex_free_element(index);
-    hex_free_element(value);
     return result;
 }
 
@@ -2308,8 +2253,6 @@ int hex_symbol_index()
     {
         hex_error("Symbol 'index' requires a quotation or a string");
     }
-    hex_free_element(element);
-    hex_free_element(list);
     return hex_push_int(result);
 }
 
@@ -2378,8 +2321,6 @@ int hex_symbol_join()
         hex_error("Symbol 'join' requires a quotation and a string");
         result = 1;
     }
-    hex_free_element(list);
-    hex_free_element(separator);
     return result;
 }
 
@@ -2442,8 +2383,6 @@ int hex_symbol_split()
         hex_error("Symbol 'split' requires two strings");
         result = 1;
     }
-    hex_free_element(str);
-    hex_free_element(separator);
     return result;
 }
 
@@ -2506,9 +2445,6 @@ int hex_symbol_replace()
         hex_error("Symbol 'replace' requires three strings");
         result = 1;
     }
-    hex_free_element(list);
-    hex_free_element(search);
-    hex_free_element(replacement);
     return result;
 }
 
@@ -2560,7 +2496,6 @@ int hex_symbol_read()
         hex_error("Symbol 'read' requires a string");
         result = 1;
     }
-    hex_free_element(filename);
     return result;
 }
 
@@ -2608,8 +2543,6 @@ int hex_symbol_write()
         hex_error("Symbol 'write' requires a string");
         result = 1;
     }
-    hex_free_element(data);
-    hex_free_element(filename);
     return result;
 }
 
@@ -2657,8 +2590,6 @@ int hex_symbol_append()
         hex_error("Symbol 'append' requires a string");
         result = 1;
     }
-    hex_free_element(data);
-    hex_free_element(filename);
     return result;
 }
 
@@ -2710,7 +2641,6 @@ int hex_symbol_exit()
         return 1;
     }
     int exit_status = element.data.intValue;
-    hex_free_element(element);
     exit(exit_status);
     return 0; // This line will never be reached, but it's here to satisfy the return type
 }
@@ -2734,7 +2664,6 @@ int hex_symbol_exec()
         hex_error("Symbol 'exec' requires a string");
         result = 1;
     }
-    hex_free_element(command);
     return result;
 }
 
@@ -2897,7 +2826,6 @@ int hex_symbol_run()
     quotation[2]->type = HEX_TYPE_STRING;
     quotation[2]->data.strValue = strdup(error);
 
-    hex_free_element(command);
     return hex_push_quotation(quotation, 3);
 }
 
@@ -2967,11 +2895,7 @@ int hex_symbol_if()
                 }
             }
         }
-        // hex_free_element(evalResult);
     }
-    // hex_free_element(condition);
-    // hex_free_element(thenBlock);
-    // hex_free_element(elseBlock);
     return result;
 }
 
@@ -3019,10 +2943,7 @@ int hex_symbol_when()
                 }
             }
         }
-        hex_free_element(evalResult);
     }
-    hex_free_element(condition);
-    hex_free_element(action);
     return result;
 }
 
@@ -3072,11 +2993,8 @@ int hex_symbol_while()
                     break;
                 }
             }
-            hex_free_element(evalResult);
         }
     }
-    hex_free_element(condition);
-    hex_free_element(action);
     return result;
 }
 
@@ -3120,8 +3038,6 @@ int hex_symbol_each()
             }
         }
     }
-    hex_free_element(list);
-    hex_free_element(action);
     return result;
 }
 
@@ -3160,8 +3076,6 @@ int hex_symbol_times()
             }
         }
     }
-    hex_free_element(count);
-    hex_free_element(action);
     return result;
 }
 
@@ -3224,8 +3138,6 @@ int hex_symbol_try()
 
         strncpy(HEX_ERROR, prevError, sizeof(HEX_ERROR));
     }
-    hex_free_element(tryBlock);
-    hex_free_element(catchBlock);
     return result;
 }
 
@@ -3292,8 +3204,6 @@ int hex_symbol_map()
             }
         }
     }
-    hex_free_element(list);
-    hex_free_element(action);
     return result;
 }
 
@@ -3357,7 +3267,6 @@ int hex_symbol_filter()
                     *quotation[count] = *list.data.quotationValue[i];
                     count++;
                 }
-                hex_free_element(evalResult);
             }
             if (result == 0)
             {
@@ -3374,8 +3283,6 @@ int hex_symbol_filter()
             }
         }
     }
-    hex_free_element(list);
-    hex_free_element(action);
     return result;
 }
 
@@ -3403,8 +3310,6 @@ int hex_symbol_swap()
     {
         result = hex_push(b);
     }
-    hex_free_element(a);
-    hex_free_element(b);
     return result;
 }
 
@@ -3421,7 +3326,6 @@ int hex_symbol_dup()
     {
         result = hex_push(element);
     }
-    hex_free_element(element);
     return result;
 }
 
@@ -3461,11 +3365,6 @@ int hex_symbol_clear()
 int hex_symbol_pop()
 {
     HEX_StackElement element = hex_pop();
-    if (element.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(element);
-        return 1;
-    }
     hex_free_element(element);
     return 0;
 }
@@ -3627,6 +3526,7 @@ char *hex_read_file(const char *filename)
     fread(buffer, 1, length, file);
     buffer[length] = '\0';
     fclose(file);
+    printf("Read file: >>>%s<<<\n", buffer);
     return buffer;
 }
 
@@ -3697,10 +3597,15 @@ int main(int argc, char *argv[])
 
     if (argc > 1)
     {
+
         for (int i = 1; i < argc; i++)
         {
-            // Set HEX_DEBUG to 1 if -d or --debug flag is provided
-            if ((strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0))
+            if ((strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0))
+            {
+                printf("%s\n", HEX_VERSION);
+                return 0;
+            }
+            else if ((strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0))
             {
                 HEX_DEBUG = 1;
                 printf("*** Debug mode enabled ***\n");
@@ -3714,9 +3619,7 @@ int main(int argc, char *argv[])
                 {
                     return 1;
                 }
-
                 hex_interpret(fileContent, filename, 1, 1);
-                free(fileContent); // Free the allocated memory
                 return 0;
             }
         }
