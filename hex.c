@@ -27,7 +27,6 @@ int HEX_DEBUG = 0;
 char HEX_ERROR[256] = "";
 char **HEX_ARGV;
 int HEX_ARGC = 0;
-volatile sig_atomic_t HEX_KEEP_RUNNING = 1;
 int HEX_ERRORS = 1;
 
 char *HEX_NATIVE_SYMBOLS[] = {
@@ -3585,7 +3584,7 @@ void hex_repl()
 
     printf("hex v%s. Press Ctrl+C to exit.\n", HEX_VERSION);
 
-    while (HEX_KEEP_RUNNING)
+    while (1)
     {
         printf("> "); // Prompt
         if (fgets(line, sizeof(line), stdin) == NULL)
@@ -3611,7 +3610,8 @@ void hex_repl()
 void hex_handle_sigint(int sig)
 {
     (void)sig; // Suppress unused warning
-    HEX_KEEP_RUNNING = 0;
+    printf("\n");
+    exit(0);
 }
 
 // Process piped input from stdin
