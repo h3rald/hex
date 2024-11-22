@@ -1,10 +1,11 @@
 (
-    "value" store
-    (value 0x1 ==)
-        ("YES" puts)
-        ("NO" puts)
+    "current-test" store
+    (current-test i)
+        ("." print)
+        ("\nTest Failed: " print current-test print "\n" print)
     if
-) "simple-test" store
+) "test" store
 
-0x1 simple-test i
-0x2 simple-test i
+(0x1 0x1 ==) test i
+(0x1 0x1 ==) test i
+"" puts

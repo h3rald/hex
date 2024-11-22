@@ -895,6 +895,42 @@ char *hex_itoa_hex(int num)
     return hex_itoa(num, 16);
 }
 
+void hex_raw_print_element(FILE *stream, HEX_StackElement element)
+{
+    switch (element.type)
+    {
+    case HEX_TYPE_INTEGER:
+        fprintf(stream, "0x%x", element.data.intValue);
+        break;
+    case HEX_TYPE_STRING:
+        fprintf(stream, element.data.strValue);
+        break;
+    case HEX_TYPE_USER_SYMBOL:
+    case HEX_TYPE_NATIVE_SYMBOL:
+        fprintf(stream, "%s", element.symbolName);
+        break;
+    case HEX_TYPE_QUOTATION:
+        fprintf(stream, "(");
+        for (size_t i = 0; i < element.quotationSize; i++)
+        {
+            if (i > 0)
+            {
+                fprintf(stream, " ");
+            }
+            hex_print_element(stream, *element.data.quotationValue[i]);
+        }
+        fprintf(stream, ")");
+        break;
+
+    case HEX_TYPE_INVALID:
+        fprintf(stream, "<invalid>");
+        break;
+    default:
+        fprintf(stream, "<unknown>");
+        break;
+    }
+}
+
 void hex_print_element(FILE *stream, HEX_StackElement element)
 {
     switch (element.type)
@@ -1118,7 +1154,7 @@ int hex_symbol_puts()
         hex_free_element(element);
         return 1;
     }
-    hex_print_element(stdout, element);
+    hex_raw_print_element(stdout, element);
     printf("\n");
     return 0;
 }
@@ -1131,7 +1167,7 @@ int hex_symbol_warn()
         hex_free_element(element);
         return 1;
     }
-    hex_print_element(stderr, element);
+    hex_raw_print_element(stderr, element);
     printf("\n");
     return 0;
 }
@@ -1144,7 +1180,7 @@ int hex_symbol_print()
         hex_free_element(element);
         return 1;
     }
-    hex_print_element(stdout, element);
+    hex_raw_print_element(stdout, element);
     return 0;
 }
 
@@ -3506,28 +3542,40 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
 // Read a file into a buffer
 char *hex_read_file(const char *filename)
 {
-    FILE *file = fopen(filename, "r");
-    if (!file)
+    FILE *file = fopen(filename, "r"); // Open file in read mode
+    if (file == NULL)
     {
-        hex_error("Could not open file: %s", filename);
-        exit(1);
+        hex_error("Failed to open file");
+        return NULL;
     }
 
+    // Move file pointer to the end to determine the file size
     fseek(file, 0, SEEK_END);
-    long length = ftell(file);
-    fseek(file, 0, SEEK_SET);
+    long fileSize = ftell(file);
+    rewind(file); // Reset the file pointer to the beginning
 
-    char *buffer = (char *)malloc(length + 1);
-    if (!buffer)
+    if (fileSize < 0)
+    {
+        hex_error("Failed to determine file size");
+        fclose(file);
+        return NULL;
+    }
+
+    // Allocate memory for the file content, plus 1 byte for the null terminator
+    char *content = (char *)malloc(fileSize + 1);
+    if (content == NULL)
     {
         hex_error("Memory allocation failed");
+        fclose(file);
+        return NULL;
     }
 
-    fread(buffer, 1, length, file);
-    buffer[length] = '\0';
-    fclose(file);
-    printf("Read file: >>>%s<<<\n", buffer);
-    return buffer;
+    // Read the file content into the buffer
+    size_t bytesRead = fread(content, 1, fileSize, file);
+    content[bytesRead] = '\0'; // Null-terminate the string
+    fclose(file);              // Close the file
+
+    return content;
 }
 
 // REPL implementation
@@ -3600,12 +3648,13 @@ int main(int argc, char *argv[])
 
         for (int i = 1; i < argc; i++)
         {
-            if ((strcmp(argv[i], "-v") == 0 || strcmp(argv[i], "--version") == 0))
+            const char *arg = strdup(argv[i]);
+            if ((strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0))
             {
                 printf("%s\n", HEX_VERSION);
                 return 0;
             }
-            else if ((strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0))
+            else if ((strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0))
             {
                 HEX_DEBUG = 1;
                 printf("*** Debug mode enabled ***\n");
@@ -3613,13 +3662,12 @@ int main(int argc, char *argv[])
             else
             {
                 // Process a file
-                const char *filename = argv[i];
-                char *fileContent = hex_read_file(filename);
+                char *fileContent = hex_read_file(arg);
                 if (!fileContent)
                 {
                     return 1;
                 }
-                hex_interpret(fileContent, filename, 1, 1);
+                hex_interpret(fileContent, arg, 1, 1);
                 return 0;
             }
         }
