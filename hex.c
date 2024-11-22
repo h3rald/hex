@@ -81,8 +81,8 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "exit",
     "exec",
     "run",
+    "if",
     "when",
-    "unless",
     "while",
     "each",
     "times",
@@ -271,10 +271,10 @@ int hex_push(HEX_StackElement element)
         }
         else
         {
-            hex_error("Undefined symbol: %s", element.symbolName);
+            hex_error("Undefined user symbol: %s", element.symbolName);
             result = 1;
         }
-        hex_free_element(value);
+        // hex_free_element(value);
         return result;
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
@@ -546,6 +546,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
     token->value = NULL;
     token->line = *line;
     token->column = *column;
+    printf("Token: >%s<\n", ptr);
 
     if (*ptr == '"')
     {
@@ -645,6 +646,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
+        printf("Token value: >%s<\n", token->value);
         if (hex_valid_native_symbol(token->value) || hex_valid_user_symbol(token->value))
         {
             token->type = HEX_TOKEN_SYMBOL;
@@ -701,7 +703,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
             balanced--;
-            hex_free_token(token);
+            // hex_free_token(token);
             break;
         }
 
@@ -775,7 +777,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
 
         quotation[size] = element;
         size++;
-        hex_free_token(token);
+        // hex_free_token(token);
     }
 
     if (balanced != 0)
@@ -1008,8 +1010,8 @@ int hex_symbol_store()
         hex_error("Failed to store variable");
         result = 1;
     }
-    hex_free_element(name);
-    hex_free_element(value);
+    // hex_free_element(name);
+    // hex_free_element(value);
     return result;
 }
 
@@ -1084,7 +1086,7 @@ int hex_symbol_i()
             break;
         }
     }
-    hex_free_element(element);
+    // hex_free_element(element);
     return result;
 }
 
@@ -1134,7 +1136,6 @@ int hex_symbol_warn()
     }
     hex_print_element(stderr, element);
     printf("\n");
-    hex_free_element(element);
     return 0;
 }
 
@@ -1147,7 +1148,6 @@ int hex_symbol_print()
         return 1;
     }
     hex_print_element(stdout, element);
-    hex_free_element(element);
     return 0;
 }
 
@@ -1667,8 +1667,8 @@ int hex_symbol_equal()
         hex_error("'==' symbol requires two integers, two strings, or two quotations");
         result = 1;
     }
-    hex_free_element(a);
-    hex_free_element(b);
+    // hex_free_element(a);
+    // hex_free_element(b);
     return result;
 }
 
@@ -2905,6 +2905,76 @@ int hex_symbol_run()
 // Control flow symbols               //
 ////////////////////////////////////////
 
+int hex_symbol_if()
+{
+    HEX_StackElement elseBlock = hex_pop();
+    if (elseBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(elseBlock);
+        return 1;
+    }
+    HEX_StackElement thenBlock = hex_pop();
+    if (thenBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(thenBlock);
+        hex_free_element(elseBlock);
+        return 1;
+    }
+    HEX_StackElement condition = hex_pop();
+    if (condition.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(condition);
+        hex_free_element(thenBlock);
+        hex_free_element(elseBlock);
+        return 1;
+    }
+    int result = 0;
+    if (condition.type != HEX_TYPE_QUOTATION || thenBlock.type != HEX_TYPE_QUOTATION || elseBlock.type != HEX_TYPE_QUOTATION)
+    {
+        hex_error("'if' symbol requires three quotations");
+        result = 1;
+    }
+    else
+    {
+        for (size_t i = 0; i < condition.quotationSize; i++)
+        {
+            if (hex_push(*condition.data.quotationValue[i]) != 0)
+            {
+                result = 1;
+                break;
+            }
+        }
+        HEX_StackElement evalResult = hex_pop();
+        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+        {
+            for (size_t i = 0; i < thenBlock.quotationSize; i++)
+            {
+                if (hex_push(*thenBlock.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < elseBlock.quotationSize; i++)
+            {
+                if (hex_push(*elseBlock.data.quotationValue[i]) != 0)
+                {
+                    result = 1;
+                    break;
+                }
+            }
+        }
+        // hex_free_element(evalResult);
+    }
+    // hex_free_element(condition);
+    // hex_free_element(thenBlock);
+    // hex_free_element(elseBlock);
+    return result;
+}
+
 int hex_symbol_when()
 {
 
@@ -2939,56 +3009,6 @@ int hex_symbol_when()
         }
         HEX_StackElement evalResult = hex_pop();
         if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
-        {
-            for (size_t i = 0; i < action.quotationSize; i++)
-            {
-                if (hex_push(*action.data.quotationValue[i]) != 0)
-                {
-                    result = 1;
-                    break;
-                }
-            }
-        }
-        hex_free_element(evalResult);
-    }
-    hex_free_element(condition);
-    hex_free_element(action);
-    return result;
-}
-
-int hex_symbol_unless()
-{
-    HEX_StackElement action = hex_pop();
-    if (action.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(action);
-        return 1;
-    }
-    HEX_StackElement condition = hex_pop();
-    if (condition.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(action);
-        hex_free_element(condition);
-        return 1;
-    }
-    int result = 0;
-    if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
-    {
-        hex_error("'unless' symbol requires two quotations");
-        result = 1;
-    }
-    else
-    {
-        for (size_t i = 0; i < condition.quotationSize; i++)
-        {
-            if (hex_push(*condition.data.quotationValue[i]) != 0)
-            {
-                result = 1;
-                break; // Break if pushing the element failed
-            }
-        }
-        HEX_StackElement evalResult = hex_pop();
-        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue == 0)
         {
             for (size_t i = 0; i < action.quotationSize; i++)
             {
@@ -3506,8 +3526,8 @@ void hex_register_symbols()
     hex_set_native_symbol("exit", hex_symbol_exit);
     hex_set_native_symbol("exec", hex_symbol_exec);
     hex_set_native_symbol("run", hex_symbol_run);
+    hex_set_native_symbol("if", hex_symbol_if);
     hex_set_native_symbol("when", hex_symbol_when);
-    hex_set_native_symbol("unless", hex_symbol_unless);
     hex_set_native_symbol("while", hex_symbol_while);
     hex_set_native_symbol("each", hex_symbol_each);
     hex_set_native_symbol("times", hex_symbol_times);
@@ -3550,8 +3570,8 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-          hex_error("Unexpected end of quotation");
-          result = 1;
+            hex_error("Unexpected end of quotation");
+            result = 1;
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
