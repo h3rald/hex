@@ -3548,27 +3548,16 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
 // Read a file into a buffer
 char *hex_read_file(const char *filename)
 {
-    FILE *file = fopen(filename, "r"); // Open file in read mode
+    FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
         hex_error("Failed to open file");
         return NULL;
     }
 
-    // Move file pointer to the end to determine the file size
-    fseek(file, 0, SEEK_END);
-    long fileSize = ftell(file);
-    rewind(file); // Reset the file pointer to the beginning
-
-    if (fileSize < 0)
-    {
-        hex_error("Failed to determine file size");
-        fclose(file);
-        return NULL;
-    }
-
-    // Allocate memory for the file content, plus 1 byte for the null terminator
-    char *content = (char *)malloc(fileSize + 1);
+    // Allocate an initial buffer
+    size_t bufferSize = 1024; // Start with a 1 KB buffer
+    char *content = (char *)malloc(bufferSize);
     if (content == NULL)
     {
         hex_error("Memory allocation failed");
@@ -3576,11 +3565,50 @@ char *hex_read_file(const char *filename)
         return NULL;
     }
 
-    // Read the file content into the buffer
-    size_t bytesRead = fread(content, 1, fileSize, file);
-    content[bytesRead] = '\0'; // Null-terminate the string
-    fclose(file);              // Close the file
+    size_t bytesReadTotal = 0;
+    size_t bytesRead = 0;
 
+    while ((bytesRead = fread(content + bytesReadTotal, 1, bufferSize - bytesReadTotal, file)) > 0)
+    {
+        bytesReadTotal += bytesRead;
+
+        // Resize the buffer if necessary
+        if (bytesReadTotal == bufferSize)
+        {
+            bufferSize *= 2; // Double the buffer size
+            char *temp = (char *)realloc(content, bufferSize);
+            if (temp == NULL)
+            {
+                hex_error("Memory reallocation failed");
+                free(content);
+                fclose(file);
+                return NULL;
+            }
+            content = temp;
+        }
+    }
+
+    if (ferror(file))
+    {
+        hex_error("Error reading the file");
+        free(content);
+        fclose(file);
+        return NULL;
+    }
+
+    // Null-terminate the content
+    char *finalContent = (char *)realloc(content, bytesReadTotal + 1);
+    if (finalContent == NULL)
+    {
+        hex_error("Final memory allocation failed");
+        free(content);
+        fclose(file);
+        return NULL;
+    }
+    content = finalContent;
+    content[bytesReadTotal] = '\0';
+
+    fclose(file);
     return content;
 }
 

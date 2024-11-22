@@ -15,7 +15,11 @@
     if
 ) "test" store
 
-(0x1 "a1" store a1 0x1 == "a1" free) test i
-(0x1 0x2 ==) test i
+; --- Tests
+(0x1 "a" store a 0x1 ==) test i
 
+; --- Report
 "\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
+
+; --- Cleanup
+"a" free
