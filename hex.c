@@ -903,7 +903,7 @@ void hex_raw_print_element(FILE *stream, HEX_StackElement element)
         fprintf(stream, "0x%x", element.data.intValue);
         break;
     case HEX_TYPE_STRING:
-        fprintf(stream, element.data.strValue);
+        fprintf(stream, "%s", element.data.strValue);
         break;
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
@@ -3160,7 +3160,7 @@ int hex_symbol_try()
         }
         HEX_ERRORS = 1;
 
-        if (HEX_ERROR != "")
+        if (strcmp(HEX_ERROR, ""))
         {
             for (size_t i = 0; i < catchBlock.quotationSize; i++)
             {
