@@ -1,27 +1,42 @@
+0x0 "test-count" store
 0x0 "successes" store
 0x0 "failures" store
+() "errors" store
 
 (
     "current-test" store
-    (current-test i)
+    test-count 0x1 + "test-counnt" store
+    (
+        (current-test i)
+            (
+                "." print 
+                successes 0x1 + "successes" store
+            )
+            (
+                "x" print
+                failures 0x1 + "failures" store
+            )
+        if
+    ) 
         (
-            "." print 
-            successes 0x1 + "successes" store
-        )
-        (
+            ; Store error
+            (test-count str " - " error) join errors append "errors" store   
             "x" print
             failures 0x1 + "failures" store
         )
-    if
+    try
 ) "test" store
-
-
 
 ; --- Tests
 (0x1 "a" store a 0x1 ==) test i
+(a free 0x1) test i
 
 ; --- Report
 "\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
 
+(errors length 0 >)
+    errors (warn) each
+when
+
 ; --- Cleanup
-"a" free
+;"a" free

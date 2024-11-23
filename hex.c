@@ -28,6 +28,8 @@ char HEX_ERROR[256] = "";
 char **HEX_ARGV;
 int HEX_ARGC = 0;
 int HEX_ERRORS = 1;
+int HEX_REPL = 0;
+int HEX_STDIN = 0;
 
 char *HEX_NATIVE_SYMBOLS[] = {
     "store",
@@ -853,6 +855,10 @@ void add_to_stack_trace(HEX_Token *token)
 // Print the stack trace
 void print_stack_trace()
 {
+    if (HEX_STDIN || HEX_REPL)
+    {
+        return;
+    }
     fprintf(stderr, "[stack trace] (most recent symbol first):\n");
 
     for (size_t i = 0; i < stackTrace.size; i++)
@@ -3730,11 +3736,13 @@ int main(int argc, char *argv[])
     }
     if (!isatty(fileno(stdin)))
     {
+        HEX_STDIN = 1;
         // Process piped input from stdin
         hex_process_stdin();
     }
     else
     {
+        HEX_REPL = 1;
         // Start REPL
         hex_repl();
     }
