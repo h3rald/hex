@@ -127,7 +127,7 @@ typedef struct HEX_StackElement
     HEX_ElementType type;
     union
     {
-        int intValue;
+        size_t intValue;
         char *strValue;
         int (*functionPointer)();
         struct HEX_StackElement **quotationValue;
@@ -166,7 +166,7 @@ int hex_valid_user_symbol(const char *symbol)
         hex_error("Invalid symbol: %s", symbol);
         return 0;
     }
-    for (int j = 1; j < strlen(symbol); j++)
+    for (size_t j = 1; j < strlen(symbol); j++)
     {
         if (!isalnum(symbol[j]) && symbol[j] != '_' && symbol[j] != '-')
         {
@@ -930,7 +930,7 @@ void hex_raw_print_element(FILE *stream, HEX_StackElement element)
     switch (element.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", element.data.intValue);
+        fprintf(stream, "0x%zxx", element.data.intValue);
         break;
     case HEX_TYPE_STRING:
         fprintf(stream, "%s", element.data.strValue);
@@ -966,7 +966,7 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     switch (element.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", element.data.intValue);
+        fprintf(stream, "0x%zx", element.data.intValue);
         break;
 
     case HEX_TYPE_STRING:
@@ -1142,7 +1142,7 @@ int hex_symbol_i()
         hex_error("'i' symbol requires a quotation");
         result = 1;
     }
-    for (int i = 0; i < element.quotationSize; i++)
+    for (size_t i = 0; i < element.quotationSize; i++)
     {
         if (hex_push(*element.data.quotationValue[i]) != 0)
         {
@@ -2298,7 +2298,7 @@ int hex_symbol_index()
     int result = -1;
     if (list.type == HEX_TYPE_QUOTATION)
     {
-        for (int i = 0; i < list.quotationSize; i++)
+        for (size_t i = 0; i < list.quotationSize; i++)
         {
             if (hex_equal(*list.data.quotationValue[i], element))
             {
@@ -2748,7 +2748,6 @@ int hex_symbol_run()
         return 1;
     }
 
-    FILE *fp;
     char path[1035];
     char output[8192] = "";
     char error[8192] = "";
@@ -3130,7 +3129,7 @@ int hex_symbol_times()
     }
     else
     {
-        for (int i = 0; i < count.data.intValue; i++)
+        for (size_t i = 0; i < count.data.intValue; i++)
         {
             for (size_t j = 0; j < action.quotationSize; j++)
             {
@@ -3541,7 +3540,6 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            int balance = 1;
             if (hex_parse_quotation(&input, quotationElement, filename, &line, &column) != 0)
             {
                 hex_error("Failed to parse quotation");
