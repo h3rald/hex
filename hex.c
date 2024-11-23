@@ -784,9 +784,13 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
                 return 1;
             }
         }
+        else if (token->type == HEX_TOKEN_COMMENT)
+        {
+            // Ignore comments
+        }
         else
         {
-            hex_error("Unexpected token in quotation");
+            hex_error("Unexpected token in quotation: >>%s<<", token->value);
             hex_free_token(token);
             free(quotation);
             return 1;
@@ -3561,7 +3565,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
 
         token = hex_next_token(&input, &line, &column);
     }
-    if (token->type == HEX_TOKEN_INVALID)
+    if (token != NULL && token->type == HEX_TOKEN_INVALID)
     {
         token->filename = strdup(filename);
         add_to_stack_trace(token);
