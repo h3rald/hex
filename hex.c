@@ -127,13 +127,13 @@ typedef struct HEX_StackElement
     HEX_ElementType type;
     union
     {
-        size_t intValue;
+        int intValue;
         char *strValue;
         int (*functionPointer)();
         struct HEX_StackElement **quotationValue;
     } data;
     char *symbolName;     // Symbol name (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
-    size_t quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
+    int quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
 ////////////////////////////////////////
@@ -295,7 +295,7 @@ int hex_push_int(int value)
 
 char *hex_process_string(const char *value)
 {
-    size_t len = strlen(value);
+    int len = strlen(value);
     char *processedStr = (char *)malloc(len + 1);
     if (!processedStr)
     {
@@ -359,7 +359,7 @@ int hex_push_string(const char *value)
     return hex_push(element);
 }
 
-int hex_push_quotation(HEX_StackElement **quotation, size_t size)
+int hex_push_quotation(HEX_StackElement **quotation, int size)
 {
     HEX_StackElement element = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
     return hex_push(element);
@@ -405,7 +405,7 @@ void hex_free_element(HEX_StackElement element)
     }
     else if (element.type == HEX_TYPE_QUOTATION && element.data.quotationValue != NULL)
     {
-        for (size_t i = 0; i < element.quotationSize; i++)
+        for (int i = 0; i < element.quotationSize; i++)
         {
             if (element.data.quotationValue[i] != NULL)
             {
@@ -547,7 +547,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
             ptr++;
             (*column)++;
         }
-        size_t len = ptr - start;
+        int len = ptr - start;
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
@@ -558,7 +558,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         // String token
         ptr++;
         const char *start = ptr;
-        size_t len = 0;
+        int len = 0;
 
         while (*ptr != '\0')
         {
@@ -631,7 +631,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
             ptr++;
             (*column)++;
         }
-        size_t len = ptr - start;
+        int len = ptr - start;
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
@@ -659,7 +659,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
             (*column)++;
         }
 
-        size_t len = ptr - start;
+        int len = ptr - start;
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
@@ -704,8 +704,8 @@ int hex_valid_native_symbol(char *symbol)
 int hex_parse_quotation(const char **input, HEX_StackElement *result, const char *filename, int *line, int *column)
 {
     HEX_StackElement **quotation = NULL;
-    size_t capacity = 2;
-    size_t size = 0;
+    int capacity = 2;
+    int size = 0;
     int balanced = 1;
 
     quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
@@ -831,8 +831,8 @@ typedef struct
 typedef struct
 {
     HEX_StackTraceEntry entries[HEX_STACK_TRACE_SIZE];
-    size_t start; // Index of the oldest element
-    size_t size;  // Current number of elements in the buffer
+    int start; // Index of the oldest element
+    int size;  // Current number of elements in the buffer
 } CircularStackTrace;
 
 CircularStackTrace stackTrace = {.start = 0, .size = 0};
@@ -840,7 +840,7 @@ CircularStackTrace stackTrace = {.start = 0, .size = 0};
 // Add an entry to the circular stack trace
 void add_to_stack_trace(HEX_Token *token)
 {
-    size_t index = (stackTrace.start + stackTrace.size) % HEX_STACK_TRACE_SIZE;
+    int index = (stackTrace.start + stackTrace.size) % HEX_STACK_TRACE_SIZE;
 
     if (stackTrace.size < HEX_STACK_TRACE_SIZE)
     {
@@ -865,9 +865,9 @@ void print_stack_trace()
     }
     fprintf(stderr, "[stack trace] (most recent symbol first):\n");
 
-    for (size_t i = 0; i < stackTrace.size; i++)
+    for (int i = 0; i < stackTrace.size; i++)
     {
-        size_t index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
+        int index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
         HEX_Token token = stackTrace.entries[index].token;
         fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.filename, token.line, token.column);
     }
@@ -930,7 +930,7 @@ void hex_raw_print_element(FILE *stream, HEX_StackElement element)
     switch (element.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%zxx", element.data.intValue);
+        fprintf(stream, "0x%xx", element.data.intValue);
         break;
     case HEX_TYPE_STRING:
         fprintf(stream, "%s", element.data.strValue);
@@ -941,7 +941,7 @@ void hex_raw_print_element(FILE *stream, HEX_StackElement element)
         break;
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (size_t i = 0; i < element.quotationSize; i++)
+        for (int i = 0; i < element.quotationSize; i++)
         {
             if (i > 0)
             {
@@ -966,7 +966,7 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     switch (element.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%zx", element.data.intValue);
+        fprintf(stream, "0x%x", element.data.intValue);
         break;
 
     case HEX_TYPE_STRING:
@@ -1022,7 +1022,7 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
 
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (size_t i = 0; i < element.quotationSize; i++)
+        for (int i = 0; i < element.quotationSize; i++)
         {
             if (i > 0)
             {
@@ -1142,7 +1142,7 @@ int hex_symbol_i()
         hex_error("'i' symbol requires a quotation");
         result = 1;
     }
-    for (size_t i = 0; i < element.quotationSize; i++)
+    for (int i = 0; i < element.quotationSize; i++)
     {
         if (hex_push(*element.data.quotationValue[i]) != 0)
         {
@@ -1667,7 +1667,7 @@ int hex_equal(HEX_StackElement a, HEX_StackElement b)
         else
         {
             result = 1;
-            for (size_t i = 0; i < a.quotationSize; i++)
+            for (int i = 0; i < a.quotationSize; i++)
             {
                 if (a.data.quotationValue[i] != b.data.quotationValue[i])
                 {
@@ -1994,7 +1994,7 @@ int hex_symbol_concat()
     int result = 0;
     if (list.type == HEX_TYPE_QUOTATION)
     {
-        size_t newSize = list.quotationSize + 1;
+        int newSize = list.quotationSize + 1;
         HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
         if (!newQuotation)
         {
@@ -2072,7 +2072,7 @@ int hex_symbol_slice()
         }
         else
         {
-            size_t newSize = end.data.intValue - start.data.intValue + 1;
+            int newSize = end.data.intValue - start.data.intValue + 1;
             HEX_StackElement **newQuotation = (HEX_StackElement **)malloc(newSize * sizeof(HEX_StackElement *));
             if (!newQuotation)
             {
@@ -2081,7 +2081,7 @@ int hex_symbol_slice()
             }
             else
             {
-                for (size_t i = 0; i < newSize; i++)
+                for (int i = 0; i < newSize; i++)
                 {
                     newQuotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
                     *newQuotation[i] = *list.data.quotationValue[start.data.intValue + i];
@@ -2097,14 +2097,14 @@ int hex_symbol_slice()
             hex_error("Slice indices must be integers");
             result = 1;
         }
-        else if (start.data.intValue < 0 || start.data.intValue >= strlen(list.data.strValue) || end.data.intValue < 0 || end.data.intValue >= strlen(list.data.strValue))
+        else if (start.data.intValue < 0 || start.data.intValue >= (int)strlen(list.data.strValue) || end.data.intValue < 0 || end.data.intValue >= (int)strlen(list.data.strValue))
         {
             hex_error("Slice indices out of range");
             result = 1;
         }
         else
         {
-            size_t newSize = end.data.intValue - start.data.intValue + 1;
+            int newSize = end.data.intValue - start.data.intValue + 1;
             char *newStr = (char *)malloc(newSize + 1);
             if (!newStr)
             {
@@ -2192,7 +2192,7 @@ int hex_symbol_get()
             hex_error("Index must be an integer");
             result = 1;
         }
-        else if (index.data.intValue < 0 || index.data.intValue >= strlen(list.data.strValue))
+        else if (index.data.intValue < 0 || index.data.intValue >= (int)strlen(list.data.strValue))
         {
             hex_error("Index out of range");
             result = 1;
@@ -2261,7 +2261,7 @@ int hex_symbol_set()
             hex_error("Index must be an integer");
             result = 1;
         }
-        else if (index.data.intValue < 0 || index.data.intValue >= strlen(list.data.strValue))
+        else if (index.data.intValue < 0 || index.data.intValue >= (int)strlen(list.data.strValue))
         {
             hex_error("Index out of range");
             result = 1;
@@ -2298,7 +2298,7 @@ int hex_symbol_index()
     int result = -1;
     if (list.type == HEX_TYPE_QUOTATION)
     {
-        for (size_t i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotationSize; i++)
         {
             if (hex_equal(*list.data.quotationValue[i], element))
             {
@@ -2344,8 +2344,8 @@ int hex_symbol_join()
     int result = 0;
     if (list.type == HEX_TYPE_QUOTATION && separator.type == HEX_TYPE_STRING)
     {
-        size_t length = 0;
-        for (size_t i = 0; i < list.quotationSize; i++)
+        int length = 0;
+        for (int i = 0; i < list.quotationSize; i++)
         {
             if (list.data.quotationValue[i]->type == HEX_TYPE_STRING)
             {
@@ -2370,7 +2370,7 @@ int hex_symbol_join()
             else
             {
                 newStr[0] = '\0';
-                for (size_t i = 0; i < list.quotationSize; i++)
+                for (int i = 0; i < list.quotationSize; i++)
                 {
                     strcat(newStr, list.data.quotationValue[i]->data.strValue);
                     if (i < list.quotationSize - 1)
@@ -2409,8 +2409,8 @@ int hex_symbol_split()
     if (str.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
     {
         char *token = strtok(str.data.strValue, separator.data.strValue);
-        size_t capacity = 2;
-        size_t size = 0;
+        int capacity = 2;
+        int size = 0;
         HEX_StackElement **quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
         if (!quotation)
         {
@@ -2484,9 +2484,9 @@ int hex_symbol_replace()
         char *ptr = strstr(str, find);
         if (ptr)
         {
-            size_t findLen = strlen(find);
-            size_t replaceLen = strlen(replace);
-            size_t newLen = strlen(str) - findLen + replaceLen + 1;
+            int findLen = strlen(find);
+            int replaceLen = strlen(replace);
+            int newLen = strlen(str) - findLen + replaceLen + 1;
             char *newStr = (char *)malloc(newLen);
             if (!newStr)
             {
@@ -2929,7 +2929,7 @@ int hex_symbol_if()
     }
     else
     {
-        for (size_t i = 0; i < condition.quotationSize; i++)
+        for (int i = 0; i < condition.quotationSize; i++)
         {
             if (hex_push(*condition.data.quotationValue[i]) != 0)
             {
@@ -2940,7 +2940,7 @@ int hex_symbol_if()
         HEX_StackElement evalResult = hex_pop();
         if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
         {
-            for (size_t i = 0; i < thenBlock.quotationSize; i++)
+            for (int i = 0; i < thenBlock.quotationSize; i++)
             {
                 if (hex_push(*thenBlock.data.quotationValue[i]) != 0)
                 {
@@ -2951,7 +2951,7 @@ int hex_symbol_if()
         }
         else
         {
-            for (size_t i = 0; i < elseBlock.quotationSize; i++)
+            for (int i = 0; i < elseBlock.quotationSize; i++)
             {
                 if (hex_push(*elseBlock.data.quotationValue[i]) != 0)
                 {
@@ -2988,7 +2988,7 @@ int hex_symbol_when()
     }
     else
     {
-        for (size_t i = 0; i < condition.quotationSize; i++)
+        for (int i = 0; i < condition.quotationSize; i++)
         {
             if (hex_push(*condition.data.quotationValue[i]) != 0)
             {
@@ -2999,7 +2999,7 @@ int hex_symbol_when()
         HEX_StackElement evalResult = hex_pop();
         if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
         {
-            for (size_t i = 0; i < action.quotationSize; i++)
+            for (int i = 0; i < action.quotationSize; i++)
             {
                 if (hex_push(*action.data.quotationValue[i]) != 0)
                 {
@@ -3037,7 +3037,7 @@ int hex_symbol_while()
     {
         while (1)
         {
-            for (size_t i = 0; i < condition.quotationSize; i++)
+            for (int i = 0; i < condition.quotationSize; i++)
             {
                 if (hex_push(*condition.data.quotationValue[i]) != 0)
                 {
@@ -3050,7 +3050,7 @@ int hex_symbol_while()
             {
                 break;
             }
-            for (size_t i = 0; i < action.quotationSize; i++)
+            for (int i = 0; i < action.quotationSize; i++)
             {
                 if (hex_push(*action.data.quotationValue[i]) != 0)
                 {
@@ -3086,14 +3086,14 @@ int hex_symbol_each()
     }
     else
     {
-        for (size_t i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotationSize; i++)
         {
             if (hex_push(*list.data.quotationValue[i]) != 0)
             {
                 result = 1;
                 break; // Break if pushing the element failed
             }
-            for (size_t j = 0; j < action.quotationSize; j++)
+            for (int j = 0; j < action.quotationSize; j++)
             {
                 if (hex_push(*action.data.quotationValue[j]) != 0)
                 {
@@ -3129,9 +3129,9 @@ int hex_symbol_times()
     }
     else
     {
-        for (size_t i = 0; i < count.data.intValue; i++)
+        for (int i = 0; i < count.data.intValue; i++)
         {
-            for (size_t j = 0; j < action.quotationSize; j++)
+            for (int j = 0; j < action.quotationSize; j++)
             {
                 if (hex_push(*action.data.quotationValue[j]) != 0)
                 {
@@ -3179,7 +3179,7 @@ int hex_symbol_try()
         HEX_ERROR[0] = '\0';
 
         HEX_ERRORS = 0;
-        for (size_t i = 0; i < tryBlock.quotationSize; i++)
+        for (int i = 0; i < tryBlock.quotationSize; i++)
         {
             if (hex_push(*tryBlock.data.quotationValue[i]) != 0)
             {
@@ -3191,7 +3191,7 @@ int hex_symbol_try()
 
         if (strcmp(HEX_ERROR, ""))
         {
-            for (size_t i = 0; i < catchBlock.quotationSize; i++)
+            for (int i = 0; i < catchBlock.quotationSize; i++)
             {
                 if (hex_push(*catchBlock.data.quotationValue[i]) != 0)
                 {
@@ -3241,14 +3241,14 @@ int hex_symbol_map()
         }
         else
         {
-            for (size_t i = 0; i < list.quotationSize; i++)
+            for (int i = 0; i < list.quotationSize; i++)
             {
                 if (hex_push(*list.data.quotationValue[i]) != 0)
                 {
                     result = 1;
                     break;
                 }
-                for (size_t j = 0; j < action.quotationSize; j++)
+                for (int j = 0; j < action.quotationSize; j++)
                 {
                     if (hex_push(*action.data.quotationValue[j]) != 0)
                     {
@@ -3303,15 +3303,15 @@ int hex_symbol_filter()
         }
         else
         {
-            size_t count = 0;
-            for (size_t i = 0; i < list.quotationSize; i++)
+            int count = 0;
+            for (int i = 0; i < list.quotationSize; i++)
             {
                 if (hex_push(*list.data.quotationValue[i]) != 0)
                 {
                     result = 1;
                     break;
                 }
-                for (size_t j = 0; j < action.quotationSize; j++)
+                for (int j = 0; j < action.quotationSize; j++)
                 {
                     if (hex_push(*action.data.quotationValue[j]) != 0)
                     {
@@ -3341,7 +3341,7 @@ int hex_symbol_filter()
             {
                 hex_error("An error occurred while filtering the list");
                 result = 1;
-                for (size_t i = 0; i < count; i++)
+                for (int i = 0; i < count; i++)
                 {
                     hex_free_element(*quotation[i]);
                 }
@@ -3548,7 +3548,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
             else
             {
                 HEX_StackElement **quotation = quotationElement->data.quotationValue;
-                size_t quotationSize = quotationElement->quotationSize;
+                int quotationSize = quotationElement->quotationSize;
                 result = hex_push_quotation(quotation, quotationSize);
             }
             free(quotationElement);
@@ -3585,7 +3585,7 @@ char *hex_read_file(const char *filename)
     }
 
     // Allocate an initial buffer
-    size_t bufferSize = 1024; // Start with a 1 KB buffer
+    int bufferSize = 1024; // Start with a 1 KB buffer
     char *content = (char *)malloc(bufferSize);
     if (content == NULL)
     {
@@ -3594,8 +3594,8 @@ char *hex_read_file(const char *filename)
         return NULL;
     }
 
-    size_t bytesReadTotal = 0;
-    size_t bytesRead = 0;
+    int bytesReadTotal = 0;
+    int bytesRead = 0;
 
     while ((bytesRead = fread(content + bytesReadTotal, 1, bufferSize - bytesReadTotal, file)) > 0)
     {
@@ -3682,7 +3682,7 @@ void hex_handle_sigint(int sig)
 void hex_process_stdin()
 {
     char buffer[8192]; // Adjust buffer size as needed
-    size_t bytesRead = fread(buffer, 1, sizeof(buffer) - 1, stdin);
+    int bytesRead = fread(buffer, 1, sizeof(buffer) - 1, stdin);
     if (bytesRead == 0)
     {
         hex_error("Error: No input provided via stdin.");
