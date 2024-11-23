@@ -1,1 +1,1 @@
-gcc hex.c -o hex
+CC hex.c -o hex

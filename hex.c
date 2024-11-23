@@ -570,6 +570,15 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
             {
                 break;
             }
+            else if (*ptr == '\n')
+            {
+                hex_error("Unescaped new line in string");
+                token->value = "<newline>";
+                token->type = HEX_TOKEN_INVALID;
+                token->line = *line;
+                token->column = *column;
+                return token;
+            }
             else
             {
                 ptr++;
@@ -582,6 +591,9 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         {
             hex_error("Unterminated string");
             token->type = HEX_TOKEN_INVALID;
+            token->value = strdup(ptr);
+            token->line = *line;
+            token->column = *column;
             return token;
         }
 
@@ -656,6 +668,8 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         else
         {
             token->type = HEX_TOKEN_INVALID;
+            token->line = *line;
+            token->column = *column;
         }
     }
 
@@ -3540,6 +3554,13 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         }
 
         token = hex_next_token(&input, &line, &column);
+    }
+    if (token->type == HEX_TOKEN_INVALID)
+    {
+        token->filename = strdup(filename);
+        add_to_stack_trace(token);
+        print_stack_trace();
+        return 1;
     }
     hex_free_token(token);
     return 0;
