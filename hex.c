@@ -66,7 +66,7 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "or",
     "not",
     "xor",
-    "concat",
+    "cat",
     "slice",
     "len",
     "get",
@@ -216,7 +216,6 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
                 return 1;
             }
             free(HEX_REGISTRY[i].key);
-            hex_free_element(HEX_REGISTRY[i].value);
             HEX_REGISTRY[i].key = strdup(key);
             HEX_REGISTRY[i].value = value;
             return 0;
@@ -269,7 +268,9 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 
 void hex_debug(const char *format, ...);
 void hex_debug_element(const char *message, HEX_StackElement element);
+void hex_print_element(FILE *stream, HEX_StackElement element);
 void add_to_stack_trace(HEX_Token *token);
+char *hex_type(HEX_ElementType type);
 
 HEX_StackElement HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
@@ -477,8 +478,6 @@ void hex_debug(const char *format, ...)
         va_end(args);
     }
 }
-
-void hex_print_element(FILE *stream, HEX_StackElement element);
 
 char *hex_type(HEX_ElementType type)
 {
@@ -1985,9 +1984,9 @@ int hex_symbol_xor()
 
 ////////////////////////////////////////
 // Quotation/String symbols           //
-////////////////////////////////////////
+///////////////////////////////////////
 
-int hex_symbol_concat()
+int hex_symbol_cat()
 {
     HEX_StackElement value = hex_pop();
     if (value.type == HEX_TYPE_INVALID)
@@ -2049,7 +2048,7 @@ int hex_symbol_concat()
     }
     else
     {
-        hex_error("Symbol 'concat' requires two quotations or two strings");
+        hex_error("Symbol 'cat' requires two quotations or two strings");
         result = 1;
     }
 
@@ -3545,7 +3544,7 @@ void hex_register_symbols()
     hex_set_native_symbol("or", hex_symbol_or);
     hex_set_native_symbol("not", hex_symbol_not);
     hex_set_native_symbol("xor", hex_symbol_xor);
-    hex_set_native_symbol("concat", hex_symbol_concat);
+    hex_set_native_symbol("cat", hex_symbol_cat);
     hex_set_native_symbol("slice", hex_symbol_slice);
     hex_set_native_symbol("len", hex_symbol_len);
     hex_set_native_symbol("get", hex_symbol_get);
