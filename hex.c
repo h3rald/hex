@@ -429,6 +429,7 @@ HEX_StackElement hex_pop()
     return HEX_STACK[HEX_TOP--];
 }
 
+void hex_free_token(HEX_Token *token);
 void hex_debug(const char *format, ...);
 char *hex_type(HEX_ElementType type);
 
@@ -459,11 +460,15 @@ void hex_free_element(HEX_StackElement element)
     {
         free(element.symbolName);
         element.symbolName = NULL;
+        hex_free_token(element.token);
+        element.token = NULL;
     }
     else if (element.type == HEX_TYPE_USER_SYMBOL && element.symbolName != NULL)
     {
         free(element.symbolName);
         element.symbolName = NULL;
+        hex_free_token(element.token);
+        element.token = NULL;
     }
 }
 
