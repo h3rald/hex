@@ -70,7 +70,7 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "slice",
     "len",
     "get",
-    "set",
+    "insert",
     "index",
     "join",
     "split",
@@ -86,9 +86,9 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "when",
     "while",
     "each",
-    "times",
     "error",
     "try",
+    "q",
     "map",
     "filter",
     "swap",
@@ -121,6 +121,27 @@ typedef enum
     HEX_TYPE_INVALID
 } HEX_ElementType;
 
+// Token Types
+typedef enum
+{
+    HEX_TOKEN_NUMBER,
+    HEX_TOKEN_STRING,
+    HEX_TOKEN_SYMBOL,
+    HEX_TOKEN_QUOTATION_START,
+    HEX_TOKEN_QUOTATION_END,
+    HEX_TOKEN_COMMENT,
+    HEX_TOKEN_INVALID
+} HEX_TokenType;
+
+typedef struct
+{
+    HEX_TokenType type;
+    char *value;
+    char *filename;
+    int line;
+    int column;
+} HEX_Token;
+
 // Unified Stack Element
 typedef struct HEX_StackElement
 {
@@ -132,7 +153,8 @@ typedef struct HEX_StackElement
         int (*functionPointer)();
         struct HEX_StackElement **quotationValue;
     } data;
-    char *symbolName;     // Symbol name (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
+    HEX_Token *token;  // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
+    char *symbolName;  // Symbol name (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
     int quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
@@ -248,6 +270,7 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 ////////////////////////////////////////
 
 void hex_debug_element(const char *message, HEX_StackElement element);
+void add_to_stack_trace(HEX_Token *token);
 
 HEX_StackElement HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
@@ -281,6 +304,7 @@ int hex_push(HEX_StackElement element)
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
     {
         hex_debug_element("CALL", element);
+        add_to_stack_trace(element.token);
         return element.data.functionPointer();
     }
     HEX_STACK[++HEX_TOP] = element;
@@ -365,16 +389,18 @@ int hex_push_quotation(HEX_StackElement **quotation, int size)
     return hex_push(element);
 }
 
-int hex_push_symbol(const char *name)
+int hex_push_symbol(HEX_Token *token)
 {
+    add_to_stack_trace(token);
     HEX_StackElement value;
-    if (hex_get_symbol(name, &value))
+    if (hex_get_symbol(token->value, &value))
     {
+        value.token = token;
         return hex_push(value);
     }
     else
     {
-        hex_error("Undefined symbol: %s", name);
+        hex_error("Undefined symbol: %s", token->value);
         return 1;
     }
 }
@@ -482,29 +508,6 @@ void hex_debug_element(const char *message, HEX_StackElement element)
 ////////////////////////////////////////
 // Tokenizer Implementation           //
 ////////////////////////////////////////
-
-// Token Types
-typedef enum
-{
-    HEX_TOKEN_NUMBER,
-    HEX_TOKEN_STRING,
-    HEX_TOKEN_SYMBOL,
-    HEX_TOKEN_QUOTATION_START,
-    HEX_TOKEN_QUOTATION_END,
-    HEX_TOKEN_COMMENT,
-    HEX_TOKEN_INVALID
-} HEX_TokenType;
-
-typedef struct
-{
-    HEX_TokenType type;
-    char *value;
-    char *filename;
-    int line;
-    int column;
-} HEX_Token;
-
-void add_to_stack_trace(HEX_Token *token);
 
 int hex_valid_native_symbol(char *symbol);
 
@@ -755,6 +758,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
                 HEX_StackElement value;
                 if (hex_get_symbol(token->value, &value))
                 {
+                    element->token = token;
                     element->type = HEX_TYPE_NATIVE_SYMBOL;
                     element->data.functionPointer = value.data.functionPointer;
                 }
@@ -772,7 +776,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
             }
             element->symbolName = strdup(token->value);
             token->filename = strdup(filename);
-            add_to_stack_trace(token);
+            element->token = token;
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
@@ -859,7 +863,7 @@ void add_to_stack_trace(HEX_Token *token)
 // Print the stack trace
 void print_stack_trace()
 {
-    if (HEX_STDIN || HEX_REPL)
+    if (HEX_STDIN || HEX_REPL || !HEX_ERRORS)
     {
         return;
     }
@@ -1982,20 +1986,25 @@ int hex_symbol_concat()
     if (value.type == HEX_TYPE_INVALID)
     {
         hex_free_element(value);
-        return 1;
+        return 1; // Failed to pop value
     }
+
     HEX_StackElement list = hex_pop();
     if (list.type == HEX_TYPE_INVALID)
     {
         hex_free_element(list);
         hex_free_element(value);
-        return 1;
+        return 1; // Failed to pop list
     }
+
     int result = 0;
-    if (list.type == HEX_TYPE_QUOTATION)
+
+    if (list.type == HEX_TYPE_QUOTATION && value.type == HEX_TYPE_QUOTATION)
     {
-        int newSize = list.quotationSize + 1;
-        HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
+        // Concatenate two quotations
+        size_t newSize = list.quotationSize + value.quotationSize;
+        HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(
+            list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
         if (!newQuotation)
         {
             hex_error("Memory allocation failed");
@@ -2003,17 +2012,22 @@ int hex_symbol_concat()
         }
         else
         {
-            HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-            *element = value;
-            newQuotation[newSize - 1] = element;
+            // Append elements from the second quotation
+            for (size_t i = 0; i < (size_t)value.quotationSize; i++)
+            {
+                newQuotation[list.quotationSize + i] = value.data.quotationValue[i];
+            }
+
             list.data.quotationValue = newQuotation;
             list.quotationSize = newSize;
             result = hex_push_quotation(list.data.quotationValue, newSize);
         }
     }
-    else if (list.type == HEX_TYPE_STRING)
+    else if (list.type == HEX_TYPE_STRING && value.type == HEX_TYPE_STRING)
     {
-        char *newStr = (char *)malloc(strlen(list.data.strValue) + strlen(value.data.strValue) + 1);
+        // Concatenate two strings
+        size_t newLength = strlen(list.data.strValue) + strlen(value.data.strValue) + 1;
+        char *newStr = (char *)malloc(newLength);
         if (!newStr)
         {
             hex_error("Memory allocation failed");
@@ -2028,9 +2042,17 @@ int hex_symbol_concat()
     }
     else
     {
-        hex_error("Symbol 'append' requires a quotation or a string");
+        hex_error("Symbol 'concat' requires two quotations or two strings");
         result = 1;
     }
+
+    // Free resources if the operation fails
+    if (result != 0)
+    {
+        hex_free_element(list);
+        hex_free_element(value);
+    }
+
     return result;
 }
 
@@ -2211,73 +2233,121 @@ int hex_symbol_get()
     return result;
 }
 
-int hex_symbol_set()
+int hex_symbol_insert(void)
 {
-    HEX_StackElement value = hex_pop();
-    if (value.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(value);
-        return 1;
-    }
     HEX_StackElement index = hex_pop();
     if (index.type == HEX_TYPE_INVALID)
     {
         hex_free_element(index);
-        hex_free_element(value);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
-    if (list.type == HEX_TYPE_INVALID)
+    HEX_StackElement value = hex_pop();
+    if (value.type == HEX_TYPE_INVALID)
     {
-        hex_free_element(list);
         hex_free_element(index);
         hex_free_element(value);
         return 1;
     }
-    int result = 0;
-    if (list.type == HEX_TYPE_QUOTATION)
+
+    HEX_StackElement target = hex_pop();
+    if (target.type == HEX_TYPE_INVALID)
     {
-        if (index.type != HEX_TYPE_INTEGER)
-        {
-            hex_error("Index must be an integer");
-            result = 1;
-        }
-        else if (index.data.intValue < 0 || index.data.intValue >= list.quotationSize)
-        {
-            hex_error("Index out of range");
-            result = 1;
-        }
-        else
-        {
-            hex_free_element(*list.data.quotationValue[index.data.intValue]);
-            *list.data.quotationValue[index.data.intValue] = value;
-            result = 0;
-        }
+        hex_free_element(target);
+        hex_free_element(index);
+        hex_free_element(value);
+        return 1;
     }
-    else if (list.type == HEX_TYPE_STRING)
+
+    if (index.type != HEX_TYPE_INTEGER)
     {
-        if (index.type != HEX_TYPE_INTEGER)
+        hex_error("Index must be an integer");
+        return 1;
+    }
+
+    if (target.type == HEX_TYPE_STRING)
+    {
+        if (value.type != HEX_TYPE_STRING)
         {
-            hex_error("Index must be an integer");
-            result = 1;
+            hex_error("Value must be a string when inserting into a string");
+            return 1;
         }
-        else if (index.data.intValue < 0 || index.data.intValue >= (int)strlen(list.data.strValue))
+
+        size_t target_len = strlen(target.data.strValue);
+        size_t value_len = strlen(value.data.strValue);
+        size_t pos = index.data.intValue;
+
+        if (pos > target_len)
         {
-            hex_error("Index out of range");
-            result = 1;
+            pos = target_len; // Append at the end if position exceeds target length
         }
-        else
+
+        char *new_str = (char *)malloc(target_len + value_len + 1);
+        if (!new_str)
         {
-            list.data.strValue[index.data.intValue] = value.data.strValue[0];
-            result = 0;
+            hex_error("Memory allocation failed");
+            return 1;
         }
+
+        strncpy(new_str, target.data.strValue, pos);
+        strcpy(new_str + pos, value.data.strValue);
+        strcpy(new_str + pos + value_len, target.data.strValue + pos);
+
+        free(target.data.strValue);
+        target.data.strValue = new_str;
+
+        if (hex_push(target) != 0)
+        {
+            free(new_str);
+            return 1; // Failed to push the result onto the stack
+        }
+
+        return 0;
+    }
+    else if (target.type == HEX_TYPE_QUOTATION)
+    {
+        if (index.data.intValue < 0 || index.data.intValue > target.quotationSize)
+        {
+            hex_error("Invalid index for quotation");
+            return 1;
+        }
+
+        HEX_StackElement **new_quotation = (HEX_StackElement **)realloc(
+            target.data.quotationValue,
+            (target.quotationSize + 1) * sizeof(HEX_StackElement *));
+        if (!new_quotation)
+        {
+            hex_error("Memory allocation failed");
+            return 1;
+        }
+
+        for (size_t i = target.quotationSize; i > (size_t)index.data.intValue; --i)
+        {
+            new_quotation[i] = new_quotation[i - 1];
+        }
+        new_quotation[index.data.intValue] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+        if (!new_quotation[index.data.intValue])
+        {
+            hex_error("Memory allocation failed");
+            return 1;
+        }
+
+        *new_quotation[index.data.intValue] = value;
+        target.data.quotationValue = new_quotation;
+        target.quotationSize++;
+
+        if (hex_push(target) != 0)
+        {
+            free(new_quotation[index.data.intValue]);
+            return 1; // Failed to push the result onto the stack
+        }
+
+        return 0;
     }
     else
     {
-        hex_error("Symbol 'set' requires a quotation or a string");
-        result = 1;
+        hex_error("Target must be a string or quotation");
+        return 1;
     }
-    return result;
 }
 
 int hex_symbol_index()
@@ -2354,8 +2424,7 @@ int hex_symbol_join()
             else
             {
                 hex_error("Quotation must contain only strings");
-                result = 1;
-                break;
+                return 1;
             }
         }
         if (result == 0)
@@ -2365,21 +2434,18 @@ int hex_symbol_join()
             if (!newStr)
             {
                 hex_error("Memory allocation failed");
-                result = 1;
+                return 1;
             }
-            else
+            newStr[0] = '\0';
+            for (int i = 0; i < list.quotationSize; i++)
             {
-                newStr[0] = '\0';
-                for (int i = 0; i < list.quotationSize; i++)
+                strcat(newStr, list.data.quotationValue[i]->data.strValue);
+                if (i < list.quotationSize - 1)
                 {
-                    strcat(newStr, list.data.quotationValue[i]->data.strValue);
-                    if (i < list.quotationSize - 1)
-                    {
-                        strcat(newStr, separator.data.strValue);
-                    }
+                    strcat(newStr, separator.data.strValue);
                 }
-                result = hex_push_string(newStr);
             }
+            result = hex_push_string(newStr);
         }
     }
     else
@@ -3106,44 +3172,6 @@ int hex_symbol_each()
     return result;
 }
 
-int hex_symbol_times()
-{
-    HEX_StackElement count = hex_pop();
-    if (count.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(count);
-        return 1;
-    }
-    HEX_StackElement action = hex_pop();
-    if (action.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(action);
-        hex_free_element(count);
-        return 1;
-    }
-    int result = 0;
-    if (count.type != HEX_TYPE_INTEGER || action.type != HEX_TYPE_QUOTATION)
-    {
-        hex_error("'times' symbol requires an integer and a quotation");
-        result = 1;
-    }
-    else
-    {
-        for (int i = 0; i < count.data.intValue; i++)
-        {
-            for (int j = 0; j < action.quotationSize; j++)
-            {
-                if (hex_push(*action.data.quotationValue[j]) != 0)
-                {
-                    result = 1;
-                    break;
-                }
-            }
-        }
-    }
-    return result;
-}
-
 int hex_symbol_error()
 {
     char *message = strdup(HEX_ERROR);
@@ -3153,14 +3181,14 @@ int hex_symbol_error()
 
 int hex_symbol_try()
 {
-    HEX_StackElement tryBlock = hex_pop();
-    if (tryBlock.type == HEX_TYPE_INVALID)
-    {
-        hex_free_element(tryBlock);
-        return 1;
-    }
     HEX_StackElement catchBlock = hex_pop();
     if (catchBlock.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(catchBlock);
+        return 1;
+    }
+    HEX_StackElement tryBlock = hex_pop();
+    if (tryBlock.type == HEX_TYPE_INVALID)
     {
         hex_free_element(catchBlock);
         hex_free_element(tryBlock);
@@ -3209,6 +3237,47 @@ int hex_symbol_try()
 ////////////////////////////////////////
 // List symbols                       //
 ////////////////////////////////////////
+
+int hex_symbol_q(void)
+{
+    HEX_StackElement element = hex_pop();
+    if (element.type == HEX_TYPE_INVALID)
+    {
+        hex_free_element(element);
+        return 1;
+    }
+
+    HEX_StackElement *quotation = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    if (!quotation)
+    {
+        hex_error("Memory allocation failed");
+        return 1;
+    }
+
+    *quotation = element;
+
+    HEX_StackElement result;
+    result.type = HEX_TYPE_QUOTATION;
+    result.data.quotationValue = (HEX_StackElement **)malloc(sizeof(HEX_StackElement *));
+    if (!result.data.quotationValue)
+    {
+        free(quotation);
+        hex_error("Memory allocation failed");
+        return 1;
+    }
+
+    result.data.quotationValue[0] = quotation;
+    result.quotationSize = 1;
+
+    if (hex_push(result) != 0)
+    {
+        free(quotation);
+        free(result.data.quotationValue);
+        return 1;
+    }
+
+    return 0;
+}
 
 int hex_symbol_map()
 {
@@ -3478,7 +3547,7 @@ void hex_register_symbols()
     hex_set_native_symbol("slice", hex_symbol_slice);
     hex_set_native_symbol("len", hex_symbol_len);
     hex_set_native_symbol("get", hex_symbol_get);
-    hex_set_native_symbol("set", hex_symbol_set);
+    hex_set_native_symbol("insert", hex_symbol_insert);
     hex_set_native_symbol("index", hex_symbol_index);
     hex_set_native_symbol("join", hex_symbol_join);
     hex_set_native_symbol("split", hex_symbol_split);
@@ -3494,9 +3563,9 @@ void hex_register_symbols()
     hex_set_native_symbol("when", hex_symbol_when);
     hex_set_native_symbol("while", hex_symbol_while);
     hex_set_native_symbol("each", hex_symbol_each);
-    hex_set_native_symbol("times", hex_symbol_times);
     hex_set_native_symbol("error", hex_symbol_error);
     hex_set_native_symbol("try", hex_symbol_try);
+    hex_set_native_symbol("q", hex_symbol_q);
     hex_set_native_symbol("map", hex_symbol_map);
     hex_set_native_symbol("filter", hex_symbol_filter);
     hex_set_native_symbol("swap", hex_symbol_swap);
@@ -3528,9 +3597,8 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            result = hex_push_symbol(token->value);
             token->filename = strdup(filename);
-            add_to_stack_trace(token);
+            result = hex_push_symbol(token);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
         {

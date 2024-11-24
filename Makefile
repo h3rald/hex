@@ -4,4 +4,12 @@ CFLAGS ?= -Wall -Wextra -g
 LDFLAGS ?=
 
 hex: hex.c
-	$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+
+.PHONY: clean, test, debug-test
+clean:
+	rm hex
+test:
+	./hex tests.hex
+debug-test:
+	./hex -d tests.hex

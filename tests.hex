@@ -20,7 +20,7 @@
     ) 
         (
             ; Store error
-            (test-count str " - " error) join errors append "errors" store   
+            errors test-count str " - " concat error concat q concat "errors" store   
             "x" print
             failures 0x1 + "failures" store
         )
@@ -28,7 +28,7 @@
 ) "test" store
 
 ; --- Tests
-(0x1 "a" store a 0x1 ==) test i
+(0x1 "a" store a 0x1 == dup) test i
 (a free 0x1) test i
 
 ; --- Report
