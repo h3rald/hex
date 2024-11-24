@@ -269,6 +269,7 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 // Stack Implementation               //
 ////////////////////////////////////////
 
+void hex_debug(const char *format, ...);
 void hex_debug_element(const char *message, HEX_StackElement element);
 void add_to_stack_trace(HEX_Token *token);
 
@@ -284,11 +285,10 @@ int hex_push(HEX_StackElement element)
         return 1;
     }
     hex_debug_element("PUSH", element);
-    // Note: from a parser perspective, there is no way to determine if a symbol is a native symbol or a user symbol
+    int result = 0;
     if (element.type == HEX_TYPE_USER_SYMBOL)
     {
         HEX_StackElement value;
-        int result = 0;
         if (hex_get_symbol(element.symbolName, &value))
         {
             result = hex_push(value);
@@ -299,16 +299,26 @@ int hex_push(HEX_StackElement element)
             hex_free_element(value);
             result = 1;
         }
-        return result;
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
     {
         hex_debug_element("CALL", element);
         add_to_stack_trace(element.token);
-        return element.data.functionPointer();
+        result = element.data.functionPointer();
     }
-    HEX_STACK[++HEX_TOP] = element;
-    return 0;
+    else
+    {
+        HEX_STACK[++HEX_TOP] = element;
+    }
+    if (result == 0)
+    {
+        hex_debug_element("DONE", element);
+    }
+    else
+    {
+        hex_debug_element("FAIL", element);
+    }
+    return result;
 }
 
 int hex_push_int(int value)
@@ -1342,6 +1352,7 @@ int hex_symbol_divide()
         if (b.data.intValue == 0)
         {
             hex_error("Division by zero");
+            return 1;
         }
         result = hex_push_int(a.data.intValue / b.data.intValue);
     }
@@ -3209,11 +3220,13 @@ int hex_symbol_try()
         HEX_ERRORS = 0;
         for (int i = 0; i < tryBlock.quotationSize; i++)
         {
+            /// Remove extra printing.
             printf("-> ");
             hex_print_element(stdout, *tryBlock.data.quotationValue[i]);
             printf("\n");
             if (hex_push(*tryBlock.data.quotationValue[i]) != 0)
             {
+                printf("Error occurred: %s\n", HEX_ERROR);
                 break;
             }
         }
