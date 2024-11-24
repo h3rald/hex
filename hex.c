@@ -66,7 +66,7 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "or",
     "not",
     "xor",
-    "concat",
+    "cat",
     "slice",
     "len",
     "get",
@@ -1989,9 +1989,9 @@ int hex_symbol_xor()
 
 ////////////////////////////////////////
 // Quotation/String symbols           //
-////////////////////////////////////////
+///////////////////////////////////////
 
-int hex_symbol_concat()
+int hex_symbol_cat()
 {
     HEX_StackElement value = hex_pop();
     if (value.type == HEX_TYPE_INVALID)
@@ -2053,7 +2053,7 @@ int hex_symbol_concat()
     }
     else
     {
-        hex_error("Symbol 'concat' requires two quotations or two strings");
+        hex_error("Symbol 'cat' requires two quotations or two strings");
         result = 1;
     }
 
@@ -3549,7 +3549,7 @@ void hex_register_symbols()
     hex_set_native_symbol("or", hex_symbol_or);
     hex_set_native_symbol("not", hex_symbol_not);
     hex_set_native_symbol("xor", hex_symbol_xor);
-    hex_set_native_symbol("concat", hex_symbol_concat);
+    hex_set_native_symbol("cat", hex_symbol_cat);
     hex_set_native_symbol("slice", hex_symbol_slice);
     hex_set_native_symbol("len", hex_symbol_len);
     hex_set_native_symbol("get", hex_symbol_get);

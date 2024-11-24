@@ -20,7 +20,7 @@
     ) 
         (
             ; Store error
-            ;errors test-count str " - " concat error concat q concat "errors" store  
+            errors test-count str " - " cat error cat q cat "errors" store  
             "x" print
             failures 0x1 + "failures" store
         )
