@@ -271,7 +271,9 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
 
 void hex_debug(const char *format, ...);
 void hex_debug_element(const char *message, HEX_StackElement element);
+void hex_print_element(FILE *stream, HEX_StackElement element);
 void add_to_stack_trace(HEX_Token *token);
+char *hex_type(HEX_ElementType type);
 
 HEX_StackElement HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
@@ -291,6 +293,7 @@ int hex_push(HEX_StackElement element)
         HEX_StackElement value;
         if (hex_get_symbol(element.symbolName, &value))
         {
+            hex_print_element(stdout, value);
             result = hex_push(value);
         }
         else
@@ -481,8 +484,6 @@ void hex_debug(const char *format, ...)
         va_end(args);
     }
 }
-
-void hex_print_element(FILE *stream, HEX_StackElement element);
 
 char *hex_type(HEX_ElementType type)
 {

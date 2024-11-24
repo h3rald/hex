@@ -20,23 +20,26 @@
     ) 
         (
             ; Store error
-            errors test-count str " - " cat error cat q cat "errors" store  
+            errors test-count str " - " cat error cat q cat dup puts "errors" store  
             "x" print
             failures 0x1 + "failures" store
+            errors puts
         )
     try
 ) "test" store
 
+
 ; --- Tests
-;(0x1 "a" store a 0x1 == dup) test i
+;(0x1 "a" store a 0x1 ==) test i
 (a free 0x1) test i
 
 ; --- Report
 "\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
 
-(errors len 0x0 >)
-    (errors (warn) each)
-when
+
+;(errors len 0x0 >)
+;    (errors (warn) each)
+;when
 
 ; --- Cleanup
 ;"a" free
