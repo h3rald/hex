@@ -173,6 +173,7 @@ HEX_RegistryEntry HEX_REGISTRY[HEX_REGISTRY_SIZE];
 int HEX_REGISTRY_COUNT = 0;
 
 void hex_free_element(HEX_StackElement element);
+void hex_free_token(HEX_Token *token);
 
 int hex_valid_user_symbol(const char *symbol)
 {
