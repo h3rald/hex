@@ -11,5 +11,5 @@ clean:
 	rm hex
 test:
 	./hex tests.hex
-debug-test:
+dtest:
 	./hex -d tests.hex

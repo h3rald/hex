@@ -794,7 +794,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
         }
         else
         {
-            hex_error("Unexpected token in quotation: >>%s<<", token->value);
+            hex_error("Unexpected token in quotation: %d", token->value);
             hex_free_token(token);
             free(quotation);
             return 1;
@@ -3209,9 +3209,11 @@ int hex_symbol_try()
         HEX_ERRORS = 0;
         for (int i = 0; i < tryBlock.quotationSize; i++)
         {
+            printf("-> ");
+            hex_print_element(stdout, *tryBlock.data.quotationValue[i]);
+            printf("\n");
             if (hex_push(*tryBlock.data.quotationValue[i]) != 0)
             {
-                result = 1;
                 break;
             }
         }

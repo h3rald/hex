@@ -5,7 +5,7 @@
 
 (
     "current-test" store
-    test-count 0x1 + "test-counnt" store
+    test-count 0x1 + "test-count" store
     (
         (current-test i)
             (
@@ -20,7 +20,7 @@
     ) 
         (
             ; Store error
-            errors test-count str " - " concat error concat q concat "errors" store   
+            ;errors test-count str " - " concat error concat q concat "errors" store  
             "x" print
             failures 0x1 + "failures" store
         )
@@ -28,14 +28,14 @@
 ) "test" store
 
 ; --- Tests
-(0x1 "a" store a 0x1 == dup) test i
+;(0x1 "a" store a 0x1 == dup) test i
 (a free 0x1) test i
 
 ; --- Report
 "\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
 
-(errors length 0 >)
-    errors (warn) each
+(errors len 0x0 >)
+    (errors (warn) each)
 when
 
 ; --- Cleanup

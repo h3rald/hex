@@ -53,3 +53,6 @@ dkms.conf
 
 # Exe names
 hex
+
+# Other
+example.hex
