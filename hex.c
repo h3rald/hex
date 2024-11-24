@@ -217,7 +217,6 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
             }
             free(HEX_REGISTRY[i].key);
             hex_free_element(HEX_REGISTRY[i].value);
-            value.symbolName = strdup(key);
             HEX_REGISTRY[i].key = strdup(key);
             HEX_REGISTRY[i].value = value;
             return 0;
@@ -227,7 +226,7 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
     if (HEX_REGISTRY_COUNT >= HEX_REGISTRY_SIZE)
     {
         hex_error("Registry overflow");
-        free(value.symbolName);
+        hex_free_token(value.token);
         return 1;
     }
 
@@ -243,7 +242,6 @@ void hex_set_native_symbol(const char *name, int (*func)())
     HEX_StackElement funcElement;
     funcElement.type = HEX_TYPE_NATIVE_SYMBOL;
     funcElement.data.functionPointer = func;
-    funcElement.symbolName = strdup(name);
 
     if (hex_set_symbol(name, funcElement, 1) != 0)
     {
@@ -289,13 +287,13 @@ int hex_push(HEX_StackElement element)
     if (element.type == HEX_TYPE_USER_SYMBOL)
     {
         HEX_StackElement value;
-        if (hex_get_symbol(element.symbolName, &value))
+        if (hex_get_symbol(element.token->value, &value))
         {
             result = hex_push(value);
         }
         else
         {
-            hex_error("Undefined user symbol: %s", element.symbolName);
+            hex_error("Undefined user symbol: %s", element.token->value);
             hex_free_element(value);
             result = 1;
         }
@@ -453,15 +451,13 @@ void hex_free_element(HEX_StackElement element)
         free(element.data.quotationValue);
         element.data.quotationValue = NULL;
     }
-    else if (element.type == HEX_TYPE_NATIVE_SYMBOL && element.symbolName != NULL)
+    else if (element.type == HEX_TYPE_NATIVE_SYMBOL && element.token->value != NULL)
     {
-        free(element.symbolName);
-        element.symbolName = NULL;
+        hex_free_token(element.token);
     }
-    else if (element.type == HEX_TYPE_USER_SYMBOL && element.symbolName != NULL)
+    else if (element.type == HEX_TYPE_USER_SYMBOL && element.token->value != NULL)
     {
-        free(element.symbolName);
-        element.symbolName = NULL;
+        hex_free_token(element.token);
     }
 }
 
@@ -951,7 +947,7 @@ void hex_raw_print_element(FILE *stream, HEX_StackElement element)
         break;
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", element.symbolName);
+        fprintf(stream, "%s", element.token->value);
         break;
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
@@ -1031,7 +1027,7 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
 
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", element.symbolName);
+        fprintf(stream, "%s", element.token->value);
         break;
 
     case HEX_TYPE_QUOTATION:
