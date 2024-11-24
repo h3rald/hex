@@ -2998,11 +2998,10 @@ int hex_symbol_if()
         hex_free_element(elseBlock);
         return 1;
     }
-    int result = 0;
     if (condition.type != HEX_TYPE_QUOTATION || thenBlock.type != HEX_TYPE_QUOTATION || elseBlock.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'if' symbol requires three quotations");
-        result = 1;
+        return 1;
     }
     else
     {
@@ -3010,8 +3009,7 @@ int hex_symbol_if()
         {
             if (hex_push(*condition.data.quotationValue[i]) != 0)
             {
-                result = 1;
-                break;
+                return 1;
             }
         }
         HEX_StackElement evalResult = hex_pop();
@@ -3021,8 +3019,7 @@ int hex_symbol_if()
             {
                 if (hex_push(*thenBlock.data.quotationValue[i]) != 0)
                 {
-                    result = 1;
-                    break;
+                    return 1;
                 }
             }
         }
@@ -3032,13 +3029,12 @@ int hex_symbol_if()
             {
                 if (hex_push(*elseBlock.data.quotationValue[i]) != 0)
                 {
-                    result = 1;
-                    break;
+                    return 1;
                 }
             }
         }
     }
-    return result;
+    return 0;
 }
 
 int hex_symbol_when()
@@ -3220,13 +3216,8 @@ int hex_symbol_try()
         HEX_ERRORS = 0;
         for (int i = 0; i < tryBlock.quotationSize; i++)
         {
-            /// Remove extra printing.
-            printf("-> ");
-            hex_print_element(stdout, *tryBlock.data.quotationValue[i]);
-            printf("\n");
             if (hex_push(*tryBlock.data.quotationValue[i]) != 0)
             {
-                printf("Error occurred: %s\n", HEX_ERROR);
                 break;
             }
         }
