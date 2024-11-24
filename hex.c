@@ -216,7 +216,7 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
                 return 1;
             }
             free(HEX_REGISTRY[i].key);
-            hex_free_element(HEX_REGISTRY[i].value);
+            //hex_free_element(HEX_REGISTRY[i].value);
             value.symbolName = strdup(key);
             HEX_REGISTRY[i].key = strdup(key);
             HEX_REGISTRY[i].value = value;
@@ -293,7 +293,6 @@ int hex_push(HEX_StackElement element)
         HEX_StackElement value;
         if (hex_get_symbol(element.symbolName, &value))
         {
-            hex_print_element(stdout, value);
             result = hex_push(value);
         }
         else
