@@ -164,6 +164,7 @@ typedef struct HEX_StackElement
     int quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
+#pragma region Registry
 ////////////////////////////////////////
 // Registry Implementation            //
 ////////////////////////////////////////
@@ -268,7 +269,9 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
     }
     return 0;
 }
+#pragma endregion Registry
 
+#pragma region Stack
 ////////////////////////////////////////
 // Stack Implementation               //
 ////////////////////////////////////////
@@ -469,7 +472,9 @@ void FREE(HEX_StackElement element)
         hex_free_token(element.token);
     }
 }
+#pragma endregion Stack
 
+#pragma region Debugging
 ////////////////////////////////////////
 // Debugging                          //
 ////////////////////////////////////////
@@ -517,7 +522,9 @@ void hex_debug_element(const char *message, HEX_StackElement element)
         fprintf(stdout, "\n");
     }
 }
+#pragma endregion Debugging
 
+#pragma region Tokenizer
 ////////////////////////////////////////
 // Tokenizer Implementation           //
 ////////////////////////////////////////
@@ -831,7 +838,9 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
     hex_free_token(token);
     return 0;
 }
+#pragma endregion Tokenizer
 
+#pragma region StackTrace
 ////////////////////////////////////////
 // Stack trace implementation         //
 ////////////////////////////////////////
@@ -889,7 +898,9 @@ void print_stack_trace()
         fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.filename, token.line, token.column);
     }
 }
+#pragma endregion StackTrace
 
+#pragma region Helpers
 ////////////////////////////////////////
 // Helper Functions                   //
 ////////////////////////////////////////
@@ -1063,23 +1074,26 @@ int hex_is_symbol(HEX_Token *token, char *value)
 {
     return strcmp(token->value, value) == 0;
 }
+#pragma endregion Helpers
 
+#pragma region Symbols
 ////////////////////////////////////////
 // Native Symbol Implementations      //
 ////////////////////////////////////////
 
+#pragma region DefSymbols
 // Definition symbols
 
 int hex_symbol_store()
 {
-    //HEX_StackElement name = hex_pop();
+    // POP(name);
     POP(name);
     if (name.type == HEX_TYPE_INVALID)
     {
         FREE(name);
         return 1;
     }
-    HEX_StackElement value = hex_pop();
+    POP(value);
     if (value.type == HEX_TYPE_INVALID)
     {
         return 1;
@@ -1099,7 +1113,7 @@ int hex_symbol_store()
 
 int hex_symbol_free()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1132,7 +1146,7 @@ int hex_symbol_free()
 
 int hex_symbol_type()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1142,12 +1156,14 @@ int hex_symbol_type()
     result = hex_push_string(hex_type(element.type));
     return result;
 }
+#pragma endregion DefSymbols
 
+#pragma region EvalSymbols
 // Evaluation symbols
 
 int hex_symbol_i()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1173,7 +1189,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column);
 // evaluate a string
 int hex_symbol_eval()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1186,12 +1202,14 @@ int hex_symbol_eval()
     }
     return hex_interpret(element.data.strValue, "<eval>", 1, 1);
 }
+#pragma endregion EvalSymbols
 
+#pragma region IOSymbols
 // IO Symbols
 
 int hex_symbol_puts()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1204,7 +1222,7 @@ int hex_symbol_puts()
 
 int hex_symbol_warn()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1217,7 +1235,7 @@ int hex_symbol_warn()
 
 int hex_symbol_print()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1245,17 +1263,19 @@ int hex_symbol_gets()
         return 1;
     }
 }
+#pragma endregion IOSymbols
 
+#pragma region MathSymbols
 // Mathematical symbols
 int hex_symbol_add()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1272,13 +1292,13 @@ int hex_symbol_add()
 
 int hex_symbol_subtract()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1295,13 +1315,13 @@ int hex_symbol_subtract()
 
 int hex_symbol_multiply()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1318,13 +1338,13 @@ int hex_symbol_multiply()
 
 int hex_symbol_divide()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1346,13 +1366,13 @@ int hex_symbol_divide()
 
 int hex_symbol_modulo()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1370,18 +1390,20 @@ int hex_symbol_modulo()
     hex_error("'%%' symbol requires two integers");
     return 1;
 }
+#pragma endregion MathSymbols
 
+#pragma region BitSymbols
 // Bit symbols
 
 int hex_symbol_bitand()
 {
-    HEX_StackElement right = hex_pop();
+    POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
         FREE(right);
         return 1;
     }
-    HEX_StackElement left = hex_pop();
+    POP(left);
     if (left.type == HEX_TYPE_INVALID)
     {
         FREE(left);
@@ -1398,13 +1420,13 @@ int hex_symbol_bitand()
 
 int hex_symbol_bitor()
 {
-    HEX_StackElement right = hex_pop();
+    POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
         FREE(right);
         return 1;
     }
-    HEX_StackElement left = hex_pop();
+    POP(left);
     if (left.type == HEX_TYPE_INVALID)
     {
         FREE(left);
@@ -1421,13 +1443,13 @@ int hex_symbol_bitor()
 
 int hex_symbol_bitxor()
 {
-    HEX_StackElement right = hex_pop();
+    POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
         FREE(right);
         return 1;
     }
-    HEX_StackElement left = hex_pop();
+    POP(left);
     if (left.type == HEX_TYPE_INVALID)
     {
         FREE(left);
@@ -1444,13 +1466,13 @@ int hex_symbol_bitxor()
 
 int hex_symbol_shiftleft()
 {
-    HEX_StackElement right = hex_pop();
+    POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
         FREE(right);
         return 1;
     }
-    HEX_StackElement left = hex_pop();
+    POP(left);
     if (left.type == HEX_TYPE_INVALID)
     {
         FREE(left);
@@ -1467,13 +1489,13 @@ int hex_symbol_shiftleft()
 
 int hex_symbol_shiftright()
 {
-    HEX_StackElement right = hex_pop();
+    POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
         FREE(right);
         return 1;
     }
-    HEX_StackElement left = hex_pop();
+    POP(left);
     if (left.type == HEX_TYPE_INVALID)
     {
         FREE(left);
@@ -1490,7 +1512,7 @@ int hex_symbol_shiftright()
 
 int hex_symbol_bitnot()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1503,12 +1525,14 @@ int hex_symbol_bitnot()
     hex_error("Bitwise NOT requires one integer");
     return 1;
 }
+#pragma endregion BitSymbols
 
+#pragma region ConvSymbols
 // Conversion symbols
 
 int hex_symbol_int()
 {
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1533,7 +1557,7 @@ int hex_symbol_int()
 
 int hex_symbol_str()
 {
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1558,7 +1582,7 @@ int hex_symbol_str()
 
 int hex_symbol_dec()
 {
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1574,7 +1598,7 @@ int hex_symbol_dec()
 
 int hex_symbol_hex()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -1587,7 +1611,9 @@ int hex_symbol_hex()
     hex_error("'hex' symbol requires a string representing a decimal integer");
     return 1;
 }
+#pragma endregion ConvSymbols
 
+#pragma region CmpSymbols
 // Comparison symbols
 
 int hex_equal(HEX_StackElement a, HEX_StackElement b)
@@ -1625,13 +1651,13 @@ int hex_equal(HEX_StackElement a, HEX_StackElement b)
 
 int hex_symbol_equal()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1648,13 +1674,13 @@ int hex_symbol_equal()
 
 int hex_symbol_notequal()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1671,13 +1697,13 @@ int hex_symbol_notequal()
 
 int hex_symbol_greater()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1698,13 +1724,13 @@ int hex_symbol_greater()
 
 int hex_symbol_less()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1725,13 +1751,13 @@ int hex_symbol_less()
 
 int hex_symbol_greaterequal()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1752,13 +1778,13 @@ int hex_symbol_greaterequal()
 
 int hex_symbol_lessequal()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1776,18 +1802,20 @@ int hex_symbol_lessequal()
     hex_error("'<=' symbol requires two integers or two strings");
     return 1;
 }
+#pragma endregion CmpSymbols
 
+#pragma region BoolSymbols
 // Boolean symbols
 
 int hex_symbol_and()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1804,13 +1832,13 @@ int hex_symbol_and()
 
 int hex_symbol_or()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1827,7 +1855,7 @@ int hex_symbol_or()
 
 int hex_symbol_not()
 {
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1844,13 +1872,13 @@ int hex_symbol_not()
 
 int hex_symbol_xor()
 {
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
         return 1;
     }
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
@@ -1864,21 +1892,21 @@ int hex_symbol_xor()
     hex_error("'xor' symbol requires two integers");
     return 1;
 }
+#pragma endregion BoolSymbols
 
-////////////////////////////////////////
-// Quotation/String symbols           //
-///////////////////////////////////////
+#pragma region ListSymbols
+// Quotation and String (List) Symbols
 
 int hex_symbol_cat()
 {
-    HEX_StackElement value = hex_pop();
+    POP(value);
     if (value.type == HEX_TYPE_INVALID)
     {
         FREE(value);
         return 1; // Failed to pop value
     }
 
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(list);
@@ -1947,20 +1975,20 @@ int hex_symbol_cat()
 
 int hex_symbol_slice()
 {
-    HEX_StackElement end = hex_pop();
+    POP(end);
     if (end.type == HEX_TYPE_INVALID)
     {
         FREE(end);
         return 1;
     }
-    HEX_StackElement start = hex_pop();
+    POP(start);
     if (start.type == HEX_TYPE_INVALID)
     {
         FREE(start);
         FREE(end);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(list);
@@ -2046,7 +2074,7 @@ int hex_symbol_slice()
 
 int hex_symbol_len()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -2075,13 +2103,13 @@ int hex_symbol_len()
 
 int hex_symbol_get()
 {
-    HEX_StackElement index = hex_pop();
+    POP(index);
     if (index.type == HEX_TYPE_INVALID)
     {
         FREE(index);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(list);
@@ -2134,13 +2162,13 @@ int hex_symbol_get()
 
 int hex_symbol_insert(void)
 {
-    HEX_StackElement index = hex_pop();
+    POP(index);
     if (index.type == HEX_TYPE_INVALID)
     {
         FREE(index);
         return 1;
     }
-    HEX_StackElement value = hex_pop();
+    POP(value);
     if (value.type == HEX_TYPE_INVALID)
     {
         FREE(index);
@@ -2148,7 +2176,7 @@ int hex_symbol_insert(void)
         return 1;
     }
 
-    HEX_StackElement target = hex_pop();
+    POP(target);
     if (target.type == HEX_TYPE_INVALID)
     {
         FREE(target);
@@ -2251,13 +2279,13 @@ int hex_symbol_insert(void)
 
 int hex_symbol_index()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(list);
@@ -2290,20 +2318,20 @@ int hex_symbol_index()
     }
     return hex_push_int(result);
 }
+#pragma endregion ListSymbols
 
-////////////////////////////////////////
-// String symbols                     //
-////////////////////////////////////////
+#pragma region StrSymbols
+// String symbols
 
 int hex_symbol_join()
 {
-    HEX_StackElement separator = hex_pop();
+    POP(separator);
     if (separator.type == HEX_TYPE_INVALID)
     {
         FREE(separator);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(list);
@@ -2357,13 +2385,13 @@ int hex_symbol_join()
 
 int hex_symbol_split()
 {
-    HEX_StackElement separator = hex_pop();
+    POP(separator);
     if (separator.type == HEX_TYPE_INVALID)
     {
         FREE(separator);
         return 1;
     }
-    HEX_StackElement str = hex_pop();
+    POP(str);
     if (str.type == HEX_TYPE_INVALID)
     {
         FREE(str);
@@ -2419,20 +2447,20 @@ int hex_symbol_split()
 
 int hex_symbol_replace()
 {
-    HEX_StackElement replacement = hex_pop();
+    POP(replacement);
     if (replacement.type == HEX_TYPE_INVALID)
     {
         FREE(replacement);
         return 1;
     }
-    HEX_StackElement search = hex_pop();
+    POP(search);
     if (search.type == HEX_TYPE_INVALID)
     {
         FREE(search);
         FREE(replacement);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(list);
@@ -2478,14 +2506,14 @@ int hex_symbol_replace()
     }
     return result;
 }
+#pragma endregion StrSymbols
 
-////////////////////////////////////////
-// File symbols                       //
-////////////////////////////////////////
+#pragma region FileSymbols
+// File symbols
 
 int hex_symbol_read()
 {
-    HEX_StackElement filename = hex_pop();
+    POP(filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
         FREE(filename);
@@ -2532,13 +2560,13 @@ int hex_symbol_read()
 
 int hex_symbol_write()
 {
-    HEX_StackElement filename = hex_pop();
+    POP(filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
         FREE(filename);
         return 1;
     }
-    HEX_StackElement data = hex_pop();
+    POP(data);
     if (data.type == HEX_TYPE_INVALID)
     {
         FREE(data);
@@ -2579,13 +2607,13 @@ int hex_symbol_write()
 
 int hex_symbol_append()
 {
-    HEX_StackElement filename = hex_pop();
+    POP(filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
         FREE(filename);
         return 1;
     }
-    HEX_StackElement data = hex_pop();
+    POP(data);
     if (data.type == HEX_TYPE_INVALID)
     {
         FREE(data);
@@ -2623,10 +2651,10 @@ int hex_symbol_append()
     }
     return result;
 }
+#pragma endregion FileSymbols
 
-////////////////////////////////////////
-// Shell symbols                      //
-////////////////////////////////////////
+#pragma region ShellSymbols
+// Shell symbols
 
 int hex_symbol_args()
 {
@@ -2659,7 +2687,7 @@ int hex_symbol_args()
 
 int hex_symbol_exit()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -2678,7 +2706,7 @@ int hex_symbol_exit()
 
 int hex_symbol_exec()
 {
-    HEX_StackElement command = hex_pop();
+    POP(command);
     if (command.type == HEX_TYPE_INVALID)
     {
         FREE(command);
@@ -2700,7 +2728,7 @@ int hex_symbol_exec()
 
 int hex_symbol_run()
 {
-    HEX_StackElement command = hex_pop();
+    POP(command);
     if (command.type == HEX_TYPE_INVALID)
     {
         FREE(command);
@@ -2858,27 +2886,27 @@ int hex_symbol_run()
 
     return hex_push_quotation(quotation, 3);
 }
+#pragma endregion ShellSymbols
 
-////////////////////////////////////////
-// Control flow symbols               //
-////////////////////////////////////////
+#pragma region CtrlSymbols
+// Control flow symbols
 
 int hex_symbol_if()
 {
-    HEX_StackElement elseBlock = hex_pop();
+    POP(elseBlock);
     if (elseBlock.type == HEX_TYPE_INVALID)
     {
         FREE(elseBlock);
         return 1;
     }
-    HEX_StackElement thenBlock = hex_pop();
+    POP(thenBlock);
     if (thenBlock.type == HEX_TYPE_INVALID)
     {
         FREE(thenBlock);
         FREE(elseBlock);
         return 1;
     }
-    HEX_StackElement condition = hex_pop();
+    POP(condition);
     if (condition.type == HEX_TYPE_INVALID)
     {
         FREE(condition);
@@ -2900,7 +2928,7 @@ int hex_symbol_if()
                 return 1;
             }
         }
-        HEX_StackElement evalResult = hex_pop();
+        POP(evalResult);
         if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
         {
             for (int i = 0; i < thenBlock.quotationSize; i++)
@@ -2928,13 +2956,13 @@ int hex_symbol_if()
 int hex_symbol_when()
 {
 
-    HEX_StackElement action = hex_pop();
+    POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
         FREE(action);
         return 1;
     }
-    HEX_StackElement condition = hex_pop();
+    POP(condition);
     if (condition.type == HEX_TYPE_INVALID)
     {
         FREE(action);
@@ -2957,7 +2985,7 @@ int hex_symbol_when()
                 break; // Break if pushing the element failed
             }
         }
-        HEX_StackElement evalResult = hex_pop();
+        POP(evalResult);
         if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
         {
             for (int i = 0; i < action.quotationSize; i++)
@@ -2975,13 +3003,13 @@ int hex_symbol_when()
 
 int hex_symbol_while()
 {
-    HEX_StackElement action = hex_pop();
+    POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
         FREE(action);
         return 1;
     }
-    HEX_StackElement condition = hex_pop();
+    POP(condition);
     if (condition.type == HEX_TYPE_INVALID)
     {
         FREE(action);
@@ -3006,7 +3034,7 @@ int hex_symbol_while()
                     break; // Break if pushing the element failed
                 }
             }
-            HEX_StackElement evalResult = hex_pop();
+            POP(evalResult);
             if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue == 0)
             {
                 break;
@@ -3026,13 +3054,13 @@ int hex_symbol_while()
 
 int hex_symbol_each()
 {
-    HEX_StackElement action = hex_pop();
+    POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
         FREE(action);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(action);
@@ -3076,13 +3104,13 @@ int hex_symbol_error()
 
 int hex_symbol_try()
 {
-    HEX_StackElement catchBlock = hex_pop();
+    POP(catchBlock);
     if (catchBlock.type == HEX_TYPE_INVALID)
     {
         FREE(catchBlock);
         return 1;
     }
-    HEX_StackElement tryBlock = hex_pop();
+    POP(tryBlock);
     if (tryBlock.type == HEX_TYPE_INVALID)
     {
         FREE(catchBlock);
@@ -3127,14 +3155,14 @@ int hex_symbol_try()
     }
     return result;
 }
+#pragma endregion CtrlSymbols
 
-////////////////////////////////////////
-// List symbols                       //
-////////////////////////////////////////
+#pragma region QuotSymbols
+// Quotation symbols
 
 int hex_symbol_q(void)
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -3175,13 +3203,13 @@ int hex_symbol_q(void)
 
 int hex_symbol_map()
 {
-    HEX_StackElement action = hex_pop();
+    POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
         FREE(action);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(action);
@@ -3237,13 +3265,13 @@ int hex_symbol_map()
 
 int hex_symbol_filter()
 {
-    HEX_StackElement action = hex_pop();
+    POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
         FREE(action);
         return 1;
     }
-    HEX_StackElement list = hex_pop();
+    POP(list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(action);
@@ -3282,7 +3310,7 @@ int hex_symbol_filter()
                         break;
                     }
                 }
-                HEX_StackElement evalResult = hex_pop();
+                POP(evalResult);
                 if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
                 {
                     quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
@@ -3313,20 +3341,20 @@ int hex_symbol_filter()
     }
     return result;
 }
+#pragma endregion QuotSymbols
 
-////////////////////////////////////////
-// Stack manipulation symbols         //
-////////////////////////////////////////
+#pragma region StckSymbols
+// Stack manipulation symbols
 
 int hex_symbol_swap()
 {
-    HEX_StackElement a = hex_pop();
+    POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
         FREE(a);
         return 1;
     }
-    HEX_StackElement b = hex_pop();
+    POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(b);
@@ -3343,7 +3371,7 @@ int hex_symbol_swap()
 
 int hex_symbol_dup()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
         FREE(element);
@@ -3392,11 +3420,13 @@ int hex_symbol_clear()
 
 int hex_symbol_pop()
 {
-    HEX_StackElement element = hex_pop();
+    POP(element);
     FREE(element);
     return 0;
 }
+#pragma endregion StkSymbols
 
+#pragma region Registration
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -3468,7 +3498,9 @@ void hex_register_symbols()
     hex_set_native_symbol("clear", hex_symbol_clear);
     hex_set_native_symbol("pop", hex_symbol_pop);
 }
+#pragma endregion Registration
 
+#pragma region Interpreter
 ////////////////////////////////////////
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
@@ -3602,7 +3634,9 @@ char *hex_read_file(const char *filename)
     fclose(file);
     return content;
 }
+#pragma endregion Interpreter
 
+#pragma region Execution
 // REPL implementation
 void hex_repl()
 {
@@ -3657,7 +3691,9 @@ void hex_process_stdin()
     buffer[bytesRead] = '\0'; // Null-terminate the input
     hex_interpret(buffer, "<stdin>", 1, 1);
 }
+#pragma endregion Execution
 
+#pragma region Main
 ////////////////////////////////////////
 // Main Program                       //
 ////////////////////////////////////////
@@ -3716,3 +3752,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+#pragma endregion Main
