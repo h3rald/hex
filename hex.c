@@ -180,7 +180,7 @@ typedef struct
 HEX_RegistryEntry HEX_REGISTRY[HEX_REGISTRY_SIZE];
 int HEX_REGISTRY_COUNT = 0;
 
-void FREE(HEX_StackElement element);
+void hex_free_element(HEX_StackElement element);
 void hex_free_token(HEX_Token *token);
 
 int hex_valid_user_symbol(const char *symbol)
@@ -442,7 +442,7 @@ void hex_debug(const char *format, ...);
 char *hex_type(HEX_ElementType type);
 
 // Free a stack element
-void FREE(HEX_StackElement element)
+void hex_free_element(HEX_StackElement element)
 {
     hex_debug_element("FREE", element);
     if (element.type == HEX_TYPE_STRING && element.data.strValue != NULL)
@@ -1570,6 +1570,7 @@ int hex_symbol_int()
     if (a.type == HEX_TYPE_QUOTATION)
     {
         hex_error("Cannot convert a quotation to an integer");
+        FREE(a);
         return 1;
     }
     if (a.type == HEX_TYPE_INTEGER)
@@ -1581,6 +1582,7 @@ int hex_symbol_int()
         return hex_push_int(strtol(a.data.strValue, NULL, 16));
     }
     hex_error("Unsupported data type: %s", hex_type(a.type));
+    FREE(a);
     return 1;
 }
 
@@ -1595,6 +1597,7 @@ int hex_symbol_str()
     if (a.type == HEX_TYPE_QUOTATION)
     {
         hex_error("Cannot convert a quotation to a string");
+        FREE(a);
         return 1;
     }
     if (a.type == HEX_TYPE_INTEGER)
@@ -1606,6 +1609,7 @@ int hex_symbol_str()
         return hex_push_string(a.data.strValue);
     }
     hex_error("Unsupported data type: %s", hex_type(a.type));
+    FREE(a);
     return 1;
 }
 
@@ -1622,6 +1626,7 @@ int hex_symbol_dec()
         return hex_push_string(hex_itoa_dec(a.data.intValue));
     }
     hex_error("An integer is required");
+    FREE(a);
     return 1;
 }
 
@@ -1638,6 +1643,7 @@ int hex_symbol_hex()
         return hex_push_int(strtol(element.data.strValue, NULL, 10));
     }
     hex_error("'hex' symbol requires a string representing a decimal integer");
+    FREE(element);
     return 1;
 }
 #pragma endregion ConvSymbols
@@ -1698,6 +1704,8 @@ int hex_symbol_equal()
         return hex_push_int(hex_equal(a, b));
     }
     hex_error("'==' symbol requires two integers, two strings, or two quotations");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1721,6 +1729,8 @@ int hex_symbol_notequal()
         return hex_push_int(!hex_equal(a, b));
     }
     hex_error("'!=' symbol requires two integers, two strings, or two quotations");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1748,6 +1758,8 @@ int hex_symbol_greater()
         return hex_push_int(strcmp(a.data.strValue, b.data.strValue) > 0);
     }
     hex_error("'>' symbol requires two integers or two strings");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1775,6 +1787,8 @@ int hex_symbol_less()
         return hex_push_int(strcmp(a.data.strValue, b.data.strValue) < 0);
     }
     hex_error("'<' symbol requires two integers or two strings");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1802,6 +1816,8 @@ int hex_symbol_greaterequal()
         return hex_push_int(strcmp(a.data.strValue, b.data.strValue) >= 0);
     }
     hex_error("'>=' symbol requires two integers or two strings");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1829,6 +1845,8 @@ int hex_symbol_lessequal()
         return hex_push_int(strcmp(a.data.strValue, b.data.strValue) <= 0);
     }
     hex_error("'<=' symbol requires two integers or two strings");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 #pragma endregion CmpSymbols
@@ -1856,6 +1874,8 @@ int hex_symbol_and()
         return hex_push_int(a.data.intValue && b.data.intValue);
     }
     hex_error("'and' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1879,6 +1899,8 @@ int hex_symbol_or()
         return hex_push_int(a.data.intValue || b.data.intValue);
     }
     hex_error("'or' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1919,6 +1941,8 @@ int hex_symbol_xor()
         return hex_push_int(a.data.intValue ^ b.data.intValue);
     }
     hex_error("'xor' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 #pragma endregion BoolSymbols
@@ -2185,6 +2209,12 @@ int hex_symbol_get()
     {
         hex_error("Symbol 'get' requires a quotation or a string");
         result = 1;
+    }
+    if (result != 0)
+    {
+
+        FREE(list);
+        FREE(index);
     }
     return result;
 }
