@@ -3601,7 +3601,10 @@ void hex_repl()
 {
     char line[1024];
 
-    printf("hex v%s. Press Ctrl+C to exit.\n", HEX_VERSION);
+    printf("    ~*\n");
+    printf("  /‾\\hex\\`*\n");
+    printf(".*\\_/_/_/ v%s\n", HEX_VERSION);
+    printf("      *‘ Press Ctrl+C to exit.\n");
 
     while (1)
     {
