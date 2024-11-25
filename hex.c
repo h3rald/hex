@@ -2247,6 +2247,9 @@ int hex_symbol_insert(void)
     if (index.type != HEX_TYPE_INTEGER)
     {
         hex_error("Index must be an integer");
+        FREE(target);
+        FREE(index);
+        FREE(value);
         return 1;
     }
 
@@ -2255,6 +2258,9 @@ int hex_symbol_insert(void)
         if (value.type != HEX_TYPE_STRING)
         {
             hex_error("Value must be a string when inserting into a string");
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1;
         }
 
@@ -2271,6 +2277,9 @@ int hex_symbol_insert(void)
         if (!new_str)
         {
             hex_error("Memory allocation failed");
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1;
         }
 
@@ -2284,6 +2293,9 @@ int hex_symbol_insert(void)
         if (PUSH(target) != 0)
         {
             free(new_str);
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1; // Failed to push the result onto the stack
         }
 
@@ -2294,6 +2306,9 @@ int hex_symbol_insert(void)
         if (index.data.intValue < 0 || index.data.intValue > target.quotationSize)
         {
             hex_error("Invalid index for quotation");
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1;
         }
 
@@ -2303,6 +2318,9 @@ int hex_symbol_insert(void)
         if (!new_quotation)
         {
             hex_error("Memory allocation failed");
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1;
         }
 
@@ -2314,6 +2332,9 @@ int hex_symbol_insert(void)
         if (!new_quotation[index.data.intValue])
         {
             hex_error("Memory allocation failed");
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1;
         }
 
@@ -2324,6 +2345,9 @@ int hex_symbol_insert(void)
         if (PUSH(target) != 0)
         {
             free(new_quotation[index.data.intValue]);
+            FREE(target);
+            FREE(index);
+            FREE(value);
             return 1; // Failed to push the result onto the stack
         }
 
@@ -2332,6 +2356,9 @@ int hex_symbol_insert(void)
     else
     {
         hex_error("Target must be a string or quotation");
+        FREE(target);
+        FREE(index);
+        FREE(value);
         return 1;
     }
 }
@@ -2374,6 +2401,9 @@ int hex_symbol_index()
     else
     {
         hex_error("Symbol 'index' requires a quotation or a string");
+        FREE(list);
+        FREE(element);
+        return 1;
     }
     return hex_push_int(result);
 }
@@ -2410,6 +2440,8 @@ int hex_symbol_join()
             else
             {
                 hex_error("Quotation must contain only strings");
+                FREE(list);
+                FREE(separator);
                 return 1;
             }
         }
@@ -2420,6 +2452,8 @@ int hex_symbol_join()
             if (!newStr)
             {
                 hex_error("Memory allocation failed");
+                FREE(list);
+                FREE(separator);
                 return 1;
             }
             newStr[0] = '\0';
@@ -2438,6 +2472,11 @@ int hex_symbol_join()
     {
         hex_error("Symbol 'join' requires a quotation and a string");
         result = 1;
+    }
+    if (result != 0)
+    {
+        FREE(list);
+        FREE(separator);
     }
     return result;
 }
@@ -2501,6 +2540,11 @@ int hex_symbol_split()
         hex_error("Symbol 'split' requires two strings");
         result = 1;
     }
+    if (result != 0)
+    {
+        FREE(str);
+        FREE(separator);
+    }
     return result;
 }
 
@@ -2563,6 +2607,12 @@ int hex_symbol_replace()
         hex_error("Symbol 'replace' requires three strings");
         result = 1;
     }
+    if (result != 0)
+    {
+        FREE(list);
+        FREE(search);
+        FREE(replacement);
+    }
     return result;
 }
 #pragma endregion StrSymbols
@@ -2614,6 +2664,10 @@ int hex_symbol_read()
         hex_error("Symbol 'read' requires a string");
         result = 1;
     }
+    if (result != 0)
+    {
+        FREE(filename);
+    }
     return result;
 }
 
@@ -2660,6 +2714,11 @@ int hex_symbol_write()
     {
         hex_error("Symbol 'write' requires a string");
         result = 1;
+    }
+    if (result != 0)
+    {
+        FREE(data);
+        FREE(filename);
     }
     return result;
 }
@@ -2708,6 +2767,11 @@ int hex_symbol_append()
         hex_error("Symbol 'append' requires a string");
         result = 1;
     }
+    if (result != 0)
+    {
+        FREE(data);
+        FREE(filename);
+    }
     return result;
 }
 #pragma endregion FileSymbols
@@ -2718,28 +2782,21 @@ int hex_symbol_append()
 int hex_symbol_args()
 {
     int result = 0;
-    if (HEX_ARGV)
+    HEX_StackElement **quotation = (HEX_StackElement **)malloc(HEX_ARGC * sizeof(HEX_StackElement *));
+    if (!quotation)
     {
-        HEX_StackElement **quotation = (HEX_StackElement **)malloc(HEX_ARGC * sizeof(HEX_StackElement *));
-        if (!quotation)
-        {
-            hex_error("Memory allocation failed");
-            result = 1;
-        }
-        else
-        {
-            for (int i = 0; i < HEX_ARGC; i++)
-            {
-                quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-                quotation[i]->type = HEX_TYPE_STRING;
-                quotation[i]->data.strValue = HEX_ARGV[i];
-            }
-            result = hex_push_quotation(quotation, HEX_ARGC);
-        }
+        hex_error("Memory allocation failed");
+        result = 1;
     }
     else
     {
-        result = 1;
+        for (int i = 0; i < HEX_ARGC; i++)
+        {
+            quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            quotation[i]->type = HEX_TYPE_STRING;
+            quotation[i]->data.strValue = HEX_ARGV[i];
+        }
+        result = hex_push_quotation(quotation, HEX_ARGC);
     }
     return result;
 }
@@ -2781,6 +2838,10 @@ int hex_symbol_exec()
     {
         hex_error("Symbol 'exec' requires a string");
         result = 1;
+    }
+    if (result != 0)
+    {
+        FREE(command);
     }
     return result;
 }
@@ -2984,6 +3045,9 @@ int hex_symbol_if()
         {
             if (hex_push(*condition.data.quotationValue[i]) != 0)
             {
+                FREE(condition);
+                FREE(thenBlock);
+                FREE(elseBlock);
                 return 1;
             }
         }
@@ -2994,6 +3058,9 @@ int hex_symbol_if()
             {
                 if (hex_push(*thenBlock.data.quotationValue[i]) != 0)
                 {
+                    FREE(condition);
+                    FREE(thenBlock);
+                    FREE(elseBlock);
                     return 1;
                 }
             }
@@ -3004,6 +3071,9 @@ int hex_symbol_if()
             {
                 if (hex_push(*elseBlock.data.quotationValue[i]) != 0)
                 {
+                    FREE(condition);
+                    FREE(thenBlock);
+                    FREE(elseBlock);
                     return 1;
                 }
             }
@@ -3057,6 +3127,11 @@ int hex_symbol_when()
             }
         }
     }
+    if (result != 0)
+    {
+        FREE(action);
+        FREE(condition);
+    }
     return result;
 }
 
@@ -3075,11 +3150,12 @@ int hex_symbol_while()
         FREE(condition);
         return 1;
     }
-    int result = 0;
     if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'while' symbol requires two quotations");
-        result = 1;
+        FREE(action);
+        FREE(condition);
+        return 1;
     }
     else
     {
@@ -3089,8 +3165,9 @@ int hex_symbol_while()
             {
                 if (hex_push(*condition.data.quotationValue[i]) != 0)
                 {
-                    result = 1;
-                    break; // Break if pushing the element failed
+                    FREE(action);
+                    FREE(condition);
+                    return 1;
                 }
             }
             POP(evalResult);
@@ -3102,13 +3179,14 @@ int hex_symbol_while()
             {
                 if (hex_push(*action.data.quotationValue[i]) != 0)
                 {
-                    result = 1;
-                    break;
+                    FREE(action);
+                    FREE(condition);
+                    return 1;
                 }
             }
         }
     }
-    return result;
+    return 0;
 }
 
 int hex_symbol_each()
@@ -3126,11 +3204,12 @@ int hex_symbol_each()
         FREE(list);
         return 1;
     }
-    int result = 0;
     if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'each' symbol requires two quotations");
-        result = 1;
+        FREE(action);
+        FREE(list);
+        return 1;
     }
     else
     {
@@ -3138,20 +3217,22 @@ int hex_symbol_each()
         {
             if (hex_push(*list.data.quotationValue[i]) != 0)
             {
-                result = 1;
-                break; // Break if pushing the element failed
+                FREE(action);
+                FREE(list);
+                return 1;
             }
             for (int j = 0; j < action.quotationSize; j++)
             {
                 if (hex_push(*action.data.quotationValue[j]) != 0)
                 {
-                    result = 1;
-                    break;
+                    FREE(action);
+                    FREE(list);
+                    return 1;
                 }
             }
         }
     }
-    return result;
+    return 0;
 }
 
 int hex_symbol_error()
@@ -3176,11 +3257,12 @@ int hex_symbol_try()
         FREE(tryBlock);
         return 1;
     }
-    int result = 0;
     if (tryBlock.type != HEX_TYPE_QUOTATION || catchBlock.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'try' symbol requires two quotations");
-        result = 1;
+        FREE(catchBlock);
+        FREE(tryBlock);
+        return 1;
     }
     else
     {
@@ -3193,7 +3275,10 @@ int hex_symbol_try()
         {
             if (hex_push(*tryBlock.data.quotationValue[i]) != 0)
             {
-                break;
+                FREE(catchBlock);
+                FREE(tryBlock);
+                HEX_ERRORS = 1;
+                return 1;
             }
         }
         HEX_ERRORS = 1;
@@ -3204,15 +3289,16 @@ int hex_symbol_try()
             {
                 if (hex_push(*catchBlock.data.quotationValue[i]) != 0)
                 {
-                    result = 1;
-                    break;
+                    FREE(catchBlock);
+                    FREE(tryBlock);
+                    return 1;
                 }
             }
         }
 
         strncpy(HEX_ERROR, prevError, sizeof(HEX_ERROR));
     }
-    return result;
+    return 0;
 }
 #pragma endregion CtrlSymbols
 
@@ -3232,6 +3318,7 @@ int hex_symbol_q(void)
     if (!quotation)
     {
         hex_error("Memory allocation failed");
+        FREE(element);
         return 1;
     }
 
@@ -3242,6 +3329,7 @@ int hex_symbol_q(void)
     result.data.quotationValue = (HEX_StackElement **)malloc(sizeof(HEX_StackElement *));
     if (!result.data.quotationValue)
     {
+        FREE(element);
         free(quotation);
         hex_error("Memory allocation failed");
         return 1;
@@ -3252,6 +3340,7 @@ int hex_symbol_q(void)
 
     if (PUSH(result) != 0)
     {
+        FREE(element);
         free(quotation);
         free(result.data.quotationValue);
         return 1;
@@ -3275,11 +3364,12 @@ int hex_symbol_map()
         FREE(list);
         return 1;
     }
-    int result = 0;
     if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'map' symbol requires two quotations");
-        result = 1;
+        FREE(action);
+        FREE(list);
+        return 1;
     }
     else
     {
@@ -3287,39 +3377,38 @@ int hex_symbol_map()
         if (!quotation)
         {
             hex_error("Memory allocation failed");
-            result = 1;
+            FREE(action);
+            FREE(list);
+            return 1;
         }
-        else
+        for (int i = 0; i < list.quotationSize; i++)
         {
-            for (int i = 0; i < list.quotationSize; i++)
+            if (hex_push(*list.data.quotationValue[i]) != 0)
             {
-                if (hex_push(*list.data.quotationValue[i]) != 0)
-                {
-                    result = 1;
-                    break;
-                }
-                for (int j = 0; j < action.quotationSize; j++)
-                {
-                    if (hex_push(*action.data.quotationValue[j]) != 0)
-                    {
-                        result = 1;
-                        break;
-                    }
-                }
-                if (result != 0)
-                {
-                    break;
-                }
-                quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-                *quotation[i] = hex_pop();
+                FREE(action);
+                FREE(list);
+                return 1;
             }
-            if (result == 0)
+            for (int j = 0; j < action.quotationSize; j++)
             {
-                result = hex_push_quotation(quotation, list.quotationSize);
+                if (hex_push(*action.data.quotationValue[j]) != 0)
+                {
+                    FREE(action);
+                    FREE(list);
+                    return 1;
+                }
             }
+            quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            *quotation[i] = hex_pop();
+        }
+        if (hex_push_quotation(quotation, list.quotationSize) != 0)
+        {
+            FREE(action);
+            FREE(list);
+            return 1;
         }
     }
-    return result;
+    return 0;
 }
 
 int hex_symbol_filter()
@@ -3337,11 +3426,12 @@ int hex_symbol_filter()
         FREE(list);
         return 1;
     }
-    int result = 0;
     if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'filter' symbol requires two quotations");
-        result = 1;
+        FREE(action);
+        FREE(list);
+        return 1;
     }
     else
     {
@@ -3349,56 +3439,57 @@ int hex_symbol_filter()
         if (!quotation)
         {
             hex_error("Memory allocation failed");
-            result = 1;
+            FREE(action);
+            FREE(list);
+            return 1;
         }
-        else
+        int count = 0;
+        for (int i = 0; i < list.quotationSize; i++)
         {
-            int count = 0;
-            for (int i = 0; i < list.quotationSize; i++)
+            if (hex_push(*list.data.quotationValue[i]) != 0)
             {
-                if (hex_push(*list.data.quotationValue[i]) != 0)
+                FREE(action);
+                FREE(list);
+                return 1;
+            }
+            for (int j = 0; j < action.quotationSize; j++)
+            {
+                if (hex_push(*action.data.quotationValue[j]) != 0)
                 {
-                    result = 1;
-                    break;
-                }
-                for (int j = 0; j < action.quotationSize; j++)
-                {
-                    if (hex_push(*action.data.quotationValue[j]) != 0)
-                    {
-                        result = 1;
-                        break;
-                    }
-                }
-                POP(evalResult);
-                if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
-                {
-                    quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
-                    if (!quotation[count])
-                    {
-                        hex_error("Memory allocation failed");
-                        result = 1;
-                        break;
-                    }
-                    *quotation[count] = *list.data.quotationValue[i];
-                    count++;
+                    FREE(action);
+                    FREE(list);
+                    return 1;
                 }
             }
-            if (result == 0)
+            POP(evalResult);
+            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
             {
-                result = hex_push_quotation(quotation, count);
-            }
-            else
-            {
-                hex_error("An error occurred while filtering the list");
-                result = 1;
-                for (int i = 0; i < count; i++)
+                quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                if (!quotation[count])
                 {
-                    FREE(*quotation[i]);
+                    hex_error("Memory allocation failed");
+                    FREE(action);
+                    FREE(list);
+                    return 1;
                 }
+                *quotation[count] = *list.data.quotationValue[i];
+                count++;
             }
         }
+        if (hex_push_quotation(quotation, count) != 0)
+        {
+            FREE(action);
+            FREE(list);
+            return 1;
+        }
+        hex_error("An error occurred while filtering the list");
+        for (int i = 0; i < count; i++)
+        {
+            FREE(*quotation[i]);
+        }
+        return 1;
     }
-    return result;
+    return 0;
 }
 #pragma endregion QuotSymbols
 
