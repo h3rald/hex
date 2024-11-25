@@ -17,6 +17,7 @@ int isatty(int fd)
 #include <sys/wait.h>
 #endif
 
+#define POP(x) HEX_StackElement x = hex_pop()
 #define HEX_VERSION "0.1.0"
 #define HEX_STDIN_BUFFER_SIZE 256
 #define HEX_REGISTRY_SIZE 1024
@@ -1066,7 +1067,8 @@ int hex_is_symbol(HEX_Token *token, char *value)
 
 int hex_symbol_store()
 {
-    HEX_StackElement name = hex_pop();
+    //HEX_StackElement name = hex_pop();
+    POP(name);
     if (name.type == HEX_TYPE_INVALID)
     {
         hex_free_element(name);
