@@ -27,6 +27,7 @@ int isatty(int fd)
 // Common operations
 #define POP(x) HEX_StackElement x = hex_pop()
 #define FREE(x) hex_free_element(x)
+#define PUSH(x) hex_push(x)
 
 // Global variables
 int HEX_DEBUG = 0;
@@ -300,7 +301,7 @@ int hex_push(HEX_StackElement element)
         HEX_StackElement value;
         if (hex_get_symbol(element.token->value, &value))
         {
-            result = hex_push(value);
+            result = PUSH(value);
         }
         else
         {
@@ -333,7 +334,7 @@ int hex_push(HEX_StackElement element)
 int hex_push_int(int value)
 {
     HEX_StackElement element = {.type = HEX_TYPE_INTEGER, .data.intValue = value};
-    return hex_push(element);
+    return PUSH(element);
 }
 
 char *hex_process_string(const char *value)
@@ -399,13 +400,13 @@ int hex_push_string(const char *value)
 {
     char *processedStr = hex_process_string(value);
     HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
-    return hex_push(element);
+    return PUSH(element);
 }
 
 int hex_push_quotation(HEX_StackElement **quotation, int size)
 {
     HEX_StackElement element = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
-    return hex_push(element);
+    return PUSH(element);
 }
 
 int hex_push_symbol(HEX_Token *token)
@@ -415,7 +416,7 @@ int hex_push_symbol(HEX_Token *token)
     if (hex_get_symbol(token->value, &value))
     {
         value.token = token;
-        return hex_push(value);
+        return PUSH(value);
     }
     else
     {
@@ -1096,16 +1097,22 @@ int hex_symbol_store()
     POP(value);
     if (value.type == HEX_TYPE_INVALID)
     {
+        FREE(name);
+        FREE(value);
         return 1;
     }
     if (name.type != HEX_TYPE_STRING)
     {
         hex_error("Symbol name must be a string");
+        FREE(name);
+        FREE(value);
         return 1;
     }
     if (hex_set_symbol(name.data.strValue, value, 0) != 0)
     {
         hex_error("Failed to store variable");
+        FREE(name);
+        FREE(value);
         return 1;
     }
     return 0;
@@ -1152,9 +1159,7 @@ int hex_symbol_type()
         FREE(element);
         return 1;
     }
-    int result = 0;
-    result = hex_push_string(hex_type(element.type));
-    return result;
+    return hex_push_string(hex_type(element.type));
 }
 #pragma endregion DefSymbols
 
@@ -1172,12 +1177,14 @@ int hex_symbol_i()
     if (element.type != HEX_TYPE_QUOTATION)
     {
         hex_error("'i' symbol requires a quotation");
+        FREE(element);
         return 1;
     }
     for (int i = 0; i < element.quotationSize; i++)
     {
         if (hex_push(*element.data.quotationValue[i]) != 0)
         {
+            FREE(element);
             return 1;
         }
     }
@@ -1198,6 +1205,7 @@ int hex_symbol_eval()
     if (element.type != HEX_TYPE_STRING)
     {
         hex_error("'eval' symbol requires a string");
+        FREE(element);
         return 1;
     }
     return hex_interpret(element.data.strValue, "<eval>", 1, 1);
@@ -1287,6 +1295,8 @@ int hex_symbol_add()
         return hex_push_int(a.data.intValue + b.data.intValue);
     }
     hex_error("'+' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1310,6 +1320,8 @@ int hex_symbol_subtract()
         return hex_push_int(a.data.intValue - b.data.intValue);
     }
     hex_error("'-' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1333,6 +1345,8 @@ int hex_symbol_multiply()
         return hex_push_int(a.data.intValue * b.data.intValue);
     }
     hex_error("'*' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1361,6 +1375,8 @@ int hex_symbol_divide()
         return hex_push_int(a.data.intValue / b.data.intValue);
     }
     hex_error("'/' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 
@@ -1388,6 +1404,8 @@ int hex_symbol_modulo()
         return hex_push_int(a.data.intValue % b.data.intValue);
     }
     hex_error("'%%' symbol requires two integers");
+    FREE(a);
+    FREE(b);
     return 1;
 }
 #pragma endregion MathSymbols
@@ -1414,7 +1432,9 @@ int hex_symbol_bitand()
     {
         return hex_push_int(left.data.intValue & right.data.intValue);
     }
-    hex_error("Bitwise AND requires two integers");
+    hex_error("'&' symbol requires two integers");
+    FREE(left);
+    FREE(right);
     return 1;
 }
 
@@ -1437,7 +1457,9 @@ int hex_symbol_bitor()
     {
         return hex_push_int(left.data.intValue | right.data.intValue);
     }
-    hex_error("Bitwise OR requires two integers");
+    hex_error("'|' symbol requires two integers");
+    FREE(left);
+    FREE(right);
     return 1;
 }
 
@@ -1460,7 +1482,9 @@ int hex_symbol_bitxor()
     {
         return hex_push_int(left.data.intValue ^ right.data.intValue);
     }
-    hex_error("Bitwise XOR requires two integers");
+    hex_error("'^' symbol requires two integers");
+    FREE(left);
+    FREE(right);
     return 1;
 }
 
@@ -1483,7 +1507,9 @@ int hex_symbol_shiftleft()
     {
         return hex_push_int(left.data.intValue << right.data.intValue);
     }
-    hex_error("Left shift requires two integers");
+    hex_error("'<<' symbol requires two integers");
+    FREE(left);
+    FREE(right);
     return 1;
 }
 
@@ -1506,7 +1532,9 @@ int hex_symbol_shiftright()
     {
         return hex_push_int(left.data.intValue >> right.data.intValue);
     }
-    hex_error("Right shift requires two integers");
+    hex_error("'>>' symbol requires two integers");
+    FREE(left);
+    FREE(right);
     return 1;
 }
 
@@ -1522,7 +1550,8 @@ int hex_symbol_bitnot()
     {
         return hex_push_int(~element.data.intValue);
     }
-    hex_error("Bitwise NOT requires one integer");
+    hex_error("'~' symbol requires one integer");
+    FREE(element);
     return 1;
 }
 #pragma endregion BitSymbols
@@ -2222,7 +2251,7 @@ int hex_symbol_insert(void)
         free(target.data.strValue);
         target.data.strValue = new_str;
 
-        if (hex_push(target) != 0)
+        if (PUSH(target) != 0)
         {
             free(new_str);
             return 1; // Failed to push the result onto the stack
@@ -2262,7 +2291,7 @@ int hex_symbol_insert(void)
         target.data.quotationValue = new_quotation;
         target.quotationSize++;
 
-        if (hex_push(target) != 0)
+        if (PUSH(target) != 0)
         {
             free(new_quotation[index.data.intValue]);
             return 1; // Failed to push the result onto the stack
@@ -3191,7 +3220,7 @@ int hex_symbol_q(void)
     result.data.quotationValue[0] = quotation;
     result.quotationSize = 1;
 
-    if (hex_push(result) != 0)
+    if (PUSH(result) != 0)
     {
         free(quotation);
         free(result.data.quotationValue);
@@ -3361,10 +3390,10 @@ int hex_symbol_swap()
         FREE(a);
         return 1;
     }
-    int result = hex_push(a);
+    int result = PUSH(a);
     if (result == 0)
     {
-        result = hex_push(b);
+        result = PUSH(b);
     }
     return result;
 }
@@ -3377,10 +3406,10 @@ int hex_symbol_dup()
         FREE(element);
         return 1;
     }
-    int result = hex_push(element);
+    int result = PUSH(element);
     if (result == 0)
     {
-        result = hex_push(element);
+        result = PUSH(element);
     }
     return result;
 }
@@ -3425,6 +3454,7 @@ int hex_symbol_pop()
     return 0;
 }
 #pragma endregion StkSymbols
+#pragma endregion Symbols
 
 #pragma region Registration
 ////////////////////////////////////////
@@ -3644,8 +3674,8 @@ void hex_repl()
 
     printf("    ~*\n");
     printf("  /‾\\hex\\`*\n");
-    printf(".*\\_/_/_/ v%s\n", HEX_VERSION);
-    printf("      *‘ Press Ctrl+C to exit.\n");
+    printf(".*\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
+    printf("      *‘\n");
 
     while (1)
     {
