@@ -3509,12 +3509,19 @@ int hex_symbol_swap()
         FREE(a);
         return 1;
     }
-    int result = PUSH(a);
-    if (result == 0)
+    if (PUSH(a) != 0)
     {
-        result = PUSH(b);
+      FREE(a);
+      FREE(b);
+      return 1;
     }
-    return result;
+    if (PUSH(b) != 0)
+    {
+      FREE(a);
+      FREE(b);
+      return 1;
+    }
+    return 0;
 }
 
 int hex_symbol_dup()
@@ -3525,12 +3532,12 @@ int hex_symbol_dup()
         FREE(element);
         return 1;
     }
-    int result = PUSH(element);
-    if (result == 0)
+    if (PUSH(element) == 0 && PUSH(element) == 0)
     {
-        result = PUSH(element);
+        return 0;
     }
-    return result;
+    FREE(element);
+    return 1;
 }
 
 int hex_symbol_stack()
