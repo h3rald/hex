@@ -181,6 +181,7 @@ int HEX_REGISTRY_COUNT = 0;
 
 void hex_free_element(HEX_StackElement element);
 void hex_free_token(HEX_Token *token);
+void hex_free_list(HEX_StackElement **quotation, int size);
 
 int hex_valid_user_symbol(const char *symbol)
 {
@@ -470,6 +471,15 @@ void hex_free_element(HEX_StackElement element)
     else if (element.type == HEX_TYPE_USER_SYMBOL && element.token->value != NULL)
     {
         hex_free_token(element.token);
+    }
+}
+
+void hex_free_list(HEX_StackElement **quotation, int size)
+{
+    hex_error("An error occurred while filtering the list");
+    for (int i = 0; i < size; i++)
+    {
+        FREE(*quotation[i]);
     }
 }
 #pragma endregion Stack
@@ -786,7 +796,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
                 {
                     hex_error("Unable to reference native symbol: %s", token->value);
                     hex_free_token(token);
-                    free(quotation);
+                    hex_free_list(quotation, size);
                     return 1;
                 }
             }
@@ -803,7 +813,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
             if (hex_parse_quotation(input, element, filename, line, column) != 0)
             {
                 hex_free_token(token);
-                free(quotation);
+                hex_free_list(quotation, size);
                 return 1;
             }
         }
@@ -815,7 +825,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
         {
             hex_error("Unexpected token in quotation: %d", token->value);
             hex_free_token(token);
-            free(quotation);
+            hex_free_list(quotation, size);
             return 1;
         }
 
@@ -827,7 +837,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
     {
         hex_error("Unterminated quotation");
         hex_free_token(token);
-        free(quotation);
+        hex_free_list(quotation, size);
         return 1;
     }
 
@@ -3511,15 +3521,15 @@ int hex_symbol_swap()
     }
     if (PUSH(a) != 0)
     {
-      FREE(a);
-      FREE(b);
-      return 1;
+        FREE(a);
+        FREE(b);
+        return 1;
     }
     if (PUSH(b) != 0)
     {
-      FREE(a);
-      FREE(b);
-      return 1;
+        FREE(a);
+        FREE(b);
+        return 1;
     }
     return 0;
 }
@@ -3548,7 +3558,7 @@ int hex_symbol_stack()
         hex_error("Memory allocation failed");
         return 1;
     }
-
+    int count = 0;
     for (int i = 0; i <= HEX_TOP; i++)
     {
         quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
@@ -3558,9 +3568,15 @@ int hex_symbol_stack()
             return 1;
         }
         *quotation[i] = HEX_STACK[i];
+        count++;
     }
 
-    return hex_push_quotation(quotation, HEX_TOP + 1);
+    if (hex_push_quotation(quotation, HEX_TOP + 1) != 0)
+    {
+        hex_error("An error occurred while fetching stack contents");
+        hex_free_list(quotation, count);
+        return 1;
+    }
 }
 
 int hex_symbol_clear()
