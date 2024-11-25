@@ -1,8 +1,0 @@
-{
-    "files.associations": {
-        "*.erd": "json",
-        "*.vuerd": "json",
-        "*.mjs": "javascript",
-        "string.h": "c"
-    }
-}

@@ -161,7 +161,6 @@ typedef struct HEX_StackElement
         struct HEX_StackElement **quotationValue;
     } data;
     HEX_Token *token;  // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
-    char *symbolName;  // Symbol name (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
     int quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } HEX_StackElement;
 
@@ -795,7 +794,6 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
             {
                 element->type = HEX_TYPE_USER_SYMBOL;
             }
-            element->symbolName = strdup(token->value);
             token->filename = strdup(filename);
             element->token = token;
         }
