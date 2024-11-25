@@ -1,2 +1,11 @@
 # hex
-A simple and minimalist concatenative programming language
+
+A minimalist, concatenative, slightly-esoteric programming language.
+
+```
+     ~*
+   /‾\hex\`*
+ .*\_/_/_/
+       *‘
+```
+
