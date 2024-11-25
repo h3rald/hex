@@ -3577,6 +3577,7 @@ int hex_symbol_stack()
         hex_free_list(quotation, count);
         return 1;
     }
+    return 0;
 }
 
 int hex_symbol_clear()
