@@ -92,7 +92,7 @@ typedef struct hex_stack_trace_t
 // TODO: refactor and use this
 typedef struct hex_stack_t
 {
-    hex_item_t item[HEX_STACK_SIZE];
+    hex_item_t entries[HEX_STACK_SIZE];
     int top;
 } hex_stack_t;
 
@@ -125,6 +125,7 @@ typedef struct hex_context_t
 
 // Functions
 
+hex_context_t hex_init();
 void hex_free_element(hex_item_t element);
 void hex_free_token(hex_token_t *token);
 void hex_free_list(hex_item_t **quotation, int size);

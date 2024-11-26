@@ -84,12 +84,28 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "pop"};
 
 ////////////////////////////////////////
-// Registry Implementation            //
+// Context Implementation             //
 ////////////////////////////////////////
 
-void hex_free_element(hex_item_t element);
-void hex_free_token(hex_token_t *token);
-void hex_free_list(hex_item_t **quotation, int size);
+hex_context_t hex_init()
+{
+    hex_context_t context;
+    context.argc = 0;
+    context.argv = NULL;
+    context.error = NULL;
+    context.registry.size = 0;
+    context.stack.top = -1;
+    context.stack_trace.start = 0;
+    context.stack_trace.size = 0;
+    context.settings.debugging_enabled = 0;
+    context.settings.errors_enabled = 1;
+    context.settings.stack_trace_enabled = 1;
+    return context;
+}
+
+////////////////////////////////////////
+// Registry Implementation            //
+////////////////////////////////////////
 
 int hex_valid_user_symbol(const char *symbol)
 {
