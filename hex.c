@@ -2843,6 +2843,7 @@ int hex_symbol_run()
 
         // Read stdout
         FILE *stdout_fp = fdopen(stdout_pipe[0], "r");
+        char path[1035];
         while (fgets(path, sizeof(path), stdout_fp) != NULL)
         {
             strcat(output, path);
