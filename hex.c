@@ -801,7 +801,7 @@ void add_to_stack_trace(hex_token_t *token)
 // Print the stack trace
 void print_stack_trace()
 {
-    if (HEX_STACK_TRACE && HEX_ERRORS)
+    if (!HEX_STACK_TRACE || !HEX_ERRORS)
     {
         return;
     }
