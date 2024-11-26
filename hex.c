@@ -1,28 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <signal.h>
-#include <stdarg.h>
-#ifdef _WIN32
-#include <windows.h>
-#include <io.h>
-int isatty(int fd)
-{
-    HANDLE h = (HANDLE)_get_osfhandle(fd);
-    return (GetFileType(h) == FILE_TYPE_CHAR);
-}
-#else
-#include <unistd.h>
-#include <sys/wait.h>
-#endif
-
-// Constants
-#define HEX_VERSION "0.1.0"
-#define HEX_STDIN_BUFFER_SIZE 256
-#define HEX_REGISTRY_SIZE 1024
-#define HEX_STACK_SIZE 128
-#define HEX_STACK_TRACE_SIZE 16
+#include "hex.h"
 
 // Common operations
 #define POP(x) hex_item_t x = hex_pop()
@@ -117,63 +93,9 @@ void hex_error(const char *format, ...)
     va_end(args);
 }
 
-// Enum to represent the type of stack elements
-typedef enum hex_item_type_t
-{
-    HEX_TYPE_INTEGER,
-    HEX_TYPE_STRING,
-    HEX_TYPE_QUOTATION,
-    HEX_TYPE_NATIVE_SYMBOL,
-    HEX_TYPE_USER_SYMBOL,
-    HEX_TYPE_INVALID
-} hex_item_type_t;
-
-// Token Types
-typedef enum hex_token_type_t
-{
-    HEX_TOKEN_NUMBER,
-    HEX_TOKEN_STRING,
-    HEX_TOKEN_SYMBOL,
-    HEX_TOKEN_QUOTATION_START,
-    HEX_TOKEN_QUOTATION_END,
-    HEX_TOKEN_COMMENT,
-    HEX_TOKEN_INVALID
-} hex_token_type_t;
-
-typedef struct hex_token_t
-{
-    hex_token_type_t type;
-    char *value;
-    char *filename;
-    int line;
-    int column;
-} hex_token_t;
-
-// Unified Stack Element
-typedef struct hex_item_t
-{
-    hex_item_type_t type;
-    union
-    {
-        int intValue;
-        char *strValue;
-        int (*functionPointer)();
-        struct hex_item_t **quotationValue;
-    } data;
-    hex_token_t *token; // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
-    int quotationSize;  // Size of the quotation (valid for HEX_TYPE_QUOTATION)
-} hex_item_t;
-
 ////////////////////////////////////////
 // Registry Implementation            //
 ////////////////////////////////////////
-
-// Registry Entry
-typedef struct hex_registry_entry
-{
-    char *key;
-    hex_item_t value;
-} hex_registry_entry_t;
 
 hex_registry_entry_t HEX_REGISTRY[HEX_REGISTRY_SIZE];
 int HEX_REGISTRY_COUNT = 0;
@@ -273,12 +195,6 @@ int hex_get_symbol(const char *key, hex_item_t *result)
 ////////////////////////////////////////
 // Stack Implementation               //
 ////////////////////////////////////////
-
-void hex_debug(const char *format, ...);
-void hex_debug_element(const char *message, hex_item_t element);
-void hex_print_element(FILE *stream, hex_item_t element);
-void add_to_stack_trace(hex_token_t *token);
-char *hex_type(hex_item_type_t type);
 
 hex_item_t HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
@@ -434,10 +350,6 @@ hex_item_t hex_pop()
     return HEX_STACK[HEX_TOP--];
 }
 
-void hex_free_token(hex_token_t *token);
-void hex_debug(const char *format, ...);
-char *hex_type(hex_item_type_t type);
-
 // Free a stack element
 void hex_free_element(hex_item_t element)
 {
@@ -531,8 +443,6 @@ void hex_debug_element(const char *message, hex_item_t element)
 ////////////////////////////////////////
 // Tokenizer Implementation           //
 ////////////////////////////////////////
-
-int hex_valid_native_symbol(char *symbol);
 
 // Process a token from the input
 hex_token_t *hex_next_token(const char **input, int *line, int *column)
@@ -715,7 +625,7 @@ void hex_free_token(hex_token_t *token)
     }
 }
 
-int hex_valid_native_symbol(char *symbol)
+int hex_valid_native_symbol(const char *symbol)
 {
     for (size_t i = 0; i < sizeof(HEX_NATIVE_SYMBOLS) / sizeof(HEX_NATIVE_SYMBOLS[0]); i++)
     {
@@ -845,23 +755,7 @@ int hex_parse_quotation(const char **input, hex_item_t *result, const char *file
 // Stack trace implementation         //
 ////////////////////////////////////////
 
-void hex_print_element(FILE *stream, hex_item_t element);
-
-// Stack trace entry with token information
-typedef struct
-{
-    hex_token_t token;
-} HEX_StackTraceEntry;
-
-// Circular buffer structure
-typedef struct
-{
-    HEX_StackTraceEntry entries[HEX_STACK_TRACE_SIZE];
-    int start; // Index of the oldest element
-    int size;  // Current number of elements in the buffer
-} CircularStackTrace;
-
-CircularStackTrace stackTrace = {.start = 0, .size = 0};
+hex_stack_trace_t stackTrace = {.start = 0, .size = 0};
 
 // Add an entry to the circular stack trace
 void add_to_stack_trace(hex_token_t *token)
