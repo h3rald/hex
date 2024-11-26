@@ -1,3 +1,4 @@
+
 #ifndef HEX_H
 #define HEX_H
 
@@ -24,7 +25,7 @@ int isatty(int fd);
 #define HEX_STACK_SIZE 128
 #define HEX_STACK_TRACE_SIZE 16
 
-// Enum to represent the type of stack elements
+// Type Definitions
 typedef enum hex_item_type_t
 {
     HEX_TYPE_INTEGER,
@@ -35,7 +36,6 @@ typedef enum hex_item_type_t
     HEX_TYPE_INVALID
 } hex_item_type_t;
 
-// Token Types
 typedef enum hex_token_type_t
 {
     HEX_TOKEN_NUMBER,
@@ -56,7 +56,6 @@ typedef struct hex_token_t
     int column;
 } hex_token_t;
 
-// Unified Stack Element
 typedef struct hex_item_t
 {
     hex_item_type_t type;
@@ -71,26 +70,54 @@ typedef struct hex_item_t
     int quotationSize;  // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } hex_item_t;
 
-// Registry Entry
 typedef struct hex_registry_entry
 {
     char *key;
     hex_item_t value;
 } hex_registry_entry_t;
 
-// Stack trace entry with token information
-typedef struct
-{
-    hex_token_t token;
-} hex_stack_trace_entry_t;
-
-// Circular buffer structure
 typedef struct hex_stack_trace_t
 {
-    hex_stack_trace_entry_t entries[HEX_STACK_TRACE_SIZE];
+    hex_token_t entries[HEX_STACK_TRACE_SIZE];
     int start; // Index of the oldest element
     int size;  // Current number of elements in the buffer
 } hex_stack_trace_t;
+
+// TODO: refactor and use this
+typedef struct hex_stack_t
+{
+    hex_item_t item[HEX_STACK_SIZE];
+    int top;
+} hex_stack_t;
+
+// TODO: refactor and use this
+typedef struct hex_registry_t
+{
+    hex_registry_entry_t entries[HEX_REGISTRY_SIZE];
+    int size;
+} hex_registry_t;
+
+// TODO: refactor and use this
+typedef struct hext_settings_t
+{
+    int debug_enabled;
+    int errors_enabled;
+    int stack_trace_enabled;
+} hex_settings_t;
+
+// TODO: refactor and use this
+typedef struct hex_context_t
+{
+    hex_stack_t stack;
+    hex_registry_t registry;
+    hex_stack_trace_t stack_trace;
+    hex_settings_t settings;
+    char *error;
+    int argc;
+    char **argv;
+} hex_context_t;
+
+// Functions
 
 void hex_free_element(hex_item_t element);
 void hex_free_token(hex_token_t *token);
@@ -112,6 +139,8 @@ char *hex_type(hex_item_type_t type);
 int hex_push(hex_item_t element);
 int hex_push_int(int value);
 int hex_push_string(const char *value);
+int hex_push_quotation(hex_item_t **quotation, int size);
+int hex_push_symbol(hex_token_t *token);
 hex_item_t hex_pop();
 
 char *hex_process_string(const char *value);
@@ -130,7 +159,13 @@ int hex_is_symbol(hex_token_t *token, char *value);
 
 int hex_symbol_store();
 int hex_symbol_free();
+int hex_symbol_type();
 int hex_symbol_i();
+int hex_symbol_eval();
+int hex_symbol_puts();
+int hex_symbol_warn();
+int hex_symbol_print();
+int hex_symbol_gets();
 int hex_symbol_add();
 int hex_symbol_subtract();
 int hex_symbol_multiply();
@@ -142,6 +177,10 @@ int hex_symbol_bitxor();
 int hex_symbol_bitnot();
 int hex_symbol_shiftleft();
 int hex_symbol_shiftright();
+int hex_symbol_int();
+int hex_symbol_str();
+int hex_symbol_dec();
+int hex_symbol_hex();
 int hex_symbol_equal();
 int hex_symbol_notequal();
 int hex_symbol_greater();
@@ -183,15 +222,14 @@ int hex_symbol_stack();
 int hex_symbol_clear();
 int hex_symbol_pop();
 
-int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column);
-int hex_push_quotation(hex_item_t **quotation, int size);
-int hex_push_symbol(hex_token_t *token);
-void hex_free_list(hex_item_t **quotation, int size);
 void hex_register_symbols();
+
 void hex_repl();
 void hex_process_stdin();
 void hex_handle_sigint(int sig);
 char *hex_read_file(const char *filename);
+
+int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column);
 int hex_interpret(const char *code, const char *filename, int line, int column);
 
 #endif // HEX_H

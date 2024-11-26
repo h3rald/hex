@@ -11,8 +11,11 @@ char HEX_ERROR[256] = "";
 char **HEX_ARGV;
 int HEX_ARGC = 0;
 int HEX_ERRORS = 1;
-int HEX_REPL = 0;
-int HEX_STDIN = 0;
+int HEX_STACK_TRACE = 0;
+hex_item_t HEX_STACK[HEX_STACK_SIZE];
+int HEX_TOP = -1;
+hex_registry_entry_t HEX_REGISTRY[HEX_REGISTRY_SIZE];
+int HEX_REGISTRY_COUNT = 0;
 
 char *HEX_NATIVE_SYMBOLS[] = {
     "store",
@@ -80,25 +83,9 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "clear",
     "pop"};
 
-void hex_error(const char *format, ...)
-{
-    va_list args;
-    va_start(args, format);
-    vsnprintf(HEX_ERROR, sizeof(HEX_ERROR), format, args);
-    if (HEX_ERRORS)
-    {
-        fprintf(stderr, "[error] ");
-        fprintf(stderr, "%s\n", HEX_ERROR);
-    }
-    va_end(args);
-}
-
 ////////////////////////////////////////
 // Registry Implementation            //
 ////////////////////////////////////////
-
-hex_registry_entry_t HEX_REGISTRY[HEX_REGISTRY_SIZE];
-int HEX_REGISTRY_COUNT = 0;
 
 void hex_free_element(hex_item_t element);
 void hex_free_token(hex_token_t *token);
@@ -195,9 +182,6 @@ int hex_get_symbol(const char *key, hex_item_t *result)
 ////////////////////////////////////////
 // Stack Implementation               //
 ////////////////////////////////////////
-
-hex_item_t HEX_STACK[HEX_STACK_SIZE];
-int HEX_TOP = -1;
 
 // Push functions
 int hex_push(hex_item_t element)
@@ -393,8 +377,21 @@ void hex_free_list(hex_item_t **quotation, int size)
 }
 
 ////////////////////////////////////////
-// Debugging                          //
+// Error & Debugging                  //
 ////////////////////////////////////////
+
+void hex_error(const char *format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    vsnprintf(HEX_ERROR, sizeof(HEX_ERROR), format, args);
+    if (HEX_ERRORS)
+    {
+        fprintf(stderr, "[error] ");
+        fprintf(stderr, "%s\n", HEX_ERROR);
+    }
+    va_end(args);
+}
 
 void hex_debug(const char *format, ...)
 {
@@ -765,13 +762,13 @@ void add_to_stack_trace(hex_token_t *token)
     if (stackTrace.size < HEX_STACK_TRACE_SIZE)
     {
         // Buffer is not full; add element
-        stackTrace.entries[index].token = *token;
+        stackTrace.entries[index] = *token;
         stackTrace.size++;
     }
     else
     {
         // Buffer is full; overwrite the oldest element
-        stackTrace.entries[index].token = *token;
+        stackTrace.entries[index] = *token;
         stackTrace.start = (stackTrace.start + 1) % HEX_STACK_TRACE_SIZE;
     }
 }
@@ -779,7 +776,7 @@ void add_to_stack_trace(hex_token_t *token)
 // Print the stack trace
 void print_stack_trace()
 {
-    if (HEX_STDIN || HEX_REPL || !HEX_ERRORS)
+    if (HEX_STACK_TRACE && HEX_ERRORS)
     {
         return;
     }
@@ -788,7 +785,7 @@ void print_stack_trace()
     for (int i = 0; i < stackTrace.size; i++)
     {
         int index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
-        hex_token_t token = stackTrace.entries[index].token;
+        hex_token_t token = stackTrace.entries[index];
         fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.filename, token.line, token.column);
     }
 }
@@ -2647,12 +2644,11 @@ int hex_symbol_append()
 
 int hex_symbol_args()
 {
-    int result = 0;
     hex_item_t **quotation = (hex_item_t **)malloc(HEX_ARGC * sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
-        result = 1;
+        return 1;
     }
     else
     {
@@ -2662,9 +2658,13 @@ int hex_symbol_args()
             quotation[i]->type = HEX_TYPE_STRING;
             quotation[i]->data.strValue = HEX_ARGV[i];
         }
-        result = hex_push_quotation(quotation, HEX_ARGC);
+        if (hex_push_quotation(quotation, HEX_ARGC) != 0)
+        {
+            hex_free_list(quotation, HEX_ARGC);
+            return 1;
+        }
     }
-    return result;
+    return 0;
 }
 
 int hex_symbol_exit()
@@ -3248,6 +3248,7 @@ int hex_symbol_map()
             {
                 FREE(action);
                 FREE(list);
+                hex_free_list(quotation, i);
                 return 1;
             }
             for (int j = 0; j < action.quotationSize; j++)
@@ -3256,6 +3257,7 @@ int hex_symbol_map()
                 {
                     FREE(action);
                     FREE(list);
+                    hex_free_list(quotation, i);
                     return 1;
                 }
             }
@@ -3266,6 +3268,7 @@ int hex_symbol_map()
         {
             FREE(action);
             FREE(list);
+            hex_free_list(quotation, list.quotationSize);
             return 1;
         }
     }
@@ -3311,6 +3314,7 @@ int hex_symbol_filter()
             {
                 FREE(action);
                 FREE(list);
+                hex_free_list(quotation, count);
                 return 1;
             }
             for (int j = 0; j < action.quotationSize; j++)
@@ -3319,6 +3323,7 @@ int hex_symbol_filter()
                 {
                     FREE(action);
                     FREE(list);
+                    hex_free_list(quotation, count);
                     return 1;
                 }
             }
@@ -3331,6 +3336,7 @@ int hex_symbol_filter()
                     hex_error("Memory allocation failed");
                     FREE(action);
                     FREE(list);
+                    hex_free_list(quotation, count);
                     return 1;
                 }
                 *quotation[count] = *list.data.quotationValue[i];
@@ -3416,6 +3422,7 @@ int hex_symbol_stack()
         if (!quotation[i])
         {
             hex_error("Memory allocation failed");
+            hex_free_list(quotation, count);
             return 1;
         }
         *quotation[i] = HEX_STACK[i];
@@ -3754,13 +3761,13 @@ int main(int argc, char *argv[])
     }
     if (!isatty(fileno(stdin)))
     {
-        HEX_STDIN = 1;
+        HEX_STACK_TRACE = 0;
         // Process piped input from stdin
         hex_process_stdin();
     }
     else
     {
-        HEX_REPL = 1;
+        HEX_STACK_TRACE = 0;
         // Start REPL
         hex_repl();
     }
