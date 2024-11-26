@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -38,7 +39,7 @@ typedef enum hex_item_type_t
 
 typedef enum hex_token_type_t
 {
-    HEX_TOKEN_NUMBER,
+    HEX_TOKEN_INTEGER,
     HEX_TOKEN_STRING,
     HEX_TOKEN_SYMBOL,
     HEX_TOKEN_QUOTATION_START,
@@ -61,7 +62,7 @@ typedef struct hex_item_t
     hex_item_type_t type;
     union
     {
-        int intValue;
+        int32_t intValue;
         char *strValue;
         int (*functionPointer)();
         struct hex_item_t **quotationValue;
@@ -229,6 +230,7 @@ void hex_process_stdin();
 void hex_handle_sigint(int sig);
 char *hex_read_file(const char *filename);
 
+int32_t hex_parse_integer(const char *hex_str);
 int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column);
 int hex_interpret(const char *code, const char *filename, int line, int column);
 

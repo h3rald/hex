@@ -568,7 +568,7 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
-        token->type = HEX_TOKEN_NUMBER;
+        token->type = HEX_TOKEN_INTEGER;
     }
     else if (*ptr == '(')
     {
@@ -634,6 +634,15 @@ int hex_valid_native_symbol(const char *symbol)
     return 0;
 }
 
+int32_t hex_parse_integer(const char *hex_str)
+{
+    // Parse the hexadecimal string as an unsigned 32-bit integer
+    uint32_t unsigned_value = (uint32_t)strtoul(hex_str, NULL, 16);
+
+    // Cast the unsigned value to a signed 32-bit integer
+    return (int32_t)unsigned_value;
+}
+
 int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column)
 {
     hex_item_t **quotation = NULL;
@@ -669,10 +678,10 @@ int hex_parse_quotation(const char **input, hex_item_t *result, const char *file
         }
 
         hex_item_t *element = (hex_item_t *)malloc(sizeof(hex_item_t));
-        if (token->type == HEX_TOKEN_NUMBER)
+        if (token->type == HEX_TOKEN_INTEGER)
         {
             element->type = HEX_TYPE_INTEGER;
-            element->data.intValue = (int)strtol(token->value, NULL, 16);
+            element->data.intValue = hex_parse_integer(token->value);
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
@@ -3539,9 +3548,9 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
     while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
         int result = 0;
-        if (token->type == HEX_TOKEN_NUMBER)
+        if (token->type == HEX_TOKEN_INTEGER)
         {
-            result = hex_push_int((int)strtol(token->value, NULL, 16));
+            result = hex_push_int(hex_parse_integer(token->value));
         }
         else if (token->type == HEX_TOKEN_STRING)
         {

@@ -20,7 +20,7 @@
     ) 
         (
             ; Store error
-            errors " - Test #" test-count str cat ": " cat error cat q cat "errors" store  
+            errors " - Test #" test-count dec cat ": " cat error cat q cat "errors" store  
             "x" print
             failures 0x1 + "failures" store
         )
@@ -29,8 +29,27 @@
 
 
 ; --- Tests
+
 (0x1 "a" store a 0x1 ==) test i
 ("a" free 0x1) test i
+("aaa" type "string" == 0x1 type "integer" == () type "quotation" == and and) test i
+((0x1 0x2 +) i 0x3 ==) test i
+("0x2 0x2 -" eval 0x0 ==) test i
+
+(0x4 0x5 + 0x9 ==) test i
+(0x5 0x3 - 0x2 ==) test i
+(0x5 0x2 * 0xa ==) test i
+(0x5 0x2 / 0x2 ==) test i
+(0x4 0x2 % 0x0 ==) test i
+
+(0x10101 0x01010 & 0x0 ==) test i
+(0x10111 0x01000 | 0x11111 ==) test i
+(0x1 0x1 ^ 0x0 ==) test i
+(0x1 ~ 0xfffffffe ==) test i
+(0x1 0x4 << 0x10 ==) test i
+
+(0x10 0x4 >> 0x1 ==) test i
+
 
 ; --- Report
 "\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
