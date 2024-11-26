@@ -25,7 +25,7 @@ int isatty(int fd)
 #define HEX_STACK_TRACE_SIZE 16
 
 // Common operations
-#define POP(x) HEX_StackElement x = hex_pop()
+#define POP(x) hex_item_t x = hex_pop()
 #define FREE(x) hex_free_element(x)
 #define PUSH(x) hex_push(x)
 
@@ -118,7 +118,7 @@ void hex_error(const char *format, ...)
 }
 
 // Enum to represent the type of stack elements
-typedef enum
+typedef enum hex_item_type_t
 {
     HEX_TYPE_INTEGER,
     HEX_TYPE_STRING,
@@ -126,10 +126,10 @@ typedef enum
     HEX_TYPE_NATIVE_SYMBOL,
     HEX_TYPE_USER_SYMBOL,
     HEX_TYPE_INVALID
-} HEX_ElementType;
+} hex_item_type_t;
 
 // Token Types
-typedef enum
+typedef enum hex_token_type_t
 {
     HEX_TOKEN_NUMBER,
     HEX_TOKEN_STRING,
@@ -138,50 +138,49 @@ typedef enum
     HEX_TOKEN_QUOTATION_END,
     HEX_TOKEN_COMMENT,
     HEX_TOKEN_INVALID
-} HEX_TokenType;
+} hex_token_type_t;
 
-typedef struct
+typedef struct hex_token_t
 {
-    HEX_TokenType type;
+    hex_token_type_t type;
     char *value;
     char *filename;
     int line;
     int column;
-} HEX_Token;
+} hex_token_t;
 
 // Unified Stack Element
-typedef struct HEX_StackElement
+typedef struct hex_item_t
 {
-    HEX_ElementType type;
+    hex_item_type_t type;
     union
     {
         int intValue;
         char *strValue;
         int (*functionPointer)();
-        struct HEX_StackElement **quotationValue;
+        struct hex_item_t **quotationValue;
     } data;
-    HEX_Token *token;  // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
-    int quotationSize; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
-} HEX_StackElement;
+    hex_token_t *token; // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
+    int quotationSize;  // Size of the quotation (valid for HEX_TYPE_QUOTATION)
+} hex_item_t;
 
-#pragma region Registry
 ////////////////////////////////////////
 // Registry Implementation            //
 ////////////////////////////////////////
 
 // Registry Entry
-typedef struct
+typedef struct hex_registry_entry
 {
     char *key;
-    HEX_StackElement value;
-} HEX_RegistryEntry;
+    hex_item_t value;
+} hex_registry_entry_t;
 
-HEX_RegistryEntry HEX_REGISTRY[HEX_REGISTRY_SIZE];
+hex_registry_entry_t HEX_REGISTRY[HEX_REGISTRY_SIZE];
 int HEX_REGISTRY_COUNT = 0;
 
-void hex_free_element(HEX_StackElement element);
-void hex_free_token(HEX_Token *token);
-void hex_free_list(HEX_StackElement **quotation, int size);
+void hex_free_element(hex_item_t element);
+void hex_free_token(hex_token_t *token);
+void hex_free_list(hex_item_t **quotation, int size);
 
 int hex_valid_user_symbol(const char *symbol)
 {
@@ -209,7 +208,7 @@ int hex_valid_user_symbol(const char *symbol)
 }
 
 // Add a symbol to the registry
-int hex_set_symbol(const char *key, HEX_StackElement value, int native)
+int hex_set_symbol(const char *key, hex_item_t value, int native)
 {
     if (!native && hex_valid_user_symbol(key) == 0)
     {
@@ -247,7 +246,7 @@ int hex_set_symbol(const char *key, HEX_StackElement value, int native)
 // Register a native symbol
 void hex_set_native_symbol(const char *name, int (*func)())
 {
-    HEX_StackElement funcElement;
+    hex_item_t funcElement;
     funcElement.type = HEX_TYPE_NATIVE_SYMBOL;
     funcElement.data.functionPointer = func;
 
@@ -258,7 +257,7 @@ void hex_set_native_symbol(const char *name, int (*func)())
 }
 
 // Get a symbol value from the registry
-int hex_get_symbol(const char *key, HEX_StackElement *result)
+int hex_get_symbol(const char *key, hex_item_t *result)
 {
     for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
@@ -270,24 +269,22 @@ int hex_get_symbol(const char *key, HEX_StackElement *result)
     }
     return 0;
 }
-#pragma endregion Registry
 
-#pragma region Stack
 ////////////////////////////////////////
 // Stack Implementation               //
 ////////////////////////////////////////
 
 void hex_debug(const char *format, ...);
-void hex_debug_element(const char *message, HEX_StackElement element);
-void hex_print_element(FILE *stream, HEX_StackElement element);
-void add_to_stack_trace(HEX_Token *token);
-char *hex_type(HEX_ElementType type);
+void hex_debug_element(const char *message, hex_item_t element);
+void hex_print_element(FILE *stream, hex_item_t element);
+void add_to_stack_trace(hex_token_t *token);
+char *hex_type(hex_item_type_t type);
 
-HEX_StackElement HEX_STACK[HEX_STACK_SIZE];
+hex_item_t HEX_STACK[HEX_STACK_SIZE];
 int HEX_TOP = -1;
 
 // Push functions
-int hex_push(HEX_StackElement element)
+int hex_push(hex_item_t element)
 {
     if (HEX_TOP >= HEX_STACK_SIZE - 1)
     {
@@ -298,7 +295,7 @@ int hex_push(HEX_StackElement element)
     int result = 0;
     if (element.type == HEX_TYPE_USER_SYMBOL)
     {
-        HEX_StackElement value;
+        hex_item_t value;
         if (hex_get_symbol(element.token->value, &value))
         {
             result = PUSH(value);
@@ -333,7 +330,7 @@ int hex_push(HEX_StackElement element)
 
 int hex_push_int(int value)
 {
-    HEX_StackElement element = {.type = HEX_TYPE_INTEGER, .data.intValue = value};
+    hex_item_t element = {.type = HEX_TYPE_INTEGER, .data.intValue = value};
     return PUSH(element);
 }
 
@@ -399,20 +396,20 @@ char *hex_process_string(const char *value)
 int hex_push_string(const char *value)
 {
     char *processedStr = hex_process_string(value);
-    HEX_StackElement element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
+    hex_item_t element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
     return PUSH(element);
 }
 
-int hex_push_quotation(HEX_StackElement **quotation, int size)
+int hex_push_quotation(hex_item_t **quotation, int size)
 {
-    HEX_StackElement element = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
+    hex_item_t element = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
     return PUSH(element);
 }
 
-int hex_push_symbol(HEX_Token *token)
+int hex_push_symbol(hex_token_t *token)
 {
     add_to_stack_trace(token);
-    HEX_StackElement value;
+    hex_item_t value;
     if (hex_get_symbol(token->value, &value))
     {
         value.token = token;
@@ -426,23 +423,23 @@ int hex_push_symbol(HEX_Token *token)
 }
 
 // Pop function
-HEX_StackElement hex_pop()
+hex_item_t hex_pop()
 {
     if (HEX_TOP < 0)
     {
         hex_error("Insufficient elements on the stack");
-        return (HEX_StackElement){.type = HEX_TYPE_INVALID};
+        return (hex_item_t){.type = HEX_TYPE_INVALID};
     }
     hex_debug_element(" POP", HEX_STACK[HEX_TOP]);
     return HEX_STACK[HEX_TOP--];
 }
 
-void hex_free_token(HEX_Token *token);
+void hex_free_token(hex_token_t *token);
 void hex_debug(const char *format, ...);
-char *hex_type(HEX_ElementType type);
+char *hex_type(hex_item_type_t type);
 
 // Free a stack element
-void hex_free_element(HEX_StackElement element)
+void hex_free_element(hex_item_t element)
 {
     hex_debug_element("FREE", element);
     if (element.type == HEX_TYPE_STRING && element.data.strValue != NULL)
@@ -474,7 +471,7 @@ void hex_free_element(HEX_StackElement element)
     }
 }
 
-void hex_free_list(HEX_StackElement **quotation, int size)
+void hex_free_list(hex_item_t **quotation, int size)
 {
     hex_error("An error occurred while filtering the list");
     for (int i = 0; i < size; i++)
@@ -482,9 +479,7 @@ void hex_free_list(HEX_StackElement **quotation, int size)
         FREE(*quotation[i]);
     }
 }
-#pragma endregion Stack
 
-#pragma region Debugging
 ////////////////////////////////////////
 // Debugging                          //
 ////////////////////////////////////////
@@ -502,7 +497,7 @@ void hex_debug(const char *format, ...)
     }
 }
 
-char *hex_type(HEX_ElementType type)
+char *hex_type(hex_item_type_t type)
 {
     switch (type)
     {
@@ -523,7 +518,7 @@ char *hex_type(HEX_ElementType type)
     }
 }
 
-void hex_debug_element(const char *message, HEX_StackElement element)
+void hex_debug_element(const char *message, hex_item_t element)
 {
     if (HEX_DEBUG)
     {
@@ -532,9 +527,7 @@ void hex_debug_element(const char *message, HEX_StackElement element)
         fprintf(stdout, "\n");
     }
 }
-#pragma endregion Debugging
 
-#pragma region Tokenizer
 ////////////////////////////////////////
 // Tokenizer Implementation           //
 ////////////////////////////////////////
@@ -542,7 +535,7 @@ void hex_debug_element(const char *message, HEX_StackElement element)
 int hex_valid_native_symbol(char *symbol);
 
 // Process a token from the input
-HEX_Token *hex_next_token(const char **input, int *line, int *column)
+hex_token_t *hex_next_token(const char **input, int *line, int *column)
 {
     const char *ptr = *input;
 
@@ -566,7 +559,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
         return NULL; // End of input
     }
 
-    HEX_Token *token = (HEX_Token *)malloc(sizeof(HEX_Token));
+    hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = NULL;
     token->line = *line;
     token->column = *column;
@@ -713,7 +706,7 @@ HEX_Token *hex_next_token(const char **input, int *line, int *column)
 }
 
 // Free a token
-void hex_free_token(HEX_Token *token)
+void hex_free_token(hex_token_t *token)
 {
     if (token)
     {
@@ -734,21 +727,21 @@ int hex_valid_native_symbol(char *symbol)
     return 0;
 }
 
-int hex_parse_quotation(const char **input, HEX_StackElement *result, const char *filename, int *line, int *column)
+int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column)
 {
-    HEX_StackElement **quotation = NULL;
+    hex_item_t **quotation = NULL;
     int capacity = 2;
     int size = 0;
     int balanced = 1;
 
-    quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
+    quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
         return 1;
     }
 
-    HEX_Token *token;
+    hex_token_t *token;
     while ((token = hex_next_token(input, line, column)) != NULL)
     {
         if (token->type == HEX_TOKEN_QUOTATION_END)
@@ -760,7 +753,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
         if (size >= capacity)
         {
             capacity *= 2;
-            quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
+            quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
             if (!quotation)
             {
                 hex_error("Memory allocation failed");
@@ -768,7 +761,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
             }
         }
 
-        HEX_StackElement *element = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+        hex_item_t *element = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (token->type == HEX_TOKEN_NUMBER)
         {
             element->type = HEX_TYPE_INTEGER;
@@ -785,7 +778,7 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
             if (hex_valid_native_symbol(token->value))
             {
                 element->type = HEX_TYPE_NATIVE_SYMBOL;
-                HEX_StackElement value;
+                hex_item_t value;
                 if (hex_get_symbol(token->value, &value))
                 {
                     element->token = token;
@@ -847,19 +840,17 @@ int hex_parse_quotation(const char **input, HEX_StackElement *result, const char
     hex_free_token(token);
     return 0;
 }
-#pragma endregion Tokenizer
 
-#pragma region StackTrace
 ////////////////////////////////////////
 // Stack trace implementation         //
 ////////////////////////////////////////
 
-void hex_print_element(FILE *stream, HEX_StackElement element);
+void hex_print_element(FILE *stream, hex_item_t element);
 
 // Stack trace entry with token information
 typedef struct
 {
-    HEX_Token token;
+    hex_token_t token;
 } HEX_StackTraceEntry;
 
 // Circular buffer structure
@@ -873,7 +864,7 @@ typedef struct
 CircularStackTrace stackTrace = {.start = 0, .size = 0};
 
 // Add an entry to the circular stack trace
-void add_to_stack_trace(HEX_Token *token)
+void add_to_stack_trace(hex_token_t *token)
 {
     int index = (stackTrace.start + stackTrace.size) % HEX_STACK_TRACE_SIZE;
 
@@ -903,13 +894,11 @@ void print_stack_trace()
     for (int i = 0; i < stackTrace.size; i++)
     {
         int index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
-        HEX_Token token = stackTrace.entries[index].token;
+        hex_token_t token = stackTrace.entries[index].token;
         fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.filename, token.line, token.column);
     }
 }
-#pragma endregion StackTrace
 
-#pragma region Helpers
 ////////////////////////////////////////
 // Helper Functions                   //
 ////////////////////////////////////////
@@ -962,7 +951,7 @@ char *hex_itoa_hex(int num)
     return hex_itoa(num, 16);
 }
 
-void hex_raw_print_element(FILE *stream, HEX_StackElement element)
+void hex_raw_print_element(FILE *stream, hex_item_t element)
 {
     switch (element.type)
     {
@@ -998,7 +987,7 @@ void hex_raw_print_element(FILE *stream, HEX_StackElement element)
     }
 }
 
-void hex_print_element(FILE *stream, HEX_StackElement element)
+void hex_print_element(FILE *stream, hex_item_t element)
 {
     switch (element.type)
     {
@@ -1079,18 +1068,15 @@ void hex_print_element(FILE *stream, HEX_StackElement element)
     }
 }
 
-int hex_is_symbol(HEX_Token *token, char *value)
+int hex_is_symbol(hex_token_t *token, char *value)
 {
     return strcmp(token->value, value) == 0;
 }
-#pragma endregion Helpers
 
-#pragma region Symbols
 ////////////////////////////////////////
 // Native Symbol Implementations      //
 ////////////////////////////////////////
 
-#pragma region DefSymbols
 // Definition symbols
 
 int hex_symbol_store()
@@ -1169,9 +1155,7 @@ int hex_symbol_type()
     }
     return hex_push_string(hex_type(element.type));
 }
-#pragma endregion DefSymbols
 
-#pragma region EvalSymbols
 // Evaluation symbols
 
 int hex_symbol_i()
@@ -1218,9 +1202,7 @@ int hex_symbol_eval()
     }
     return hex_interpret(element.data.strValue, "<eval>", 1, 1);
 }
-#pragma endregion EvalSymbols
 
-#pragma region IOSymbols
 // IO Symbols
 
 int hex_symbol_puts()
@@ -1279,9 +1261,7 @@ int hex_symbol_gets()
         return 1;
     }
 }
-#pragma endregion IOSymbols
 
-#pragma region MathSymbols
 // Mathematical symbols
 int hex_symbol_add()
 {
@@ -1416,9 +1396,7 @@ int hex_symbol_modulo()
     FREE(b);
     return 1;
 }
-#pragma endregion MathSymbols
 
-#pragma region BitSymbols
 // Bit symbols
 
 int hex_symbol_bitand()
@@ -1562,9 +1540,7 @@ int hex_symbol_bitnot()
     FREE(element);
     return 1;
 }
-#pragma endregion BitSymbols
 
-#pragma region ConvSymbols
 // Conversion symbols
 
 int hex_symbol_int()
@@ -1654,12 +1630,10 @@ int hex_symbol_hex()
     FREE(element);
     return 1;
 }
-#pragma endregion ConvSymbols
 
-#pragma region CmpSymbols
 // Comparison symbols
 
-int hex_equal(HEX_StackElement a, HEX_StackElement b)
+int hex_equal(hex_item_t a, hex_item_t b)
 {
     int result = 0;
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
@@ -1857,9 +1831,7 @@ int hex_symbol_lessequal()
     FREE(b);
     return 1;
 }
-#pragma endregion CmpSymbols
 
-#pragma region BoolSymbols
 // Boolean symbols
 
 int hex_symbol_and()
@@ -1953,9 +1925,7 @@ int hex_symbol_xor()
     FREE(b);
     return 1;
 }
-#pragma endregion BoolSymbols
 
-#pragma region ListSymbols
 // Quotation and String (List) Symbols
 
 int hex_symbol_cat()
@@ -1981,8 +1951,8 @@ int hex_symbol_cat()
     {
         // Concatenate two quotations
         size_t newSize = list.quotationSize + value.quotationSize;
-        HEX_StackElement **newQuotation = (HEX_StackElement **)realloc(
-            list.data.quotationValue, newSize * sizeof(HEX_StackElement *));
+        hex_item_t **newQuotation = (hex_item_t **)realloc(
+            list.data.quotationValue, newSize * sizeof(hex_item_t *));
         if (!newQuotation)
         {
             hex_error("Memory allocation failed");
@@ -2073,7 +2043,7 @@ int hex_symbol_slice()
         else
         {
             int newSize = end.data.intValue - start.data.intValue + 1;
-            HEX_StackElement **newQuotation = (HEX_StackElement **)malloc(newSize * sizeof(HEX_StackElement *));
+            hex_item_t **newQuotation = (hex_item_t **)malloc(newSize * sizeof(hex_item_t *));
             if (!newQuotation)
             {
                 hex_error("Memory allocation failed");
@@ -2083,7 +2053,7 @@ int hex_symbol_slice()
             {
                 for (int i = 0; i < newSize; i++)
                 {
-                    newQuotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                    newQuotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
                     *newQuotation[i] = *list.data.quotationValue[start.data.intValue + i];
                 }
                 result = hex_push_quotation(newQuotation, newSize);
@@ -2320,9 +2290,9 @@ int hex_symbol_insert(void)
             return 1;
         }
 
-        HEX_StackElement **new_quotation = (HEX_StackElement **)realloc(
+        hex_item_t **new_quotation = (hex_item_t **)realloc(
             target.data.quotationValue,
-            (target.quotationSize + 1) * sizeof(HEX_StackElement *));
+            (target.quotationSize + 1) * sizeof(hex_item_t *));
         if (!new_quotation)
         {
             hex_error("Memory allocation failed");
@@ -2336,7 +2306,7 @@ int hex_symbol_insert(void)
         {
             new_quotation[i] = new_quotation[i - 1];
         }
-        new_quotation[index.data.intValue] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+        new_quotation[index.data.intValue] = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (!new_quotation[index.data.intValue])
         {
             hex_error("Memory allocation failed");
@@ -2415,9 +2385,7 @@ int hex_symbol_index()
     }
     return hex_push_int(result);
 }
-#pragma endregion ListSymbols
 
-#pragma region StrSymbols
 // String symbols
 
 int hex_symbol_join()
@@ -2510,7 +2478,7 @@ int hex_symbol_split()
         char *token = strtok(str.data.strValue, separator.data.strValue);
         int capacity = 2;
         int size = 0;
-        HEX_StackElement **quotation = (HEX_StackElement **)malloc(capacity * sizeof(HEX_StackElement *));
+        hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error("Memory allocation failed");
@@ -2523,7 +2491,7 @@ int hex_symbol_split()
                 if (size >= capacity)
                 {
                     capacity *= 2;
-                    quotation = (HEX_StackElement **)realloc(quotation, capacity * sizeof(HEX_StackElement *));
+                    quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
                     if (!quotation)
                     {
                         hex_error("Memory allocation failed");
@@ -2531,7 +2499,7 @@ int hex_symbol_split()
                         break;
                     }
                 }
-                quotation[size] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                quotation[size] = (hex_item_t *)malloc(sizeof(hex_item_t));
                 quotation[size]->type = HEX_TYPE_STRING;
                 quotation[size]->data.strValue = strdup(token);
                 size++;
@@ -2623,9 +2591,7 @@ int hex_symbol_replace()
     }
     return result;
 }
-#pragma endregion StrSymbols
 
-#pragma region FileSymbols
 // File symbols
 
 int hex_symbol_read()
@@ -2782,15 +2748,13 @@ int hex_symbol_append()
     }
     return result;
 }
-#pragma endregion FileSymbols
 
-#pragma region ShellSymbols
 // Shell symbols
 
 int hex_symbol_args()
 {
     int result = 0;
-    HEX_StackElement **quotation = (HEX_StackElement **)malloc(HEX_ARGC * sizeof(HEX_StackElement *));
+    hex_item_t **quotation = (hex_item_t **)malloc(HEX_ARGC * sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
@@ -2800,7 +2764,7 @@ int hex_symbol_args()
     {
         for (int i = 0; i < HEX_ARGC; i++)
         {
-            quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
             quotation[i]->type = HEX_TYPE_STRING;
             quotation[i]->data.strValue = HEX_ARGV[i];
         }
@@ -2869,7 +2833,6 @@ int hex_symbol_run()
         return 1;
     }
 
-    char path[1035];
     char output[8192] = "";
     char error[8192] = "";
     int return_code = 0;
@@ -2999,24 +2962,22 @@ int hex_symbol_run()
 #endif
 
     // Push the return code, output, and error as a quotation
-    HEX_StackElement **quotation = (HEX_StackElement **)malloc(3 * sizeof(HEX_StackElement *));
-    quotation[0] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    hex_item_t **quotation = (hex_item_t **)malloc(3 * sizeof(hex_item_t *));
+    quotation[0] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[0]->type = HEX_TYPE_INTEGER;
     quotation[0]->data.intValue = return_code;
 
-    quotation[1] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    quotation[1] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[1]->type = HEX_TYPE_STRING;
     quotation[1]->data.strValue = strdup(output);
 
-    quotation[2] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    quotation[2] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[2]->type = HEX_TYPE_STRING;
     quotation[2]->data.strValue = strdup(error);
 
     return hex_push_quotation(quotation, 3);
 }
-#pragma endregion ShellSymbols
 
-#pragma region CtrlSymbols
 // Control flow symbols
 
 int hex_symbol_if()
@@ -3308,9 +3269,7 @@ int hex_symbol_try()
     }
     return 0;
 }
-#pragma endregion CtrlSymbols
 
-#pragma region QuotSymbols
 // Quotation symbols
 
 int hex_symbol_q(void)
@@ -3322,7 +3281,7 @@ int hex_symbol_q(void)
         return 1;
     }
 
-    HEX_StackElement *quotation = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+    hex_item_t *quotation = (hex_item_t *)malloc(sizeof(hex_item_t));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
@@ -3332,9 +3291,9 @@ int hex_symbol_q(void)
 
     *quotation = element;
 
-    HEX_StackElement result;
+    hex_item_t result;
     result.type = HEX_TYPE_QUOTATION;
-    result.data.quotationValue = (HEX_StackElement **)malloc(sizeof(HEX_StackElement *));
+    result.data.quotationValue = (hex_item_t **)malloc(sizeof(hex_item_t *));
     if (!result.data.quotationValue)
     {
         FREE(element);
@@ -3381,7 +3340,7 @@ int hex_symbol_map()
     }
     else
     {
-        HEX_StackElement **quotation = (HEX_StackElement **)malloc(list.quotationSize * sizeof(HEX_StackElement *));
+        hex_item_t **quotation = (hex_item_t **)malloc(list.quotationSize * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error("Memory allocation failed");
@@ -3406,7 +3365,7 @@ int hex_symbol_map()
                     return 1;
                 }
             }
-            quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
             *quotation[i] = hex_pop();
         }
         if (hex_push_quotation(quotation, list.quotationSize) != 0)
@@ -3443,7 +3402,7 @@ int hex_symbol_filter()
     }
     else
     {
-        HEX_StackElement **quotation = (HEX_StackElement **)malloc(list.quotationSize * sizeof(HEX_StackElement *));
+        hex_item_t **quotation = (hex_item_t **)malloc(list.quotationSize * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error("Memory allocation failed");
@@ -3472,7 +3431,7 @@ int hex_symbol_filter()
             POP(evalResult);
             if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
             {
-                quotation[count] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+                quotation[count] = (hex_item_t *)malloc(sizeof(hex_item_t));
                 if (!quotation[count])
                 {
                     hex_error("Memory allocation failed");
@@ -3499,9 +3458,7 @@ int hex_symbol_filter()
     }
     return 0;
 }
-#pragma endregion QuotSymbols
 
-#pragma region StckSymbols
 // Stack manipulation symbols
 
 int hex_symbol_swap()
@@ -3552,7 +3509,7 @@ int hex_symbol_dup()
 
 int hex_symbol_stack()
 {
-    HEX_StackElement **quotation = (HEX_StackElement **)malloc((HEX_TOP + 1) * sizeof(HEX_StackElement *));
+    hex_item_t **quotation = (hex_item_t **)malloc((HEX_TOP + 1) * sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error("Memory allocation failed");
@@ -3561,7 +3518,7 @@ int hex_symbol_stack()
     int count = 0;
     for (int i = 0; i <= HEX_TOP; i++)
     {
-        quotation[i] = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+        quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (!quotation[i])
         {
             hex_error("Memory allocation failed");
@@ -3596,10 +3553,7 @@ int hex_symbol_pop()
     FREE(element);
     return 0;
 }
-#pragma endregion StkSymbols
-#pragma endregion Symbols
 
-#pragma region Registration
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -3671,9 +3625,7 @@ void hex_register_symbols()
     hex_set_native_symbol("clear", hex_symbol_clear);
     hex_set_native_symbol("pop", hex_symbol_pop);
 }
-#pragma endregion Registration
 
-#pragma region Interpreter
 ////////////////////////////////////////
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
@@ -3681,7 +3633,7 @@ void hex_register_symbols()
 int hex_interpret(const char *code, const char *filename, int line, int column)
 {
     const char *input = code;
-    HEX_Token *token = hex_next_token(&input, &line, &column);
+    hex_token_t *token = hex_next_token(&input, &line, &column);
 
     while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
@@ -3706,7 +3658,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            HEX_StackElement *quotationElement = (HEX_StackElement *)malloc(sizeof(HEX_StackElement));
+            hex_item_t *quotationElement = (hex_item_t *)malloc(sizeof(hex_item_t));
             if (hex_parse_quotation(&input, quotationElement, filename, &line, &column) != 0)
             {
                 hex_error("Failed to parse quotation");
@@ -3714,7 +3666,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
             }
             else
             {
-                HEX_StackElement **quotation = quotationElement->data.quotationValue;
+                hex_item_t **quotation = quotationElement->data.quotationValue;
                 int quotationSize = quotationElement->quotationSize;
                 result = hex_push_quotation(quotation, quotationSize);
             }
@@ -3807,18 +3759,16 @@ char *hex_read_file(const char *filename)
     fclose(file);
     return content;
 }
-#pragma endregion Interpreter
 
-#pragma region Execution
 // REPL implementation
 void hex_repl()
 {
     char line[1024];
 
-    printf("    ~*\n");
-    printf("  /‾\\hex\\`*\n");
-    printf(".*\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
-    printf("      *‘\n");
+    printf("   _*_ _\n");
+    printf("  / \\hex\\*\n");
+    printf(" *\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
+    printf("      *\n");
 
     while (1)
     {
@@ -3864,9 +3814,7 @@ void hex_process_stdin()
     buffer[bytesRead] = '\0'; // Null-terminate the input
     hex_interpret(buffer, "<stdin>", 1, 1);
 }
-#pragma endregion Execution
 
-#pragma region Main
 ////////////////////////////////////////
 // Main Program                       //
 ////////////////////////////////////////
@@ -3925,4 +3873,3 @@ int main(int argc, char *argv[])
 
     return 0;
 }
-#pragma endregion Main
