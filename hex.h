@@ -98,9 +98,9 @@ typedef struct hex_registry_t
 } hex_registry_t;
 
 // TODO: refactor and use this
-typedef struct hext_settings_t
+typedef struct hex_settings_t
 {
-    int debug_enabled;
+    int debugging_enabled;
     int errors_enabled;
     int stack_trace_enabled;
 } hex_settings_t;
