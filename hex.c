@@ -173,7 +173,7 @@ void hex_set_native_symbol(const char *name, int (*func)())
 {
     hex_item_t funcElement;
     funcElement.type = HEX_TYPE_NATIVE_SYMBOL;
-    funcElement.data.functionPointer = func;
+    funcElement.data.fnValue = func;
 
     if (hex_set_symbol(name, funcElement, 1) != 0)
     {
@@ -227,7 +227,7 @@ int hex_push(hex_item_t element)
     {
         hex_debug_element("CALL", element);
         add_to_stack_trace(element.token);
-        result = element.data.functionPointer();
+        result = element.data.fnValue();
     }
     else
     {
@@ -715,7 +715,7 @@ int hex_parse_quotation(const char **input, hex_item_t *result, hex_file_positio
                 {
                     element->token = token;
                     element->type = HEX_TYPE_NATIVE_SYMBOL;
-                    element->data.functionPointer = value.data.functionPointer;
+                    element->data.fnValue = value.data.fnValue;
                 }
                 else
                 {
@@ -995,8 +995,10 @@ int hex_is_symbol(hex_token_t *token, char *value)
 
 // Definition symbols
 
-int hex_symbol_store()
+int hex_symbol_store(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     // POP(name);
     POP(name);
     if (name.type == HEX_TYPE_INVALID)
@@ -1028,8 +1030,10 @@ int hex_symbol_store()
     return 0;
 }
 
-int hex_symbol_free()
+int hex_symbol_free(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1061,8 +1065,10 @@ int hex_symbol_free()
     return 0;
 }
 
-int hex_symbol_type()
+int hex_symbol_type(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1074,8 +1080,10 @@ int hex_symbol_type()
 
 // Evaluation symbols
 
-int hex_symbol_i()
+int hex_symbol_i(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1099,11 +1107,11 @@ int hex_symbol_i()
     return 0;
 }
 
-int hex_interpret(const char *code, char *filename, int line, int column);
-
 // evaluate a string
-int hex_symbol_eval()
+int hex_symbol_eval(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1116,13 +1124,15 @@ int hex_symbol_eval()
         FREE(element);
         return 1;
     }
-    return hex_interpret(element.data.strValue, "<eval>", 1, 1);
+    return hex_interpret(ctx, element.data.strValue, "<eval>", 1, 1);
 }
 
 // IO Symbols
 
-int hex_symbol_puts()
+int hex_symbol_puts(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1134,8 +1144,10 @@ int hex_symbol_puts()
     return 0;
 }
 
-int hex_symbol_warn()
+int hex_symbol_warn(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1147,8 +1159,10 @@ int hex_symbol_warn()
     return 0;
 }
 
-int hex_symbol_print()
+int hex_symbol_print(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1159,8 +1173,10 @@ int hex_symbol_print()
     return 0;
 }
 
-int hex_symbol_gets()
+int hex_symbol_gets(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
 
     if (fgets(input, sizeof(input), stdin) != NULL)
@@ -1179,8 +1195,10 @@ int hex_symbol_gets()
 }
 
 // Mathematical symbols
-int hex_symbol_add()
+int hex_symbol_add(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1204,8 +1222,10 @@ int hex_symbol_add()
     return 1;
 }
 
-int hex_symbol_subtract()
+int hex_symbol_subtract(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1229,8 +1249,10 @@ int hex_symbol_subtract()
     return 1;
 }
 
-int hex_symbol_multiply()
+int hex_symbol_multiply(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1254,8 +1276,10 @@ int hex_symbol_multiply()
     return 1;
 }
 
-int hex_symbol_divide()
+int hex_symbol_divide(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1284,8 +1308,10 @@ int hex_symbol_divide()
     return 1;
 }
 
-int hex_symbol_modulo()
+int hex_symbol_modulo(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1315,8 +1341,10 @@ int hex_symbol_modulo()
 
 // Bit symbols
 
-int hex_symbol_bitand()
+int hex_symbol_bitand(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
@@ -1340,8 +1368,10 @@ int hex_symbol_bitand()
     return 1;
 }
 
-int hex_symbol_bitor()
+int hex_symbol_bitor(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
@@ -1365,8 +1395,10 @@ int hex_symbol_bitor()
     return 1;
 }
 
-int hex_symbol_bitxor()
+int hex_symbol_bitxor(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
@@ -1390,8 +1422,10 @@ int hex_symbol_bitxor()
     return 1;
 }
 
-int hex_symbol_shiftleft()
+int hex_symbol_shiftleft(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
@@ -1415,8 +1449,10 @@ int hex_symbol_shiftleft()
     return 1;
 }
 
-int hex_symbol_shiftright()
+int hex_symbol_shiftright(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(right);
     if (right.type == HEX_TYPE_INVALID)
     {
@@ -1440,8 +1476,10 @@ int hex_symbol_shiftright()
     return 1;
 }
 
-int hex_symbol_bitnot()
+int hex_symbol_bitnot(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1459,8 +1497,10 @@ int hex_symbol_bitnot()
 
 // Conversion symbols
 
-int hex_symbol_int()
+int hex_symbol_int(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -1486,8 +1526,10 @@ int hex_symbol_int()
     return 1;
 }
 
-int hex_symbol_str()
+int hex_symbol_str(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -1513,8 +1555,10 @@ int hex_symbol_str()
     return 1;
 }
 
-int hex_symbol_dec()
+int hex_symbol_dec(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -1530,8 +1574,10 @@ int hex_symbol_dec()
     return 1;
 }
 
-int hex_symbol_hex()
+int hex_symbol_hex(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -1592,8 +1638,10 @@ int hex_equal(hex_item_t a, hex_item_t b)
     return 0;
 }
 
-int hex_symbol_equal()
+int hex_symbol_equal(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1617,8 +1665,10 @@ int hex_symbol_equal()
     return 1;
 }
 
-int hex_symbol_notequal()
+int hex_symbol_notequal(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1642,8 +1692,10 @@ int hex_symbol_notequal()
     return 1;
 }
 
-int hex_symbol_greater()
+int hex_symbol_greater(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1671,8 +1723,10 @@ int hex_symbol_greater()
     return 1;
 }
 
-int hex_symbol_less()
+int hex_symbol_less(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1700,8 +1754,10 @@ int hex_symbol_less()
     return 1;
 }
 
-int hex_symbol_greaterequal()
+int hex_symbol_greaterequal(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1729,8 +1785,10 @@ int hex_symbol_greaterequal()
     return 1;
 }
 
-int hex_symbol_lessequal()
+int hex_symbol_lessequal(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1760,8 +1818,10 @@ int hex_symbol_lessequal()
 
 // Boolean symbols
 
-int hex_symbol_and()
+int hex_symbol_and(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1785,8 +1845,10 @@ int hex_symbol_and()
     return 1;
 }
 
-int hex_symbol_or()
+int hex_symbol_or(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1810,8 +1872,10 @@ int hex_symbol_or()
     return 1;
 }
 
-int hex_symbol_not()
+int hex_symbol_not(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -1827,8 +1891,10 @@ int hex_symbol_not()
     return 1;
 }
 
-int hex_symbol_xor()
+int hex_symbol_xor(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(b);
     if (b.type == HEX_TYPE_INVALID)
     {
@@ -1854,8 +1920,10 @@ int hex_symbol_xor()
 
 // Quotation and String (List) Symbols
 
-int hex_symbol_cat()
+int hex_symbol_cat(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(value);
     if (value.type == HEX_TYPE_INVALID)
     {
@@ -1930,8 +1998,10 @@ int hex_symbol_cat()
     return result;
 }
 
-int hex_symbol_slice()
+int hex_symbol_slice(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(end);
     if (end.type == HEX_TYPE_INVALID)
     {
@@ -2029,8 +2099,10 @@ int hex_symbol_slice()
     return result;
 }
 
-int hex_symbol_len()
+int hex_symbol_len(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -2058,8 +2130,10 @@ int hex_symbol_len()
     return result;
 }
 
-int hex_symbol_get()
+int hex_symbol_get(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(index);
     if (index.type == HEX_TYPE_INVALID)
     {
@@ -2123,8 +2197,9 @@ int hex_symbol_get()
     return result;
 }
 
-int hex_symbol_insert(void)
+int hex_symbol_insert(hex_context_t *ctx)
 {
+    (void)(ctx);
     POP(index);
     if (index.type == HEX_TYPE_INVALID)
     {
@@ -2267,8 +2342,10 @@ int hex_symbol_insert(void)
     }
 }
 
-int hex_symbol_index()
+int hex_symbol_index(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -2314,8 +2391,10 @@ int hex_symbol_index()
 
 // String symbols
 
-int hex_symbol_join()
+int hex_symbol_join(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(separator);
     if (separator.type == HEX_TYPE_INVALID)
     {
@@ -2383,8 +2462,10 @@ int hex_symbol_join()
     return result;
 }
 
-int hex_symbol_split()
+int hex_symbol_split(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(separator);
     if (separator.type == HEX_TYPE_INVALID)
     {
@@ -2450,8 +2531,10 @@ int hex_symbol_split()
     return result;
 }
 
-int hex_symbol_replace()
+int hex_symbol_replace(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(replacement);
     if (replacement.type == HEX_TYPE_INVALID)
     {
@@ -2520,8 +2603,10 @@ int hex_symbol_replace()
 
 // File symbols
 
-int hex_symbol_read()
+int hex_symbol_read(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
@@ -2571,8 +2656,10 @@ int hex_symbol_read()
     return result;
 }
 
-int hex_symbol_write()
+int hex_symbol_write(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
@@ -2623,8 +2710,10 @@ int hex_symbol_write()
     return result;
 }
 
-int hex_symbol_append()
+int hex_symbol_append(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
@@ -2677,8 +2766,10 @@ int hex_symbol_append()
 
 // Shell symbols
 
-int hex_symbol_args()
+int hex_symbol_args(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     hex_item_t **quotation = (hex_item_t **)malloc(HEX_ARGC * sizeof(hex_item_t *));
     if (!quotation)
     {
@@ -2702,8 +2793,10 @@ int hex_symbol_args()
     return 0;
 }
 
-int hex_symbol_exit()
+int hex_symbol_exit(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -2721,8 +2814,10 @@ int hex_symbol_exit()
     return 0; // This line will never be reached, but it's here to satisfy the return type
 }
 
-int hex_symbol_exec()
+int hex_symbol_exec(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(command);
     if (command.type == HEX_TYPE_INVALID)
     {
@@ -2747,8 +2842,10 @@ int hex_symbol_exec()
     return result;
 }
 
-int hex_symbol_run()
+int hex_symbol_run(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(command);
     if (command.type == HEX_TYPE_INVALID)
     {
@@ -2910,8 +3007,10 @@ int hex_symbol_run()
 
 // Control flow symbols
 
-int hex_symbol_if()
+int hex_symbol_if(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(elseBlock);
     if (elseBlock.type == HEX_TYPE_INVALID)
     {
@@ -2981,8 +3080,9 @@ int hex_symbol_if()
     return 0;
 }
 
-int hex_symbol_when()
+int hex_symbol_when(hex_context_t *ctx)
 {
+    (void)(ctx);
 
     POP(action);
     if (action.type == HEX_TYPE_INVALID)
@@ -3034,8 +3134,10 @@ int hex_symbol_when()
     return result;
 }
 
-int hex_symbol_while()
+int hex_symbol_while(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
@@ -3088,8 +3190,10 @@ int hex_symbol_while()
     return 0;
 }
 
-int hex_symbol_each()
+int hex_symbol_each(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
@@ -3134,15 +3238,19 @@ int hex_symbol_each()
     return 0;
 }
 
-int hex_symbol_error()
+int hex_symbol_error(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     char *message = strdup(HEX_ERROR);
     HEX_ERROR[0] = '\0';
     return hex_push_string(message);
 }
 
-int hex_symbol_try()
+int hex_symbol_try(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(catchBlock);
     if (catchBlock.type == HEX_TYPE_INVALID)
     {
@@ -3202,8 +3310,9 @@ int hex_symbol_try()
 
 // Quotation symbols
 
-int hex_symbol_q(void)
+int hex_symbol_q(hex_context_t *ctx)
 {
+    (void)(ctx);
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -3246,8 +3355,10 @@ int hex_symbol_q(void)
     return 0;
 }
 
-int hex_symbol_map()
+int hex_symbol_map(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
@@ -3311,8 +3422,10 @@ int hex_symbol_map()
     return 0;
 }
 
-int hex_symbol_filter()
+int hex_symbol_filter(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(action);
     if (action.type == HEX_TYPE_INVALID)
     {
@@ -3397,8 +3510,10 @@ int hex_symbol_filter()
 
 // Stack manipulation symbols
 
-int hex_symbol_swap()
+int hex_symbol_swap(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -3427,8 +3542,10 @@ int hex_symbol_swap()
     return 0;
 }
 
-int hex_symbol_dup()
+int hex_symbol_dup(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     if (element.type == HEX_TYPE_INVALID)
     {
@@ -3443,8 +3560,10 @@ int hex_symbol_dup()
     return 1;
 }
 
-int hex_symbol_stack()
+int hex_symbol_stack(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     hex_item_t **quotation = (hex_item_t **)malloc((HEX_TOP + 1) * sizeof(hex_item_t *));
     if (!quotation)
     {
@@ -3474,8 +3593,10 @@ int hex_symbol_stack()
     return 0;
 }
 
-int hex_symbol_clear()
+int hex_symbol_clear(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     while (HEX_TOP >= 0)
     {
         FREE(HEX_STACK[HEX_TOP--]);
@@ -3484,8 +3605,10 @@ int hex_symbol_clear()
     return 0;
 }
 
-int hex_symbol_pop()
+int hex_symbol_pop(hex_context_t *ctx)
 {
+    (void)(ctx);
+
     POP(element);
     FREE(element);
     return 0;
@@ -3567,8 +3690,9 @@ void hex_register_symbols()
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
 
-int hex_interpret(const char *code, char *filename, int line, int column)
+int hex_interpret(hex_context_t *ctx, char *code, char *filename, int line, int column)
 {
+    (void)(ctx);
     const char *input = code;
     hex_file_position_t position = {filename, line, column};
     hex_token_t *token = hex_next_token(&input, &position);
@@ -3699,8 +3823,9 @@ char *hex_read_file(const char *filename)
 }
 
 // REPL implementation
-void hex_repl()
+void hex_repl(hex_context_t *ctx)
 {
+    (void)(ctx);
     char line[1024];
 
     printf("   _*_ _\n");
@@ -3721,7 +3846,7 @@ void hex_repl()
         line[strcspn(line, "\r\n")] = '\0';
 
         // Tokenize and process the input
-        hex_interpret(line, "<repl>", 1, 1);
+        hex_interpret(ctx, line, "<repl>", 1, 1);
         // Print the top element of the stack
         if (HEX_TOP >= 0)
         {
@@ -3739,8 +3864,9 @@ void hex_handle_sigint(int sig)
 }
 
 // Process piped input from stdin
-void hex_process_stdin()
+void hex_process_stdin(hex_context_t *ctx)
 {
+    (void)(ctx);
     char buffer[8192]; // Adjust buffer size as needed
     int bytesRead = fread(buffer, 1, sizeof(buffer) - 1, stdin);
     if (bytesRead == 0)
@@ -3750,7 +3876,7 @@ void hex_process_stdin()
     }
 
     buffer[bytesRead] = '\0'; // Null-terminate the input
-    hex_interpret(buffer, "<stdin>", 1, 1);
+    hex_interpret(ctx, buffer, "<stdin>", 1, 1);
 }
 
 ////////////////////////////////////////
@@ -3766,6 +3892,7 @@ int main(int argc, char *argv[])
     signal(SIGINT, hex_handle_sigint);
 
     hex_register_symbols();
+    hex_context_t ctx = hex_init();
 
     if (argc > 1)
     {
@@ -3791,7 +3918,7 @@ int main(int argc, char *argv[])
                 {
                     return 1;
                 }
-                hex_interpret(fileContent, arg, 1, 1);
+                hex_interpret(&ctx, fileContent, arg, 1, 1);
                 return 0;
             }
         }
@@ -3800,13 +3927,13 @@ int main(int argc, char *argv[])
     {
         HEX_STACK_TRACE = 0;
         // Process piped input from stdin
-        hex_process_stdin();
+        hex_process_stdin(&ctx);
     }
     else
     {
         HEX_STACK_TRACE = 0;
         // Start REPL
-        hex_repl();
+        hex_repl(&ctx);
     }
 
     return 0;
