@@ -48,13 +48,18 @@ typedef enum hex_token_type_t
     HEX_TOKEN_INVALID
 } hex_token_type_t;
 
+typedef struct hex_file_position_t
+{
+    char *filename;
+    int line;
+    int column;
+} hex_file_position_t;
+
 typedef struct hex_token_t
 {
     hex_token_type_t type;
     char *value;
-    char *filename;
-    int line;
-    int column;
+    hex_file_position_t position;
 } hex_token_t;
 
 typedef struct hex_item_t
@@ -146,7 +151,7 @@ hex_item_t hex_pop();
 
 char *hex_process_string(const char *value);
 
-hex_token_t *hex_next_token(const char **input, int *line, int *column);
+hex_token_t *hex_next_token(const char **input, hex_file_position_t *position);
 
 void print_stack_trace();
 
@@ -231,7 +236,7 @@ void hex_handle_sigint(int sig);
 char *hex_read_file(const char *filename);
 
 int32_t hex_parse_integer(const char *hex_str);
-int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column);
-int hex_interpret(const char *code, const char *filename, int line, int column);
+int hex_parse_quotation(const char **input, hex_item_t *result, hex_file_position_t *position);
+int hex_interpret(const char *code, char *filename, int line, int column);
 
 #endif // HEX_H

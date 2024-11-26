@@ -442,7 +442,7 @@ void hex_debug_element(const char *message, hex_item_t element)
 ////////////////////////////////////////
 
 // Process a token from the input
-hex_token_t *hex_next_token(const char **input, int *line, int *column)
+hex_token_t *hex_next_token(const char **input, hex_file_position_t *position)
 {
     const char *ptr = *input;
 
@@ -451,12 +451,12 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
     {
         if (*ptr == '\n')
         {
-            (*line)++;
-            *column = 1;
+            position->line++;
+            position->column = 1;
         }
         else
         {
-            (*column)++;
+            position->column++;
         }
         ptr++;
     }
@@ -468,8 +468,8 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = NULL;
-    token->line = *line;
-    token->column = *column;
+    token->position.line = position->line;
+    token->position.column = position->column;
 
     if (*ptr == ';')
     {
@@ -478,7 +478,7 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
         while (*ptr != '\0' && *ptr != '\n')
         {
             ptr++;
-            (*column)++;
+            position->column++;
         }
         int len = ptr - start;
         token->value = (char *)malloc(len + 1);
@@ -499,7 +499,7 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
             {
                 ptr += 2;
                 len++;
-                (*column) += 2;
+                position->column += 2;
             }
             else if (*ptr == '"')
             {
@@ -510,15 +510,15 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
                 hex_error("Unescaped new line in string");
                 token->value = "<newline>";
                 token->type = HEX_TOKEN_INVALID;
-                token->line = *line;
-                token->column = *column;
+                token->position.line = position->line;
+                token->position.column = position->column;
                 return token;
             }
             else
             {
                 ptr++;
                 len++;
-                (*column)++;
+                position->column++;
             }
         }
 
@@ -527,8 +527,8 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
             hex_error("Unterminated string");
             token->type = HEX_TOKEN_INVALID;
             token->value = strdup(ptr);
-            token->line = *line;
-            token->column = *column;
+            token->position.line = position->line;
+            token->position.column = position->column;
             return token;
         }
 
@@ -550,7 +550,7 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
         }
         *dst = '\0';
         ptr++;
-        (*column)++;
+        position->column++;
         token->type = HEX_TOKEN_STRING;
     }
     else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0)
@@ -558,11 +558,11 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
         // Hexadecimal integer token
         const char *start = ptr;
         ptr += 2; // Skip the "0x" prefix
-        (*column) += 2;
+        position->column += 2;
         while (isxdigit(*ptr))
         {
             ptr++;
-            (*column)++;
+            position->column++;
         }
         int len = ptr - start;
         token->value = (char *)malloc(len + 1);
@@ -574,13 +574,13 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
     {
         token->type = HEX_TOKEN_QUOTATION_START;
         ptr++;
-        (*column)++;
+        position->column++;
     }
     else if (*ptr == ')')
     {
         token->type = HEX_TOKEN_QUOTATION_END;
         ptr++;
-        (*column)++;
+        position->column++;
     }
     else
     {
@@ -589,7 +589,7 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
         while (*ptr != '\0' && !isspace(*ptr) && *ptr != ';' && *ptr != '(' && *ptr != ')' && *ptr != '"')
         {
             ptr++;
-            (*column)++;
+            position->column++;
         }
 
         int len = ptr - start;
@@ -603,8 +603,8 @@ hex_token_t *hex_next_token(const char **input, int *line, int *column)
         else
         {
             token->type = HEX_TOKEN_INVALID;
-            token->line = *line;
-            token->column = *column;
+            token->position.line = position->line;
+            token->position.column = position->column;
         }
     }
 
@@ -643,7 +643,7 @@ int32_t hex_parse_integer(const char *hex_str)
     return (int32_t)unsigned_value;
 }
 
-int hex_parse_quotation(const char **input, hex_item_t *result, const char *filename, int *line, int *column)
+int hex_parse_quotation(const char **input, hex_item_t *result, hex_file_position_t *position)
 {
     hex_item_t **quotation = NULL;
     int capacity = 2;
@@ -658,7 +658,7 @@ int hex_parse_quotation(const char **input, hex_item_t *result, const char *file
     }
 
     hex_token_t *token;
-    while ((token = hex_next_token(input, line, column)) != NULL)
+    while ((token = hex_next_token(input, position)) != NULL)
     {
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
@@ -713,13 +713,13 @@ int hex_parse_quotation(const char **input, hex_item_t *result, const char *file
             {
                 element->type = HEX_TYPE_USER_SYMBOL;
             }
-            token->filename = strdup(filename);
+            token->position.filename = strdup(position->filename);
             element->token = token;
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             element->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(input, element, filename, line, column) != 0)
+            if (hex_parse_quotation(input, element, position) != 0)
             {
                 hex_free_token(token);
                 hex_free_list(quotation, size);
@@ -795,7 +795,7 @@ void print_stack_trace()
     {
         int index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
         hex_token_t token = stackTrace.entries[index];
-        fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.filename, token.line, token.column);
+        fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.position.filename, token.position.line, token.position.column);
     }
 }
 
@@ -1083,7 +1083,7 @@ int hex_symbol_i()
     return 0;
 }
 
-int hex_interpret(const char *code, const char *filename, int line, int column);
+int hex_interpret(const char *code, char *filename, int line, int column);
 
 // evaluate a string
 int hex_symbol_eval()
@@ -3540,10 +3540,11 @@ void hex_register_symbols()
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
 
-int hex_interpret(const char *code, const char *filename, int line, int column)
+int hex_interpret(const char *code, char *filename, int line, int column)
 {
     const char *input = code;
-    hex_token_t *token = hex_next_token(&input, &line, &column);
+    hex_file_position_t position = {filename, line, column};
+    hex_token_t *token = hex_next_token(&input, &position);
 
     while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
@@ -3558,7 +3559,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            token->filename = strdup(filename);
+            token->position.filename = strdup(filename);
             result = hex_push_symbol(token);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
@@ -3569,7 +3570,7 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
             hex_item_t *quotationElement = (hex_item_t *)malloc(sizeof(hex_item_t));
-            if (hex_parse_quotation(&input, quotationElement, filename, &line, &column) != 0)
+            if (hex_parse_quotation(&input, quotationElement, &position) != 0)
             {
                 hex_error("Failed to parse quotation");
                 result = 1;
@@ -3590,11 +3591,11 @@ int hex_interpret(const char *code, const char *filename, int line, int column)
             return result;
         }
 
-        token = hex_next_token(&input, &line, &column);
+        token = hex_next_token(&input, &position);
     }
     if (token != NULL && token->type == HEX_TOKEN_INVALID)
     {
-        token->filename = strdup(filename);
+        token->position.filename = strdup(filename);
         add_to_stack_trace(token);
         print_stack_trace();
         return 1;
@@ -3744,7 +3745,7 @@ int main(int argc, char *argv[])
 
         for (int i = 1; i < argc; i++)
         {
-            const char *arg = strdup(argv[i]);
+            char *arg = strdup(argv[i]);
             if ((strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0))
             {
                 printf("%s\n", HEX_VERSION);
