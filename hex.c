@@ -1535,35 +1535,45 @@ int hex_symbol_hex()
 
 int hex_equal(hex_item_t a, hex_item_t b)
 {
-    int result = 0;
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a.type == HEX_TYPE_INVALID || b.type == HEX_TYPE_INVALID)
     {
-        result = a.data.intValue == b.data.intValue;
+        return 0;
     }
-    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
+    if (a.type == HEX_TYPE_NATIVE_SYMBOL || a.type == HEX_TYPE_USER_SYMBOL)
     {
-        result = (strcmp(a.data.strValue, b.data.strValue) == 0);
+        return (strcmp(a.token->value, b.token->value) == 0);
     }
-    else if (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION)
+    if (a.type != b.type)
+    {
+        return 0;
+    }
+    if (a.type == HEX_TYPE_INTEGER)
+    {
+        return a.data.intValue == b.data.intValue;
+    }
+    if (a.type == HEX_TYPE_STRING)
+    {
+        return (strcmp(a.data.strValue, b.data.strValue) == 0);
+    }
+    if (a.type == HEX_TYPE_QUOTATION)
     {
         if (a.quotationSize != b.quotationSize)
         {
-            result = 0;
+            return 0;
         }
         else
         {
-            result = 1;
             for (int i = 0; i < a.quotationSize; i++)
             {
-                if (a.data.quotationValue[i] != b.data.quotationValue[i])
+                if (!hex_equal(*a.data.quotationValue[i], *b.data.quotationValue[i]))
                 {
-                    result = 0;
-                    break;
+                    return 0;
                 }
             }
+            return 1;
         }
     }
-    return result;
+    return 0;
 }
 
 int hex_symbol_equal()
