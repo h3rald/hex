@@ -127,13 +127,13 @@ void hex_free_element(hex_context_t *ctx, hex_item_t element);
 void hex_free_token(hex_token_t *token);
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size);
 
-int hex_valid_user_symbol(const char *symbol);
+int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol);
 int hex_valid_native_symbol(const char *symbol);
 int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int native);
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)());
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
 
-void hex_error(const char *format, ...);
+void hex_error(hex_context_t *ctx, const char *format, ...);
 void hex_debug(hex_context_t *ctx, char *format, ...);
 void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t element);
 void hex_print_element(FILE *stream, hex_item_t element);
@@ -147,9 +147,9 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size);
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
 hex_item_t hex_pop(hex_context_t *ctx);
 
-char *hex_process_string(const char *value);
+char *hex_process_string(hex_context_t *ctx, const char *value);
 
-hex_token_t *hex_next_token(const char **input, hex_file_position_t *position);
+hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);
 
 void print_stack_trace(hex_context_t *ctx);
 
@@ -231,7 +231,7 @@ void hex_register_symbols();
 void hex_repl(hex_context_t *ctx);
 void hex_process_stdin(hex_context_t *ctx);
 void hex_handle_sigint(int sig);
-char *hex_read_file(const char *filename);
+char *hex_read_file(hex_context_t *ctx, const char *filename);
 
 int32_t hex_parse_integer(const char *hex_str);
 int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position);
