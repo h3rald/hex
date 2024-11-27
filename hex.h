@@ -95,7 +95,6 @@ typedef struct hex_stack_t
     int top;
 } hex_stack_t;
 
-// TODO: refactor and use this
 typedef struct hex_registry_t
 {
     hex_registry_entry_t entries[HEX_REGISTRY_SIZE];

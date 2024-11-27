@@ -5,11 +5,7 @@
 #define FREE(ctx, x) hex_free_element(ctx, x)
 #define PUSH(ctx, x) hex_push(ctx, x)
 
-// Global variables
-hex_registry_entry_t HEX_REGISTRY[HEX_REGISTRY_SIZE];
-int HEX_REGISTRY_COUNT = 0;
-
-char *HEX_NATIVE_SYMBOLS[] = {
+static char *HEX_NATIVE_SYMBOLS[] = {
     "store",
     "free",
     "type",
@@ -76,25 +72,6 @@ char *HEX_NATIVE_SYMBOLS[] = {
     "pop"};
 
 ////////////////////////////////////////
-// Context Implementation             //
-////////////////////////////////////////
-
-hex_context_t hex_init()
-{
-    hex_context_t context;
-    context.argc = 0;
-    context.argv = NULL;
-    context.registry.size = 0;
-    context.stack.top = -1;
-    context.stack_trace.start = 0;
-    context.stack_trace.size = 0;
-    context.settings.debugging_enabled = 0;
-    context.settings.errors_enabled = 1;
-    context.settings.stack_trace_enabled = 1;
-    return context;
-}
-
-////////////////////////////////////////
 // Registry Implementation            //
 ////////////////////////////////////////
 
@@ -131,32 +108,32 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int na
     {
         return 1;
     }
-    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
+    for (int i = 0; i < ctx->registry.size; i++)
     {
-        if (strcmp(HEX_REGISTRY[i].key, key) == 0)
+        if (strcmp(ctx->registry.entries[i].key, key) == 0)
         {
-            if (HEX_REGISTRY[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
+            if (ctx->registry.entries[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
                 hex_error(ctx, "Cannot overwrite native symbol %s", key);
                 return 1;
             }
-            free(HEX_REGISTRY[i].key);
-            HEX_REGISTRY[i].key = strdup(key);
-            HEX_REGISTRY[i].value = value;
+            free(ctx->registry.entries[i].key);
+            ctx->registry.entries[i].key = strdup(key);
+            ctx->registry.entries[i].value = value;
             return 0;
         }
     }
 
-    if (HEX_REGISTRY_COUNT >= HEX_REGISTRY_SIZE)
+    if (ctx->registry.size >= HEX_REGISTRY_SIZE)
     {
         hex_error(ctx, "Registry overflow");
         hex_free_token(value.token);
         return 1;
     }
 
-    HEX_REGISTRY[HEX_REGISTRY_COUNT].key = strdup(key);
-    HEX_REGISTRY[HEX_REGISTRY_COUNT].value = value;
-    HEX_REGISTRY_COUNT++;
+    ctx->registry.entries[ctx->registry.size].key = strdup(key);
+    ctx->registry.entries[ctx->registry.size].value = value;
+    ctx->registry.size++;
     return 0;
 }
 
@@ -177,11 +154,11 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
     (void)(ctx);
-    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
+    for (int i = 0; i < ctx->registry.size; i++)
     {
-        if (strcmp(HEX_REGISTRY[i].key, key) == 0)
+        if (strcmp(ctx->registry.entries[i].key, key) == 0)
         {
-            *result = HEX_REGISTRY[i].value;
+            *result = ctx->registry.entries[i].value;
             return 1;
         }
     }
@@ -1038,17 +1015,17 @@ int hex_symbol_free(hex_context_t *ctx)
         hex_error(ctx, "Variable name must be a string");
         return 1;
     }
-    for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
+    for (int i = 0; i < ctx->registry.size; i++)
     {
-        if (strcmp(HEX_REGISTRY[i].key, element.data.strValue) == 0)
+        if (strcmp(ctx->registry.entries[i].key, element.data.strValue) == 0)
         {
-            free(HEX_REGISTRY[i].key);
-            FREE(ctx, HEX_REGISTRY[i].value);
-            for (int j = i; j < HEX_REGISTRY_COUNT - 1; j++)
+            free(ctx->registry.entries[i].key);
+            FREE(ctx, ctx->registry.entries[i].value);
+            for (int j = i; j < ctx->registry.size - 1; j++)
             {
-                HEX_REGISTRY[j] = HEX_REGISTRY[j + 1];
+                ctx->registry.entries[j] = ctx->registry.entries[j + 1];
             }
-            HEX_REGISTRY_COUNT--;
+            ctx->registry.size--;
             FREE(ctx, element);
             return 0;
         }
@@ -3681,6 +3658,21 @@ void hex_register_symbols(hex_context_t *ctx)
 ////////////////////////////////////////
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
+
+hex_context_t hex_init()
+{
+    hex_context_t context;
+    context.argc = 0;
+    context.argv = NULL;
+    context.registry.size = 0;
+    context.stack.top = -1;
+    context.stack_trace.start = 0;
+    context.stack_trace.size = 0;
+    context.settings.debugging_enabled = 0;
+    context.settings.errors_enabled = 1;
+    context.settings.stack_trace_enabled = 1;
+    return context;
+}
 
 int hex_interpret(hex_context_t *ctx, char *code, char *filename, int line, int column)
 {
