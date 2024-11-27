@@ -136,7 +136,7 @@ void hex_error(hex_context_t *ctx, const char *format, ...);
 void hex_debug(hex_context_t *ctx, char *format, ...);
 void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t element);
 void hex_print_element(FILE *stream, hex_item_t element);
-void add_to_stack_trace(hex_token_t *token);
+void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token);
 char *hex_type(hex_item_type_t type);
 
 int hex_push(hex_context_t *ctx, hex_item_t element);

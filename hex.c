@@ -197,7 +197,7 @@ int hex_push(hex_context_t *ctx, hex_item_t element)
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
     {
         hex_debug_element(ctx, "CALL", element);
-        add_to_stack_trace(element.token);
+        add_to_stack_trace(ctx, element.token);
         result = element.data.fnValue(ctx);
     }
     else
@@ -295,7 +295,7 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size)
 
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 {
-    add_to_stack_trace(token);
+    add_to_stack_trace(ctx, token);
     hex_item_t value;
     if (hex_get_symbol(ctx, token->value, &value))
     {
@@ -748,24 +748,22 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
 // Stack trace implementation         //
 ////////////////////////////////////////
 
-hex_stack_trace_t stackTrace = {.start = 0, .size = 0};
-
 // Add an entry to the circular stack trace
-void add_to_stack_trace(hex_token_t *token)
+void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token)
 {
-    int index = (stackTrace.start + stackTrace.size) % HEX_STACK_TRACE_SIZE;
+    int index = (ctx->stack_trace.start + ctx->stack_trace.size) % HEX_STACK_TRACE_SIZE;
 
-    if (stackTrace.size < HEX_STACK_TRACE_SIZE)
+    if (ctx->stack_trace.size < HEX_STACK_TRACE_SIZE)
     {
         // Buffer is not full; add element
-        stackTrace.entries[index] = *token;
-        stackTrace.size++;
+        ctx->stack_trace.entries[index] = *token;
+        ctx->stack_trace.size++;
     }
     else
     {
         // Buffer is full; overwrite the oldest element
-        stackTrace.entries[index] = *token;
-        stackTrace.start = (stackTrace.start + 1) % HEX_STACK_TRACE_SIZE;
+        ctx->stack_trace.entries[index] = *token;
+        ctx->stack_trace.start = (ctx->stack_trace.start + 1) % HEX_STACK_TRACE_SIZE;
     }
 }
 
@@ -778,10 +776,10 @@ void print_stack_trace(hex_context_t *ctx)
     }
     fprintf(stderr, "[stack trace] (most recent symbol first):\n");
 
-    for (int i = 0; i < stackTrace.size; i++)
+    for (int i = 0; i < ctx->stack_trace.size; i++)
     {
-        int index = (stackTrace.start + stackTrace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
-        hex_token_t token = stackTrace.entries[index];
+        int index = (ctx->stack_trace.start + ctx->stack_trace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
+        hex_token_t token = ctx->stack_trace.entries[index];
         fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.position.filename, token.position.line, token.position.column);
     }
 }
@@ -3731,7 +3729,7 @@ int hex_interpret(hex_context_t *ctx, char *code, char *filename, int line, int 
     if (token != NULL && token->type == HEX_TOKEN_INVALID)
     {
         token->position.filename = strdup(filename);
-        add_to_stack_trace(token);
+        add_to_stack_trace(ctx, token);
         print_stack_trace(ctx);
         return 1;
     }
