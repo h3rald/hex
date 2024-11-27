@@ -5,7 +5,7 @@
 #define FREE(ctx, x) hex_free_element(ctx, x)
 #define PUSH(ctx, x) hex_push(ctx, x)
 
-static char *HEX_NATIVE_SYMBOLS[] = {
+static char *HEX_NATIVE_SYMBOLS_LIST[] = {
     "store",
     "free",
     "type",
@@ -425,6 +425,54 @@ void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t eleme
 }
 
 ////////////////////////////////////////
+// Help System                        //
+////////////////////////////////////////
+
+// Hash function (simple djb2 hash)
+unsigned int hex_doc_hash(const char *str)
+{
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *str++))
+    {
+        hash = ((hash << 5) + hash) + c; // hash * 33 + c
+    }
+    return hash % HEX_NATIVE_SYMBOLS;
+}
+
+// Insert a DocEntry into the hash table
+void hex_doc(hex_doc_dictionary_t *dict, hex_doc_entry_t doc)
+{
+    unsigned int index = hex_doc_hash(doc.name);
+    // Handle collisions using linear probing
+    while (dict->entries[index].name != NULL)
+    {
+        index = (index + 1) % HEX_NATIVE_SYMBOLS;
+    }
+    dict->entries[index] = doc;
+}
+
+// Lookup a DocEntry by name
+const hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *name)
+{
+    unsigned int index = hex_doc_hash(name);
+    unsigned int start_index = index; // Save the starting index for detection of loops
+    while (dict->entries[index].name != NULL)
+    {
+        if (strcmp(dict->entries[index].name, name) == 0)
+        {
+            return &dict->entries[index];
+        }
+        index = (index + 1) % HEX_NATIVE_SYMBOLS;
+        if (index == start_index)
+        {
+            break; // Avoid infinite loops
+        }
+    }
+    return NULL; // Not found
+}
+
+////////////////////////////////////////
 // Tokenizer Implementation           //
 ////////////////////////////////////////
 
@@ -611,9 +659,9 @@ void hex_free_token(hex_token_t *token)
 
 int hex_valid_native_symbol(const char *symbol)
 {
-    for (size_t i = 0; i < sizeof(HEX_NATIVE_SYMBOLS) / sizeof(HEX_NATIVE_SYMBOLS[0]); i++)
+    for (size_t i = 0; i < sizeof(HEX_NATIVE_SYMBOLS_LIST) / sizeof(HEX_NATIVE_SYMBOLS_LIST[0]); i++)
     {
-        if (strcmp(symbol, HEX_NATIVE_SYMBOLS[i]) == 0)
+        if (strcmp(symbol, HEX_NATIVE_SYMBOLS_LIST[i]) == 0)
         {
             return 1;
         }

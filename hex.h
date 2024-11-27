@@ -25,6 +25,7 @@ int isatty(int fd);
 #define HEX_REGISTRY_SIZE 1024
 #define HEX_STACK_SIZE 128
 #define HEX_STACK_TRACE_SIZE 16
+#define HEX_NATIVE_SYMBOLS 64
 
 // Type Definitions
 typedef enum hex_item_type_t
@@ -120,6 +121,29 @@ typedef struct hex_context_t
     int argc;
     char **argv;
 } hex_context_t;
+
+typedef struct hex_signature_t
+{
+    const char *input;
+    const char *output;
+} hex_signature_t;
+
+typedef struct hex_doc_entry_t
+{
+    const char *name;
+    const char *description;
+    hex_signature_t signature;
+} hex_doc_entry_t;
+
+typedef struct hex_doc_dictionary_t
+{
+    hex_doc_entry_t entries[64];
+} hex_doc_dictionary_t;
+
+// Help System
+unsigned int hex_doc_hash(const char *str);
+void hex_add_doc(hex_doc_dictionary_t *dict, hex_doc_entry_t entry);
+const hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *symbol);
 
 // Free data
 void hex_free_element(hex_context_t *ctx, hex_item_t element);
