@@ -62,6 +62,8 @@ typedef struct hex_token_t
     hex_file_position_t position;
 } hex_token_t;
 
+typedef struct hex_context_t hex_context_t;
+
 typedef struct hex_item_t
 {
     hex_item_type_t type;
@@ -69,7 +71,7 @@ typedef struct hex_item_t
     {
         int32_t intValue;
         char *strValue;
-        int (*fnValue)();
+        int (*fnValue)(hex_context_t *);
         struct hex_item_t **quotationValue;
     } data;
     hex_token_t *token; // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
