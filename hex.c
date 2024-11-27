@@ -380,7 +380,7 @@ void hex_error(hex_context_t *ctx, const char *format, ...)
     va_end(args);
 }
 
-void hex_debug(hex_context_t *ctx, char *format, ...)
+void hex_debug(hex_context_t *ctx, const char *format, ...)
 {
     if (ctx->settings.debugging_enabled)
     {
@@ -3672,7 +3672,7 @@ hex_context_t hex_init()
     return context;
 }
 
-int hex_interpret(hex_context_t *ctx, char *code, char *filename, int line, int column)
+int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, int line, int column)
 {
     (void)(ctx);
     const char *input = code;

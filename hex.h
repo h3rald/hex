@@ -50,7 +50,7 @@ typedef enum hex_token_type_t
 
 typedef struct hex_file_position_t
 {
-    char *filename;
+    const char *filename;
     int line;
     int column;
 } hex_file_position_t;
@@ -133,7 +133,7 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
 
 // Errors and debugging
 void hex_error(hex_context_t *ctx, const char *format, ...);
-void hex_debug(hex_context_t *ctx, char *format, ...);
+void hex_debug(hex_context_t *ctx, const char *format, ...);
 void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t element);
 void hex_print_element(FILE *stream, hex_item_t element);
 void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token);
@@ -152,7 +152,7 @@ char *hex_process_string(hex_context_t *ctx, const char *value);
 hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);
 int32_t hex_parse_integer(const char *hex_str);
 int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position);
-int hex_interpret(hex_context_t *ctx, char *code, char *filename, int line, int column);
+int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, int line, int column);
 
 // Helpers
 char *hex_itoa(int num, int base);
