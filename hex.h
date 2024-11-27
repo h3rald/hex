@@ -129,9 +129,9 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size);
 
 int hex_valid_user_symbol(const char *symbol);
 int hex_valid_native_symbol(const char *symbol);
-int hex_set_symbol(const char *key, hex_item_t value, int native);
-void hex_set_native_symbol(const char *name, int (*func)());
-int hex_get_symbol(const char *key, hex_item_t *result);
+int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int native);
+void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)());
+int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
 
 void hex_error(const char *format, ...);
 void hex_debug(hex_context_t *ctx, char *format, ...);

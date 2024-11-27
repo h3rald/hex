@@ -127,8 +127,9 @@ int hex_valid_user_symbol(const char *symbol)
 }
 
 // Add a symbol to the registry
-int hex_set_symbol(const char *key, hex_item_t value, int native)
+int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int native)
 {
+    (void)(ctx);
     if (!native && hex_valid_user_symbol(key) == 0)
     {
         return 1;
@@ -163,21 +164,22 @@ int hex_set_symbol(const char *key, hex_item_t value, int native)
 }
 
 // Register a native symbol
-void hex_set_native_symbol(const char *name, int (*func)())
+void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 {
     hex_item_t funcElement;
     funcElement.type = HEX_TYPE_NATIVE_SYMBOL;
     funcElement.data.fnValue = func;
 
-    if (hex_set_symbol(name, funcElement, 1) != 0)
+    if (hex_set_symbol(ctx, name, funcElement, 1) != 0)
     {
         hex_error("Error: Failed to register native symbol '%s'", name);
     }
 }
 
 // Get a symbol value from the registry
-int hex_get_symbol(const char *key, hex_item_t *result)
+int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
+    (void)(ctx);
     for (int i = 0; i < HEX_REGISTRY_COUNT; i++)
     {
         if (strcmp(HEX_REGISTRY[i].key, key) == 0)
@@ -207,7 +209,7 @@ int hex_push(hex_context_t *ctx, hex_item_t element)
     if (element.type == HEX_TYPE_USER_SYMBOL)
     {
         hex_item_t value;
-        if (hex_get_symbol(element.token->value, &value))
+        if (hex_get_symbol(ctx, element.token->value, &value))
         {
             result = PUSH(ctx, value);
         }
@@ -321,7 +323,7 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 {
     add_to_stack_trace(token);
     hex_item_t value;
-    if (hex_get_symbol(token->value, &value))
+    if (hex_get_symbol(ctx, token->value, &value))
     {
         value.token = token;
         return PUSH(ctx, value);
@@ -706,7 +708,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             {
                 element->type = HEX_TYPE_NATIVE_SYMBOL;
                 hex_item_t value;
-                if (hex_get_symbol(token->value, &value))
+                if (hex_get_symbol(ctx, token->value, &value))
                 {
                     element->token = token;
                     element->type = HEX_TYPE_NATIVE_SYMBOL;
@@ -1013,7 +1015,7 @@ int hex_symbol_store(hex_context_t *ctx)
         FREE(ctx, value);
         return 1;
     }
-    if (hex_set_symbol(name.data.strValue, value, 0) != 0)
+    if (hex_set_symbol(ctx, name.data.strValue, value, 0) != 0)
     {
         hex_error("Failed to store variable");
         FREE(ctx, name);
@@ -3611,72 +3613,72 @@ int hex_symbol_pop(hex_context_t *ctx)
 // Native Symbol Registration         //
 ////////////////////////////////////////
 
-void hex_register_symbols()
+void hex_register_symbols(hex_context_t *ctx)
 {
-    hex_set_native_symbol("store", hex_symbol_store);
-    hex_set_native_symbol("free", hex_symbol_free);
-    hex_set_native_symbol("type", hex_symbol_type);
-    hex_set_native_symbol("i", hex_symbol_i);
-    hex_set_native_symbol("eval", hex_symbol_eval);
-    hex_set_native_symbol("puts", hex_symbol_puts);
-    hex_set_native_symbol("warn", hex_symbol_warn);
-    hex_set_native_symbol("print", hex_symbol_print);
-    hex_set_native_symbol("gets", hex_symbol_gets);
-    hex_set_native_symbol("+", hex_symbol_add);
-    hex_set_native_symbol("-", hex_symbol_subtract);
-    hex_set_native_symbol("*", hex_symbol_multiply);
-    hex_set_native_symbol("/", hex_symbol_divide);
-    hex_set_native_symbol("%", hex_symbol_modulo);
-    hex_set_native_symbol("&", hex_symbol_bitand);
-    hex_set_native_symbol("|", hex_symbol_bitor);
-    hex_set_native_symbol("^", hex_symbol_bitxor);
-    hex_set_native_symbol("~", hex_symbol_bitnot);
-    hex_set_native_symbol("<<", hex_symbol_shiftleft);
-    hex_set_native_symbol(">>", hex_symbol_shiftright);
-    hex_set_native_symbol("int", hex_symbol_int);
-    hex_set_native_symbol("str", hex_symbol_str);
-    hex_set_native_symbol("dec", hex_symbol_dec);
-    hex_set_native_symbol("hex", hex_symbol_hex);
-    hex_set_native_symbol("==", hex_symbol_equal);
-    hex_set_native_symbol("!=", hex_symbol_notequal);
-    hex_set_native_symbol(">", hex_symbol_greater);
-    hex_set_native_symbol("<", hex_symbol_less);
-    hex_set_native_symbol(">=", hex_symbol_greaterequal);
-    hex_set_native_symbol("<=", hex_symbol_lessequal);
-    hex_set_native_symbol("and", hex_symbol_and);
-    hex_set_native_symbol("or", hex_symbol_or);
-    hex_set_native_symbol("not", hex_symbol_not);
-    hex_set_native_symbol("xor", hex_symbol_xor);
-    hex_set_native_symbol("cat", hex_symbol_cat);
-    hex_set_native_symbol("slice", hex_symbol_slice);
-    hex_set_native_symbol("len", hex_symbol_len);
-    hex_set_native_symbol("get", hex_symbol_get);
-    hex_set_native_symbol("insert", hex_symbol_insert);
-    hex_set_native_symbol("index", hex_symbol_index);
-    hex_set_native_symbol("join", hex_symbol_join);
-    hex_set_native_symbol("split", hex_symbol_split);
-    hex_set_native_symbol("replace", hex_symbol_replace);
-    hex_set_native_symbol("read", hex_symbol_read);
-    hex_set_native_symbol("write", hex_symbol_write);
-    hex_set_native_symbol("append", hex_symbol_append);
-    hex_set_native_symbol("args", hex_symbol_args);
-    hex_set_native_symbol("exit", hex_symbol_exit);
-    hex_set_native_symbol("exec", hex_symbol_exec);
-    hex_set_native_symbol("run", hex_symbol_run);
-    hex_set_native_symbol("if", hex_symbol_if);
-    hex_set_native_symbol("when", hex_symbol_when);
-    hex_set_native_symbol("while", hex_symbol_while);
-    hex_set_native_symbol("each", hex_symbol_each);
-    hex_set_native_symbol("error", hex_symbol_error);
-    hex_set_native_symbol("try", hex_symbol_try);
-    hex_set_native_symbol("q", hex_symbol_q);
-    hex_set_native_symbol("map", hex_symbol_map);
-    hex_set_native_symbol("filter", hex_symbol_filter);
-    hex_set_native_symbol("swap", hex_symbol_swap);
-    hex_set_native_symbol("dup", hex_symbol_dup);
-    hex_set_native_symbol("stack", hex_symbol_stack);
-    hex_set_native_symbol("clear", hex_symbol_clear);
-    hex_set_native_symbol("pop", hex_symbol_pop);
+    hex_set_native_symbol(ctx, "store", hex_symbol_store);
+    hex_set_native_symbol(ctx, "free", hex_symbol_free);
+    hex_set_native_symbol(ctx, "type", hex_symbol_type);
+    hex_set_native_symbol(ctx, "i", hex_symbol_i);
+    hex_set_native_symbol(ctx, "eval", hex_symbol_eval);
+    hex_set_native_symbol(ctx, "puts", hex_symbol_puts);
+    hex_set_native_symbol(ctx, "warn", hex_symbol_warn);
+    hex_set_native_symbol(ctx, "print", hex_symbol_print);
+    hex_set_native_symbol(ctx, "gets", hex_symbol_gets);
+    hex_set_native_symbol(ctx, "+", hex_symbol_add);
+    hex_set_native_symbol(ctx, "-", hex_symbol_subtract);
+    hex_set_native_symbol(ctx, "*", hex_symbol_multiply);
+    hex_set_native_symbol(ctx, "/", hex_symbol_divide);
+    hex_set_native_symbol(ctx, "%", hex_symbol_modulo);
+    hex_set_native_symbol(ctx, "&", hex_symbol_bitand);
+    hex_set_native_symbol(ctx, "|", hex_symbol_bitor);
+    hex_set_native_symbol(ctx, "^", hex_symbol_bitxor);
+    hex_set_native_symbol(ctx, "~", hex_symbol_bitnot);
+    hex_set_native_symbol(ctx, "<<", hex_symbol_shiftleft);
+    hex_set_native_symbol(ctx, ">>", hex_symbol_shiftright);
+    hex_set_native_symbol(ctx, "int", hex_symbol_int);
+    hex_set_native_symbol(ctx, "str", hex_symbol_str);
+    hex_set_native_symbol(ctx, "dec", hex_symbol_dec);
+    hex_set_native_symbol(ctx, "hex", hex_symbol_hex);
+    hex_set_native_symbol(ctx, "==", hex_symbol_equal);
+    hex_set_native_symbol(ctx, "!=", hex_symbol_notequal);
+    hex_set_native_symbol(ctx, ">", hex_symbol_greater);
+    hex_set_native_symbol(ctx, "<", hex_symbol_less);
+    hex_set_native_symbol(ctx, ">=", hex_symbol_greaterequal);
+    hex_set_native_symbol(ctx, "<=", hex_symbol_lessequal);
+    hex_set_native_symbol(ctx, "and", hex_symbol_and);
+    hex_set_native_symbol(ctx, "or", hex_symbol_or);
+    hex_set_native_symbol(ctx, "not", hex_symbol_not);
+    hex_set_native_symbol(ctx, "xor", hex_symbol_xor);
+    hex_set_native_symbol(ctx, "cat", hex_symbol_cat);
+    hex_set_native_symbol(ctx, "slice", hex_symbol_slice);
+    hex_set_native_symbol(ctx, "len", hex_symbol_len);
+    hex_set_native_symbol(ctx, "get", hex_symbol_get);
+    hex_set_native_symbol(ctx, "insert", hex_symbol_insert);
+    hex_set_native_symbol(ctx, "index", hex_symbol_index);
+    hex_set_native_symbol(ctx, "join", hex_symbol_join);
+    hex_set_native_symbol(ctx, "split", hex_symbol_split);
+    hex_set_native_symbol(ctx, "replace", hex_symbol_replace);
+    hex_set_native_symbol(ctx, "read", hex_symbol_read);
+    hex_set_native_symbol(ctx, "write", hex_symbol_write);
+    hex_set_native_symbol(ctx, "append", hex_symbol_append);
+    hex_set_native_symbol(ctx, "args", hex_symbol_args);
+    hex_set_native_symbol(ctx, "exit", hex_symbol_exit);
+    hex_set_native_symbol(ctx, "exec", hex_symbol_exec);
+    hex_set_native_symbol(ctx, "run", hex_symbol_run);
+    hex_set_native_symbol(ctx, "if", hex_symbol_if);
+    hex_set_native_symbol(ctx, "when", hex_symbol_when);
+    hex_set_native_symbol(ctx, "while", hex_symbol_while);
+    hex_set_native_symbol(ctx, "each", hex_symbol_each);
+    hex_set_native_symbol(ctx, "error", hex_symbol_error);
+    hex_set_native_symbol(ctx, "try", hex_symbol_try);
+    hex_set_native_symbol(ctx, "q", hex_symbol_q);
+    hex_set_native_symbol(ctx, "map", hex_symbol_map);
+    hex_set_native_symbol(ctx, "filter", hex_symbol_filter);
+    hex_set_native_symbol(ctx, "swap", hex_symbol_swap);
+    hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
+    hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
+    hex_set_native_symbol(ctx, "clear", hex_symbol_clear);
+    hex_set_native_symbol(ctx, "pop", hex_symbol_pop);
 }
 
 ////////////////////////////////////////
@@ -3882,12 +3884,12 @@ int main(int argc, char *argv[])
     // Register SIGINT (Ctrl+C) signal handler
     signal(SIGINT, hex_handle_sigint);
 
-    hex_register_symbols();
-
     // Initialize the context
     hex_context_t ctx = hex_init();
     ctx.argc = argc;
     ctx.argv = argv;
+
+    hex_register_symbols(&ctx);
 
     if (argc > 1)
     {
