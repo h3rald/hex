@@ -3,9 +3,9 @@
 A minimalist, concatenative, slightly-esoteric programming language.
 
 ```
-     ~*
-   /‾\hex\`*
- .*\_/_/_/
-       *‘
+   _*_ _
+  / \hex\*
+ *\_/_/_/
+      *
 ```
 
