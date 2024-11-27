@@ -142,8 +142,11 @@ typedef struct hex_doc_dictionary_t
 
 // Help System
 unsigned int hex_doc_hash(const char *str);
-void hex_add_doc(hex_doc_dictionary_t *dict, hex_doc_entry_t entry);
-const hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *symbol);
+void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *description, const char *input, const char *output);
+hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *symbol);
+hex_doc_dictionary_t hex_create_docs();
+void hex_print_help(hex_doc_dictionary_t *docs);
+void hex_print_doc(hex_doc_entry_t *doc);
 
 // Free data
 void hex_free_element(hex_context_t *ctx, hex_item_t element);

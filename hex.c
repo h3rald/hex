@@ -441,8 +441,9 @@ unsigned int hex_doc_hash(const char *str)
 }
 
 // Insert a DocEntry into the hash table
-void hex_doc(hex_doc_dictionary_t *dict, hex_doc_entry_t doc)
+void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *description, const char *input, const char *output)
 {
+    hex_doc_entry_t doc = {.name = name, .description = description, .signature.input = input, .signature.output = output};
     unsigned int index = hex_doc_hash(doc.name);
     // Handle collisions using linear probing
     while (dict->entries[index].name != NULL)
@@ -453,7 +454,7 @@ void hex_doc(hex_doc_dictionary_t *dict, hex_doc_entry_t doc)
 }
 
 // Lookup a DocEntry by name
-const hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *name)
+hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *name)
 {
     unsigned int index = hex_doc_hash(name);
     unsigned int start_index = index; // Save the starting index for detection of loops
@@ -470,6 +471,76 @@ const hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *name)
         }
     }
     return NULL; // Not found
+}
+
+hex_doc_dictionary_t hex_create_docs()
+{
+    hex_doc_dictionary_t docs;
+    hex_doc(&docs, "!=", "-", "-", "-");
+    hex_doc(&docs, "%%", "-", "-", "-");
+    hex_doc(&docs, "&", "-", "-", "-");
+    hex_doc(&docs, "*", "-", "-", "-");
+    hex_doc(&docs, "+", "-", "-", "-");
+    hex_doc(&docs, "-", "-", "-", "-");
+    hex_doc(&docs, "/", "-", "-", "-");
+    hex_doc(&docs, "<", "-", "-", "-");
+    hex_doc(&docs, "<<", "-", "-", "-");
+    hex_doc(&docs, "<=", "-", "-", "-");
+    hex_doc(&docs, "==", "-", "-", "-");
+    hex_doc(&docs, ">", "-", "-", "-");
+    hex_doc(&docs, ">=", "-", "-", "-");
+    hex_doc(&docs, ">>", "-", "-", "-");
+    hex_doc(&docs, "^", "-", "-", "-");
+    hex_doc(&docs, "and", "-", "-", "-");
+    hex_doc(&docs, "append", "-", "-", "-");
+    hex_doc(&docs, "args", "-", "-", "-");
+    hex_doc(&docs, "cat", "-", "-", "-");
+    hex_doc(&docs, "clear", "-", "-", "-");
+    hex_doc(&docs, "dec", "-", "-", "-");
+    hex_doc(&docs, "dup", "-", "-", "-");
+    hex_doc(&docs, "each", "-", "-", "-");
+    hex_doc(&docs, "error", "-", "-", "-");
+    hex_doc(&docs, "eval", "-", "-", "-");
+    hex_doc(&docs, "exec", "-", "-", "-");
+    hex_doc(&docs, "exit", "-", "-", "-");
+    hex_doc(&docs, "filter", "-", "-", "-");
+    hex_doc(&docs, "free", "-", "-", "-");
+    hex_doc(&docs, "get", "-", "-", "-");
+    hex_doc(&docs, "gets", "-", "-", "-");
+    hex_doc(&docs, "hex", "-", "-", "-");
+    hex_doc(&docs, "i", "-", "-", "-");
+    hex_doc(&docs, "if", "-", "-", "-");
+    hex_doc(&docs, "index", "-", "-", "-");
+    hex_doc(&docs, "insert", "-", "-", "-");
+    hex_doc(&docs, "int", "-", "-", "-");
+    hex_doc(&docs, "join", "-", "-", "-");
+    hex_doc(&docs, "len", "-", "-", "-");
+    hex_doc(&docs, "map", "-", "-", "-");
+    hex_doc(&docs, "not", "-", "-", "-");
+    hex_doc(&docs, "or", "-", "-", "-");
+    hex_doc(&docs, "pop", "-", "-", "-");
+    hex_doc(&docs, "print", "-", "-", "-");
+    hex_doc(&docs, "puts", "-", "-", "-");
+    hex_doc(&docs, "q", "-", "-", "-");
+    hex_doc(&docs, "read", "-", "-", "-");
+    hex_doc(&docs, "replace", "-", "-", "-");
+    hex_doc(&docs, "run", "-", "-", "-");
+    hex_doc(&docs, "slice", "-", "-", "-");
+    hex_doc(&docs, "split", "-", "-", "-");
+    hex_doc(&docs, "stack", "-", "-", "-");
+    hex_doc(&docs, "store", "-", "-", "-");
+    hex_doc(&docs, "str", "-", "-", "-");
+    hex_doc(&docs, "swap", "-", "-", "-");
+    hex_doc(&docs, "try", "-", "-", "-");
+    hex_doc(&docs, "type", "-", "-", "-");
+    hex_doc(&docs, "warn", "-", "-", "-");
+    hex_doc(&docs, "when", "-", "-", "-");
+    hex_doc(&docs, "while", "-", "-", "-");
+    hex_doc(&docs, "write", "-", "-", "-");
+    hex_doc(&docs, "xor", "-", "-", "-");
+    hex_doc(&docs, "|", "-", "-", "-");
+    hex_doc(&docs, "~", "-", "-", "-");
+    return docs;
 }
 
 ////////////////////////////////////////
@@ -3910,6 +3981,22 @@ void hex_process_stdin(hex_context_t *ctx)
     hex_interpret(ctx, buffer, "<stdin>", 1, 1);
 }
 
+void hex_print_help(hex_doc_dictionary_t *docs)
+{
+    printf("   _*_ _\n");
+    printf("  / \\hex\\*\n");
+    printf(" *\\_/_/_/ v%s\n", HEX_VERSION);
+    printf("      *\n");
+    (void)(docs);
+}
+
+void hex_print_doc(hex_doc_entry_t *doc)
+{
+    printf("  Symbol '%s'\n", doc->name);
+    printf("  %s => %s\n", doc->signature.input, doc->signature.output);
+    printf("  %s\n", doc->description);
+}
+
 ////////////////////////////////////////
 // Main Program                       //
 ////////////////////////////////////////
@@ -3925,10 +4012,11 @@ int main(int argc, char *argv[])
     ctx.argv = argv;
 
     hex_register_symbols(&ctx);
+    hex_doc_dictionary_t docs = hex_create_docs();
 
     if (argc > 1)
     {
-
+        int help = 0;
         for (int i = 1; i < argc; i++)
         {
             char *arg = strdup(argv[i]);
@@ -3942,17 +4030,46 @@ int main(int argc, char *argv[])
                 ctx.settings.debugging_enabled = 1;
                 printf("*** Debug mode enabled ***\n");
             }
+            else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0))
+            {
+                help = 1;
+            }
             else
             {
-                // Process a file
-                char *fileContent = hex_read_file(&ctx, arg);
-                if (!fileContent)
+                if (help)
                 {
-                    return 1;
+                    // Lookup symbol
+                    hex_doc_entry_t *doc = hex_get_doc(&docs, arg);
+                    help = 0;
+                    if (doc)
+                    {
+                        hex_print_doc(doc);
+                        return 0;
+                    }
+                    else
+                    {
+                        fprintf(stderr, "Symbol '%s' does not exist.\n", arg);
+                        return 1;
+                    }
                 }
-                hex_interpret(&ctx, fileContent, arg, 1, 1);
-                return 0;
+                else
+                {
+                    // Process a file
+                    char *fileContent = hex_read_file(&ctx, arg);
+                    if (!fileContent)
+                    {
+                        return 1;
+                    }
+                    hex_interpret(&ctx, fileContent, arg, 1, 1);
+                    return 0;
+                }
             }
+        }
+        if (help)
+        {
+            // TODO print help
+            hex_print_help(&docs);
+            return 0;
         }
     }
     if (!isatty(fileno(stdin)))
