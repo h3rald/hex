@@ -6,7 +6,6 @@
 #define PUSH(ctx, x) hex_push(ctx, x)
 
 // Global variables
-char HEX_ERROR[256] = "";
 hex_registry_entry_t HEX_REGISTRY[HEX_REGISTRY_SIZE];
 int HEX_REGISTRY_COUNT = 0;
 
@@ -85,7 +84,6 @@ hex_context_t hex_init()
     hex_context_t context;
     context.argc = 0;
     context.argv = NULL;
-    context.error = NULL;
     context.registry.size = 0;
     context.stack.top = -1;
     context.stack_trace.start = 0;
@@ -396,11 +394,11 @@ void hex_error(hex_context_t *ctx, const char *format, ...)
 {
     va_list args;
     va_start(args, format);
-    vsnprintf(HEX_ERROR, sizeof(HEX_ERROR), format, args);
+    vsnprintf(ctx->error, sizeof(ctx->error), format, args);
     if (ctx->settings.errors_enabled)
     {
         fprintf(stderr, "[error] ");
-        fprintf(stderr, "%s\n", HEX_ERROR);
+        fprintf(stderr, "%s\n", ctx->error);
     }
     va_end(args);
 }
@@ -3234,8 +3232,8 @@ int hex_symbol_error(hex_context_t *ctx)
 {
     (void)(ctx);
 
-    char *message = strdup(HEX_ERROR);
-    HEX_ERROR[0] = '\0';
+    char *message = strdup(ctx->error);
+    ctx->error[0] = '\0';
     return hex_push_string(ctx, message);
 }
 
@@ -3266,8 +3264,8 @@ int hex_symbol_try(hex_context_t *ctx)
     else
     {
         char prevError[256];
-        strncpy(prevError, HEX_ERROR, sizeof(HEX_ERROR));
-        HEX_ERROR[0] = '\0';
+        strncpy(prevError, ctx->error, sizeof(ctx->error));
+        ctx->error[0] = '\0';
 
         ctx->settings.errors_enabled = 0;
         for (int i = 0; i < tryBlock.quotationSize; i++)
@@ -3282,7 +3280,7 @@ int hex_symbol_try(hex_context_t *ctx)
         }
         ctx->settings.errors_enabled = 1;
 
-        if (strcmp(HEX_ERROR, ""))
+        if (strcmp(ctx->error, ""))
         {
             for (int i = 0; i < catchBlock.quotationSize; i++)
             {
@@ -3295,7 +3293,7 @@ int hex_symbol_try(hex_context_t *ctx)
             }
         }
 
-        strncpy(HEX_ERROR, prevError, sizeof(HEX_ERROR));
+        strncpy(ctx->error, prevError, sizeof(ctx->error));
     }
     return 0;
 }

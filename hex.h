@@ -115,7 +115,7 @@ typedef struct hex_context_t
     hex_registry_t registry;
     hex_stack_trace_t stack_trace;
     hex_settings_t settings;
-    char *error;
+    char error[256];
     int argc;
     char **argv;
 } hex_context_t;
