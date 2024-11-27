@@ -89,7 +89,6 @@ typedef struct hex_stack_trace_t
     int size;  // Current number of elements in the buffer
 } hex_stack_trace_t;
 
-// TODO: refactor and use this
 typedef struct hex_stack_t
 {
     hex_item_t entries[HEX_STACK_SIZE];
@@ -103,7 +102,6 @@ typedef struct hex_registry_t
     int size;
 } hex_registry_t;
 
-// TODO: refactor and use this
 typedef struct hex_settings_t
 {
     int debugging_enabled;
@@ -111,7 +109,6 @@ typedef struct hex_settings_t
     int stack_trace_enabled;
 } hex_settings_t;
 
-// TODO: refactor and use this
 typedef struct hex_context_t
 {
     hex_stack_t stack;
@@ -126,9 +123,9 @@ typedef struct hex_context_t
 // Functions
 
 hex_context_t hex_init();
-void hex_free_element(hex_item_t element);
+void hex_free_element(hex_context_t *ctx, hex_item_t element);
 void hex_free_token(hex_token_t *token);
-void hex_free_list(hex_item_t **quotation, int size);
+void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size);
 
 int hex_valid_user_symbol(const char *symbol);
 int hex_valid_native_symbol(const char *symbol);
@@ -137,24 +134,24 @@ void hex_set_native_symbol(const char *name, int (*func)());
 int hex_get_symbol(const char *key, hex_item_t *result);
 
 void hex_error(const char *format, ...);
-void hex_debug(const char *format, ...);
-void hex_debug_element(const char *message, hex_item_t element);
+void hex_debug(hex_context_t *ctx, char *format, ...);
+void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t element);
 void hex_print_element(FILE *stream, hex_item_t element);
 void add_to_stack_trace(hex_token_t *token);
 char *hex_type(hex_item_type_t type);
 
-int hex_push(hex_item_t element);
-int hex_push_int(int value);
-int hex_push_string(const char *value);
-int hex_push_quotation(hex_item_t **quotation, int size);
-int hex_push_symbol(hex_token_t *token);
-hex_item_t hex_pop();
+int hex_push(hex_context_t *ctx, hex_item_t element);
+int hex_push_int(hex_context_t *ctx, int value);
+int hex_push_string(hex_context_t *ctx, const char *value);
+int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size);
+int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
+hex_item_t hex_pop(hex_context_t *ctx);
 
 char *hex_process_string(const char *value);
 
 hex_token_t *hex_next_token(const char **input, hex_file_position_t *position);
 
-void print_stack_trace();
+void print_stack_trace(hex_context_t *ctx);
 
 char *hex_itoa(int num, int base);
 char *hex_itoa_dec(int num);
@@ -237,7 +234,7 @@ void hex_handle_sigint(int sig);
 char *hex_read_file(const char *filename);
 
 int32_t hex_parse_integer(const char *hex_str);
-int hex_parse_quotation(const char **input, hex_item_t *result, hex_file_position_t *position);
+int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position);
 int hex_interpret(hex_context_t *ctx, char *code, char *filename, int line, int column);
 
 #endif // HEX_H
