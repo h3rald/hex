@@ -138,9 +138,8 @@ typedef struct hex_context_t
 } hex_context_t;
 
 // Help System
-unsigned int hex_doc_hash(const char *str);
 void hex_doc(hex_doc_dictionary_t *docs, const char *name, const char *description, const char *input, const char *output);
-hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *docs, const char *symbol);
+int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *result);
 void hex_create_docs(hex_doc_dictionary_t *docs);
 void hex_print_help(hex_doc_dictionary_t *docs);
 void hex_print_doc(hex_doc_entry_t *doc);
@@ -152,7 +151,7 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size);
 
 // Symbol management
 int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol);
-int hex_valid_native_symbol(const char *symbol);
+int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol);
 int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int native);
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)());
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);

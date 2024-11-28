@@ -5,72 +5,6 @@
 #define FREE(ctx, x) hex_free_element(ctx, x)
 #define PUSH(ctx, x) hex_push(ctx, x)
 
-static char *HEX_NATIVE_SYMBOLS_LIST[] = {
-    "store",
-    "free",
-    "type",
-    "i",
-    "eval",
-    "puts",
-    "warn",
-    "print",
-    "gets",
-    "+",
-    "-",
-    "*",
-    "/",
-    "%",
-    "&",
-    "|",
-    "^",
-    "~",
-    "<<",
-    ">>",
-    "int",
-    "str",
-    "dec",
-    "hex",
-    "==",
-    "!=",
-    ">",
-    "<",
-    ">=",
-    "<=",
-    "and",
-    "or",
-    "not",
-    "xor",
-    "cat",
-    "slice",
-    "len",
-    "get",
-    "insert",
-    "index",
-    "join",
-    "split",
-    "replace",
-    "read",
-    "write",
-    "append",
-    "args",
-    "exit",
-    "exec",
-    "run",
-    "if",
-    "when",
-    "while",
-    "each",
-    "error",
-    "try",
-    "q",
-    "map",
-    "filter",
-    "swap",
-    "dup",
-    "stack",
-    "clear",
-    "pop"};
-
 ////////////////////////////////////////
 // Registry Implementation            //
 ////////////////////////////////////////
@@ -428,20 +362,6 @@ void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t eleme
 // Help System                        //
 ////////////////////////////////////////
 
-// Hash function (simple djb2 hash)
-
-unsigned int hex_doc_hash(const char *str)
-{
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *str++))
-    {
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
-    }
-    return hash & (HEX_NATIVE_SYMBOLS - 1); // Use bitwise AND for better distribution
-}
-
-// Insert a DocEntry into the hash table
 void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *description, const char *input, const char *output)
 {
     hex_doc_entry_t doc = {.name = name, .description = description, .input = input, .output = output};
@@ -450,24 +370,17 @@ void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *descripti
     dict->size++;
 }
 
-// Lookup a DocEntry by name
-hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *name)
+int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *result)
 {
-    unsigned int index = hex_doc_hash(name);
-    unsigned int start_index = index; // Save the starting index for detection of loops
-    while (dict->entries[index].name != NULL)
+    for (int i = 0; i < docs->size; i++)
     {
-        if (strcmp(dict->entries[index].name, name) == 0)
+        if (strcmp(docs->entries[i].name, key) == 0)
         {
-            return &dict->entries[index];
-        }
-        index = (index + 1) % HEX_NATIVE_SYMBOLS;
-        if (index == start_index)
-        {
-            break; // Avoid infinite loops
+            *result = docs->entries[i];
+            return 1;
         }
     }
-    return NULL; // Not found
+    return 0;
 }
 
 void hex_create_docs(hex_doc_dictionary_t *docs)
@@ -697,7 +610,7 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         token->value = (char *)malloc(len + 1);
         strncpy(token->value, start, len);
         token->value[len] = '\0';
-        if (hex_valid_native_symbol(token->value) || hex_valid_user_symbol(ctx, token->value))
+        if (hex_valid_native_symbol(ctx, token->value) || hex_valid_user_symbol(ctx, token->value))
         {
             token->type = HEX_TOKEN_SYMBOL;
         }
@@ -723,11 +636,12 @@ void hex_free_token(hex_token_t *token)
     }
 }
 
-int hex_valid_native_symbol(const char *symbol)
+int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol)
 {
-    for (size_t i = 0; i < sizeof(HEX_NATIVE_SYMBOLS_LIST) / sizeof(HEX_NATIVE_SYMBOLS_LIST[0]); i++)
+    hex_doc_entry_t doc;
+    for (size_t i = 0; i < HEX_NATIVE_SYMBOLS; i++)
     {
-        if (strcmp(symbol, HEX_NATIVE_SYMBOLS_LIST[i]) == 0)
+        if (hex_get_doc(&ctx->docs, symbol, &doc))
         {
             return 1;
         }
@@ -792,7 +706,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            if (hex_valid_native_symbol(token->value))
+            if (hex_valid_native_symbol(ctx, token->value))
             {
                 element->type = HEX_TYPE_NATIVE_SYMBOL;
                 hex_item_t value;
@@ -4035,11 +3949,12 @@ int main(int argc, char *argv[])
                 if (help)
                 {
                     // Lookup symbol
-                    hex_doc_entry_t *doc = hex_get_doc(&ctx.docs, arg);
+                    hex_doc_entry_t doc;
+                    hex_get_doc(&ctx.docs, arg, &doc);
                     help = 0;
-                    if (doc)
+                    if (doc.name != NULL)
                     {
-                        hex_print_doc(doc);
+                        hex_print_doc(&doc);
                         return 0;
                     }
                     else
