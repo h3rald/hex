@@ -697,12 +697,16 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         {
             element->type = HEX_TYPE_INTEGER;
             element->data.intValue = hex_parse_integer(token->value);
+            quotation[size] = element;
+            size++;
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
             char *processedStr = hex_process_string(ctx, token->value);
             element->type = HEX_TYPE_STRING;
             element->data.strValue = strdup(processedStr);
+            quotation[size] = element;
+            size++;
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
@@ -730,6 +734,8 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             }
             token->position.filename = strdup(position->filename);
             element->token = token;
+            quotation[size] = element;
+            size++;
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
@@ -740,6 +746,8 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
                 hex_free_list(ctx, quotation, size);
                 return 1;
             }
+            quotation[size] = element;
+            size++;
         }
         else if (token->type == HEX_TOKEN_COMMENT)
         {
@@ -752,9 +760,6 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             hex_free_list(ctx, quotation, size);
             return 1;
         }
-
-        quotation[size] = element;
-        size++;
     }
 
     if (balanced != 0)
