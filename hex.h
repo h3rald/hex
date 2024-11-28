@@ -104,6 +104,20 @@ typedef struct hex_registry_t
     int size;
 } hex_registry_t;
 
+typedef struct hex_doc_entry_t
+{
+    const char *name;
+    const char *description;
+    const char *input;
+    const char *output;
+} hex_doc_entry_t;
+
+typedef struct hex_doc_dictionary_t
+{
+    hex_doc_entry_t entries[64];
+    int size;
+} hex_doc_dictionary_t;
+
 typedef struct hex_settings_t
 {
     int debugging_enabled;
@@ -117,34 +131,17 @@ typedef struct hex_context_t
     hex_registry_t registry;
     hex_stack_trace_t stack_trace;
     hex_settings_t settings;
+    hex_doc_dictionary_t docs;
     char error[256];
     int argc;
     char **argv;
 } hex_context_t;
 
-typedef struct hex_signature_t
-{
-    const char *input;
-    const char *output;
-} hex_signature_t;
-
-typedef struct hex_doc_entry_t
-{
-    const char *name;
-    const char *description;
-    hex_signature_t signature;
-} hex_doc_entry_t;
-
-typedef struct hex_doc_dictionary_t
-{
-    hex_doc_entry_t entries[64];
-} hex_doc_dictionary_t;
-
 // Help System
 unsigned int hex_doc_hash(const char *str);
-void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *description, const char *input, const char *output);
-hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *dict, const char *symbol);
-hex_doc_dictionary_t hex_create_docs();
+void hex_doc(hex_doc_dictionary_t *docs, const char *name, const char *description, const char *input, const char *output);
+hex_doc_entry_t *hex_get_doc(hex_doc_dictionary_t *docs, const char *symbol);
+void hex_create_docs(hex_doc_dictionary_t *docs);
 void hex_print_help(hex_doc_dictionary_t *docs);
 void hex_print_doc(hex_doc_entry_t *doc);
 
