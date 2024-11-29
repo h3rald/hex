@@ -164,9 +164,14 @@ void hex_print_item(FILE *stream, hex_item_t item);
 void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token);
 void print_stack_trace(hex_context_t *ctx);
 
+// Item constructors
+hex_item_t hex_string_item(hex_context_t *ctx, const char *value);
+hex_item_t hex_integer_item(hex_context_t *ctx, int value);
+hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, int size);
+
 // Stack management
 int hex_push(hex_context_t *ctx, hex_item_t item);
-int hex_push_int(hex_context_t *ctx, int value);
+int hex_push_integer(hex_context_t *ctx, int value);
 int hex_push_string(hex_context_t *ctx, const char *value);
 int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size);
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
