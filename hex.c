@@ -2,7 +2,7 @@
 
 // Common operations
 #define POP(ctx, x) hex_item_t x = hex_pop(ctx)
-#define FREE(ctx, x) hex_free_element(ctx, x)
+#define FREE(ctx, x) hex_free_item(ctx, x)
 #define PUSH(ctx, x) hex_push(ctx, x)
 
 ////////////////////////////////////////
@@ -112,7 +112,7 @@ int hex_push(hex_context_t *ctx, hex_item_t element)
         hex_error(ctx, "Stack overflow");
         return 1;
     }
-    hex_debug_element(ctx, "PUSH", element);
+    hex_debug_item(ctx, "PUSH", element);
     int result = 0;
     if (element.type == HEX_TYPE_USER_SYMBOL)
     {
@@ -130,7 +130,7 @@ int hex_push(hex_context_t *ctx, hex_item_t element)
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
     {
-        hex_debug_element(ctx, "CALL", element);
+        hex_debug_item(ctx, "CALL", element);
         add_to_stack_trace(ctx, element.token);
         result = element.data.fnValue(ctx);
     }
@@ -140,11 +140,11 @@ int hex_push(hex_context_t *ctx, hex_item_t element)
     }
     if (result == 0)
     {
-        hex_debug_element(ctx, "DONE", element);
+        hex_debug_item(ctx, "DONE", element);
     }
     else
     {
-        hex_debug_element(ctx, "FAIL", element);
+        hex_debug_item(ctx, "FAIL", element);
     }
     return result;
 }
@@ -251,31 +251,24 @@ hex_item_t hex_pop(hex_context_t *ctx)
         hex_error(ctx, "Insufficient elements on the stack");
         return (hex_item_t){.type = HEX_TYPE_INVALID};
     }
-    hex_debug_element(ctx, " POP", ctx->stack.entries[ctx->stack.top]);
+    hex_debug_item(ctx, " POP", ctx->stack.entries[ctx->stack.top]);
     return ctx->stack.entries[ctx->stack.top--];
 }
 
 // Free a stack element
-void hex_free_element(hex_context_t *ctx, hex_item_t element)
+void hex_free_item(hex_context_t *ctx, hex_item_t element)
 {
-    hex_debug_element(ctx, "FREE", element);
+    hex_debug_item(ctx, "FREE", element);
     if (element.type == HEX_TYPE_STRING && element.data.strValue != NULL)
     {
-        free(element.data.strValue);
+        /// FC Evaluate if strings actually need to be freed (segfaults in quotations)
+        // free(element.data.strValue);
         element.data.strValue = NULL;
     }
+
     else if (element.type == HEX_TYPE_QUOTATION && element.data.quotationValue != NULL)
     {
-        for (int i = 0; i < element.quotationSize; i++)
-        {
-            if (element.data.quotationValue[i] != NULL)
-            {
-                FREE(ctx, *element.data.quotationValue[i]);
-                // free(element.data.quotationValue[i]);
-                // element.data.quotationValue[i] = NULL;
-            }
-        }
-        free(element.data.quotationValue);
+        hex_free_list(ctx, element.data.quotationValue, element.quotationSize);
         element.data.quotationValue = NULL;
     }
     else if (element.type == HEX_TYPE_NATIVE_SYMBOL && element.token->value != NULL)
@@ -290,7 +283,6 @@ void hex_free_element(hex_context_t *ctx, hex_item_t element)
 
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size)
 {
-    hex_error(ctx, "An error occurred while filtering the list");
     for (int i = 0; i < size; i++)
     {
         FREE(ctx, *quotation[i]);
@@ -306,7 +298,7 @@ void hex_error(hex_context_t *ctx, const char *format, ...)
     va_list args;
     va_start(args, format);
     vsnprintf(ctx->error, sizeof(ctx->error), format, args);
-    if (ctx->settings.errors_enabled)
+    if (ctx->settings.errors_enabled) /// FC
     {
         fprintf(stderr, "[error] ");
         fprintf(stderr, "%s\n", ctx->error);
@@ -348,12 +340,12 @@ char *hex_type(hex_item_type_t type)
     }
 }
 
-void hex_debug_element(hex_context_t *ctx, const char *message, hex_item_t element)
+void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t element)
 {
     if (ctx->settings.debugging_enabled)
     {
         fprintf(stdout, "*** %s: ", message);
-        hex_print_element(stdout, element);
+        hex_print_item(stdout, element);
         fprintf(stdout, "\n");
     }
 }
@@ -869,7 +861,7 @@ char *hex_itoa_hex(int num)
     return hex_itoa(num, 16);
 }
 
-void hex_raw_print_element(FILE *stream, hex_item_t element)
+void hex_raw_print_item(FILE *stream, hex_item_t element)
 {
     switch (element.type)
     {
@@ -891,7 +883,7 @@ void hex_raw_print_element(FILE *stream, hex_item_t element)
             {
                 fprintf(stream, " ");
             }
-            hex_print_element(stream, *element.data.quotationValue[i]);
+            hex_print_item(stream, *element.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
@@ -905,7 +897,7 @@ void hex_raw_print_element(FILE *stream, hex_item_t element)
     }
 }
 
-void hex_print_element(FILE *stream, hex_item_t element)
+void hex_print_item(FILE *stream, hex_item_t element)
 {
     switch (element.type)
     {
@@ -972,7 +964,7 @@ void hex_print_element(FILE *stream, hex_item_t element)
             {
                 fprintf(stream, " ");
             }
-            hex_print_element(stream, *element.data.quotationValue[i]);
+            hex_print_item(stream, *element.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
@@ -1139,7 +1131,7 @@ int hex_symbol_puts(hex_context_t *ctx)
         FREE(ctx, element);
         return 1;
     }
-    hex_raw_print_element(stdout, element);
+    hex_raw_print_item(stdout, element);
     printf("\n");
     return 0;
 }
@@ -1154,7 +1146,7 @@ int hex_symbol_warn(hex_context_t *ctx)
         FREE(ctx, element);
         return 1;
     }
-    hex_raw_print_element(stderr, element);
+    hex_raw_print_item(stderr, element);
     printf("\n");
     return 0;
 }
@@ -1169,7 +1161,7 @@ int hex_symbol_print(hex_context_t *ctx)
         FREE(ctx, element);
         return 1;
     }
-    hex_raw_print_element(stdout, element);
+    hex_raw_print_item(stdout, element);
     return 0;
 }
 
@@ -2245,9 +2237,13 @@ int hex_symbol_insert(hex_context_t *ctx)
         size_t value_len = strlen(value.data.strValue);
         size_t pos = index.data.intValue;
 
-        if (pos > target_len)
+        if (index.data.intValue < 0 || pos > target_len)
         {
-            pos = target_len; // Append at the end if position exceeds target length
+            hex_error(ctx, "Index out of range");
+            FREE(ctx, target);
+            FREE(ctx, index);
+            FREE(ctx, value);
+            return 1;
         }
 
         char *new_str = (char *)malloc(target_len + value_len + 1);
@@ -2282,7 +2278,7 @@ int hex_symbol_insert(hex_context_t *ctx)
     {
         if (index.data.intValue < 0 || index.data.intValue > target.quotationSize)
         {
-            hex_error(ctx, "Invalid index for quotation");
+            hex_error(ctx, "Index out of range");
             FREE(ctx, target);
             FREE(ctx, index);
             FREE(ctx, value);
@@ -3280,10 +3276,7 @@ int hex_symbol_try(hex_context_t *ctx)
         {
             if (hex_push(ctx, *tryBlock.data.quotationValue[i]) != 0)
             {
-                FREE(ctx, catchBlock);
-                FREE(ctx, tryBlock);
                 ctx->settings.errors_enabled = 1;
-                return 1;
             }
         }
         ctx->settings.errors_enabled = 1;
@@ -3866,8 +3859,8 @@ void hex_repl(hex_context_t *ctx)
         // Print the top element of the stack
         if (ctx->stack.top >= 0)
         {
-            hex_print_element(stdout, ctx->stack.entries[ctx->stack.top]);
-            // hex_print_element(stdout, HEX_STACK[HEX_TOP]);
+            hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+            // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
             printf("\n");
         }
     }
