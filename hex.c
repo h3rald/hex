@@ -3880,19 +3880,20 @@ void hex_print_help()
     printf("   _*_ _\n"
            "  / \\hex\\*\n"
            " *\\_/_/_/ v%s - A minimalist, concatenative programming language.\n"
-           "      *   (c) 2024 Fabio Cevasco\n"
-           "\n"
-           "Usage:\n"
+           "      *   (c) 2024 Fabio Cevasco\n",
+           HEX_VERSION);
+    printf("\n"
+           "USAGE\n"
            "  hex [options] [file]\n"
            "\n"
-           "Arguments:\n"
+           "ARGUMENTS\n"
            "  file            A .hex file to interpret\n"
            "\n"
-           "Options:\n"
-           "  -d, --debug     Enable debug mode.\n",
+           "OPTIONS\n"
+           "  -d, --debug     Enable debug mode.\n"
            "  -h, --help      Display this help message.\n"
            "  -m --manual     Display the manual.\n"
-           "  -v, --version   Display hex version.\n" HEX_VERSION);
+           "  -v, --version   Display hex version.\n\n");
 }
 
 void hex_print_docs(hex_doc_dictionary_t *docs)
