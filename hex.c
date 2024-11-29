@@ -383,7 +383,7 @@ void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t item)
 // Help System                        //
 ////////////////////////////////////////
 
-void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *description, const char *input, const char *output)
+void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *input, const char *output, const char *description)
 {
     hex_doc_entry_t doc = {.name = name, .description = description, .input = input, .output = output};
     // No overflow check as the dictionary is fixed size
@@ -406,70 +406,70 @@ int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *re
 
 void hex_create_docs(hex_doc_dictionary_t *docs)
 {
-    hex_doc(docs, "store", "-", "-", "-");
-    hex_doc(docs, "free", "-", "-", "-");
-    hex_doc(docs, "type", "-", "-", "-");
-    hex_doc(docs, "i", "-", "-", "-");
-    hex_doc(docs, "eval", "-", "-", "-");
-    hex_doc(docs, "puts", "-", "-", "-");
-    hex_doc(docs, "warn", "-", "-", "-");
-    hex_doc(docs, "print", "-", "-", "-");
-    hex_doc(docs, "gets", "-", "-", "-");
-    hex_doc(docs, "+", "-", "-", "-");
-    hex_doc(docs, "-", "-", "-", "-");
-    hex_doc(docs, "*", "-", "-", "-");
-    hex_doc(docs, "/", "-", "-", "-");
-    hex_doc(docs, "%", "-", "-", "-");
-    hex_doc(docs, "&", "-", "-", "-");
-    hex_doc(docs, "|", "-", "-", "-");
-    hex_doc(docs, "^", "-", "-", "-");
-    hex_doc(docs, "~", "-", "-", "-");
-    hex_doc(docs, "<<", "-", "-", "-");
-    hex_doc(docs, ">>", "-", "-", "-");
-    hex_doc(docs, "int", "-", "-", "-");
-    hex_doc(docs, "str", "-", "-", "-");
-    hex_doc(docs, "dec", "-", "-", "-");
-    hex_doc(docs, "hex", "-", "-", "-");
-    hex_doc(docs, "==", "-", "-", "-");
-    hex_doc(docs, "!=", "-", "-", "-");
-    hex_doc(docs, ">", "-", "-", "-");
-    hex_doc(docs, "<", "-", "-", "-");
-    hex_doc(docs, ">=", "-", "-", "-");
-    hex_doc(docs, "<=", "-", "-", "-");
-    hex_doc(docs, "and", "-", "-", "-");
-    hex_doc(docs, "or", "-", "-", "-");
-    hex_doc(docs, "not", "-", "-", "-");
-    hex_doc(docs, "xor", "-", "-", "-");
-    hex_doc(docs, "cat", "-", "-", "-");
-    hex_doc(docs, "slice", "-", "-", "-");
-    hex_doc(docs, "len", "-", "-", "-");
-    hex_doc(docs, "get", "-", "-", "-");
-    hex_doc(docs, "insert", "-", "-", "-");
-    hex_doc(docs, "index", "-", "-", "-");
-    hex_doc(docs, "join", "-", "-", "-");
-    hex_doc(docs, "split", "-", "-", "-");
-    hex_doc(docs, "replace", "-", "-", "-");
-    hex_doc(docs, "read", "-", "-", "-");
-    hex_doc(docs, "write", "-", "-", "-");
-    hex_doc(docs, "append", "-", "-", "-");
-    hex_doc(docs, "args", "-", "-", "-");
-    hex_doc(docs, "exit", "-", "-", "-");
-    hex_doc(docs, "exec", "-", "-", "-");
-    hex_doc(docs, "run", "-", "-", "-");
-    hex_doc(docs, "if", "-", "-", "-");
-    hex_doc(docs, "when", "-", "-", "-");
-    hex_doc(docs, "while", "-", "-", "-");
-    hex_doc(docs, "each", "-", "-", "-");
-    hex_doc(docs, "error", "-", "-", "-");
-    hex_doc(docs, "try", "-", "-", "-");
-    hex_doc(docs, "q", "-", "-", "-");
-    hex_doc(docs, "map", "-", "-", "-");
-    hex_doc(docs, "filter", "-", "-", "-");
-    hex_doc(docs, "swap", "-", "-", "-");
-    hex_doc(docs, "dup", "-", "-", "-");
-    hex_doc(docs, "stack", "-", "-", "-");
-    hex_doc(docs, "clear", "-", "-", "-");
-    hex_doc(docs, "pop", "-", "-", "-");
+    hex_doc(docs, "store", "a s", "", "Stores 'a' as symbol 's'.");
+    hex_doc(docs, "free", "s", "", "Deletes user symbol 's'.");
+    hex_doc(docs, "type", "a", "s", "Pushes the data type of 'a' on the stack.");
+    hex_doc(docs, "i", "q", "*", "Pushes each item of 'q' on the stack.");
+    hex_doc(docs, "eval", "s", "", "Evaluates 's' as a hex program.");
+    hex_doc(docs, "puts", "a", "", "Prints 'a' and a new line to standard output.");
+    hex_doc(docs, "warn", "a", "", "Prints 'a' and a new line to standard error.");
+    hex_doc(docs, "print", "a", "", "Prints 'a' to standard output.");
+    hex_doc(docs, "gets", "", "s", "Gets a string from standard input.");
+    hex_doc(docs, "+", "i1 12", "i", "Adds two integers.");
+    hex_doc(docs, "-", "i1 12", "i", "Subtracts 'i2' from 'i1'.");
+    hex_doc(docs, "*", "i1 12", "i", "Multiplies two integers.");
+    hex_doc(docs, "/", "i1 12", "i", "Divides 'i1' by 'i2'.");
+    hex_doc(docs, "%", "i1 12", "i", "Calculates the modulo of 'i1' divided by 'i2'.");
+    hex_doc(docs, "&", "i1 12", "i", "Calculates the bitwise AND of two integers.");
+    hex_doc(docs, "|", "i1 12", "i", "Calculates the bitwise OR of two integers.");
+    hex_doc(docs, "^", "i1 12", "i", "Calculates the bitwise XOR of two integers.");
+    hex_doc(docs, "~", "i", "i", "Calculates the bitwise NOT of an integer.");
+    hex_doc(docs, "<<", "i1 12", "i", "Shifts 'i1' by 'i2' bytes to the left.");
+    hex_doc(docs, ">>", "i1 12", "i", "Shifts 'i1' by 'i2' bytes to the right.");
+    hex_doc(docs, "int", "(i|s)", "i", "Converts a string to a hex integer.");
+    hex_doc(docs, "str", "(i|s)", "s", "Converts a hex integer to a string.");
+    hex_doc(docs, "dec", "i", "s", "Converts a hex integer to a decimal string.");
+    hex_doc(docs, "hex", "s", "i", "Converter a decimal string to a hex integer.");
+    hex_doc(docs, "==", "i1 12", "i", "Returns 0x1 if 'i1' == 'i2', 0x0 otherwise.");
+    hex_doc(docs, "!=", "i1 12", "i", "Returns 0x1 if 'i1' != 'i2', 0x0 otherwise.");
+    hex_doc(docs, ">", "i1 12", "i", "Returns 0x1 if 'i1' > 'i2', 0x0 otherwise.");
+    hex_doc(docs, "<", "i1 12", "i", "Returns 0x1 if 'i1' < 'i2', 0x0 otherwise.");
+    hex_doc(docs, ">=", "i1 12", "i", "Returns 0x1 if 'i1' >= 'i2', 0x0 otherwise.");
+    hex_doc(docs, "<=", "i1 i2", "i", "Returns 0x1 if 'i1' <= 'i2', 0x0 otherwise.");
+    hex_doc(docs, "and", "i1 i2", "i", "Returns 0x1 if both 'i1' and 'i2' are not 0x0.");
+    hex_doc(docs, "or", "i1 i2", "i", "Returns 0x1 if either 'i1' or 'i2' are not 0x0.");
+    hex_doc(docs, "not", "i", "i", "Returns 0x1 if 'i' is 0x0, 0x0 otherwise.");
+    hex_doc(docs, "xor", "i1 i2", "i", "Returns 0x1 if only one item is not 0x0.");
+    hex_doc(docs, "cat", "(s s|q q) ", "(s|q)", "Concatenates two quotations or two strings.");
+    hex_doc(docs, "slice", "(s i1 i2|q i1 i2)", "(s|q)", "Removes 'i2' items 's' or 'q' at index 'i1'.");
+    hex_doc(docs, "len", "(s|q)", "i ", "Returns the length of 's' or 'q'.");
+    hex_doc(docs, "get", "(s|q)", "a", "Gets the item at position 'i' in 's' or 'q'.");
+    hex_doc(docs, "insert", "(s a i|q a i)", "(s|q)", "Inserts 'a' at position 'i'.");
+    hex_doc(docs, "index", "(s a|q a)", "i", "Returns the index of 'a' within 's' or 'q'.");
+    hex_doc(docs, "join", "q s", "s", "Joins the strings in 'q' using separator 's'.");
+    hex_doc(docs, "split", "s1 s2", "q", "Splits 's1' using separator 's2'.");
+    hex_doc(docs, "replace", "s1 s2 s3", "s", "Replaces 's2' with 's3' within 's1'.");
+    hex_doc(docs, "read", "s", "s", "Returns the contents of the specified file.");
+    hex_doc(docs, "write", "s1 s2", "s", "Writes 's2' to the file 's1'.");
+    hex_doc(docs, "append", "s1 s2", "s", "Appends 's2' to the file 's1'.");
+    hex_doc(docs, "args", "", "q", "Returns the program arguments.");
+    hex_doc(docs, "exit", "i", "", "Exits the program with exit code 'i'.");
+    hex_doc(docs, "exec", "s", "", "Executes the command 's'.");
+    hex_doc(docs, "run", "s", "q", "Executes 's' and returns code, stdout, stderr.");
+    hex_doc(docs, "if", "q q q", "*", "If 'q1' is not 0x0, executes 'q2', else 'q3'.");
+    hex_doc(docs, "when", "q1 q2", "*", "If 'q1' is not 0x0, executes 'q2'.");
+    hex_doc(docs, "while", "q1 q2", "*", "While 'q1' is not 0x0, executes 'q2'.");
+    hex_doc(docs, "each", "q1 q2", "*", "Executes 'q2' for each item of 'q1'.");
+    hex_doc(docs, "error", "", "s", "Returns the last error message.");
+    hex_doc(docs, "try", "q1 q2", "*", "If 'q1' fails, executes 'q2'.");
+    hex_doc(docs, "q", "a", "q", "Wraps 'a' in a quotation.");
+    hex_doc(docs, "map", "q1 q2", "q", "Applies 'q2' to 'q1' items and returns results.");
+    hex_doc(docs, "filter", "q1 q2", "q", "Filters 'q2' by applying 'q1'.");
+    hex_doc(docs, "swap", "a1 a2", "a2 a1", "Swaps 'a2' with 'a1'.");
+    hex_doc(docs, "dup", "a", "a a", "Duplicates 'a'.");
+    hex_doc(docs, "stack", "", "q", "Returns the contents of the stack.");
+    hex_doc(docs, "clear", "", "", "Clears the stack.");
+    hex_doc(docs, "pop", "a", "", "Removes the top item from the stack.");
 }
 
 ////////////////////////////////////////
@@ -839,6 +839,25 @@ void print_stack_trace(hex_context_t *ctx)
 ////////////////////////////////////////
 // Helper Functions                   //
 ////////////////////////////////////////
+
+static void hex_rpad(const char *str, int total_length)
+{
+    int len = strlen(str);
+    printf("%s", str);
+    for (int i = len; i < total_length; i++)
+    {
+        printf(" ");
+    }
+}
+static void hex_lpad(const char *str, int total_length)
+{
+    int len = strlen(str);
+    for (int i = len; i < total_length; i++)
+    {
+        printf(" ");
+    }
+    printf("%s", str);
+}
 
 char *hex_itoa(int num, int base)
 {
@@ -3856,20 +3875,67 @@ void hex_process_stdin(hex_context_t *ctx)
     hex_interpret(ctx, buffer, "<stdin>", 1, 1);
 }
 
-void hex_print_help(hex_doc_dictionary_t *docs)
+void hex_print_help()
 {
-    printf("   _*_ _\n");
-    printf("  / \\hex\\*\n");
-    printf(" *\\_/_/_/ v%s\n", HEX_VERSION);
-    printf("      *\n");
-    (void)(docs);
+    printf("   _*_ _\n"
+           "  / \\hex\\*\n"
+           " *\\_/_/_/ v%s - A minimalist, concatenative programming language.\n"
+           "      *   (c) 2024 Fabio Cevasco\n"
+           "\n"
+           "Usage:\n"
+           "  hex [options] [file]\n"
+           "\n"
+           "Arguments:\n"
+           "  file            A .hex file to interpret\n"
+           "\n"
+           "Options:\n"
+           "  -d, --debug     Enable debug mode.\n",
+           "  -h, --help      Display this help message.\n"
+           "  -m --manual     Display the manual.\n"
+           "  -v, --version   Display hex version.\n" HEX_VERSION);
 }
 
-void hex_print_doc(hex_doc_entry_t *doc)
+void hex_print_docs(hex_doc_dictionary_t *docs)
 {
-    printf("  Symbol '%s'\n", doc->name);
-    printf("  %s => %s\n", doc->input, doc->output);
-    printf("  %s\n", doc->description);
+    printf("   _*_ _\n"
+           "  / \\hex\\*\n"
+           " *\\_/_/_/ v%s - A minimalist, concatenative programming language.\n"
+           "      *   (c) 2024 Fabio Cevasco\n",
+           HEX_VERSION);
+    printf("\n"
+           "BASICS\n"
+           "  hex is a minimalist, concatenative programming language that supports only integers,\n"
+           "  strings, symbols, and quotations (lists).\n"
+           "\n"
+           "  It uses a stack-based execution model and provides 64 native symbols for stack\n"
+           "  manipulation, arithmetic operations, control flow, reading and writing\n"
+           "  (standard input/output/error and files), executing external processes, and more.\n"
+           "\n"
+           "  Symbols and literals are separated by whitespace and can be grouped in quotations using\n"
+           "  parentheses.\n"
+           "  Symbols are evaluated only when they are pushed on the stack, therefore, symbols inside\n"
+           "  quotations are not evaluated until the contents of the quotation are pushed on the stack.\n"
+           "  You can define your own symbols using the symbol 'store' and execute a quotation with 'i'.\n"
+           "\n"
+           "  Oh, and of course all integers are hexadecimal! ;)\n"
+           "\n"
+           "SYMBOLS\n"
+           "  +---------+----------------------------+-------------------------------------------------+\n"
+           "  | Symbol  | Input -> Output            | Description                                     |\n"
+           "  +---------+----------------------------+-------------------------------------------------+\n");
+    for (int i = 0; i < docs->size; i++)
+    {
+        printf("  | ");
+        hex_rpad(docs->entries[i].name, 7);
+        printf(" | ");
+        hex_lpad(docs->entries[i].input, 17);
+        printf(" -> ");
+        hex_rpad(docs->entries[i].output, 5);
+        printf(" | ");
+        hex_rpad(docs->entries[i].description, 47);
+        printf(" |\n");
+    }
+    printf("  +---------+----------------------------+-------------------------------------------------+\n");
 }
 
 ////////////////////////////////////////
@@ -3889,7 +3955,6 @@ int main(int argc, char *argv[])
     hex_register_symbols(&ctx);
     hex_create_docs(&ctx.docs);
 
-    int help = 0;
     if (argc > 1)
     {
         for (int i = 1; i < argc; i++)
@@ -3907,45 +3972,26 @@ int main(int argc, char *argv[])
             }
             else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0))
             {
-                help = 1;
+                hex_print_help(&ctx.docs);
+                return 0;
+            }
+            else if ((strcmp(arg, "-m") == 0 || strcmp(arg, "--manual") == 0))
+            {
+                hex_print_docs(&ctx.docs);
+                return 0;
             }
             else
             {
-                if (help)
+
+                // Process a file
+                char *fileContent = hex_read_file(&ctx, arg);
+                if (!fileContent)
                 {
-                    // Lookup symbol
-                    hex_doc_entry_t doc;
-                    hex_get_doc(&ctx.docs, arg, &doc);
-                    help = 0;
-                    if (doc.name != NULL)
-                    {
-                        hex_print_doc(&doc);
-                        return 0;
-                    }
-                    else
-                    {
-                        fprintf(stderr, "Symbol '%s' does not exist.\n", arg);
-                        return 1;
-                    }
+                    return 1;
                 }
-                else
-                {
-                    // Process a file
-                    char *fileContent = hex_read_file(&ctx, arg);
-                    if (!fileContent)
-                    {
-                        return 1;
-                    }
-                    hex_interpret(&ctx, fileContent, arg, 1, 1);
-                    return 0;
-                }
+                hex_interpret(&ctx, fileContent, arg, 1, 1);
+                return 0;
             }
-        }
-        if (help)
-        {
-            // TODO print help
-            hex_print_help(&ctx.docs);
-            return 0;
         }
     }
     if (!isatty(fileno(stdin)))

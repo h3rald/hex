@@ -141,8 +141,8 @@ typedef struct hex_context_t
 void hex_doc(hex_doc_dictionary_t *docs, const char *name, const char *description, const char *input, const char *output);
 int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *result);
 void hex_create_docs(hex_doc_dictionary_t *docs);
-void hex_print_help(hex_doc_dictionary_t *docs);
-void hex_print_doc(hex_doc_entry_t *doc);
+void hex_print_help();
+void hex_print_docs(hex_doc_dictionary_t *docs);
 
 // Free data
 void hex_free_item(hex_context_t *ctx, hex_item_t item);
