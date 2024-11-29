@@ -37,7 +37,7 @@ int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
 // Add a symbol to the registry
 int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int native)
 {
-    (void)(ctx);
+
     if (!native && hex_valid_user_symbol(ctx, key) == 0)
     {
         return 1;
@@ -74,11 +74,11 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int na
 // Register a native symbol
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 {
-    hex_item_t funcElement;
-    funcElement.type = HEX_TYPE_NATIVE_SYMBOL;
-    funcElement.data.fnValue = func;
+    hex_item_t funcItem;
+    funcItem.type = HEX_TYPE_NATIVE_SYMBOL;
+    funcItem.data.fnValue = func;
 
-    if (hex_set_symbol(ctx, name, funcElement, 1) != 0)
+    if (hex_set_symbol(ctx, name, funcItem, 1) != 0)
     {
         hex_error(ctx, "Error: Failed to register native symbol '%s'", name);
     }
@@ -87,7 +87,7 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 // Get a symbol value from the registry
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
-    (void)(ctx);
+
     for (int i = 0; i < ctx->registry.size; i++)
     {
         if (strcmp(ctx->registry.entries[i].key, key) == 0)
@@ -104,55 +104,55 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 ////////////////////////////////////////
 
 // Push functions
-int hex_push(hex_context_t *ctx, hex_item_t element)
+int hex_push(hex_context_t *ctx, hex_item_t item)
 {
-    (void)(ctx);
+
     if (ctx->stack.top >= HEX_STACK_SIZE - 1)
     {
         hex_error(ctx, "Stack overflow");
         return 1;
     }
-    hex_debug_item(ctx, "PUSH", element);
+    hex_debug_item(ctx, "PUSH", item);
     int result = 0;
-    if (element.type == HEX_TYPE_USER_SYMBOL)
+    if (item.type == HEX_TYPE_USER_SYMBOL)
     {
         hex_item_t value;
-        if (hex_get_symbol(ctx, element.token->value, &value))
+        if (hex_get_symbol(ctx, item.token->value, &value))
         {
             result = PUSH(ctx, value);
         }
         else
         {
-            hex_error(ctx, "Undefined user symbol: %s", element.token->value);
+            hex_error(ctx, "Undefined user symbol: %s", item.token->value);
             FREE(ctx, value);
             result = 1;
         }
     }
-    else if (element.type == HEX_TYPE_NATIVE_SYMBOL)
+    else if (item.type == HEX_TYPE_NATIVE_SYMBOL)
     {
-        hex_debug_item(ctx, "CALL", element);
-        add_to_stack_trace(ctx, element.token);
-        result = element.data.fnValue(ctx);
+        hex_debug_item(ctx, "CALL", item);
+        add_to_stack_trace(ctx, item.token);
+        result = item.data.fnValue(ctx);
     }
     else
     {
-        ctx->stack.entries[++ctx->stack.top] = element;
+        ctx->stack.entries[++ctx->stack.top] = item;
     }
     if (result == 0)
     {
-        hex_debug_item(ctx, "DONE", element);
+        hex_debug_item(ctx, "DONE", item);
     }
     else
     {
-        hex_debug_item(ctx, "FAIL", element);
+        hex_debug_item(ctx, "FAIL", item);
     }
     return result;
 }
 
 int hex_push_int(hex_context_t *ctx, int value)
 {
-    hex_item_t element = {.type = HEX_TYPE_INTEGER, .data.intValue = value};
-    return PUSH(ctx, element);
+    hex_item_t item = {.type = HEX_TYPE_INTEGER, .data.intValue = value};
+    return PUSH(ctx, item);
 }
 
 char *hex_process_string(hex_context_t *ctx, const char *value)
@@ -217,14 +217,14 @@ char *hex_process_string(hex_context_t *ctx, const char *value)
 int hex_push_string(hex_context_t *ctx, const char *value)
 {
     char *processedStr = hex_process_string(ctx, value);
-    hex_item_t element = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
-    return PUSH(ctx, element);
+    hex_item_t item = {.type = HEX_TYPE_STRING, .data.strValue = processedStr};
+    return PUSH(ctx, item);
 }
 
 int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size)
 {
-    hex_item_t element = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
-    return PUSH(ctx, element);
+    hex_item_t item = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
+    return PUSH(ctx, item);
 }
 
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
@@ -248,36 +248,36 @@ hex_item_t hex_pop(hex_context_t *ctx)
 {
     if (ctx->stack.top < 0)
     {
-        hex_error(ctx, "Insufficient elements on the stack");
+        hex_error(ctx, "Insufficient items on the stack");
         return (hex_item_t){.type = HEX_TYPE_INVALID};
     }
     hex_debug_item(ctx, " POP", ctx->stack.entries[ctx->stack.top]);
     return ctx->stack.entries[ctx->stack.top--];
 }
 
-// Free a stack element
-void hex_free_item(hex_context_t *ctx, hex_item_t element)
+// Free a stack item
+void hex_free_item(hex_context_t *ctx, hex_item_t item)
 {
-    hex_debug_item(ctx, "FREE", element);
-    if (element.type == HEX_TYPE_STRING && element.data.strValue != NULL)
+    hex_debug_item(ctx, "FREE", item);
+    if (item.type == HEX_TYPE_STRING && item.data.strValue != NULL)
     {
         /// FC Evaluate if strings actually need to be freed (segfaults in quotations)
-        // free(element.data.strValue);
-        element.data.strValue = NULL;
+        // free(item.data.strValue);
+        item.data.strValue = NULL;
     }
 
-    else if (element.type == HEX_TYPE_QUOTATION && element.data.quotationValue != NULL)
+    else if (item.type == HEX_TYPE_QUOTATION && item.data.quotationValue != NULL)
     {
-        hex_free_list(ctx, element.data.quotationValue, element.quotationSize);
-        element.data.quotationValue = NULL;
+        hex_free_list(ctx, item.data.quotationValue, item.quotationSize);
+        item.data.quotationValue = NULL;
     }
-    else if (element.type == HEX_TYPE_NATIVE_SYMBOL && element.token->value != NULL)
+    else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->value != NULL)
     {
-        hex_free_token(element.token);
+        hex_free_token(item.token);
     }
-    else if (element.type == HEX_TYPE_USER_SYMBOL && element.token->value != NULL)
+    else if (item.type == HEX_TYPE_USER_SYMBOL && item.token->value != NULL)
     {
-        hex_free_token(element.token);
+        hex_free_token(item.token);
     }
 }
 
@@ -340,12 +340,12 @@ char *hex_type(hex_item_type_t type)
     }
 }
 
-void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t element)
+void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t item)
 {
     if (ctx->settings.debugging_enabled)
     {
         fprintf(stdout, "*** %s: ", message);
-        hex_print_item(stdout, element);
+        hex_print_item(stdout, item);
         fprintf(stdout, "\n");
     }
 }
@@ -684,33 +684,33 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             }
         }
 
-        hex_item_t *element = (hex_item_t *)malloc(sizeof(hex_item_t));
+        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (token->type == HEX_TOKEN_INTEGER)
         {
-            element->type = HEX_TYPE_INTEGER;
-            element->data.intValue = hex_parse_integer(token->value);
-            quotation[size] = element;
+            item->type = HEX_TYPE_INTEGER;
+            item->data.intValue = hex_parse_integer(token->value);
+            quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
             char *processedStr = hex_process_string(ctx, token->value);
-            element->type = HEX_TYPE_STRING;
-            element->data.strValue = strdup(processedStr);
-            quotation[size] = element;
+            item->type = HEX_TYPE_STRING;
+            item->data.strValue = strdup(processedStr);
+            quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
             if (hex_valid_native_symbol(ctx, token->value))
             {
-                element->type = HEX_TYPE_NATIVE_SYMBOL;
+                item->type = HEX_TYPE_NATIVE_SYMBOL;
                 hex_item_t value;
                 if (hex_get_symbol(ctx, token->value, &value))
                 {
-                    element->token = token;
-                    element->type = HEX_TYPE_NATIVE_SYMBOL;
-                    element->data.fnValue = value.data.fnValue;
+                    item->token = token;
+                    item->type = HEX_TYPE_NATIVE_SYMBOL;
+                    item->data.fnValue = value.data.fnValue;
                 }
                 else
                 {
@@ -722,23 +722,23 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             }
             else
             {
-                element->type = HEX_TYPE_USER_SYMBOL;
+                item->type = HEX_TYPE_USER_SYMBOL;
             }
             token->position.filename = strdup(position->filename);
-            element->token = token;
-            quotation[size] = element;
+            item->token = token;
+            quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            element->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(ctx, input, element, position) != 0)
+            item->type = HEX_TYPE_QUOTATION;
+            if (hex_parse_quotation(ctx, input, item, position) != 0)
             {
                 hex_free_token(token);
                 hex_free_list(ctx, quotation, size);
                 return 1;
             }
-            quotation[size] = element;
+            quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_COMMENT)
@@ -780,13 +780,13 @@ void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token)
 
     if (ctx->stack_trace.size < HEX_STACK_TRACE_SIZE)
     {
-        // Buffer is not full; add element
+        // Buffer is not full; add item
         ctx->stack_trace.entries[index] = *token;
         ctx->stack_trace.size++;
     }
     else
     {
-        // Buffer is full; overwrite the oldest element
+        // Buffer is full; overwrite the oldest item
         ctx->stack_trace.entries[index] = *token;
         ctx->stack_trace.start = (ctx->stack_trace.start + 1) % HEX_STACK_TRACE_SIZE;
     }
@@ -861,29 +861,29 @@ char *hex_itoa_hex(int num)
     return hex_itoa(num, 16);
 }
 
-void hex_raw_print_item(FILE *stream, hex_item_t element)
+void hex_raw_print_item(FILE *stream, hex_item_t item)
 {
-    switch (element.type)
+    switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%xx", element.data.intValue);
+        fprintf(stream, "0x%xx", item.data.intValue);
         break;
     case HEX_TYPE_STRING:
-        fprintf(stream, "%s", element.data.strValue);
+        fprintf(stream, "%s", item.data.strValue);
         break;
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", element.token->value);
+        fprintf(stream, "%s", item.token->value);
         break;
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (int i = 0; i < element.quotationSize; i++)
+        for (int i = 0; i < item.quotationSize; i++)
         {
             if (i > 0)
             {
                 fprintf(stream, " ");
             }
-            hex_print_item(stream, *element.data.quotationValue[i]);
+            hex_print_item(stream, *item.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
@@ -897,17 +897,17 @@ void hex_raw_print_item(FILE *stream, hex_item_t element)
     }
 }
 
-void hex_print_item(FILE *stream, hex_item_t element)
+void hex_print_item(FILE *stream, hex_item_t item)
 {
-    switch (element.type)
+    switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", element.data.intValue);
+        fprintf(stream, "0x%x", item.data.intValue);
         break;
 
     case HEX_TYPE_STRING:
         fprintf(stream, "\"");
-        for (char *c = element.data.strValue; *c != '\0'; c++)
+        for (char *c = item.data.strValue; *c != '\0'; c++)
         {
             switch (*c)
             {
@@ -953,18 +953,18 @@ void hex_print_item(FILE *stream, hex_item_t element)
 
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", element.token->value);
+        fprintf(stream, "%s", item.token->value);
         break;
 
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (int i = 0; i < element.quotationSize; i++)
+        for (int i = 0; i < item.quotationSize; i++)
         {
             if (i > 0)
             {
                 fprintf(stream, " ");
             }
-            hex_print_item(stream, *element.data.quotationValue[i]);
+            hex_print_item(stream, *item.data.quotationValue[i]);
         }
         fprintf(stream, ")");
         break;
@@ -991,7 +991,7 @@ int hex_is_symbol(hex_token_t *token, char *value)
 
 int hex_symbol_store(hex_context_t *ctx)
 {
-    (void)(ctx);
+
     POP(ctx, name);
     if (name.type == HEX_TYPE_INVALID)
     {
@@ -1024,23 +1024,22 @@ int hex_symbol_store(hex_context_t *ctx)
 
 int hex_symbol_free(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (element.type != HEX_TYPE_STRING)
+    if (item.type != HEX_TYPE_STRING)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         hex_error(ctx, "Variable name must be a string");
         return 1;
     }
     for (int i = 0; i < ctx->registry.size; i++)
     {
-        if (strcmp(ctx->registry.entries[i].key, element.data.strValue) == 0)
+        if (strcmp(ctx->registry.entries[i].key, item.data.strValue) == 0)
         {
             free(ctx->registry.entries[i].key);
             FREE(ctx, ctx->registry.entries[i].value);
@@ -1049,50 +1048,48 @@ int hex_symbol_free(hex_context_t *ctx)
                 ctx->registry.entries[j] = ctx->registry.entries[j + 1];
             }
             ctx->registry.size--;
-            FREE(ctx, element);
+            FREE(ctx, item);
             return 0;
         }
     }
-    FREE(ctx, element);
+    FREE(ctx, item);
     return 0;
 }
 
 int hex_symbol_type(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    return hex_push_string(ctx, hex_type(element.type));
+    return hex_push_string(ctx, hex_type(item.type));
 }
 
 // Evaluation symbols
 
 int hex_symbol_i(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (element.type != HEX_TYPE_QUOTATION)
+    if (item.type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "'i' symbol requires a quotation");
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    for (int i = 0; i < element.quotationSize; i++)
+    for (int i = 0; i < item.quotationSize; i++)
     {
-        if (hex_push(ctx, *element.data.quotationValue[i]) != 0)
+        if (hex_push(ctx, *item.data.quotationValue[i]) != 0)
         {
-            FREE(ctx, element);
+            FREE(ctx, item);
             return 1;
         }
     }
@@ -1102,72 +1099,67 @@ int hex_symbol_i(hex_context_t *ctx)
 // evaluate a string
 int hex_symbol_eval(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (element.type != HEX_TYPE_STRING)
+    if (item.type != HEX_TYPE_STRING)
     {
         hex_error(ctx, "'eval' symbol requires a string");
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    return hex_interpret(ctx, element.data.strValue, "<eval>", 1, 1);
+    return hex_interpret(ctx, item.data.strValue, "<eval>", 1, 1);
 }
 
 // IO Symbols
 
 int hex_symbol_puts(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    hex_raw_print_item(stdout, element);
+    hex_raw_print_item(stdout, item);
     printf("\n");
     return 0;
 }
 
 int hex_symbol_warn(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    hex_raw_print_item(stderr, element);
+    hex_raw_print_item(stderr, item);
     printf("\n");
     return 0;
 }
 
 int hex_symbol_print(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    hex_raw_print_item(stdout, element);
+    hex_raw_print_item(stdout, item);
     return 0;
 }
 
 int hex_symbol_gets(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
 
@@ -1214,7 +1206,6 @@ int hex_symbol_add(hex_context_t *ctx)
 
 int hex_symbol_subtract(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1241,7 +1232,6 @@ int hex_symbol_subtract(hex_context_t *ctx)
 
 int hex_symbol_multiply(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1268,7 +1258,6 @@ int hex_symbol_multiply(hex_context_t *ctx)
 
 int hex_symbol_divide(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1300,7 +1289,6 @@ int hex_symbol_divide(hex_context_t *ctx)
 
 int hex_symbol_modulo(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1333,7 +1321,6 @@ int hex_symbol_modulo(hex_context_t *ctx)
 
 int hex_symbol_bitand(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, right);
     if (right.type == HEX_TYPE_INVALID)
@@ -1360,7 +1347,6 @@ int hex_symbol_bitand(hex_context_t *ctx)
 
 int hex_symbol_bitor(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, right);
     if (right.type == HEX_TYPE_INVALID)
@@ -1387,7 +1373,6 @@ int hex_symbol_bitor(hex_context_t *ctx)
 
 int hex_symbol_bitxor(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, right);
     if (right.type == HEX_TYPE_INVALID)
@@ -1414,7 +1399,6 @@ int hex_symbol_bitxor(hex_context_t *ctx)
 
 int hex_symbol_shiftleft(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, right);
     if (right.type == HEX_TYPE_INVALID)
@@ -1441,7 +1425,6 @@ int hex_symbol_shiftleft(hex_context_t *ctx)
 
 int hex_symbol_shiftright(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, right);
     if (right.type == HEX_TYPE_INVALID)
@@ -1468,20 +1451,19 @@ int hex_symbol_shiftright(hex_context_t *ctx)
 
 int hex_symbol_bitnot(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (element.type == HEX_TYPE_INTEGER)
+    if (item.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_int(ctx, ~element.data.intValue);
+        return hex_push_int(ctx, ~item.data.intValue);
     }
     hex_error(ctx, "'~' symbol requires one integer");
-    FREE(ctx, element);
+    FREE(ctx, item);
     return 1;
 }
 
@@ -1489,7 +1471,6 @@ int hex_symbol_bitnot(hex_context_t *ctx)
 
 int hex_symbol_int(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
@@ -1518,7 +1499,6 @@ int hex_symbol_int(hex_context_t *ctx)
 
 int hex_symbol_str(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
@@ -1547,7 +1527,6 @@ int hex_symbol_str(hex_context_t *ctx)
 
 int hex_symbol_dec(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
@@ -1566,20 +1545,19 @@ int hex_symbol_dec(hex_context_t *ctx)
 
 int hex_symbol_hex(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (element.type == HEX_TYPE_STRING)
+    if (item.type == HEX_TYPE_STRING)
     {
-        return hex_push_int(ctx, strtol(element.data.strValue, NULL, 10));
+        return hex_push_int(ctx, strtol(item.data.strValue, NULL, 10));
     }
     hex_error(ctx, "'hex' symbol requires a string representing a decimal integer");
-    FREE(ctx, element);
+    FREE(ctx, item);
     return 1;
 }
 
@@ -1630,7 +1608,6 @@ int hex_equal(hex_item_t a, hex_item_t b)
 
 int hex_symbol_equal(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1657,7 +1634,6 @@ int hex_symbol_equal(hex_context_t *ctx)
 
 int hex_symbol_notequal(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1684,7 +1660,6 @@ int hex_symbol_notequal(hex_context_t *ctx)
 
 int hex_symbol_greater(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1715,7 +1690,6 @@ int hex_symbol_greater(hex_context_t *ctx)
 
 int hex_symbol_less(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1746,7 +1720,6 @@ int hex_symbol_less(hex_context_t *ctx)
 
 int hex_symbol_greaterequal(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1777,7 +1750,6 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
 
 int hex_symbol_lessequal(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1810,7 +1782,6 @@ int hex_symbol_lessequal(hex_context_t *ctx)
 
 int hex_symbol_and(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1837,7 +1808,6 @@ int hex_symbol_and(hex_context_t *ctx)
 
 int hex_symbol_or(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1864,7 +1834,6 @@ int hex_symbol_or(hex_context_t *ctx)
 
 int hex_symbol_not(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
@@ -1883,7 +1852,6 @@ int hex_symbol_not(hex_context_t *ctx)
 
 int hex_symbol_xor(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
@@ -1912,7 +1880,6 @@ int hex_symbol_xor(hex_context_t *ctx)
 
 int hex_symbol_cat(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, value);
     if (value.type == HEX_TYPE_INVALID)
@@ -1944,7 +1911,7 @@ int hex_symbol_cat(hex_context_t *ctx)
         }
         else
         {
-            // Append elements from the second quotation
+            // Append items from the second quotation
             for (size_t i = 0; i < (size_t)value.quotationSize; i++)
             {
                 newQuotation[list.quotationSize + i] = value.data.quotationValue[i];
@@ -1990,7 +1957,6 @@ int hex_symbol_cat(hex_context_t *ctx)
 
 int hex_symbol_slice(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, end);
     if (end.type == HEX_TYPE_INVALID)
@@ -2091,22 +2057,21 @@ int hex_symbol_slice(hex_context_t *ctx)
 
 int hex_symbol_len(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
     int result = 0;
-    if (element.type == HEX_TYPE_QUOTATION)
+    if (item.type == HEX_TYPE_QUOTATION)
     {
-        result = hex_push_int(ctx, element.quotationSize);
+        result = hex_push_int(ctx, item.quotationSize);
     }
-    else if (element.type == HEX_TYPE_STRING)
+    else if (item.type == HEX_TYPE_STRING)
     {
-        result = hex_push_int(ctx, strlen(element.data.strValue));
+        result = hex_push_int(ctx, strlen(item.data.strValue));
     }
     else
     {
@@ -2115,14 +2080,13 @@ int hex_symbol_len(hex_context_t *ctx)
     }
     if (result != 0)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
     }
     return result;
 }
 
 int hex_symbol_get(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, index);
     if (index.type == HEX_TYPE_INVALID)
@@ -2189,7 +2153,7 @@ int hex_symbol_get(hex_context_t *ctx)
 
 int hex_symbol_insert(hex_context_t *ctx)
 {
-    (void)(ctx);
+
     POP(ctx, index);
     if (index.type == HEX_TYPE_INVALID)
     {
@@ -2338,19 +2302,18 @@ int hex_symbol_insert(hex_context_t *ctx)
 
 int hex_symbol_index(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
     POP(ctx, list);
     if (list.type == HEX_TYPE_INVALID)
     {
         FREE(ctx, list);
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
     int result = -1;
@@ -2358,7 +2321,7 @@ int hex_symbol_index(hex_context_t *ctx)
     {
         for (int i = 0; i < list.quotationSize; i++)
         {
-            if (hex_equal(*list.data.quotationValue[i], element))
+            if (hex_equal(*list.data.quotationValue[i], item))
             {
                 result = i;
                 break;
@@ -2367,7 +2330,7 @@ int hex_symbol_index(hex_context_t *ctx)
     }
     else if (list.type == HEX_TYPE_STRING)
     {
-        char *ptr = strstr(list.data.strValue, element.data.strValue);
+        char *ptr = strstr(list.data.strValue, item.data.strValue);
         if (ptr)
         {
             result = ptr - list.data.strValue;
@@ -2377,7 +2340,7 @@ int hex_symbol_index(hex_context_t *ctx)
     {
         hex_error(ctx, "Symbol 'index' requires a quotation or a string");
         FREE(ctx, list);
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
     return hex_push_int(ctx, result);
@@ -2387,7 +2350,6 @@ int hex_symbol_index(hex_context_t *ctx)
 
 int hex_symbol_join(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, separator);
     if (separator.type == HEX_TYPE_INVALID)
@@ -2458,7 +2420,6 @@ int hex_symbol_join(hex_context_t *ctx)
 
 int hex_symbol_split(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, separator);
     if (separator.type == HEX_TYPE_INVALID)
@@ -2527,7 +2488,6 @@ int hex_symbol_split(hex_context_t *ctx)
 
 int hex_symbol_replace(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, replacement);
     if (replacement.type == HEX_TYPE_INVALID)
@@ -2599,7 +2559,6 @@ int hex_symbol_replace(hex_context_t *ctx)
 
 int hex_symbol_read(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, filename);
     if (filename.type == HEX_TYPE_INVALID)
@@ -2652,7 +2611,6 @@ int hex_symbol_read(hex_context_t *ctx)
 
 int hex_symbol_write(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, filename);
     if (filename.type == HEX_TYPE_INVALID)
@@ -2706,7 +2664,6 @@ int hex_symbol_write(hex_context_t *ctx)
 
 int hex_symbol_append(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, filename);
     if (filename.type == HEX_TYPE_INVALID)
@@ -2762,7 +2719,6 @@ int hex_symbol_append(hex_context_t *ctx)
 
 int hex_symbol_args(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     hex_item_t **quotation = (hex_item_t **)malloc(ctx->argc * sizeof(hex_item_t *));
     if (!quotation)
@@ -2789,28 +2745,26 @@ int hex_symbol_args(hex_context_t *ctx)
 
 int hex_symbol_exit(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (element.type != HEX_TYPE_INTEGER)
+    if (item.type != HEX_TYPE_INTEGER)
     {
         hex_error(ctx, "Exit status must be an integer");
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    int exit_status = element.data.intValue;
+    int exit_status = item.data.intValue;
     exit(exit_status);
     return 0; // This line will never be reached, but it's here to satisfy the return type
 }
 
 int hex_symbol_exec(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, command);
     if (command.type == HEX_TYPE_INVALID)
@@ -2838,7 +2792,6 @@ int hex_symbol_exec(hex_context_t *ctx)
 
 int hex_symbol_run(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, command);
     if (command.type == HEX_TYPE_INVALID)
@@ -3003,7 +2956,6 @@ int hex_symbol_run(hex_context_t *ctx)
 
 int hex_symbol_if(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, elseBlock);
     if (elseBlock.type == HEX_TYPE_INVALID)
@@ -3076,7 +3028,6 @@ int hex_symbol_if(hex_context_t *ctx)
 
 int hex_symbol_when(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, action);
     if (action.type == HEX_TYPE_INVALID)
@@ -3104,7 +3055,7 @@ int hex_symbol_when(hex_context_t *ctx)
             if (hex_push(ctx, *condition.data.quotationValue[i]) != 0)
             {
                 result = 1;
-                break; // Break if pushing the element failed
+                break; // Break if pushing the item failed
             }
         }
         POP(ctx, evalResult);
@@ -3130,7 +3081,6 @@ int hex_symbol_when(hex_context_t *ctx)
 
 int hex_symbol_while(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, action);
     if (action.type == HEX_TYPE_INVALID)
@@ -3186,7 +3136,6 @@ int hex_symbol_while(hex_context_t *ctx)
 
 int hex_symbol_each(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, action);
     if (action.type == HEX_TYPE_INVALID)
@@ -3234,7 +3183,6 @@ int hex_symbol_each(hex_context_t *ctx)
 
 int hex_symbol_error(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     char *message = strdup(ctx->error);
     ctx->error[0] = '\0';
@@ -3243,7 +3191,6 @@ int hex_symbol_error(hex_context_t *ctx)
 
 int hex_symbol_try(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, catchBlock);
     if (catchBlock.type == HEX_TYPE_INVALID)
@@ -3303,11 +3250,11 @@ int hex_symbol_try(hex_context_t *ctx)
 
 int hex_symbol_q(hex_context_t *ctx)
 {
-    (void)(ctx);
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
 
@@ -3315,18 +3262,18 @@ int hex_symbol_q(hex_context_t *ctx)
     if (!quotation)
     {
         hex_error(ctx, "Memory allocation failed");
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
 
-    *quotation = element;
+    *quotation = item;
 
     hex_item_t result;
     result.type = HEX_TYPE_QUOTATION;
     result.data.quotationValue = (hex_item_t **)malloc(sizeof(hex_item_t *));
     if (!result.data.quotationValue)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         free(quotation);
         hex_error(ctx, "Memory allocation failed");
         return 1;
@@ -3337,7 +3284,7 @@ int hex_symbol_q(hex_context_t *ctx)
 
     if (PUSH(ctx, result) != 0)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         free(quotation);
         free(result.data.quotationValue);
         return 1;
@@ -3348,7 +3295,6 @@ int hex_symbol_q(hex_context_t *ctx)
 
 int hex_symbol_map(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, action);
     if (action.type == HEX_TYPE_INVALID)
@@ -3415,7 +3361,6 @@ int hex_symbol_map(hex_context_t *ctx)
 
 int hex_symbol_filter(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, action);
     if (action.type == HEX_TYPE_INVALID)
@@ -3503,7 +3448,6 @@ int hex_symbol_filter(hex_context_t *ctx)
 
 int hex_symbol_swap(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
@@ -3535,25 +3479,23 @@ int hex_symbol_swap(hex_context_t *ctx)
 
 int hex_symbol_dup(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    if (element.type == HEX_TYPE_INVALID)
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, element);
+        FREE(ctx, item);
         return 1;
     }
-    if (PUSH(ctx, element) == 0 && PUSH(ctx, element) == 0)
+    if (PUSH(ctx, item) == 0 && PUSH(ctx, item) == 0)
     {
         return 0;
     }
-    FREE(ctx, element);
+    FREE(ctx, item);
     return 1;
 }
 
 int hex_symbol_stack(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack.top + 1) * sizeof(hex_item_t *));
     if (!quotation)
@@ -3587,7 +3529,6 @@ int hex_symbol_stack(hex_context_t *ctx)
 
 int hex_symbol_clear(hex_context_t *ctx)
 {
-    (void)(ctx);
 
     while (ctx->stack.top >= 0)
     {
@@ -3600,10 +3541,9 @@ int hex_symbol_clear(hex_context_t *ctx)
 
 int hex_symbol_pop(hex_context_t *ctx)
 {
-    (void)(ctx);
 
-    POP(ctx, element);
-    FREE(ctx, element);
+    POP(ctx, item);
+    FREE(ctx, item);
     return 0;
 }
 
@@ -3701,7 +3641,7 @@ hex_context_t hex_init()
 
 int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, int line, int column)
 {
-    (void)(ctx);
+
     const char *input = code;
     hex_file_position_t position = {filename, line, column};
     hex_token_t *token = hex_next_token(ctx, &input, &position);
@@ -3729,19 +3669,19 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            hex_item_t *quotationElement = (hex_item_t *)malloc(sizeof(hex_item_t));
-            if (hex_parse_quotation(ctx, &input, quotationElement, &position) != 0)
+            hex_item_t *quotationItem = (hex_item_t *)malloc(sizeof(hex_item_t));
+            if (hex_parse_quotation(ctx, &input, quotationItem, &position) != 0)
             {
                 hex_error(ctx, "Failed to parse quotation");
                 result = 1;
             }
             else
             {
-                hex_item_t **quotation = quotationElement->data.quotationValue;
-                int quotationSize = quotationElement->quotationSize;
+                hex_item_t **quotation = quotationItem->data.quotationValue;
+                int quotationSize = quotationItem->quotationSize;
                 result = hex_push_quotation(ctx, quotation, quotationSize);
             }
-            free(quotationElement);
+            free(quotationItem);
         }
 
         if (result != 0)
@@ -3834,7 +3774,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
 {
-    (void)(ctx);
+
     char line[1024];
 
     printf("   _*_ _\n");
@@ -3856,7 +3796,7 @@ void hex_repl(hex_context_t *ctx)
 
         // Tokenize and process the input
         hex_interpret(ctx, line, "<repl>", 1, 1);
-        // Print the top element of the stack
+        // Print the top item of the stack
         if (ctx->stack.top >= 0)
         {
             hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
@@ -3876,7 +3816,7 @@ void hex_handle_sigint(int sig)
 // Process piped input from stdin
 void hex_process_stdin(hex_context_t *ctx)
 {
-    (void)(ctx);
+
     char buffer[8192]; // Adjust buffer size as needed
     int bytesRead = fread(buffer, 1, sizeof(buffer) - 1, stdin);
     if (bytesRead == 0)

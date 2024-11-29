@@ -88,8 +88,8 @@ typedef struct hex_registry_entry
 typedef struct hex_stack_trace_t
 {
     hex_token_t entries[HEX_STACK_TRACE_SIZE];
-    int start; // Index of the oldest element
-    int size;  // Current number of elements in the buffer
+    int start; // Index of the oldest item
+    int size;  // Current number of items in the buffer
 } hex_stack_trace_t;
 
 typedef struct hex_stack_t
@@ -145,7 +145,7 @@ void hex_print_help(hex_doc_dictionary_t *docs);
 void hex_print_doc(hex_doc_entry_t *doc);
 
 // Free data
-void hex_free_item(hex_context_t *ctx, hex_item_t element);
+void hex_free_item(hex_context_t *ctx, hex_item_t item);
 void hex_free_token(hex_token_t *token);
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size);
 
@@ -159,13 +159,13 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
 // Errors and debugging
 void hex_error(hex_context_t *ctx, const char *format, ...);
 void hex_debug(hex_context_t *ctx, const char *format, ...);
-void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t element);
-void hex_print_item(FILE *stream, hex_item_t element);
+void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t item);
+void hex_print_item(FILE *stream, hex_item_t item);
 void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token);
 void print_stack_trace(hex_context_t *ctx);
 
 // Stack management
-int hex_push(hex_context_t *ctx, hex_item_t element);
+int hex_push(hex_context_t *ctx, hex_item_t item);
 int hex_push_int(hex_context_t *ctx, int value);
 int hex_push_string(hex_context_t *ctx, const char *value);
 int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size);
@@ -183,7 +183,7 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
 char *hex_itoa(int num, int base);
 char *hex_itoa_dec(int num);
 char *hex_itoa_hex(int num);
-void hex_raw_print_item(FILE *stream, hex_item_t element);
+void hex_raw_print_item(FILE *stream, hex_item_t item);
 int hex_is_symbol(hex_token_t *token, char *value);
 char *hex_type(hex_item_type_t type);
 
