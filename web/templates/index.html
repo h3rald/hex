@@ -48,12 +48,16 @@
     em {
       font-style: italic;
     }
+    
+    li {
+      margin: 0.5rem 0;
+    } 
     </style>
 </head>
 <body>
     <header>
      _*_ _
-    / \<h1>hex</h1>\* programming language
+    / \<h1><a href="/">hex</a></h1>\* programming language
    *\_/_/_/
         *
     </header>
@@ -65,8 +69,18 @@
       <a href="/about">About</a> 
     </nav>
     <article>
-<h2>Welcome</h2>
-Welcome to the <strong>hex</strong> programming language. 
+      <h2>Welcome</h2>
+      <p>Welcome to the <strong>hex</strong>      programming language.</p>    
+      <p><strong>hex</strong> is a minimalist, concatenative, stack-based and slightly-esoteric programming language written in a single .c file that can run on many platforms (including <a href="/play">the browser</a>) and can be used as an embedded languahe, to create small shell scripts, or simply to learn more about concatenative programming.</p>
+      <h2>Features</h2>
+      <ul>
+        <li>Support <strong>32bit integers</strong>, <em>written only in hexadecimal format</em>, both positive and negative (represented via <a href="https://en.wikipedia.org/wiki/Two%27s_complement">two's complement</a>), <strong>strings</strong>, and <strong>quotations</strong> (lists).</li>
+        <li><strong>64 native symbols</strong> implementing simple arithmetic, boolean logic, bitwise operations, comparison of integers, read/write from/to stdin/stdout/stderr, read and write files, execute external processes, work with quotations and strings, create and delete user symbols (variables), error handling, and manipulate the stack.</li>
+        <li>Fully <strong>homoiconic</strong> (everything is data).</li>
+        <li>Includes a simple <strong>REPL</strong>.</li>
+        <li>Includes an integrated <strong>help system</strong>.</li>
+      </ul>
+
     </article>
 
 </body>
