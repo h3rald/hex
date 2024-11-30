@@ -2618,7 +2618,7 @@ int hex_symbol_read(hex_context_t *ctx)
         FILE *file = fopen(filename.data.strValue, "r");
         if (!file)
         {
-            hex_error(ctx, "Could not open file: %s", filename.data.strValue);
+            hex_error(ctx, "Could not open file for reading: %s", filename.data.strValue);
             result = 1;
         }
         else
@@ -3973,7 +3973,7 @@ int main(int argc, char *argv[])
             }
             else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0))
             {
-                hex_print_help(&ctx.docs);
+                hex_print_help();
                 return 0;
             }
             else if ((strcmp(arg, "-m") == 0 || strcmp(arg, "--manual") == 0))

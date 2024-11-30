@@ -97,8 +97,20 @@
     ((0x1 0x2 0x3) 0x4 0x3 insert (0x1 0x2 0x3 0x4) ==)
     ;44
 
-    ;("this is a test" "is" index 0x6 ==)
+    ("this is a test" "is" index 0x2 ==)
     (("a" 0x1 "b") "b" index 0x2)
+    ("abc" "d" index 0xffffffff ==)
+    (("0" "0" "0" "0") "." join "0.0.0.0"==)
+    ;48
+
+    ("0.0.0.0" "." split ("0" "0" "0" "0") ==)
+    ("Hello, World!" "Hello" "Goodbye" replace "Goodbye, World!" ==)
+    ("test" "test.txt" write "test.txt" read "test" ==)
+    ("!" "test.txt" append "test.txt" read "test!" ==)
+    ;52
+
+    ("rm test.txt" exec 0x1)
+    
     
 ) "tests" store
 
