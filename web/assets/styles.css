@@ -1,0 +1,66 @@
+html {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+    line-height: 16px;
+}
+
+body {
+    margin: 1rem;
+    padding: 0;
+    font-family: Monospace;
+    font-size: 1rem;
+    background-color: black;
+    color: white;
+}
+
+h1,
+h2,
+h3 {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+header {
+    font-size: 120%;
+    margin: 0;
+}
+
+header h1 {
+    display: inline;
+    font-size: 100%;
+    font-weight: 400;
+    margin: 0;
+}
+
+footer {
+    font-size: 80%;
+    text-align: center;
+    margin: auto;
+}
+
+a {
+    color: lime;
+    text-decoration: underline;
+}
+
+a:visited {
+    color: limegreen;
+}
+
+a[href^=http] {
+    text-decoration-style: dashed;
+}
+
+strong {
+    font-weight: 600;
+}
+
+em {
+    font-style: italic;
+}
+
+li {
+    margin: 0.5rem 0;
+}

@@ -6,10 +6,22 @@ LDFLAGS ?=
 hex: hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
-.PHONY: clean, test, debug-test
+.PHONY: clean
 clean:
 	rm hex
+
+.PHONY: test
 test:
 	./hex tests.hex
+
+.PHONY: dtest
 dtest:
 	./hex -d tests.hex
+
+.PHONY: web
+web:
+	./hex web.hex
+
+.PHONY: dweb
+dweb:
+	./hex -d web.hex

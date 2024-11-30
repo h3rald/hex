@@ -1,0 +1,42 @@
+"web/assets" "d_assets" store
+"web/templates" "d_templates" store
+"web/contents" "d_contents" store
+"web/out" "d_out" store
+
+; Get all files from a directory
+("ls " swap cat run 0x1 get "\n" split) "ls" store
+
+; Get relevant files
+d_contents ls i "contents" store
+d_assets ls i "assets" store
+d_templates "/page.html" cat "t_page" store
+
+"*** Generating hex web site..." puts
+; Write contents
+contents
+(
+    "fn_content" store
+    "fn_content" ".html" "" replace "id_content" store
+    d_contents "/" fn_content cat cat read "content" store
+    t_page read "{{content}}" content replace "new_content" store
+    (fn_content "home.html" ==)
+        (d_out "/index.html" cat "dst_file" store) 
+        ((d_out id_content "index.html") "/" join "dst_file" store)
+    if
+    "  - Writing: " dst_file cat puts
+    new_content dst_file write
+) each
+
+; Write assets
+("mkdir -p " d_out "/assets") () map "" join exec
+assets
+(
+    "fn_asset" store
+    (d_out "assets" fn_asset) () map "/" join "dst_file" store
+    (d_assets fn_asset) () map "/" join "src_file" store
+    "  - Writing: " dst_file cat puts
+    ("cp" src_file dst_file) () map " " join exec  
+) each
+
+"*** Done!" puts
+

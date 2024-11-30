@@ -1,0 +1,27 @@
+<article>
+    <h2>Welcome</h2>
+    <p>Welcome to the <strong>hex</strong> programming language.</p>
+    <p><strong>hex</strong> is a tiny minimalist, concatenative, stack-based and slightly-esoteric programming language
+        that can run on many platforms (including <a href="/play">the browser</a>) and can be used as an embedded
+        language, to create shell scripts, or simply to learn more about concatenative programming.</p>
+    <p>Its syntax is heavily inspired by the <a href="https://min-lang.org">min</a> programming language, and features
+        space-separated tokens, no unnecessary punctuation characters, and round brackets to delimit lists.</p>
+    <h2>Features</h2>
+    <ul>
+        <li>Support <strong>32bit integers</strong>, <em>written only in hexadecimal format</em>, both positive and
+            negative (represented via <a href="https://en.wikipedia.org/wiki/Two%27s_complement">two's complement</a>),
+            <strong>strings</strong>, and <strong>quotations</strong> (lists).
+        </li>
+        <li><strong>64 native symbols</strong> implementing simple arithmetic, boolean logic, bitwise operations,
+            comparison of integers, read/write from/to stdin/stdout/stderr, read and write files, execute external
+            processes, work with quotations and strings, create and delete user symbols (variables), error handling, and
+            manipulate the stack.</li>
+        <li>Fully <strong>homoiconic</strong> (everything is data).</li>
+        <li>Includes a simple <strong>REPL</strong>.</li>
+        <li>Includes an integrated <strong>help system</strong>.</li>
+        <li>Implemented as <strong>a single <a href="https://github.com/h3rald/hex/blob/master/hex.c">.c file</a> and a
+                single <a href="https://github.com/h3rald/hex/blob/master/hex.h">.h file</a></strong>, making it easier
+            to
+            embed in other programs and port to different platforms.</li>
+    </ul>
+</article>
