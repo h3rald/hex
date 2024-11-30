@@ -16,12 +16,15 @@ d_templates "/page.html" cat "t_page" store
 contents
 (
     "fn_content" store
-    "fn_content" ".html" "" replace "id_content" store
+    fn_content ".html" "" replace "id_content" store
     d_contents "/" fn_content cat cat read "content" store
     t_page read "{{content}}" content replace "new_content" store
     (fn_content "home.html" ==)
         (d_out "/index.html" cat "dst_file" store) 
-        ((d_out id_content "index.html") "/" join "dst_file" store)
+        (
+            ("mkdir -p " d_out "/" id_content) () map "" join exec
+            (d_out id_content "index.html") () map "/" join "dst_file" store
+        )
     if
     "  - Writing: " dst_file cat puts
     new_content dst_file write
