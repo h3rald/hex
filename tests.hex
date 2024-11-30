@@ -96,6 +96,9 @@
     ("abcde" "f" 0x5 insert "abcdef" ==)
     ((0x1 0x2 0x3) 0x4 0x3 insert (0x1 0x2 0x3 0x4) ==)
     ;44
+
+    ;("this is a test" "is" index 0x6 ==)
+    (("a" 0x1 "b") "b" index 0x2)
     
 ) "tests" store
 
@@ -112,8 +115,8 @@ tests (test i) each
     (
         "Errors:" warn
         errors (warn) each
+        0x1 exit
     )
 when
 
-; --- Cleanup
-;"a" free
+0x0 exit
