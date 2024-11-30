@@ -12,11 +12,11 @@ clean:
 
 .PHONY: test
 test:
-	./hex tests.hex
+	./hex test.hex
 
 .PHONY: dtest
 dtest:
-	./hex -d tests.hex
+	./hex -d test.hex
 
 .PHONY: web
 web:
