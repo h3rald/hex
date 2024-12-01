@@ -6,6 +6,9 @@ LDFLAGS ?=
 hex: hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
+wasm: hex.c
+	 emcc hex.c -o web/assets/hex.js
+
 .PHONY: clean
 clean:
 	rm hex
@@ -19,7 +22,7 @@ dtest:
 	./hex -d test.hex
 
 .PHONY: web
-web:
+web: wasm
 	./hex web.hex
 
 .PHONY: dweb

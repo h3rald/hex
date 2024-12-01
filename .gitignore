@@ -57,3 +57,5 @@ hex
 # Other
 example.hex
 web/out/
+web/assets/hex.js
+web/assets/hex.wasm
