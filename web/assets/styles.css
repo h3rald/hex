@@ -64,3 +64,9 @@ em {
 li {
     margin: 0.5rem 0;
 }
+
+article section {
+    height: 40vh;
+    white-space: pre-wrap;
+
+}

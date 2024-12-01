@@ -7,7 +7,7 @@ hex: hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
 
 wasm: hex.c
-	 emcc hex.c -o web/assets/hex.js
+	 emcc hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
 
 .PHONY: clean
 clean:
