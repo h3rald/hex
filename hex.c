@@ -706,7 +706,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
             if (!quotation)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "(%d,%d), Memory allocation failed", position->line, position->column);
                 return 1;
             }
         }
@@ -739,7 +739,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
                 }
                 else
                 {
-                    hex_error(ctx, "Unable to reference native symbol: %s", token->value);
+                    hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s", position->line, position->column, token->value);
                     hex_free_token(token);
                     hex_free_list(ctx, quotation, size);
                     return 1;
@@ -772,7 +772,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         }
         else
         {
-            hex_error(ctx, "Unexpected token in quotation: %d", token->value);
+            hex_error(ctx, "(%d,%d) Unexpected token in quotation: %d", position->line, position->column, token->value);
             hex_free_token(token);
             hex_free_list(ctx, quotation, size);
             return 1;
@@ -781,7 +781,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
 
     if (balanced != 0)
     {
-        hex_error(ctx, "Unterminated quotation");
+        hex_error(ctx, "(%d,%d) Unterminated quotation", position->line, position->column);
         hex_free_token(token);
         hex_free_list(ctx, quotation, size);
         return 1;
@@ -3480,8 +3480,8 @@ int hex_symbol_filter(hex_context_t *ctx)
             for (int i = 0; i < count; i++)
             {
                 FREE(ctx, *quotation[i]);
-            } 
-            return 1  ;
+            }
+            return 1;
         }
     }
     return 0;
@@ -3707,7 +3707,7 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-            hex_error(ctx, "Unexpected end of quotation");
+            hex_error(ctx, "(%d,%d) Unexpected end of quotation", position.line, position.column);
             result = 1;
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
@@ -3715,7 +3715,7 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
             hex_item_t *quotationItem = (hex_item_t *)malloc(sizeof(hex_item_t));
             if (hex_parse_quotation(ctx, &input, quotationItem, &position) != 0)
             {
-                hex_error(ctx, "Failed to parse quotation");
+                hex_error(ctx, "(%d,%d) Failed to parse quotation", position.line, position.column);
                 result = 1;
             }
             else
