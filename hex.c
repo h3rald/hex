@@ -74,11 +74,11 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int na
 // Register a native symbol
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 {
-    hex_item_t funcItem;
-    funcItem.type = HEX_TYPE_NATIVE_SYMBOL;
-    funcItem.data.fnValue = func;
+    hex_item_t func_item;
+    func_item.type = HEX_TYPE_NATIVE_SYMBOL;
+    func_item.data.fn_value = func;
 
-    if (hex_set_symbol(ctx, name, funcItem, 1) != 0)
+    if (hex_set_symbol(ctx, name, func_item, 1) != 0)
     {
         hex_error(ctx, "Error: Failed to register native symbol '%s'", name);
     }
@@ -132,7 +132,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
     {
         hex_debug_item(ctx, "CALL", item);
         add_to_stack_trace(ctx, item.token);
-        result = item.data.fnValue(ctx);
+        result = item.data.fn_value(ctx);
     }
     else
     {
@@ -152,14 +152,14 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
 char *hex_process_string(hex_context_t *ctx, const char *value)
 {
     int len = strlen(value);
-    char *processedStr = (char *)malloc(len + 1);
-    if (!processedStr)
+    char *processed_str = (char *)malloc(len + 1);
+    if (!processed_str)
     {
         hex_error(ctx, "Memory allocation failed");
         return NULL;
     }
 
-    char *dst = processedStr;
+    char *dst = processed_str;
     const char *src = value;
     while (*src)
     {
@@ -205,26 +205,26 @@ char *hex_process_string(hex_context_t *ctx, const char *value)
         src++;
     }
     *dst = '\0';
-    return processedStr;
+    return processed_str;
 }
 
 hex_item_t hex_string_item(hex_context_t *ctx, const char *value)
 {
-    hex_item_t item = {.type = HEX_TYPE_STRING, .data.strValue = hex_process_string(ctx, value)};
+    hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = hex_process_string(ctx, value)};
     return item;
 }
 
 hex_item_t hex_integer_item(hex_context_t *ctx, int value)
 {
     (void)(ctx);
-    hex_item_t item = {.type = HEX_TYPE_INTEGER, .data.intValue = value};
+    hex_item_t item = {.type = HEX_TYPE_INTEGER, .data.int_value = value};
     return item;
 }
 
 hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, int size)
 {
     (void)(ctx);
-    hex_item_t item = {.type = HEX_TYPE_QUOTATION, .data.quotationValue = quotation, .quotationSize = size};
+    hex_item_t item = {.type = HEX_TYPE_QUOTATION, .data.quotation_value = quotation, .quotation_size = size};
     return item;
 }
 
@@ -275,19 +275,19 @@ hex_item_t hex_pop(hex_context_t *ctx)
 void hex_free_item(hex_context_t *ctx, hex_item_t item)
 {
     hex_debug_item(ctx, "FREE", item);
-    if (item.type == HEX_TYPE_STRING && item.data.strValue != NULL)
+    if (item.type == HEX_TYPE_STRING && item.data.str_value != NULL)
     {
         hex_debug(ctx, "FREE: ** string start");
-        item.data.strValue = NULL;
-        free(item.data.strValue);
+        item.data.str_value = NULL;
+        free(item.data.str_value);
         hex_debug(ctx, "FREE: ** string end");
     }
 
-    else if (item.type == HEX_TYPE_QUOTATION && item.data.quotationValue != NULL)
+    else if (item.type == HEX_TYPE_QUOTATION && item.data.quotation_value != NULL)
     {
         hex_debug(ctx, "FREE: ** quotation start");
-        hex_free_list(ctx, item.data.quotationValue, item.quotationSize);
-        item.data.quotationValue = NULL;
+        hex_free_list(ctx, item.data.quotation_value, item.quotation_size);
+        item.data.quotation_value = NULL;
         hex_debug(ctx, "FREE: ** quotation end");
     }
     else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->value != NULL)
@@ -735,7 +735,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
                 {
                     item->token = token;
                     item->type = HEX_TYPE_NATIVE_SYMBOL;
-                    item->data.fnValue = value.data.fnValue;
+                    item->data.fn_value = value.data.fn_value;
                 }
                 else
                 {
@@ -788,8 +788,8 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
     }
 
     result->type = HEX_TYPE_QUOTATION;
-    result->data.quotationValue = quotation;
-    result->quotationSize = size;
+    result->data.quotation_value = quotation;
+    result->quotation_size = size;
     hex_free_token(token);
     return 0;
 }
@@ -910,10 +910,10 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
     switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item.data.intValue);
+        fprintf(stream, "0x%x", item.data.int_value);
         break;
     case HEX_TYPE_STRING:
-        fprintf(stream, "%s", item.data.strValue);
+        fprintf(stream, "%s", item.data.str_value);
         break;
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
@@ -921,13 +921,13 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
         break;
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (int i = 0; i < item.quotationSize; i++)
+        for (int i = 0; i < item.quotation_size; i++)
         {
             if (i > 0)
             {
                 fprintf(stream, " ");
             }
-            hex_print_item(stream, *item.data.quotationValue[i]);
+            hex_print_item(stream, *item.data.quotation_value[i]);
         }
         fprintf(stream, ")");
         break;
@@ -946,12 +946,12 @@ void hex_print_item(FILE *stream, hex_item_t item)
     switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item.data.intValue);
+        fprintf(stream, "0x%x", item.data.int_value);
         break;
 
     case HEX_TYPE_STRING:
         fprintf(stream, "\"");
-        for (char *c = item.data.strValue; *c != '\0'; c++)
+        for (char *c = item.data.str_value; *c != '\0'; c++)
         {
             switch (*c)
             {
@@ -1002,13 +1002,13 @@ void hex_print_item(FILE *stream, hex_item_t item)
 
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (int i = 0; i < item.quotationSize; i++)
+        for (int i = 0; i < item.quotation_size; i++)
         {
             if (i > 0)
             {
                 fprintf(stream, " ");
             }
-            hex_print_item(stream, *item.data.quotationValue[i]);
+            hex_print_item(stream, *item.data.quotation_value[i]);
         }
         fprintf(stream, ")");
         break;
@@ -1056,7 +1056,7 @@ int hex_symbol_store(hex_context_t *ctx)
         FREE(ctx, value);
         return 1;
     }
-    if (hex_set_symbol(ctx, name.data.strValue, value, 0) != 0)
+    if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
     {
         hex_error(ctx, "Failed to store variable");
         FREE(ctx, name);
@@ -1083,7 +1083,7 @@ int hex_symbol_free(hex_context_t *ctx)
     }
     for (int i = 0; i < ctx->registry.size; i++)
     {
-        if (strcmp(ctx->registry.entries[i].key, item.data.strValue) == 0)
+        if (strcmp(ctx->registry.entries[i].key, item.data.str_value) == 0)
         {
             free(ctx->registry.entries[i].key);
             FREE(ctx, ctx->registry.entries[i].value);
@@ -1129,9 +1129,9 @@ int hex_symbol_i(hex_context_t *ctx)
         FREE(ctx, item);
         return 1;
     }
-    for (int i = 0; i < item.quotationSize; i++)
+    for (int i = 0; i < item.quotation_size; i++)
     {
-        if (hex_push(ctx, *item.data.quotationValue[i]) != 0)
+        if (hex_push(ctx, *item.data.quotation_value[i]) != 0)
         {
             FREE(ctx, item);
             return 1;
@@ -1156,7 +1156,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         FREE(ctx, item);
         return 1;
     }
-    return hex_interpret(ctx, item.data.strValue, "<eval>", 1, 1);
+    return hex_interpret(ctx, item.data.str_value, "<eval>", 1, 1);
 }
 
 // IO Symbols
@@ -1240,7 +1240,7 @@ int hex_symbol_add(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue + b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value + b.data.int_value);
     }
     hex_error(ctx, "'+' symbol requires two integers");
     FREE(ctx, a);
@@ -1266,7 +1266,7 @@ int hex_symbol_subtract(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue - b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value - b.data.int_value);
     }
     hex_error(ctx, "'-' symbol requires two integers");
     FREE(ctx, a);
@@ -1292,7 +1292,7 @@ int hex_symbol_multiply(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue * b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value * b.data.int_value);
     }
     hex_error(ctx, "'*' symbol requires two integers");
     FREE(ctx, a);
@@ -1318,12 +1318,12 @@ int hex_symbol_divide(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        if (b.data.intValue == 0)
+        if (b.data.int_value == 0)
         {
             hex_error(ctx, "Division by zero");
             return 1;
         }
-        return hex_push_integer(ctx, a.data.intValue / b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value / b.data.int_value);
     }
     hex_error(ctx, "'/' symbol requires two integers");
     FREE(ctx, a);
@@ -1349,11 +1349,11 @@ int hex_symbol_modulo(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        if (b.data.intValue == 0)
+        if (b.data.int_value == 0)
         {
             hex_error(ctx, "Division by zero");
         }
-        return hex_push_integer(ctx, a.data.intValue % b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value % b.data.int_value);
     }
     hex_error(ctx, "'%%' symbol requires two integers");
     FREE(ctx, a);
@@ -1381,7 +1381,7 @@ int hex_symbol_bitand(hex_context_t *ctx)
     }
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.intValue & right.data.intValue);
+        return hex_push_integer(ctx, left.data.int_value & right.data.int_value);
     }
     hex_error(ctx, "'&' symbol requires two integers");
     FREE(ctx, left);
@@ -1407,7 +1407,7 @@ int hex_symbol_bitor(hex_context_t *ctx)
     }
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.intValue | right.data.intValue);
+        return hex_push_integer(ctx, left.data.int_value | right.data.int_value);
     }
     hex_error(ctx, "'|' symbol requires two integers");
     FREE(ctx, left);
@@ -1433,7 +1433,7 @@ int hex_symbol_bitxor(hex_context_t *ctx)
     }
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.intValue ^ right.data.intValue);
+        return hex_push_integer(ctx, left.data.int_value ^ right.data.int_value);
     }
     hex_error(ctx, "'^' symbol requires two integers");
     FREE(ctx, left);
@@ -1459,7 +1459,7 @@ int hex_symbol_shiftleft(hex_context_t *ctx)
     }
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.intValue << right.data.intValue);
+        return hex_push_integer(ctx, left.data.int_value << right.data.int_value);
     }
     hex_error(ctx, "'<<' symbol requires two integers");
     FREE(ctx, left);
@@ -1485,7 +1485,7 @@ int hex_symbol_shiftright(hex_context_t *ctx)
     }
     if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.intValue >> right.data.intValue);
+        return hex_push_integer(ctx, left.data.int_value >> right.data.int_value);
     }
     hex_error(ctx, "'>>' symbol requires two integers");
     FREE(ctx, left);
@@ -1504,7 +1504,7 @@ int hex_symbol_bitnot(hex_context_t *ctx)
     }
     if (item.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, ~item.data.intValue);
+        return hex_push_integer(ctx, ~item.data.int_value);
     }
     hex_error(ctx, "'~' symbol requires one integer");
     FREE(ctx, item);
@@ -1530,11 +1530,11 @@ int hex_symbol_int(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value);
     }
     if (a.type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strtol(a.data.strValue, NULL, 16));
+        return hex_push_integer(ctx, strtol(a.data.str_value, NULL, 16));
     }
     hex_error(ctx, "Unsupported data type: %s", hex_type(a.type));
     FREE(ctx, a);
@@ -1558,11 +1558,11 @@ int hex_symbol_str(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_string(ctx, hex_itoa_hex(a.data.intValue));
+        return hex_push_string(ctx, hex_itoa_hex(a.data.int_value));
     }
     if (a.type == HEX_TYPE_STRING)
     {
-        return hex_push_string(ctx, a.data.strValue);
+        return hex_push_string(ctx, a.data.str_value);
     }
     hex_error(ctx, "Unsupported data type: %s", hex_type(a.type));
     FREE(ctx, a);
@@ -1580,7 +1580,7 @@ int hex_symbol_dec(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_string(ctx, hex_itoa_dec(a.data.intValue));
+        return hex_push_string(ctx, hex_itoa_dec(a.data.int_value));
     }
     hex_error(ctx, "An integer is required");
     FREE(ctx, a);
@@ -1598,7 +1598,7 @@ int hex_symbol_hex(hex_context_t *ctx)
     }
     if (item.type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strtol(item.data.strValue, NULL, 10));
+        return hex_push_integer(ctx, strtol(item.data.str_value, NULL, 10));
     }
     hex_error(ctx, "'hex' symbol requires a string representing a decimal integer");
     FREE(ctx, item);
@@ -1623,23 +1623,23 @@ int hex_equal(hex_item_t a, hex_item_t b)
     }
     if (a.type == HEX_TYPE_INTEGER)
     {
-        return a.data.intValue == b.data.intValue;
+        return a.data.int_value == b.data.int_value;
     }
     if (a.type == HEX_TYPE_STRING)
     {
-        return (strcmp(a.data.strValue, b.data.strValue) == 0);
+        return (strcmp(a.data.str_value, b.data.str_value) == 0);
     }
     if (a.type == HEX_TYPE_QUOTATION)
     {
-        if (a.quotationSize != b.quotationSize)
+        if (a.quotation_size != b.quotation_size)
         {
             return 0;
         }
         else
         {
-            for (int i = 0; i < a.quotationSize; i++)
+            for (int i = 0; i < a.quotation_size; i++)
             {
-                if (!hex_equal(*a.data.quotationValue[i], *b.data.quotationValue[i]))
+                if (!hex_equal(*a.data.quotation_value[i], *b.data.quotation_value[i]))
                 {
                     return 0;
                 }
@@ -1720,11 +1720,11 @@ int hex_symbol_greater(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue > b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value > b.data.int_value);
     }
     else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strcmp(a.data.strValue, b.data.strValue) > 0);
+        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) > 0);
     }
     hex_error(ctx, "'>' symbol requires two integers or two strings");
     FREE(ctx, a);
@@ -1750,11 +1750,11 @@ int hex_symbol_less(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue < b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value < b.data.int_value);
     }
     if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strcmp(a.data.strValue, b.data.strValue) < 0);
+        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) < 0);
     }
     hex_error(ctx, "'<' symbol requires two integers or two strings");
     FREE(ctx, a);
@@ -1780,11 +1780,11 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue >= b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value >= b.data.int_value);
     }
     if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strcmp(a.data.strValue, b.data.strValue) >= 0);
+        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) >= 0);
     }
     hex_error(ctx, "'>=' symbol requires two integers or two strings");
     FREE(ctx, a);
@@ -1810,11 +1810,11 @@ int hex_symbol_lessequal(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue <= b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value <= b.data.int_value);
     }
     if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strcmp(a.data.strValue, b.data.strValue) <= 0);
+        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) <= 0);
     }
     hex_error(ctx, "'<=' symbol requires two integers or two strings");
     FREE(ctx, a);
@@ -1842,7 +1842,7 @@ int hex_symbol_and(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue && b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value && b.data.int_value);
     }
     hex_error(ctx, "'and' symbol requires two integers");
     FREE(ctx, a);
@@ -1868,7 +1868,7 @@ int hex_symbol_or(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue || b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value || b.data.int_value);
     }
     hex_error(ctx, "'or' symbol requires two integers");
     FREE(ctx, a);
@@ -1887,7 +1887,7 @@ int hex_symbol_not(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, !a.data.intValue);
+        return hex_push_integer(ctx, !a.data.int_value);
     }
     hex_error(ctx, "'not' symbol requires an integer");
     FREE(ctx, a);
@@ -1912,7 +1912,7 @@ int hex_symbol_xor(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.intValue ^ b.data.intValue);
+        return hex_push_integer(ctx, a.data.int_value ^ b.data.int_value);
     }
     hex_error(ctx, "'xor' symbol requires two integers");
     FREE(ctx, a);
@@ -1945,9 +1945,9 @@ int hex_symbol_cat(hex_context_t *ctx)
     if (list.type == HEX_TYPE_QUOTATION && value.type == HEX_TYPE_QUOTATION)
     {
         // Concatenate two quotations
-        size_t newSize = list.quotationSize + value.quotationSize;
+        size_t newSize = list.quotation_size + value.quotation_size;
         hex_item_t **newQuotation = (hex_item_t **)realloc(
-            list.data.quotationValue, newSize * sizeof(hex_item_t *));
+            list.data.quotation_value, newSize * sizeof(hex_item_t *));
         if (!newQuotation)
         {
             hex_error(ctx, "Memory allocation failed");
@@ -1956,20 +1956,20 @@ int hex_symbol_cat(hex_context_t *ctx)
         else
         {
             // Append items from the second quotation
-            for (size_t i = 0; i < (size_t)value.quotationSize; i++)
+            for (size_t i = 0; i < (size_t)value.quotation_size; i++)
             {
-                newQuotation[list.quotationSize + i] = value.data.quotationValue[i];
+                newQuotation[list.quotation_size + i] = value.data.quotation_value[i];
             }
 
-            list.data.quotationValue = newQuotation;
-            list.quotationSize = newSize;
-            result = hex_push_quotation(ctx, list.data.quotationValue, newSize);
+            list.data.quotation_value = newQuotation;
+            list.quotation_size = newSize;
+            result = hex_push_quotation(ctx, list.data.quotation_value, newSize);
         }
     }
     else if (list.type == HEX_TYPE_STRING && value.type == HEX_TYPE_STRING)
     {
         // Concatenate two strings
-        size_t newLength = strlen(list.data.strValue) + strlen(value.data.strValue) + 1;
+        size_t newLength = strlen(list.data.str_value) + strlen(value.data.str_value) + 1;
         char *newStr = (char *)malloc(newLength);
         if (!newStr)
         {
@@ -1978,8 +1978,8 @@ int hex_symbol_cat(hex_context_t *ctx)
         }
         else
         {
-            strcpy(newStr, list.data.strValue);
-            strcat(newStr, value.data.strValue);
+            strcpy(newStr, list.data.str_value);
+            strcat(newStr, value.data.str_value);
             result = hex_push_string(ctx, newStr);
         }
     }
@@ -2031,14 +2031,14 @@ int hex_symbol_slice(hex_context_t *ctx)
             hex_error(ctx, "Slice indices must be integers");
             result = 1;
         }
-        else if (start.data.intValue < 0 || start.data.intValue >= list.quotationSize || end.data.intValue < 0 || end.data.intValue >= list.quotationSize)
+        else if (start.data.int_value < 0 || start.data.int_value >= list.quotation_size || end.data.int_value < 0 || end.data.int_value >= list.quotation_size)
         {
             hex_error(ctx, "Slice indices out of range");
             result = 1;
         }
         else
         {
-            int newSize = end.data.intValue - start.data.intValue + 1;
+            int newSize = end.data.int_value - start.data.int_value + 1;
             hex_item_t **newQuotation = (hex_item_t **)malloc(newSize * sizeof(hex_item_t *));
             if (!newQuotation)
             {
@@ -2050,7 +2050,7 @@ int hex_symbol_slice(hex_context_t *ctx)
                 for (int i = 0; i < newSize; i++)
                 {
                     newQuotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-                    *newQuotation[i] = *list.data.quotationValue[start.data.intValue + i];
+                    *newQuotation[i] = *list.data.quotation_value[start.data.int_value + i];
                 }
                 result = hex_push_quotation(ctx, newQuotation, newSize);
             }
@@ -2063,14 +2063,14 @@ int hex_symbol_slice(hex_context_t *ctx)
             hex_error(ctx, "Slice indices must be integers");
             result = 1;
         }
-        else if (start.data.intValue < 0 || start.data.intValue >= (int)strlen(list.data.strValue) || end.data.intValue < 0 || end.data.intValue >= (int)strlen(list.data.strValue))
+        else if (start.data.int_value < 0 || start.data.int_value >= (int)strlen(list.data.str_value) || end.data.int_value < 0 || end.data.int_value >= (int)strlen(list.data.str_value))
         {
             hex_error(ctx, "Slice indices out of range");
             result = 1;
         }
         else
         {
-            int newSize = end.data.intValue - start.data.intValue + 1;
+            int newSize = end.data.int_value - start.data.int_value + 1;
             char *newStr = (char *)malloc(newSize + 1);
             if (!newStr)
             {
@@ -2079,7 +2079,7 @@ int hex_symbol_slice(hex_context_t *ctx)
             }
             else
             {
-                strncpy(newStr, list.data.strValue + start.data.intValue, newSize);
+                strncpy(newStr, list.data.str_value + start.data.int_value, newSize);
                 newStr[newSize] = '\0';
                 result = hex_push_string(ctx, newStr);
             }
@@ -2111,11 +2111,11 @@ int hex_symbol_len(hex_context_t *ctx)
     int result = 0;
     if (item.type == HEX_TYPE_QUOTATION)
     {
-        result = hex_push_integer(ctx, item.quotationSize);
+        result = hex_push_integer(ctx, item.quotation_size);
     }
     else if (item.type == HEX_TYPE_STRING)
     {
-        result = hex_push_integer(ctx, strlen(item.data.strValue));
+        result = hex_push_integer(ctx, strlen(item.data.str_value));
     }
     else
     {
@@ -2153,14 +2153,14 @@ int hex_symbol_get(hex_context_t *ctx)
             hex_error(ctx, "Index must be an integer");
             result = 1;
         }
-        else if (index.data.intValue < 0 || index.data.intValue >= list.quotationSize)
+        else if (index.data.int_value < 0 || index.data.int_value >= list.quotation_size)
         {
             hex_error(ctx, "Index out of range");
             result = 1;
         }
         else
         {
-            result = hex_push(ctx, *list.data.quotationValue[index.data.intValue]);
+            result = hex_push(ctx, *list.data.quotation_value[index.data.int_value]);
         }
     }
     else if (list.type == HEX_TYPE_STRING)
@@ -2170,14 +2170,14 @@ int hex_symbol_get(hex_context_t *ctx)
             hex_error(ctx, "Index must be an integer");
             result = 1;
         }
-        else if (index.data.intValue < 0 || index.data.intValue >= (int)strlen(list.data.strValue))
+        else if (index.data.int_value < 0 || index.data.int_value >= (int)strlen(list.data.str_value))
         {
             hex_error(ctx, "Index out of range");
             result = 1;
         }
         else
         {
-            char str[2] = {list.data.strValue[index.data.intValue], '\0'};
+            char str[2] = {list.data.str_value[index.data.int_value], '\0'};
             result = hex_push_string(ctx, str);
         }
     }
@@ -2241,11 +2241,11 @@ int hex_symbol_insert(hex_context_t *ctx)
             return 1;
         }
 
-        size_t target_len = strlen(target.data.strValue);
-        size_t value_len = strlen(value.data.strValue);
-        size_t pos = index.data.intValue;
+        size_t target_len = strlen(target.data.str_value);
+        size_t value_len = strlen(value.data.str_value);
+        size_t pos = index.data.int_value;
 
-        if (index.data.intValue < 0 || pos > target_len)
+        if (index.data.int_value < 0 || pos > target_len)
         {
             hex_error(ctx, "Index out of range");
             FREE(ctx, target);
@@ -2264,12 +2264,12 @@ int hex_symbol_insert(hex_context_t *ctx)
             return 1;
         }
 
-        strncpy(new_str, target.data.strValue, pos);
-        strcpy(new_str + pos, value.data.strValue);
-        strcpy(new_str + pos + value_len, target.data.strValue + pos);
+        strncpy(new_str, target.data.str_value, pos);
+        strcpy(new_str + pos, value.data.str_value);
+        strcpy(new_str + pos + value_len, target.data.str_value + pos);
 
-        free(target.data.strValue);
-        target.data.strValue = new_str;
+        free(target.data.str_value);
+        target.data.str_value = new_str;
 
         if (PUSH(ctx, target) != 0)
         {
@@ -2284,7 +2284,7 @@ int hex_symbol_insert(hex_context_t *ctx)
     }
     else if (target.type == HEX_TYPE_QUOTATION)
     {
-        if (index.data.intValue < 0 || index.data.intValue > target.quotationSize)
+        if (index.data.int_value < 0 || index.data.int_value > target.quotation_size)
         {
             hex_error(ctx, "Index out of range");
             FREE(ctx, target);
@@ -2294,8 +2294,8 @@ int hex_symbol_insert(hex_context_t *ctx)
         }
 
         hex_item_t **new_quotation = (hex_item_t **)realloc(
-            target.data.quotationValue,
-            (target.quotationSize + 1) * sizeof(hex_item_t *));
+            target.data.quotation_value,
+            (target.quotation_size + 1) * sizeof(hex_item_t *));
         if (!new_quotation)
         {
             hex_error(ctx, "Memory allocation failed");
@@ -2305,12 +2305,12 @@ int hex_symbol_insert(hex_context_t *ctx)
             return 1;
         }
 
-        for (size_t i = target.quotationSize; i > (size_t)index.data.intValue; --i)
+        for (size_t i = target.quotation_size; i > (size_t)index.data.int_value; --i)
         {
             new_quotation[i] = new_quotation[i - 1];
         }
-        new_quotation[index.data.intValue] = (hex_item_t *)malloc(sizeof(hex_item_t));
-        if (!new_quotation[index.data.intValue])
+        new_quotation[index.data.int_value] = (hex_item_t *)malloc(sizeof(hex_item_t));
+        if (!new_quotation[index.data.int_value])
         {
             hex_error(ctx, "Memory allocation failed");
             FREE(ctx, target);
@@ -2319,13 +2319,13 @@ int hex_symbol_insert(hex_context_t *ctx)
             return 1;
         }
 
-        *new_quotation[index.data.intValue] = value;
-        target.data.quotationValue = new_quotation;
-        target.quotationSize++;
+        *new_quotation[index.data.int_value] = value;
+        target.data.quotation_value = new_quotation;
+        target.quotation_size++;
 
         if (PUSH(ctx, target) != 0)
         {
-            free(new_quotation[index.data.intValue]);
+            free(new_quotation[index.data.int_value]);
             FREE(ctx, target);
             FREE(ctx, index);
             FREE(ctx, value);
@@ -2363,9 +2363,9 @@ int hex_symbol_index(hex_context_t *ctx)
     int result = -1;
     if (list.type == HEX_TYPE_QUOTATION)
     {
-        for (int i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotation_size; i++)
         {
-            if (hex_equal(*list.data.quotationValue[i], item))
+            if (hex_equal(*list.data.quotation_value[i], item))
             {
                 result = i;
                 break;
@@ -2374,10 +2374,10 @@ int hex_symbol_index(hex_context_t *ctx)
     }
     else if (list.type == HEX_TYPE_STRING)
     {
-        char *ptr = strstr(list.data.strValue, item.data.strValue);
+        char *ptr = strstr(list.data.str_value, item.data.str_value);
         if (ptr)
         {
-            result = ptr - list.data.strValue;
+            result = ptr - list.data.str_value;
         }
     }
     else
@@ -2412,11 +2412,11 @@ int hex_symbol_join(hex_context_t *ctx)
     if (list.type == HEX_TYPE_QUOTATION && separator.type == HEX_TYPE_STRING)
     {
         int length = 0;
-        for (int i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotation_size; i++)
         {
-            if (list.data.quotationValue[i]->type == HEX_TYPE_STRING)
+            if (list.data.quotation_value[i]->type == HEX_TYPE_STRING)
             {
-                length += strlen(list.data.quotationValue[i]->data.strValue);
+                length += strlen(list.data.quotation_value[i]->data.str_value);
             }
             else
             {
@@ -2428,7 +2428,7 @@ int hex_symbol_join(hex_context_t *ctx)
         }
         if (result == 0)
         {
-            length += (list.quotationSize - 1) * strlen(separator.data.strValue);
+            length += (list.quotation_size - 1) * strlen(separator.data.str_value);
             char *newStr = (char *)malloc(length + 1);
             if (!newStr)
             {
@@ -2438,12 +2438,12 @@ int hex_symbol_join(hex_context_t *ctx)
                 return 1;
             }
             newStr[0] = '\0';
-            for (int i = 0; i < list.quotationSize; i++)
+            for (int i = 0; i < list.quotation_size; i++)
             {
-                strcat(newStr, list.data.quotationValue[i]->data.strValue);
-                if (i < list.quotationSize - 1)
+                strcat(newStr, list.data.quotation_value[i]->data.str_value);
+                if (i < list.quotation_size - 1)
                 {
-                    strcat(newStr, separator.data.strValue);
+                    strcat(newStr, separator.data.str_value);
                 }
             }
             result = hex_push_string(ctx, newStr);
@@ -2481,7 +2481,7 @@ int hex_symbol_split(hex_context_t *ctx)
     int result = 0;
     if (str.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
     {
-        char *token = strtok(str.data.strValue, separator.data.strValue);
+        char *token = strtok(str.data.str_value, separator.data.str_value);
         int capacity = 2;
         int size = 0;
         hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
@@ -2507,9 +2507,9 @@ int hex_symbol_split(hex_context_t *ctx)
                 }
                 quotation[size] = (hex_item_t *)malloc(sizeof(hex_item_t));
                 quotation[size]->type = HEX_TYPE_STRING;
-                quotation[size]->data.strValue = strdup(token);
+                quotation[size]->data.str_value = strdup(token);
                 size++;
-                token = strtok(NULL, separator.data.strValue);
+                token = strtok(NULL, separator.data.str_value);
             }
             if (result == 0)
             {
@@ -2557,9 +2557,9 @@ int hex_symbol_replace(hex_context_t *ctx)
     int result = 0;
     if (list.type == HEX_TYPE_STRING && search.type == HEX_TYPE_STRING && replacement.type == HEX_TYPE_STRING)
     {
-        char *str = list.data.strValue;
-        char *find = search.data.strValue;
-        char *replace = replacement.data.strValue;
+        char *str = list.data.str_value;
+        char *find = search.data.str_value;
+        char *replace = replacement.data.str_value;
         char *ptr = strstr(str, find);
         if (ptr)
         {
@@ -2613,10 +2613,10 @@ int hex_symbol_read(hex_context_t *ctx)
     int result = 0;
     if (filename.type == HEX_TYPE_STRING)
     {
-        FILE *file = fopen(filename.data.strValue, "r");
+        FILE *file = fopen(filename.data.str_value, "r");
         if (!file)
         {
-            hex_error(ctx, "Could not open file for reading: %s", filename.data.strValue);
+            hex_error(ctx, "Could not open file for reading: %s", filename.data.str_value);
             result = 1;
         }
         else
@@ -2674,16 +2674,16 @@ int hex_symbol_write(hex_context_t *ctx)
     {
         if (data.type == HEX_TYPE_STRING)
         {
-            FILE *file = fopen(filename.data.strValue, "w");
+            FILE *file = fopen(filename.data.str_value, "w");
             if (file)
             {
-                fputs(data.data.strValue, file);
+                fputs(data.data.str_value, file);
                 fclose(file);
                 result = 0;
             }
             else
             {
-                hex_error(ctx, "Could not open file for writing: %s", filename.data.strValue);
+                hex_error(ctx, "Could not open file for writing: %s", filename.data.str_value);
                 result = 1;
             }
         }
@@ -2727,16 +2727,16 @@ int hex_symbol_append(hex_context_t *ctx)
     {
         if (data.type == HEX_TYPE_STRING)
         {
-            FILE *file = fopen(filename.data.strValue, "a");
+            FILE *file = fopen(filename.data.str_value, "a");
             if (file)
             {
-                fputs(data.data.strValue, file);
+                fputs(data.data.str_value, file);
                 fclose(file);
                 result = 0;
             }
             else
             {
-                hex_error(ctx, "Could not open file for appending: %s", filename.data.strValue);
+                hex_error(ctx, "Could not open file for appending: %s", filename.data.str_value);
                 result = 1;
             }
         }
@@ -2776,7 +2776,7 @@ int hex_symbol_args(hex_context_t *ctx)
         {
             quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
             quotation[i]->type = HEX_TYPE_STRING;
-            quotation[i]->data.strValue = ctx->argv[i];
+            quotation[i]->data.str_value = ctx->argv[i];
         }
         if (hex_push_quotation(ctx, quotation, ctx->argc) != 0)
         {
@@ -2802,7 +2802,7 @@ int hex_symbol_exit(hex_context_t *ctx)
         FREE(ctx, item);
         return 1;
     }
-    int exit_status = item.data.intValue;
+    int exit_status = item.data.int_value;
     exit(exit_status);
     return 0; // This line will never be reached, but it's here to satisfy the return type
 }
@@ -2819,7 +2819,7 @@ int hex_symbol_exec(hex_context_t *ctx)
     int result = 0;
     if (command.type == HEX_TYPE_STRING)
     {
-        int status = system(command.data.strValue);
+        int status = system(command.data.str_value);
         result = hex_push_integer(ctx, status);
     }
     else
@@ -2883,7 +2883,7 @@ int hex_symbol_run(hex_context_t *ctx)
     si.dwFlags |= STARTF_USESTDHANDLES;
 
     // Create the child process
-    if (!CreateProcess(NULL, command.data.strValue, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+    if (!CreateProcess(NULL, command.data.str_value, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
     {
         hex_error(ctx, "Failed to create process");
         FREE(ctx, command);
@@ -2946,7 +2946,7 @@ int hex_symbol_run(hex_context_t *ctx)
         close(stderr_pipe[0]);
         dup2(stdout_pipe[1], STDOUT_FILENO);
         dup2(stderr_pipe[1], STDERR_FILENO);
-        execl("/bin/sh", "sh", "-c", command.data.strValue, (char *)NULL);
+        execl("/bin/sh", "sh", "-c", command.data.str_value, (char *)NULL);
         exit(1);
     }
     else
@@ -2983,15 +2983,15 @@ int hex_symbol_run(hex_context_t *ctx)
     hex_item_t **quotation = (hex_item_t **)malloc(3 * sizeof(hex_item_t *));
     quotation[0] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[0]->type = HEX_TYPE_INTEGER;
-    quotation[0]->data.intValue = return_code;
+    quotation[0]->data.int_value = return_code;
 
     quotation[1] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[1]->type = HEX_TYPE_STRING;
-    quotation[1]->data.strValue = strdup(output);
+    quotation[1]->data.str_value = strdup(output);
 
     quotation[2] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[2]->type = HEX_TYPE_STRING;
-    quotation[2]->data.strValue = strdup(error);
+    quotation[2]->data.str_value = strdup(error);
 
     return hex_push_quotation(ctx, quotation, 3);
 }
@@ -3029,9 +3029,9 @@ int hex_symbol_if(hex_context_t *ctx)
     }
     else
     {
-        for (int i = 0; i < condition.quotationSize; i++)
+        for (int i = 0; i < condition.quotation_size; i++)
         {
-            if (hex_push(ctx, *condition.data.quotationValue[i]) != 0)
+            if (hex_push(ctx, *condition.data.quotation_value[i]) != 0)
             {
                 FREE(ctx, condition);
                 FREE(ctx, thenBlock);
@@ -3040,11 +3040,11 @@ int hex_symbol_if(hex_context_t *ctx)
             }
         }
         POP(ctx, evalResult);
-        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value > 0)
         {
-            for (int i = 0; i < thenBlock.quotationSize; i++)
+            for (int i = 0; i < thenBlock.quotation_size; i++)
             {
-                if (hex_push(ctx, *thenBlock.data.quotationValue[i]) != 0)
+                if (hex_push(ctx, *thenBlock.data.quotation_value[i]) != 0)
                 {
                     FREE(ctx, condition);
                     FREE(ctx, thenBlock);
@@ -3055,9 +3055,9 @@ int hex_symbol_if(hex_context_t *ctx)
         }
         else
         {
-            for (int i = 0; i < elseBlock.quotationSize; i++)
+            for (int i = 0; i < elseBlock.quotation_size; i++)
             {
-                if (hex_push(ctx, *elseBlock.data.quotationValue[i]) != 0)
+                if (hex_push(ctx, *elseBlock.data.quotation_value[i]) != 0)
                 {
                     FREE(ctx, condition);
                     FREE(ctx, thenBlock);
@@ -3094,20 +3094,20 @@ int hex_symbol_when(hex_context_t *ctx)
     }
     else
     {
-        for (int i = 0; i < condition.quotationSize; i++)
+        for (int i = 0; i < condition.quotation_size; i++)
         {
-            if (hex_push(ctx, *condition.data.quotationValue[i]) != 0)
+            if (hex_push(ctx, *condition.data.quotation_value[i]) != 0)
             {
                 result = 1;
                 break; // Break if pushing the item failed
             }
         }
         POP(ctx, evalResult);
-        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value > 0)
         {
-            for (int i = 0; i < action.quotationSize; i++)
+            for (int i = 0; i < action.quotation_size; i++)
             {
-                if (hex_push(ctx, *action.data.quotationValue[i]) != 0)
+                if (hex_push(ctx, *action.data.quotation_value[i]) != 0)
                 {
                     result = 1;
                     break;
@@ -3150,9 +3150,9 @@ int hex_symbol_while(hex_context_t *ctx)
     {
         while (1)
         {
-            for (int i = 0; i < condition.quotationSize; i++)
+            for (int i = 0; i < condition.quotation_size; i++)
             {
-                if (hex_push(ctx, *condition.data.quotationValue[i]) != 0)
+                if (hex_push(ctx, *condition.data.quotation_value[i]) != 0)
                 {
                     FREE(ctx, action);
                     FREE(ctx, condition);
@@ -3160,13 +3160,13 @@ int hex_symbol_while(hex_context_t *ctx)
                 }
             }
             POP(ctx, evalResult);
-            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue == 0)
+            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value == 0)
             {
                 break;
             }
-            for (int i = 0; i < action.quotationSize; i++)
+            for (int i = 0; i < action.quotation_size; i++)
             {
-                if (hex_push(ctx, *action.data.quotationValue[i]) != 0)
+                if (hex_push(ctx, *action.data.quotation_value[i]) != 0)
                 {
                     FREE(ctx, action);
                     FREE(ctx, condition);
@@ -3203,17 +3203,17 @@ int hex_symbol_each(hex_context_t *ctx)
     }
     else
     {
-        for (int i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotation_size; i++)
         {
-            if (hex_push(ctx, *list.data.quotationValue[i]) != 0)
+            if (hex_push(ctx, *list.data.quotation_value[i]) != 0)
             {
                 FREE(ctx, action);
                 FREE(ctx, list);
                 return 1;
             }
-            for (int j = 0; j < action.quotationSize; j++)
+            for (int j = 0; j < action.quotation_size; j++)
             {
-                if (hex_push(ctx, *action.data.quotationValue[j]) != 0)
+                if (hex_push(ctx, *action.data.quotation_value[j]) != 0)
                 {
                     FREE(ctx, action);
                     FREE(ctx, list);
@@ -3236,24 +3236,24 @@ int hex_symbol_error(hex_context_t *ctx)
 int hex_symbol_try(hex_context_t *ctx)
 {
 
-    POP(ctx, catchBlock);
-    if (catchBlock.type == HEX_TYPE_INVALID)
+    POP(ctx, catch_block);
+    if (catch_block.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, catchBlock);
+        FREE(ctx, catch_block);
         return 1;
     }
-    POP(ctx, tryBlock);
-    if (tryBlock.type == HEX_TYPE_INVALID)
+    POP(ctx, try_block);
+    if (try_block.type == HEX_TYPE_INVALID)
     {
-        FREE(ctx, catchBlock);
-        FREE(ctx, tryBlock);
+        FREE(ctx, catch_block);
+        FREE(ctx, try_block);
         return 1;
     }
-    if (tryBlock.type != HEX_TYPE_QUOTATION || catchBlock.type != HEX_TYPE_QUOTATION)
+    if (try_block.type != HEX_TYPE_QUOTATION || catch_block.type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "'try' symbol requires two quotations");
-        FREE(ctx, catchBlock);
-        FREE(ctx, tryBlock);
+        FREE(ctx, catch_block);
+        FREE(ctx, try_block);
         return 1;
     }
     else
@@ -3263,9 +3263,9 @@ int hex_symbol_try(hex_context_t *ctx)
         ctx->error[0] = '\0';
 
         ctx->settings.errors_enabled = 0;
-        for (int i = 0; i < tryBlock.quotationSize; i++)
+        for (int i = 0; i < try_block.quotation_size; i++)
         {
-            if (hex_push(ctx, *tryBlock.data.quotationValue[i]) != 0)
+            if (hex_push(ctx, *try_block.data.quotation_value[i]) != 0)
             {
                 ctx->settings.errors_enabled = 1;
             }
@@ -3274,12 +3274,12 @@ int hex_symbol_try(hex_context_t *ctx)
 
         if (strcmp(ctx->error, ""))
         {
-            for (int i = 0; i < catchBlock.quotationSize; i++)
+            for (int i = 0; i < catch_block.quotation_size; i++)
             {
-                if (hex_push(ctx, *catchBlock.data.quotationValue[i]) != 0)
+                if (hex_push(ctx, *catch_block.data.quotation_value[i]) != 0)
                 {
-                    FREE(ctx, catchBlock);
-                    FREE(ctx, tryBlock);
+                    FREE(ctx, catch_block);
+                    FREE(ctx, try_block);
                     return 1;
                 }
             }
@@ -3314,8 +3314,8 @@ int hex_symbol_q(hex_context_t *ctx)
 
     hex_item_t result;
     result.type = HEX_TYPE_QUOTATION;
-    result.data.quotationValue = (hex_item_t **)malloc(sizeof(hex_item_t *));
-    if (!result.data.quotationValue)
+    result.data.quotation_value = (hex_item_t **)malloc(sizeof(hex_item_t *));
+    if (!result.data.quotation_value)
     {
         FREE(ctx, item);
         free(quotation);
@@ -3323,14 +3323,14 @@ int hex_symbol_q(hex_context_t *ctx)
         return 1;
     }
 
-    result.data.quotationValue[0] = quotation;
-    result.quotationSize = 1;
+    result.data.quotation_value[0] = quotation;
+    result.quotation_size = 1;
 
     if (PUSH(ctx, result) != 0)
     {
         FREE(ctx, item);
         free(quotation);
-        free(result.data.quotationValue);
+        free(result.data.quotation_value);
         return 1;
     }
 
@@ -3362,7 +3362,7 @@ int hex_symbol_map(hex_context_t *ctx)
     }
     else
     {
-        hex_item_t **quotation = (hex_item_t **)malloc(list.quotationSize * sizeof(hex_item_t *));
+        hex_item_t **quotation = (hex_item_t **)malloc(list.quotation_size * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error(ctx, "Memory allocation failed");
@@ -3370,18 +3370,18 @@ int hex_symbol_map(hex_context_t *ctx)
             FREE(ctx, list);
             return 1;
         }
-        for (int i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotation_size; i++)
         {
-            if (hex_push(ctx, *list.data.quotationValue[i]) != 0)
+            if (hex_push(ctx, *list.data.quotation_value[i]) != 0)
             {
                 FREE(ctx, action);
                 FREE(ctx, list);
                 hex_free_list(ctx, quotation, i);
                 return 1;
             }
-            for (int j = 0; j < action.quotationSize; j++)
+            for (int j = 0; j < action.quotation_size; j++)
             {
-                if (hex_push(ctx, *action.data.quotationValue[j]) != 0)
+                if (hex_push(ctx, *action.data.quotation_value[j]) != 0)
                 {
                     FREE(ctx, action);
                     FREE(ctx, list);
@@ -3392,11 +3392,11 @@ int hex_symbol_map(hex_context_t *ctx)
             quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
             *quotation[i] = hex_pop(ctx);
         }
-        if (hex_push_quotation(ctx, quotation, list.quotationSize) != 0)
+        if (hex_push_quotation(ctx, quotation, list.quotation_size) != 0)
         {
             FREE(ctx, action);
             FREE(ctx, list);
-            hex_free_list(ctx, quotation, list.quotationSize);
+            hex_free_list(ctx, quotation, list.quotation_size);
             return 1;
         }
     }
@@ -3428,7 +3428,7 @@ int hex_symbol_filter(hex_context_t *ctx)
     }
     else
     {
-        hex_item_t **quotation = (hex_item_t **)malloc(list.quotationSize * sizeof(hex_item_t *));
+        hex_item_t **quotation = (hex_item_t **)malloc(list.quotation_size * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error(ctx, "Memory allocation failed");
@@ -3437,18 +3437,18 @@ int hex_symbol_filter(hex_context_t *ctx)
             return 1;
         }
         int count = 0;
-        for (int i = 0; i < list.quotationSize; i++)
+        for (int i = 0; i < list.quotation_size; i++)
         {
-            if (hex_push(ctx, *list.data.quotationValue[i]) != 0)
+            if (hex_push(ctx, *list.data.quotation_value[i]) != 0)
             {
                 FREE(ctx, action);
                 FREE(ctx, list);
                 hex_free_list(ctx, quotation, count);
                 return 1;
             }
-            for (int j = 0; j < action.quotationSize; j++)
+            for (int j = 0; j < action.quotation_size; j++)
             {
-                if (hex_push(ctx, *action.data.quotationValue[j]) != 0)
+                if (hex_push(ctx, *action.data.quotation_value[j]) != 0)
                 {
                     FREE(ctx, action);
                     FREE(ctx, list);
@@ -3457,7 +3457,7 @@ int hex_symbol_filter(hex_context_t *ctx)
                 }
             }
             POP(ctx, evalResult);
-            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.intValue > 0)
+            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value > 0)
             {
                 quotation[count] = (hex_item_t *)malloc(sizeof(hex_item_t));
                 if (!quotation[count])
@@ -3468,7 +3468,7 @@ int hex_symbol_filter(hex_context_t *ctx)
                     hex_free_list(ctx, quotation, count);
                     return 1;
                 }
-                *quotation[count] = *list.data.quotationValue[i];
+                *quotation[count] = *list.data.quotation_value[i];
                 count++;
             }
         }
@@ -3720,9 +3720,9 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
             }
             else
             {
-                hex_item_t **quotation = quotationItem->data.quotationValue;
-                int quotationSize = quotationItem->quotationSize;
-                result = hex_push_quotation(ctx, quotation, quotationSize);
+                hex_item_t **quotation = quotationItem->data.quotation_value;
+                int quotation_size = quotationItem->quotation_size;
+                result = hex_push_quotation(ctx, quotation, quotation_size);
             }
             free(quotationItem);
         }

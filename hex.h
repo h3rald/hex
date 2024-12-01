@@ -70,13 +70,13 @@ typedef struct hex_item_t
     hex_item_type_t type;
     union
     {
-        int32_t intValue;
-        char *strValue;
-        int (*fnValue)(hex_context_t *);
-        struct hex_item_t **quotationValue;
+        int32_t int_value;
+        char *str_value;
+        int (*fn_value)(hex_context_t *);
+        struct hex_item_t **quotation_value;
     } data;
     hex_token_t *token; // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
-    int quotationSize;  // Size of the quotation (valid for HEX_TYPE_QUOTATION)
+    int quotation_size; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } hex_item_t;
 
 typedef struct hex_registry_entry
