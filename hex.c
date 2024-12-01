@@ -542,11 +542,10 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
             }
             else if (*ptr == '\n')
             {
-                hex_error(ctx, "Unescaped new line in string");
-                token->value = "<newline>";
                 token->type = HEX_TOKEN_INVALID;
                 token->position.line = position->line;
                 token->position.column = position->column;
+                hex_error(ctx, "(%d,%d) Unescaped new line in string", position->line, position->column);
                 return token;
             }
             else
@@ -559,11 +558,10 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
 
         if (*ptr != '"')
         {
-            hex_error(ctx, "Unterminated string");
             token->type = HEX_TOKEN_INVALID;
-            token->value = strdup(ptr);
             token->position.line = position->line;
             token->position.column = position->column;
+            hex_error(ctx, "(%d,%d) Unterminated string", position->line, position->column);
             return token;
         }
 
@@ -822,7 +820,7 @@ void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token)
 // Print the stack trace
 void print_stack_trace(hex_context_t *ctx)
 {
-    if (!ctx->settings.stack_trace_enabled || !ctx->settings.errors_enabled)
+    if (!ctx->settings.stack_trace_enabled || !ctx->settings.errors_enabled || ctx->stack_trace.size <= 0)
     {
         return;
     }
