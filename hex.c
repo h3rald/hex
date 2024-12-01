@@ -912,7 +912,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
     switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%xx", item.data.intValue);
+        fprintf(stream, "0x%x", item.data.intValue);
         break;
     case HEX_TYPE_STRING:
         fprintf(stream, "%s", item.data.strValue);
