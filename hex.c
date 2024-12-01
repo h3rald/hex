@@ -3476,16 +3476,15 @@ int hex_symbol_filter(hex_context_t *ctx)
         }
         if (hex_push_quotation(ctx, quotation, count) != 0)
         {
+            hex_error(ctx, "An error occurred while filtering the list");
             FREE(ctx, action);
             FREE(ctx, list);
-            return 1;
+            for (int i = 0; i < count; i++)
+            {
+                FREE(ctx, *quotation[i]);
+            } 
+            return 1  ;
         }
-        hex_error(ctx, "An error occurred while filtering the list");
-        for (int i = 0; i < count; i++)
-        {
-            FREE(ctx, *quotation[i]);
-        }
-        return 1;
     }
     return 0;
 }
