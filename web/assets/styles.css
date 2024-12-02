@@ -71,12 +71,13 @@ li {
 }
 
 
-article section {
+article > section {
     display: flex;
     flex-direction: column;
+    border: 1px solid lime;
 }
 
-article section section {
+article > section > section {
     height: 40vh;
     white-space: pre-wrap;
     overflow-y: scroll;
@@ -84,21 +85,23 @@ article section section {
     flex-direction: column-reverse;
     scrollbar-color: black black;
     scrollbar-width: thin;
-    margin: 1rem;
     padding: 0.5rem;
-    border: 1px solid lime;
 }
 
 aside {
     display: flex;
-    margin: 0 1rem;
+    margin: 0 0.5rem;
 }
 
 article input {
     font-family: monospace;
     background-color: black;
+    border: none;
     color: white;
-    border: 1px solid lime;
     display: flex;
     flex-grow: 1;
+}
+
+article input:focus {
+    outline: none;
 }
