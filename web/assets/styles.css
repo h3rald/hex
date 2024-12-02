@@ -89,9 +89,13 @@ article section section {
     border: 1px solid lime;
 }
 
+aside {
+    display: flex;
+    margin: 0 1rem;
+}
+
 article input {
     font-family: monospace;
-    margin: 1rem;
     background-color: black;
     color: white;
     border: 1px solid lime;

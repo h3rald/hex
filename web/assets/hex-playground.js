@@ -1,24 +1,21 @@
-
-
-
 Module.pending_fgets = [];
-Module.pending_chars = [];
 Module.pending_lines = [];
+const inputBox = document.querySelector("article input");
+const outputBox = document.querySelector("article section section");
 Module.print = (text) => {
-  document.querySelector("article section section").textContent += text + '\n';
+  outputBox.textContent += text + "\n";
 };
 
 Module.printErr = (text) => {
-  document.querySelector("article section section").textContent += text + '\n';
+  outputBox.textContent += text + "\n";
 };
 
-const inputBox = document.querySelector("article input");
 
 inputBox.addEventListener("keydown", (e) => {
-  if (e.key === 'Enter') {
+  if (e.key === "Enter") {
     e.preventDefault();
-    Module.pending_lines.push(Module.pending_chars.join(''));
-    Module.pending_chars = [];
+    Module.pending_lines.push(inputBox.value);
+    outputBox.textContent += "> " + inputBox.value + "\n";
     inputBox.value = '';
   } else if (e.key.length === 1) {
     Module.pending_chars.push(e.key);
