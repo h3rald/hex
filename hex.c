@@ -1231,8 +1231,14 @@ int hex_symbol_gets(hex_context_t *ctx)
 {
 
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
+    char *p = input;
+#ifdef EMSCRIPTEN
+    p = em_fgets(input, 1024);
+#else
+    p = fgets(input, sizeof(input), stdin);
+#endif
 
-    if (fgets(input, sizeof(input), stdin) != NULL)
+    if (p != NULL)
     {
         // Strip the newline character at the end of the string
         input[strcspn(input, "\n")] = '\0';
