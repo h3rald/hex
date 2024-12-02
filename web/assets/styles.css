@@ -78,7 +78,7 @@ article > section {
 }
 
 article > section > section {
-    height: 40vh;
+    height: 30vh;
     white-space: pre-wrap;
     overflow-y: scroll;
     display: flex;
