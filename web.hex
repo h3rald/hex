@@ -22,7 +22,7 @@ contents
     (fn_content "home.html" ==)
         (d_out "/index.html" cat "dst_file" store) 
         (
-            ("mkdir -p " d_out "/" id_content) () map "" join exec
+            ("sh -c \"mkdir -p " d_out "/" id_content "\"") () map "" exec
             (d_out id_content "index.html") () map "/" join "dst_file" store
         )
     if
@@ -31,7 +31,7 @@ contents
 ) each
 
 ; Write assets
-("mkdir -p " d_out "/assets") () map "" join exec
+("sh -c \"mkdir -p " d_out "/assets\"") () map "" join exec
 assets
 (
     "fn_asset" store
