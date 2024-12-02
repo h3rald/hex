@@ -22,7 +22,7 @@ contents
     (fn_content "home.html" ==)
         (d_out "/index.html" cat "dst_file" store) 
         (
-            ("sh -c \"mkdir -p " d_out "/" id_content "\"") () map "" exec
+            ("sh -c \"mkdir -p " d_out "/" id_content "\"") () map "" join exec
             (d_out id_content "index.html") () map "/" join "dst_file" store
         )
     if
