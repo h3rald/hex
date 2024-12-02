@@ -3884,18 +3884,21 @@ static void do_repl(void *v_ctx)
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
 {
+#ifdef __EMSCRIPTEN__
+    printf("   _*_ _\n");
+    printf("  / \\hex\\*\n");
+    printf(" *\\_/_/_/ v%s - WASM Build\n", HEX_VERSION);
+    printf("      *\n");
 
+    int fps = 0;
+    int simulate_infinite_loop = 1;
+    emscripten_set_main_loop_arg(do_repl, ctx, fps, simulate_infinite_loop);
+#else
 
     printf("   _*_ _\n");
     printf("  / \\hex\\*\n");
     printf(" *\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
     printf("      *\n");
-
-#ifdef __EMSCRIPTEN__
-  int fps = 0;
-  int simulate_infinite_loop = 1;
-  emscripten_set_main_loop_arg(do_repl, ctx, fps, simulate_infinite_loop);
-#else
 
     while (1)
     {
