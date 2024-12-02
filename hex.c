@@ -14,7 +14,7 @@ EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
                    Module.pending_fgets.push(resolve);
                }
            })
-        .then((s) = > {
+        .then(function(s) {
             // convert JS string to WASM string
             let l = s.length + 1;
             if (l >= bufsize)
