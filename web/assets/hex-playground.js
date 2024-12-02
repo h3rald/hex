@@ -5,11 +5,11 @@ Module.pending_fgets = [];
 Module.pending_chars = [];
 Module.pending_lines = [];
 Module.print = (text) => {
-  document.querySelector("article section").textContent += text + '\n';
+  document.querySelector("article section section").textContent += text + '\n';
 };
 
 Module.printErr = (text) => {
-  document.querySelector("article section").textContent += text + '\n';
+  document.querySelector("article section section").textContent += text + '\n';
 };
 
 const inputBox = document.querySelector("article input");

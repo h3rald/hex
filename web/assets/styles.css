@@ -65,8 +65,36 @@ li {
     margin: 0.5rem 0;
 }
 
+.prompt-wrapper {
+  whitespace: nowrap;
+  color: lime;
+}
+
+
 article section {
+    display: flex;
+    flex-direction: column;
+}
+
+article section section {
     height: 40vh;
     white-space: pre-wrap;
+    overflow-y: scroll;
+    display: flex;
+    flex-direction: column-reverse;
+    scrollbar-color: black black;
+    scrollbar-width: thin;
+    margin: 1rem;
+    padding: 0.5rem;
+    border: 1px solid lime;
+}
 
+article input {
+    font-family: monospace;
+    margin: 1rem;
+    background-color: black;
+    color: white;
+    border: 1px solid lime;
+    display: flex;
+    flex-grow: 1;
 }
