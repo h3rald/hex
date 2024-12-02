@@ -4,7 +4,7 @@
 #include <emscripten.h>
 
 EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
-    return await new Promise((resolve, reject) = > {
+    return await new Promise(function(resolve, reject) {
                if (Module.pending_lines.length > 0)
                {
                    resolve(Module.pending_lines.shift());
