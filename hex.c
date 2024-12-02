@@ -3,27 +3,31 @@
 #ifdef EMSCRIPTEN
 #include <emscripten.h>
 
-EM_ASYNC_JS(char *, em_fgets, (const char* buf, size_t bufsize), {
-  return await new Promise((resolve, reject) => {
-      if (Module.pending_lines.length > 0) {
-        resolve(Module.pending_lines.shift());
-      } else {
-        Module.pending_fgets.push(resolve);
-      }
-  }).then((s) => {
-      // convert JS string to WASM string
-      let l = s.length + 1;
-      if (l >= bufsize) {
-        // truncate
-        l = bufsize - 1;
-      }
-      Module.stringToUTF8(s.slice(0, l), buf, l);
-      return buf;
-  });
+EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
+    return await new Promise((resolve, reject) = > {
+               if (Module.pending_lines.length > 0)
+               {
+                   resolve(Module.pending_lines.shift());
+               }
+               else
+               {
+                   Module.pending_fgets.push(resolve);
+               }
+           })
+        .then((s) = > {
+            // convert JS string to WASM string
+            let l = s.length + 1;
+            if (l >= bufsize)
+            {
+                // truncate
+                l = bufsize - 1;
+            }
+            Module.stringToUTF8(s.slice(0, l), buf, l);
+            return buf;
+        });
 });
 
 #endif
-
 
 // Common operations
 #define POP(ctx, x) hex_item_t x = hex_pop(ctx)
@@ -3845,40 +3849,39 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     return content;
 }
 
-static void do_repl(void *v_ctx) 
+static void do_repl(void *v_ctx)
 {
-       hex_context_t *ctx = (hex_context_t *)v_ctx;
-        char line[1024];
+    hex_context_t *ctx = (hex_context_t *)v_ctx;
+    char line[1024];
 #ifdef EMSCRIPTEN
-        char *p = line;
-        p = em_fgets(line, 1024);
-        if (!p)
-        {
-            printf("Error reading output");
-        }
+    char *p = line;
+    p = em_fgets(line, 1024);
+    if (!p)
+    {
+        printf("Error reading output");
+    }
 #else
-        printf("> "); // Prompt
-        if (fgets(line, sizeof(line), stdin) == NULL)
-        {
-            printf("\n"); // Handle EOF (Ctrl+D)
-            return;
-        }
-#endif
-        // Normalize line endings (remove trailing \r\n or \n)
-        line[strcspn(line, "\r\n")] = '\0';
-
-        // Tokenize and process the input
-        hex_interpret(ctx, line, "<repl>", 1, 1);
-        // Print the top item of the stack
-        if (ctx->stack.top >= 0)
-        {
-            hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
-            // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
-            printf("\n");
-        }
+    printf("> "); // Prompt
+    fflush(stdout);
+    if (fgets(line, sizeof(line), stdin) == NULL)
+    {
+        printf("\n"); // Handle EOF (Ctrl+D)
         return;
+    }
+#endif
+    // Normalize line endings (remove trailing \r\n or \n)
+    line[strcspn(line, "\r\n")] = '\0';
 
-
+    // Tokenize and process the input
+    hex_interpret(ctx, line, "<repl>", 1, 1);
+    // Print the top item of the stack
+    if (ctx->stack.top >= 0)
+    {
+        hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+        // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
+        printf("\n");
+    }
+    return;
 }
 
 // REPL implementation
@@ -3902,7 +3905,7 @@ void hex_repl(hex_context_t *ctx)
 
     while (1)
     {
-      do_repl(ctx);
+        do_repl(ctx);
     }
 #endif
 }

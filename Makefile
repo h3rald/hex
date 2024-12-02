@@ -8,6 +8,8 @@ hex: hex.c
 wasm: hex.c
 	 emcc -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
 
+ape: hex.c
+	cosmocc $(CFLAGS) $(LDFLAGS) $< -o $@
 
 .PHONY: clean
 clean:
