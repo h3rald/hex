@@ -8,6 +8,10 @@ Module.print = (text) => {
   document.querySelector("article section").textContent += text + '\n';
 };
 
+Module.printErr = (text) => {
+  document.querySelector("article section").textContent += text + '\n';
+};
+
 const inputBox = document.querySelector("article input");
 
 inputBox.addEventListener("keydown", (e) => {
@@ -16,7 +20,7 @@ inputBox.addEventListener("keydown", (e) => {
     Module.pending_lines.push(Module.pending_chars.join(''));
     Module.pending_chars = [];
     inputBox.value = '';
-  } else {
+  } else if (e.key.length === 1) {
     Module.pending_chars.push(e.key);
   }
   if (Module.pending_fgets.length > 0 && Module.pending_lines.length > 0) {
