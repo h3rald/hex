@@ -58,3 +58,4 @@ example.hex
 web/out/
 web/assets/hex.js
 web/assets/hex.wasm
+*.com.dbg

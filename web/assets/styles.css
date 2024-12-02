@@ -55,7 +55,8 @@ a:visited {
 }
 
 a[href^=http] {
-    text-decoration-style: dashed;
+    text-decoration-style: dotted;
+    text-decoration-thickness: from-font;
 }
 
 strong {
