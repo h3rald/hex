@@ -1224,6 +1224,7 @@ int hex_symbol_print(hex_context_t *ctx)
         return 1;
     }
     hex_raw_print_item(stdout, item);
+    fflush(stdout);
     return 0;
 }
 
