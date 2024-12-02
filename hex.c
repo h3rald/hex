@@ -1,5 +1,30 @@
 #include "hex.h"
 
+#ifdef EMSCRIPTEN
+#include <emscripten.h>
+
+EM_ASYNC_JS(char *, em_fgets, (const char* buf, size_t bufsize), {
+  return await new Promise((resolve, reject) => {
+      if (Module.pending_lines.length > 0) {
+        resolve(Module.pending_lines.shift());
+      } else {
+        Module.pending_fgets.push(resolve);
+      }
+  }).then((s) => {
+      // convert JS string to WASM string
+      let l = s.length + 1;
+      if (l >= bufsize) {
+        // truncate
+        l = bufsize - 1;
+      }
+      Module.stringToUTF8(s.slice(0, l), buf, l);
+      return buf;
+  });
+});
+
+#endif
+
+
 // Common operations
 #define POP(ctx, x) hex_item_t x = hex_pop(ctx)
 #define FREE(ctx, x) hex_free_item(ctx, x)
@@ -3814,26 +3839,25 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     return content;
 }
 
-// REPL implementation
-void hex_repl(hex_context_t *ctx)
+static void do_repl(void *v_ctx) 
 {
-
-    char line[1024];
-
-    printf("   _*_ _\n");
-    printf("  / \\hex\\*\n");
-    printf(" *\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
-    printf("      *\n");
-
-    while (1)
-    {
+       hex_context_t *ctx = (hex_context_t *)v_ctx;
+        char line[1024];
+#ifdef EMSCRIPTEN
+        char *p = line;
+        p = em_fgets(line, 1024);
+        if (!p)
+        {
+            printf("Error reading output");
+        }
+#else
         printf("> "); // Prompt
         if (fgets(line, sizeof(line), stdin) == NULL)
         {
             printf("\n"); // Handle EOF (Ctrl+D)
-            break;
+            return;
         }
-
+#endif
         // Normalize line endings (remove trailing \r\n or \n)
         line[strcspn(line, "\r\n")] = '\0';
 
@@ -3846,7 +3870,32 @@ void hex_repl(hex_context_t *ctx)
             // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
             printf("\n");
         }
+        return;
+
+
+}
+
+// REPL implementation
+void hex_repl(hex_context_t *ctx)
+{
+
+
+    printf("   _*_ _\n");
+    printf("  / \\hex\\*\n");
+    printf(" *\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
+    printf("      *\n");
+
+#ifdef __EMSCRIPTEN__
+  int fps = 0;
+  int simulate_infinite_loop = 1;
+  emscripten_set_main_loop_arg(do_repl, ctx, fps, simulate_infinite_loop);
+#else
+
+    while (1)
+    {
+      do_repl(ctx);
     }
+#endif
 }
 
 void hex_handle_sigint(int sig)
