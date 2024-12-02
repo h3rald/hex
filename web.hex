@@ -36,6 +36,9 @@ assets
 (
     "fn_asset" store
     (d_out "assets" fn_asset) () map "/" join "dst_file" store
+    (fn_asset "robots.txt" ==)
+        ((d_out fn_asset) () map "/" join "dst_file" store)
+    when
     (d_assets fn_asset) () map "/" join "src_file" store
     "  - Writing: " dst_file cat puts
     ("cp" src_file dst_file) () map " " join exec  

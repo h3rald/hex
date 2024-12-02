@@ -31,7 +31,12 @@ header h1 {
     display: inline;
     font-size: 100%;
     font-weight: 400;
+    text-decoration: none;
     margin: 0;
+}
+
+header h1 a {
+    text-decoration: none;
 }
 
 footer {
@@ -66,18 +71,17 @@ li {
 }
 
 .prompt-wrapper {
-  whitespace: nowrap;
-  color: lime;
+    white-space: nowrap;
+    color: lime;
 }
 
-
-article > section {
+article>section {
     display: flex;
     flex-direction: column;
     border: 1px solid lime;
 }
 
-article > section > section {
+article>section>section {
     height: 30vh;
     white-space: pre-wrap;
     overflow-y: scroll;
@@ -105,3 +109,13 @@ article input {
 article input:focus {
     outline: none;
 }
+
+pre {
+    margin: 1rem;
+}
+
+code {
+    color: gold;
+}
+
+pre code {}

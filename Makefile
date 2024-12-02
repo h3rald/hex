@@ -1,4 +1,3 @@
-# Default Compiler and Flags
 CC ?= gcc
 CFLAGS ?= -Wall -Wextra -g
 LDFLAGS ?=
@@ -13,6 +12,7 @@ wasm: hex.c
 .PHONY: clean
 clean:
 	rm hex
+	rm -r web/out/
 
 .PHONY: test
 test:
