@@ -17,7 +17,6 @@ wasm: web/assets/hex.wasm
 .PHONY: clean
 clean:
 	rm hex
-	rm -r web/out/
 
 .PHONY: test
 test:
@@ -32,5 +31,5 @@ web: wasm
 	./hex web.hex
 
 .PHONY: dweb
-dweb:
+dweb: wasm
 	./hex -d web.hex
