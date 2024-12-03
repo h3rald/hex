@@ -18,7 +18,9 @@ contents
     "fn_content" store
     fn_content ".html" "" replace "id_content" store
     d_contents "/" fn_content cat cat read "content" store
-    t_page read "{{content}}" content replace "new_content" store
+    t_page read "{{content}}" content replace
+    "{{title}}" id_content replace 
+    "new_content" store
     (fn_content "home.html" ==)
         (d_out "/index.html" cat "dst_file" store) 
         (
