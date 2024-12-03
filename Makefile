@@ -1,15 +1,15 @@
-CC ?= gcc
-CFLAGS ?= -Wall -Wextra -g
-LDFLAGS ?=
+CC = gcc
+CFLAGS = -Wall -Wextra -g
+LDFLAGS =
 
 hex: hex.c
-	$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
 
 wasm: hex.c
 	 emcc -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
 
 ape: hex.c
-	cosmocc $(CFLAGS) $(LDFLAGS) $< -o $@
+	cosmocc $(CFLAGS) $(LDFLAGS) $< -o hex
 
 .PHONY: clean
 clean:

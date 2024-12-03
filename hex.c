@@ -77,7 +77,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int na
         {
             if (ctx->registry.entries[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
-                hex_error(ctx, "Cannot overwrite native symbol %s", key);
+                hex_error(ctx, "Cannot overwrite native symbol '%s'", key);
                 return 1;
             }
             free(ctx->registry.entries[i].key);
@@ -1108,6 +1108,12 @@ int hex_symbol_free(hex_context_t *ctx)
     {
         FREE(ctx, item);
         hex_error(ctx, "Variable name must be a string");
+        return 1;
+    }
+    if (hex_valid_native_symbol(ctx, item.data.str_value))
+    {
+        hex_error(ctx, "Cannot free native symbol '%s'", item.data.str_value);
+        FREE(ctx, item);
         return 1;
     }
     for (int i = 0; i < ctx->registry.size; i++)
@@ -2956,7 +2962,6 @@ int hex_symbol_run(hex_context_t *ctx)
     CloseHandle(pi.hThread);
     CloseHandle(hOutputRead);
     CloseHandle(hErrorRead);
-
 #else
     // POSIX implementation (Linux/macOS)
     int stdout_pipe[2];

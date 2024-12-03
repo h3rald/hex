@@ -34,14 +34,14 @@
     <pre><code>"ls" run 0x1 get "&bsol;n" split puts</code></pre>
     <p>Note that <strong>no variable is used in the code above</strong>! Let's break it down:</p>
     <ul>
-        <li>The string <code>ls</code> is pushed on the stack.</li>
+        <li>The string <code>"ls"</code> is pushed on the stack.</li>
         <li>The <code>run</code> symbol is executed, which runs the command <code>ls</code> and pushes quotation on the
             stack
             containing three elements: the return code of the program, its standard output, and its standard error.</li>
         <li>The integer <code>0x1</code> is pushed on the stack.</li>
         <li>The <code>get</code> symbol is executed, which retrieves the second element of the quotation (the standard
             output).</li>
-        <li>The string <code>&bsol;n</code> is pushed on the stack.</li>
+        <li>The string <code>"&bsol;n"</code> is pushed on the stack.</li>
         <li>The <code>split</code> symbol is executed, which splits the string using the newline character as a
             separator.</li>
         <li>The <code>puts</code> symbol is executed, which prints the quotation on the stack.</li>
