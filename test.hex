@@ -4,6 +4,8 @@
 () "errors" store
 () "fails" store
 
+(dup puts) "pp" store
+
 (
     "current-test" store
     test-count 0x1 + "test-count" store
@@ -135,6 +137,18 @@
     (clear stack () ==)
     (0x1 0x2 swap pop stack (0x2) ==)
     ;68
+
+    (("aaa" "puts" store) (error) try "Failed to store symbol 'puts'" ==)
+    (("puts" free) (error) try "Cannot free native symbol 'puts'" ==)
+    (("aaa" 0x2 store) (error) try "Symbol name must be a string" ==)
+    ((0x2 free) (error) try "Symbol name must be a string" ==)
+    ;72
+
+    (("puts" i) (error) try "Symbol 'i' requires a quotation" ==)
+    (((puts) eval) (error) try "Symbol 'eval' requires a string" ==)
+    (("3" 0x3 +) (error) try "Symbol '+' requires two integers" ==)
+    (("3" 0x3 -) (error) try "Symbol '-' requires two integers" ==)
+    ;76
     
 ) "tests" store
 

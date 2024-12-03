@@ -1087,7 +1087,7 @@ int hex_symbol_store(hex_context_t *ctx)
     }
     if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
     {
-        hex_error(ctx, "Failed to store variable");
+        hex_error(ctx, "Failed to store symbol '%s'", name.data.str_value);
         FREE(ctx, name);
         FREE(ctx, value);
         return 1;
@@ -1107,7 +1107,7 @@ int hex_symbol_free(hex_context_t *ctx)
     if (item.type != HEX_TYPE_STRING)
     {
         FREE(ctx, item);
-        hex_error(ctx, "Variable name must be a string");
+        hex_error(ctx, "Symbol name must be a string");
         return 1;
     }
     if (hex_valid_native_symbol(ctx, item.data.str_value))
@@ -1160,7 +1160,7 @@ int hex_symbol_i(hex_context_t *ctx)
     }
     if (item.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'i' symbol requires a quotation");
+        hex_error(ctx, "Symbol 'i' requires a quotation");
         FREE(ctx, item);
         return 1;
     }
@@ -1187,7 +1187,7 @@ int hex_symbol_eval(hex_context_t *ctx)
     }
     if (item.type != HEX_TYPE_STRING)
     {
-        hex_error(ctx, "'eval' symbol requires a string");
+        hex_error(ctx, "Symbol 'eval' requires a string");
         FREE(ctx, item);
         return 1;
     }
@@ -1284,7 +1284,7 @@ int hex_symbol_add(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value + b.data.int_value);
     }
-    hex_error(ctx, "'+' symbol requires two integers");
+    hex_error(ctx, "Symbol '+' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;
@@ -1310,7 +1310,7 @@ int hex_symbol_subtract(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value - b.data.int_value);
     }
-    hex_error(ctx, "'-' symbol requires two integers");
+    hex_error(ctx, "Symbol '-' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;

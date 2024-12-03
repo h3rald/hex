@@ -6,7 +6,7 @@ hex: hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
 
 wasm: hex.c
-	 emcc -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
+	 emcc -O2 -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
 
 ape: hex.c
 	cosmocc $(CFLAGS) $(LDFLAGS) $< -o hex
