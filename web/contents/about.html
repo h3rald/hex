@@ -1,7 +1,13 @@
 <article>
-    <h2>About</h2>
+<h2>About</h2>
+<p>The core idea behind <strong>hex</strong> is to be a really small language for experimenting with the <a href="https://concatenative.org" target="_blank">concatenative</a> programming paradigm and at the same time being somewhat useful for practical things like creating short scripts or be used as glue code for automating common tasks.</p>
+<p>When I first implemented <a href="https://min-lang.org" target="_blank">min</a>, the intent was to create a minimal language, hence the name. The reality however turned out to be very different: in no time, I found myself adding a lot of syntactic sugar, complex data types, support for XML processing and HTTP client and server... it became more of a batteries-included language with a somewhat spartan syntax than anything else. </p>
+<p>The second attempt was to essentially fork part of the min codebase and create <a href="https://h3rald.com/mn" target="_blank">mn</a>, which was a lot more limited, but still not minimal <em>enough</em>. The one thing that was bothering me the most was, in the end, the fact that it was implemented in Nim. Not that Nim is a bad language (quite the opposite!), but I really wanted to keep things simple, and implement something in C.</p>
+<p>And that&#39;s how <strong>hex</strong> was born! Actually... I started off asking ChatGPT to implement a tokenizer for a small stack-based language able to process integers, then an interpreter, then I asked for string support, and then... well, the boilerplate wasn&#39;t too bad. A few tweaks here and there and I was able to improve a few things, and in a few days I realized that I had re-learnt some C programming skills I hadn&#39;t been using in the past 20 years!</p>
+<p>So there you have it. A language that is purely concatenative, truly minimalist and yet powerful enough, limited to 64 native symbols and yet manage to be somewhat useful, hopefully. The fact that I could get it to compile to WASM with just a few hours worth of extra work (mainly to manage stdin properly) also meant that this little thing also has its own browser-based <a href="/play">playground</a>!</p>
+<p>The only annoying thing is that it only understands hexadecimal integers. Well... I figured I could take a little <em>poetic license</em>, and introduce a small quirk that would justify its nice, almost magical, three letter name!</p>
+<p>Happy hexxing!</p>
+<p><em>-- Fabio aka H3RALD</em></p>
 
-    <blockquote>
-        Under construction.
-    </blockquote>
 </article>
+
