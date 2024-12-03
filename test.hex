@@ -2,6 +2,7 @@
 0x0 "successes" store
 0x0 "failures" store
 () "errors" store
+() "fails" store
 
 (
     "current-test" store
@@ -15,6 +16,7 @@
             (
                 "x" print
                 failures 0x1 + "failures" store
+                fails test-count dec q cat "fails" store
             )
         if
     ) 
@@ -23,6 +25,7 @@
             errors " - Test #" test-count dec cat ": " cat error cat q cat "errors" store  
             "x" print
             failures 0x1 + "failures" store
+            fails test-count dec q cat "fails" store
         )
     try
 ) "test" store
@@ -154,5 +157,12 @@ tests (test i) each
         0x1 exit
     )
 when
+(fails len 0x0 >)
+    (
+        "Failed Tests: " fails ", " join cat warn
+        0x1 exit
+    )
+when
+
 
 0x0 exit
