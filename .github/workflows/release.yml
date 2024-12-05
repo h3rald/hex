@@ -61,6 +61,9 @@ jobs:
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+            - name: Debgug current release
+              run: echo "${{steps.current-release.outputs.data}}"
+
             # Package the resulting Linux/macOS binary
             - name: Create artifact (Linux, macOS)
               run: zip hex_${{fromJson(steps.current-release.outputs.data).tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
