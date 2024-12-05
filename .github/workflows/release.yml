@@ -63,17 +63,17 @@ jobs:
 
             # Package the resulting Linux/macOS binary
             - name: Create artifact (Linux, macOS)
-              run: zip min_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip min
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
               if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
 
             # Package the resulting macOs latest binary
             - name: Create artifact (Linux, macOS)
-              run: zip min_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip min
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
               if:  matrix.os == 'macos-latest'
               
             # Package the resulting Windows binary
             - name: Create artifact (Windows)
-              run: Compress-Archive -Path min.exe -DestinationPath min_${{steps.current-release.outputs.tag_name}}_windows_x86_64.zip
+              run: Compress-Archive -Path hex.exe -DestinationPath hex_${{steps.current-release.outputs.tag_name}}_windows_x86_64.zip
               if: matrix.os == 'windows-latest'
 
             # Upload artifacts to current draft release
@@ -82,7 +82,7 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
-                  file: "min_v*.zip"
+                  file: "hex_v*.zip"
                   overwrite: true
                   tag_name: ${{steps.current-release.outputs.tag_name}}
                   release_id: ${{steps.current-release.outputs.id }}
