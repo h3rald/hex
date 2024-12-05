@@ -40,15 +40,18 @@ jobs:
                 cd cosmocc
                 wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
                 unzip cosmocc.zip
-                cd ..
                 pwd
-                ls -l cosmocc
+                ls -l
               if: matrix.os == 'ubuntu-latest'
 
             # Sets path (Linux, macOS)
             - name: Update $PATH
               run: echo "$HOME/cosmocc/bin" >> $GITHUB_PATH
               if: matrix.os == 'ubuntu-latest'
+
+            # Setup emsdk
+            - name: Setup emsdk
+              uses: mymindstorm/setup-emsdk@v14
 
             # Retrieve ID and Name of the current (draft) release
             - name: "Get current release"
