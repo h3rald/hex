@@ -1,0 +1,129 @@
+name: Release
+
+# Controls when the action will run.
+on:
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
+
+jobs:
+    release:
+        name: "Build and upload artifacts"
+        runs-on: ${{ matrix.os }}
+        permissions:
+            contents: write
+        strategy:
+            matrix:
+                os:
+                    - ubuntu-latest
+                    - macos-latest
+                    - windows-latest
+                    - macos-13
+        steps:
+            # Cancel other actions of the same type that might be already running
+            - name: "Cancel similar actions in progress"
+              uses: styfle/cancel-workflow-action@0.9.1
+              with:
+                  access_token: ${{ github.token }}
+                  
+            # Detects OS and provide Nim-friendly OS identifiers
+            - name: Detect current OS
+              id: os
+              run:  echo "os=${{matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-latest' && 'macos' || matrix.os == 'macos-13' && 'macos' || matrix.os == 'windows-latest' && 'windows'}}" >> $GITHUB_OUTPUT
+
+            # Checks out the repository
+            - uses: actions/checkout@v2
+
+            # Install cosmocc
+            - name: Install cosmocc
+              run: |
+                mkdir -p $HOME/cosmocc
+                cd $HOME/cosmocc
+                wget -q https://cosmo.zip/pub/cosmocc/cosmocc.zip
+                unzip -q cosmocc.zip
+                pwd
+                ls -l
+              if: matrix.os == 'ubuntu-latest'
+
+            # Setup emsdk
+            - name: Setup emsdk
+              uses: mymindstorm/setup-emsdk@v14
+              if: matrix.os == 'ubuntu-latest'
+
+            # Retrieve ID and Name of the current (draft) release
+            - name: "Get current release"
+              id: current-release
+              uses: InsonusK/get-latest-release@v1.0.1
+              with:
+                myToken: ${{ github.token }}
+                exclude_types: "release"
+                view_top: 1
+            
+            # Build (non-Windows)
+            - name: Build
+              run: make
+              if: matrix.os != 'windows-latest'
+
+            # Package the resulting Linux/macOS binary
+            - name: Create artifact (Linux, macOS)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
+              if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
+
+            # Package the resulting macOs latest binary
+            - name: Create artifact (Linux, macOS)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
+              if:  matrix.os == 'macos-latest'
+
+            # Generate WASM binary
+            - name: Generate WASM binary
+              run: emcc -O2 -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o hex.js
+              if: matrix.os == 'ubuntu-latest'
+
+            # Package the resulting WASM binary
+            - name: Create artifact (Linux - WASM)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_wasm.zip hex.wasm hex.js
+              if: matrix.os == 'ubuntu-latest'
+
+            # Add cosmocc to PATH + see https://redbean.dev/#install
+            - name: Add cosmocc to PATH
+              run: |
+                echo $HOME/cosmocc/bin >> $GITHUB_PATH
+                sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+                sudo chmod +x /usr/bin/ape
+                sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+                sudo sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+              if: matrix.os == 'ubuntu-latest'
+
+            # Generate APE binary
+            - name: Generate APE binary
+              run: |
+                mv hex hex.native
+                make ape
+              if: matrix.os == 'ubuntu-latest'
+
+            # Package the resulting APE binary
+            - name: Create artifact (Linux - APE)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_ape.zip hex
+              if: matrix.os == 'ubuntu-latest'
+            
+            # Build (Windows)
+            - name: Build
+              run: make
+              shell: bash
+              if: matrix.os == 'windows-latest'
+              
+            # Package the resulting Windows binary
+            - name: Create artifact (Windows)
+              run: Compress-Archive -Path hex.exe -DestinationPath hex_${{steps.current-release.outputs.tag_name}}_windows_x86_64.zip
+              if: matrix.os == 'windows-latest'
+
+            # Upload artifacts to current draft release
+            - name: "Upload to current release"
+              uses: xresloader/upload-to-github-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  file: "hex_v*.zip"
+                  overwrite: true
+                  tag_name: ${{steps.current-release.outputs.tag_name}}
+                  release_id: ${{steps.current-release.outputs.id }}
+                  verbose: true

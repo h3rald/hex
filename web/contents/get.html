@@ -1,7 +1,57 @@
 <article>
     <h2>Get Started</h2>
 
-    <blockquote>
-        Under construction.
-    </blockquote>
+    <p>At present there are no pre-build binaries available for download, because hex has not been officially released
+        yet. However, when it is, the following pre-built binaries will be available from download:</p>
+    <ul>
+        <li>hex v{{release}} for Windows (x86_64)</li>
+        <li>hex v{{release}} for Linux (x86_64)</li>
+        <li>hex v{{release}} for MacOS (ARM64)</li>
+        <li>hex v{{release}} (<a href="https://justine.lol/ape.html" target="_blank">αcτµαlly pδrταblε εxεcµταblε</a>)
+        </li>
+        <li>hex v{{release}} (<a href="https://webassembly.org" target="_blank">WebAssembly</a>)</li>
+    </ul>
+
+    <h3>Building from Source</h3>
+
+    <p>Building from source is easy: just run <code>make</code> after cloning the repo to build the hex executable for
+        your platform.</p>
+    <p>This assumes that you have a C compiler like GCC and the make command installed. On Windows, you may want to look
+        into <a href="https://www.msys2.org" target="_blank">MSYS2</a>.</p>
+    <p>You can also:</p>
+    <ul>
+        <li>Run <code>make test</code> to run the test suite.</li>
+        <li>Run <code>make ape</code> to generate an αcτµαlly pδrταblε εxεcµταblε (requires <a
+                href="https://github.com/jart/cosmopolitan" target="_blank">Cosmopolitan</a>). </li>
+        <li>Run <code>make wasm</code> to generate a <code>hex.js</code> and a <code>hex.wasm</code> (WebAssembly) file.
+        </li>
+    </ul>
+
+    <h3>Command line options</h3>
+
+    <p>Running <code>hex -h</code> will print the following list of all the available command line options for the hex
+        executable:</p>
+
+    <pre>
+     _*_ _
+    / \hex\*
+   *\_/_/_/ v{{release}} - A minimalist, concatenative programming language.
+        *   (c) {{year}} Fabio Cevasco
+    
+    USAGE
+    hex [options] [file]
+    
+    ARGUMENTS
+    file            A .hex file to interpret
+    
+    OPTIONS
+    -d, --debug     Enable debug mode.
+    -h, --help      Display this help message.
+    -m --manual     Display the manual.
+    -v, --version   Display hex version.
+    </pre>
+
+    <p>If you do not specify any option or argument, a simple <abbr title="Read-Eval-Print-Loop">REPL</abbr> will be
+        started.</p>
+
 </article>

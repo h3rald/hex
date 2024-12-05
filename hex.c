@@ -1,6 +1,6 @@
 #include "hex.h"
 
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) && defined(BROWSER)
 #include <emscripten.h>
 
 EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
@@ -1243,7 +1243,7 @@ int hex_symbol_gets(hex_context_t *ctx)
 
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
     char *p = input;
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) && defined(BROWSER)
     p = em_fgets(input, 1024);
 #else
     p = fgets(input, sizeof(input), stdin);
@@ -2675,8 +2675,8 @@ int hex_symbol_read(hex_context_t *ctx)
             }
             else
             {
-                fread(buffer, 1, length, file);
-                buffer[length] = '\0';
+                size_t bytesRead = fread(buffer, 1, length, file);
+                buffer[bytesRead] = '\0';
                 result = hex_push_string(ctx, buffer);
                 free(buffer);
             }
@@ -3794,7 +3794,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        hex_error(ctx, "Failed to open file");
+        hex_error(ctx, "Failed to open file: %s", filename);
         return NULL;
     }
 
@@ -3859,7 +3859,7 @@ static void do_repl(void *v_ctx)
 {
     hex_context_t *ctx = (hex_context_t *)v_ctx;
     char line[1024];
-#ifdef EMSCRIPTEN
+#if defined(EMSCRIPTEN) && defined(BROWSER)
     char *p = line;
     p = em_fgets(line, 1024);
     if (!p)
@@ -3893,7 +3893,7 @@ static void do_repl(void *v_ctx)
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
 {
-#ifdef __EMSCRIPTEN__
+#if defined(EMSCRIPTEN) && defined(BROWSER)
     printf("   _*_ _\n");
     printf("  / \\hex\\*\n");
     printf(" *\\_/_/_/ v%s - WASM Build\n", HEX_VERSION);
@@ -4059,7 +4059,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-#ifndef EMSCRIPTEN
+#if !(EMSCRIPTEN) && !(BROWSER)
     if (!isatty(fileno(stdin)))
     {
         ctx.settings.stack_trace_enabled = 0;
