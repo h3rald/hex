@@ -9,6 +9,7 @@ jobs:
     release:
         name: "Build and upload artifacts"
         runs-on: ${{ matrix.os }}
+        permissions: write-all
         strategy:
             matrix:
                 os:
