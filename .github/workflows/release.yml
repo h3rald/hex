@@ -75,7 +75,7 @@ jobs:
 
             # Generate WASM binary
             - name: Generate WASM binary
-              run: make wasm
+              run: emcc -O2 -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o hex.js
               if: matrix.os == 'ubuntu-latest'
 
             # Package the resulting WASM binary
