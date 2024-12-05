@@ -83,16 +83,11 @@ jobs:
               run: zip hex_${{steps.current-release.outputs.tag_name}}_wasm.zip hex.wasm hex.js
               if: matrix.os == 'ubuntu-latest'
 
-            # Add cosmocc to PATH
-            - name: Add cosmocc to PATH
-              run: echo $HOME/cosmocc/bin >> $GITHUB_PATH
-              if: matrix.os == 'ubuntu-latest'
-
             # Generate APE binary
             - name: Generate APE binary
               run: |
                 mv hex hex.native
-                make ape
+                $HOME/cosmocc/bin/cosmocc -Wall -Wextra -g -o hex
               if: matrix.os == 'ubuntu-latest'
 
             # Package the resulting APE binary
