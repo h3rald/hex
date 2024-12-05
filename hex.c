@@ -3895,8 +3895,8 @@ void hex_repl(hex_context_t *ctx)
 {
 #if defined(EMSCRIPTEN) && defined(BROWSER)
     printf("   _*_ _\n");
-    printf("  / \\hex\\*\n");
-    printf(" *\\_/_/_/ v%s - WASM Build\n", HEX_VERSION);
+    printf("  / \\hex\\* programming language\n");
+    printf(" *\\_/_/_/  v%s - WASM Build\n", HEX_VERSION);
     printf("      *\n");
 
     int fps = 0;
@@ -3905,8 +3905,8 @@ void hex_repl(hex_context_t *ctx)
 #else
 
     printf("   _*_ _\n");
-    printf("  / \\hex\\*\n");
-    printf(" *\\_/_/_/ v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
+    printf("  / \\hex\\* programming language\n");
+    printf(" *\\_/_/_/  v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
     printf("      *\n");
 
     while (1)
@@ -3942,9 +3942,9 @@ void hex_process_stdin(hex_context_t *ctx)
 void hex_print_help()
 {
     printf("   _*_ _\n"
-           "  / \\hex\\*\n"
-           " *\\_/_/_/ v%s - A minimalist, concatenative programming language.\n"
-           "      *   (c) 2024 Fabio Cevasco\n",
+           "  / \\hex\\* programming language\n"
+           " *\\_/_/_/  v%s - (c) 2024 Fabio Cevasco\n"
+           "      *      \n",
            HEX_VERSION);
     printf("\n"
            "USAGE\n"
@@ -3963,9 +3963,9 @@ void hex_print_help()
 void hex_print_docs(hex_doc_dictionary_t *docs)
 {
     printf("   _*_ _\n"
-           "  / \\hex\\*\n"
-           " *\\_/_/_/ v%s - A minimalist, concatenative programming language.\n"
-           "      *   (c) 2024 Fabio Cevasco\n",
+           "  / \\hex\\* programming language\n"
+           " *\\_/_/_/  v%s - (c) 2024 Fabio Cevasco\n"
+           "      *   \n",
            HEX_VERSION);
     printf("\n"
            "BASICS\n"
