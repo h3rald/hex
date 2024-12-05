@@ -42,11 +42,7 @@ jobs:
                 unzip cosmocc.zip
                 pwd
                 ls -l
-              if: matrix.os == 'ubuntu-latest'
-
-            # Sets path (Linux, macOS)
-            - name: Update $PATH
-              run: echo "$HOME/cosmocc/bin" >> $GITHUB_PATH
+                echo pwd >> $GITHUB_PATH
               if: matrix.os == 'ubuntu-latest'
 
             # Setup emsdk
