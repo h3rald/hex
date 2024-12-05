@@ -28,7 +28,7 @@ jobs:
             # Detects OS and provide Nim-friendly OS identifiers
             - name: Detect current OS
               id: os
-              run:  echo "os=${{matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-13' && 'macosx' || matrix.os == 'windows-latest' && 'windows'}}" >> $GITHUB_OUTPUT
+              run:  echo "os=${{matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-latest' && 'macos' || matrix.os == 'macos-13' && 'macos' || matrix.os == 'windows-latest' && 'windows'}}" >> $GITHUB_OUTPUT
 
             # Checks out the repository
             - uses: actions/checkout@v2
