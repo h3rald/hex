@@ -80,13 +80,17 @@ jobs:
 
             # Package the resulting WASM binary
             - name: Create artifact (Linux - WASM)
-              run: zip hex_${{steps.current-release.outputs.tag_name}}_wasm.zip hex
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_wasm.zip hex.wasm hex.js
+              if: matrix.os == 'ubuntu-latest'
+
+            # Add cosmocc to PATH
+            - name: Add cosmocc to PATH
+              run: echo $(HOME)/cosmocc/bin >> $GITHUB_PATH
               if: matrix.os == 'ubuntu-latest'
 
             # Generate APE binary
             - name: Generate APE binary
               run: |
-                echo $(HOME)/cosmocc/bin >> $GITHUB_PATH
                 mv hex hex.native
                 make ape
               if: matrix.os == 'ubuntu-latest'
