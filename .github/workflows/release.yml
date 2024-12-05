@@ -55,23 +55,9 @@ jobs:
             # Retrieve ID and Name of the current (draft) release
             - name: "Get current release"
               id: current-release
-              uses: InsonusK/get-latest-release@v1.0.1
-              with:
-                  myToken: ${{ github.token }}
-                  exclude_types: "release"
-                  view_top: 1
-            
-            # Print the result of the current release
-            - name: "Print release result"
-              run: |
-                echo "id: ${{ steps.current-release.outputs.id }}"
-                echo "name: ${{ steps.current-release.outputs.name }}"
-                echo "tag_name: ${{ steps.current-release.outputs.tag_name }}"
-                echo "created_at: ${{ steps.current-release.outputs.created_at }}"
-                echo "draft: ${{ steps.current-release.outputs.draft }}"
-                echo "prerelease: ${{ steps.current-release.outputs.prerelease }}"
-                echo "url: ${{ steps.current-release.outputs.url }}"
-                echo "html_url: ${{ steps.current-release.outputs.html_url }}"
+              uses: AsheKR/get-latest-draft-release@1.0.2
+              env:
+                GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             # Package the resulting Linux/macOS binary
             - name: Create artifact (Linux, macOS)
