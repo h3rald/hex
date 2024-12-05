@@ -52,6 +52,7 @@ jobs:
             # Setup emsdk
             - name: Setup emsdk
               uses: mymindstorm/setup-emsdk@v14
+              if: matrix.os == 'ubuntu-latest'
 
             # Retrieve ID and Name of the current (draft) release
             - name: "Get current release"
