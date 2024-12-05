@@ -58,8 +58,6 @@ jobs:
               id: current-release
               with:
                 route: GET /repos/h3rald/hex/releases
-                owner: h3rald
-                repo: hex
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
