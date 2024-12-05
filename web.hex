@@ -1,3 +1,5 @@
+"2024" "meta_year" store
+"0.1.0" "meta_release" store
 "web/assets" "d_assets" store
 "web/templates" "d_templates" store
 "web/contents" "d_contents" store
@@ -11,6 +13,25 @@ d_contents ls i "contents" store
 d_assets ls i "assets" store
 d_templates "/page.html" cat "t_page" store
 
+; Convenience symbol for debugging
+(dup puts) "_" store
+
+; Generate tag placeholder
+(
+    "{{" swap "}}" cat cat
+) "tag" store
+
+; Replace tag
+(
+    "pt_repl" store
+    "pt_tag" store
+    "pt_content" store
+    (pt_content pt_tag tag i index 0x0 >)
+        (pt_content pt_tag tag i pt_repl replace "pt_content" store)
+    while 
+    pt_content
+) "process-tag" store
+
 "*** Generating hex web site..." puts
 ; Write contents
 contents
@@ -18,8 +39,12 @@ contents
     "fn_content" store
     fn_content ".html" "" replace "id_content" store
     d_contents "/" fn_content cat cat read "content" store
-    t_page read "{{content}}" content replace
-    "{{title}}" id_content replace 
+    t_page read
+    ; Replace tags
+    "content" content process-tag i
+    "title" id_content process-tag i
+    "release" meta_release process-tag i
+    "year" meta_year process-tag i
     "new_content" store
     (fn_content "home.html" ==)
         (d_out "/index.html" cat "dst_file" store) 
