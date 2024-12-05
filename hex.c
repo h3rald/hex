@@ -1,6 +1,6 @@
 #include "hex.h"
 
-#if defined(EMSCRIPTEN) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__) && defined(BROWSER)
 #include <emscripten.h>
 
 EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
@@ -1243,7 +1243,7 @@ int hex_symbol_gets(hex_context_t *ctx)
 
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
     char *p = input;
-#if defined(EMSCRIPTEN) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__) && defined(BROWSER)
     p = em_fgets(input, 1024);
 #else
     p = fgets(input, sizeof(input), stdin);
@@ -3855,11 +3855,11 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     return content;
 }
 
-static void do_repl(void *v_ctx)
+static int do_repl(void *v_ctx)
 {
     hex_context_t *ctx = (hex_context_t *)v_ctx;
     char line[1024];
-#if defined(EMSCRIPTEN) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__) && defined(BROWSER)
     char *p = line;
     p = em_fgets(line, 1024);
     if (!p)
@@ -3872,7 +3872,7 @@ static void do_repl(void *v_ctx)
     if (fgets(line, sizeof(line), stdin) == NULL)
     {
         printf("\n"); // Handle EOF (Ctrl+D)
-        return;
+        return 1;
     }
 #endif
     // Normalize line endings (remove trailing \r\n or \n)
@@ -3887,13 +3887,13 @@ static void do_repl(void *v_ctx)
         // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
         printf("\n");
     }
-    return;
+    return 0;
 }
 
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
 {
-#if defined(EMSCRIPTEN) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__) && defined(BROWSER)
     printf("   _*_ _\n");
     printf("  / \\hex\\* programming language\n");
     printf(" *\\_/_/_/  v%s - WASM Build\n", HEX_VERSION);
@@ -3911,7 +3911,10 @@ void hex_repl(hex_context_t *ctx)
 
     while (1)
     {
-        do_repl(ctx);
+        if (do_repl(ctx) != 0)
+        {
+            exit(1);
+        }
     }
 #endif
 }
@@ -4059,7 +4062,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-#if !(EMSCRIPTEN) && !(BROWSER)
+#if !(__EMSCRIPTEN__) && !(BROWSER)
     if (!isatty(fileno(stdin)))
     {
         ctx.settings.stack_trace_enabled = 0;

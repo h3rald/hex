@@ -22,7 +22,10 @@ playground: web/assets/hex.wasm
 
 .PHONY: clean
 clean:
-	rm hex
+	rm -f hex
+	rm -f hex.exe
+	rm -f hex.js
+	rm -f hex.wasm
 
 .PHONY: test
 test:
