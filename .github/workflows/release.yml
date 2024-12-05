@@ -53,25 +53,29 @@ jobs:
               if: matrix.os == 'windows-latest'
 
             # Retrieve ID and Name of the current (draft) release
-            - name: "Get current release"
+            - name: Get current release
+              uses: octokit/request-action@v2.x
               id: current-release
-              uses: AsheKR/get-latest-draft-release@1.0.2
+              with:
+                route: GET /repos/h3rald/hex/releases
+                owner: h3rald
+                repo: hex
               env:
                 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             # Package the resulting Linux/macOS binary
             - name: Create artifact (Linux, macOS)
-              run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
+              run: zip hex_${{fromJson(steps.current-release.outputs.data).tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
               if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
 
             # Package the resulting macOs latest binary
             - name: Create artifact (Linux, macOS)
-              run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
+              run: zip hex_${{fromJson(steps.current-release.outputs.data).tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
               if:  matrix.os == 'macos-latest'
               
             # Package the resulting Windows binary
             - name: Create artifact (Windows)
-              run: Compress-Archive -Path hex.exe -DestinationPath hex_${{steps.current-release.outputs.tag_name}}_windows_x86_64.zip
+              run: Compress-Archive -Path hex.exe -DestinationPath hex_${{fromJson(steps.current-release.outputs.data).tag_name}}_windows_x86_64.zip
               if: matrix.os == 'windows-latest'
 
             # Upload artifacts to current draft release
@@ -82,6 +86,6 @@ jobs:
               with:
                   file: "hex_v*.zip"
                   overwrite: true
-                  tag_name: ${{steps.current-release.outputs.tag_name}}
-                  release_id: ${{steps.current-release.outputs.id }}
+                  tag_name: ${{fromJson(steps.current-release.outputs.data).tag_name}}
+                  release_id: ${{fromJson(steps.current-release.outputs.data).id}}
                   verbose: true
