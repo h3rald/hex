@@ -42,7 +42,6 @@ jobs:
                 unzip -q cosmocc.zip
                 pwd
                 ls -l
-                echo $(pwd)/bin >> $GITHUB_PATH
               if: matrix.os == 'ubuntu-latest'
 
             # Setup emsdk
@@ -69,18 +68,6 @@ jobs:
               run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
               if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
 
-            # Generate APE binary
-            - name: Generate APE binary
-              run: |
-                mv hex hex.native
-                make ape
-              if: matrix.os == 'ubuntu-latest'
-
-            # Package the resulting APE binary
-            - name: Create artifact (Linux - APE)
-              run: zip hex_${{steps.current-release.outputs.tag_name}}_ape.zip hex
-              if: matrix.os == 'ubuntu-latest'
-
             # Package the resulting macOs latest binary
             - name: Create artifact (Linux, macOS)
               run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
@@ -94,6 +81,19 @@ jobs:
             # Package the resulting WASM binary
             - name: Create artifact (Linux - WASM)
               run: zip hex_${{steps.current-release.outputs.tag_name}}_wasm.zip hex
+              if: matrix.os == 'ubuntu-latest'
+
+            # Generate APE binary
+            - name: Generate APE binary
+              run: |
+                echo $(HOME)/cosmocc/bin >> $GITHUB_PATH
+                mv hex hex.native
+                make ape
+              if: matrix.os == 'ubuntu-latest'
+
+            # Package the resulting APE binary
+            - name: Create artifact (Linux - APE)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_ape.zip hex
               if: matrix.os == 'ubuntu-latest'
             
             # Build (Windows)
