@@ -23,7 +23,6 @@ playground: web/assets/hex.wasm
 .PHONY: clean
 clean:
 	rm hex
-	rm -r web/out/
 
 .PHONY: test
 test:
