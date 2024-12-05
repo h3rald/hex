@@ -9,7 +9,8 @@ jobs:
     release:
         name: "Build and upload artifacts"
         runs-on: ${{ matrix.os }}
-        permissions: write-all
+        permissions:
+            contents: write
         strategy:
             matrix:
                 os:
@@ -32,6 +33,14 @@ jobs:
             # Checks out the repository
             - uses: actions/checkout@v2
 
+            # Install cosmocc
+            - name: Install cosmocc
+              run: |
+                mkdir -p cosmocc
+                cd cosmocc
+                wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
+                unzip cosmocc.zip
+
             # Sets path (Linux, macOS)
             - name: Update $PATH
               run: echo "$HOME/cosmocc/bin" >> $GITHUB_PATH
@@ -41,36 +50,58 @@ jobs:
             - name: Update %PATH%
               run: echo "${HOME}/cosmocc/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
               if: matrix.os == 'windows-latest'
-            
-            # Build (non-Windows)
-            - name: Build
-              run: make
-              if: matrix.os != 'windows-latest'
-
-            # Build (Windows)
-            - name: Build
-              run: make
-              shell: bash
-              if: matrix.os == 'windows-latest'
 
             # Retrieve ID and Name of the current (draft) release
             - name: "Get current release"
               id: current-release
               uses: InsonusK/get-latest-release@v1.0.1
               with:
-                  myToken: ${{ github.token }}
-                  exclude_types: "release"
-                  view_top: 1
+                myToken: ${{ github.token }}
+                exclude_types: "release"
+                view_top: 1
+            
+            # Build (non-Windows)
+            - name: Build
+              run: make
+              if: matrix.os != 'windows-latest'
 
             # Package the resulting Linux/macOS binary
             - name: Create artifact (Linux, macOS)
               run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex
               if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
 
+            # Generate APE binary
+            - name: Generate APE binary
+              run: |
+                mv hex hex.native
+                make ape
+              if: matrix.os == 'ubuntu-latest'
+
+            # Package the resulting APE binary
+            - name: Create artifact (Linux - APE)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_ape.zip hex
+              if: matrix.os == 'ubuntu-latest'
+
             # Package the resulting macOs latest binary
             - name: Create artifact (Linux, macOS)
               run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
               if:  matrix.os == 'macos-latest'
+
+            # Generate WASM binary
+            - name: Generate WASM binary
+              run: make wasm
+              if: matrix.os == 'ubuntu-latest'
+
+            # Package the resulting WASM binary
+            - name: Create artifact (Linux - WASM)
+              run: zip hex_${{steps.current-release.outputs.tag_name}}_wasm.zip hex
+              if: matrix.os == 'ubuntu-latest'
+            
+            # Build (Windows)
+            - name: Build
+              run: make
+              shell: bash
+              if: matrix.os == 'windows-latest'
               
             # Package the resulting Windows binary
             - name: Create artifact (Windows)
