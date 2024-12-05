@@ -3854,19 +3854,41 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     fclose(file);
     return content;
 }
+#if defined(__EMSCRIPTEN__) && defined(BROWSER)
 
-static int do_repl(void *v_ctx)
+static void do_repl(void *v_ctx)
 {
     hex_context_t *ctx = (hex_context_t *)v_ctx;
     char line[1024];
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+
     char *p = line;
     p = em_fgets(line, 1024);
     if (!p)
     {
         printf("Error reading output");
+        return;
     }
+    // Normalize line endings (remove trailing \r\n or \n)
+    line[strcspn(line, "\r\n")] = '\0';
+
+    // Tokenize and process the input
+    hex_interpret(ctx, line, "<repl>", 1, 1);
+    // Print the top item of the stack
+    if (ctx->stack.top >= 0)
+    {
+        hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+        // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
+        printf("\n");
+    }
+    return;
+}
+
 #else
+
+static int do_repl(void *v_ctx)
+{
+    hex_context_t *ctx = (hex_context_t *)v_ctx;
+    char line[1024];
     printf("> "); // Prompt
     fflush(stdout);
     if (fgets(line, sizeof(line), stdin) == NULL)
@@ -3874,7 +3896,6 @@ static int do_repl(void *v_ctx)
         printf("\n"); // Handle EOF (Ctrl+D)
         return 1;
     }
-#endif
     // Normalize line endings (remove trailing \r\n or \n)
     line[strcspn(line, "\r\n")] = '\0';
 
@@ -3889,6 +3910,8 @@ static int do_repl(void *v_ctx)
     }
     return 0;
 }
+
+#endif
 
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
