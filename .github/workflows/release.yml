@@ -36,13 +36,13 @@ jobs:
             # Install cosmocc
             - name: Install cosmocc
               run: |
-                mkdir -p cosmocc
-                cd cosmocc
-                wget https://cosmo.zip/pub/cosmocc/cosmocc.zip
-                unzip cosmocc.zip
+                mkdir -p $HOME/cosmocc
+                cd $HOME/cosmocc
+                wget -q https://cosmo.zip/pub/cosmocc/cosmocc.zip
+                unzip -q cosmocc.zip
                 pwd
                 ls -l
-                echo pwd >> $GITHUB_PATH
+                echo $(pwd)/bin >> $GITHUB_PATH
               if: matrix.os == 'ubuntu-latest'
 
             # Setup emsdk
