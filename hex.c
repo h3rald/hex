@@ -3918,7 +3918,7 @@ void hex_repl(hex_context_t *ctx)
 {
 #if defined(__EMSCRIPTEN__) && defined(BROWSER)
     printf("   _*_ _\n");
-    printf("  / \\hex\\* programming language\n");
+    printf("  / \\hex\\*\n");
     printf(" *\\_/_/_/  v%s - WASM Build\n", HEX_VERSION);
     printf("      *\n");
 
@@ -3928,7 +3928,7 @@ void hex_repl(hex_context_t *ctx)
 #else
 
     printf("   _*_ _\n");
-    printf("  / \\hex\\* programming language\n");
+    printf("  / \\hex\\*\n");
     printf(" *\\_/_/_/  v%s - Press Ctrl+C to exit.\n", HEX_VERSION);
     printf("      *\n");
 
@@ -3968,7 +3968,7 @@ void hex_process_stdin(hex_context_t *ctx)
 void hex_print_help()
 {
     printf("   _*_ _\n"
-           "  / \\hex\\* programming language\n"
+           "  / \\hex\\*\n"
            " *\\_/_/_/  v%s - (c) 2024 Fabio Cevasco\n"
            "      *      \n",
            HEX_VERSION);
@@ -3989,7 +3989,7 @@ void hex_print_help()
 void hex_print_docs(hex_doc_dictionary_t *docs)
 {
     printf("   _*_ _\n"
-           "  / \\hex\\* programming language\n"
+           "  / \\hex\\*\n"
            " *\\_/_/_/  v%s - (c) 2024 Fabio Cevasco\n"
            "      *   \n",
            HEX_VERSION);
