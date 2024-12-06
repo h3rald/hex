@@ -1,56 +1,56 @@
-"2024" "meta_year" store
-"0.1.0" "meta_release" store
-"web/assets" "d_assets" store
-"web/templates" "d_templates" store
-"web/contents" "d_contents" store
-"web/out" "d_out" store
+"2024" "meta_year" :
+"0.1.0" "meta_release" :
+"web/assets" "d_assets" :
+"web/templates" "d_templates" :
+"web/contents" "d_contents" :
+"web/out" "d_out" :
 
 ; Get all files from a directory
-("ls " swap cat run 0x1 get "\n" split) "ls" store
+("ls " swap cat run 0x1 get "\n" split) "ls" :
 
 ; Get relevant files
-d_contents ls i "contents" store
-d_assets ls i "assets" store
-d_templates "/page.html" cat "t_page" store
+d_contents ls . "contents" :
+d_assets ls . "assets" :
+d_templates "/page.html" cat "t_page" :
 
 ; Convenience symbol for debugging
-(dup puts) "_" store
+(dup puts) "_" :
 
 ; Generate tag placeholder
 (
     "{{" swap "}}" cat cat
-) "tag" store
+) "tag" :
 
 ; Replace tag
 (
-    "pt_repl" store
-    "pt_tag" store
-    "pt_content" store
-    (pt_content pt_tag tag i index 0x0 >)
-        (pt_content pt_tag tag i pt_repl replace "pt_content" store)
+    "pt_repl" :
+    "pt_tag" :
+    "pt_content" :
+    (pt_content pt_tag tag . index 0x0 >)
+        (pt_content pt_tag tag . pt_repl replace "pt_content" :)
     while 
     pt_content
-) "process-tag" store
+) "process-tag" :
 
 "*** Generating hex web site..." puts
 ; Write contents
 contents
 (
-    "fn_content" store
-    fn_content ".html" "" replace "id_content" store
-    d_contents "/" fn_content cat cat read "content" store
+    "fn_content" :
+    fn_content ".html" "" replace "id_content" :
+    d_contents "/" fn_content cat cat read "content" :
     t_page read
     ; Replace tags
-    "content" content process-tag i
-    "title" id_content process-tag i
-    "release" meta_release process-tag i
-    "year" meta_year process-tag i
-    "new_content" store
+    "content" content process-tag .
+    "title" id_content process-tag .
+    "release" meta_release process-tag .
+    "year" meta_year process-tag .
+    "new_content" :
     (fn_content "home.html" ==)
-        (d_out "/index.html" cat "dst_file" store) 
+        (d_out "/index.html" cat "dst_file" :) 
         (
             ("sh -c \"mkdir -p " d_out "/" id_content "\"") () map "" join exec
-            (d_out id_content "index.html") () map "/" join "dst_file" store
+            (d_out id_content "index.html") () map "/" join "dst_file" :
         )
     if
     "  - Writing: " dst_file cat puts
@@ -61,12 +61,12 @@ contents
 ("sh -c \"mkdir -p " d_out "/assets\"") () map "" join exec
 assets
 (
-    "fn_asset" store
-    (d_out "assets" fn_asset) () map "/" join "dst_file" store
+    "fn_asset" :
+    (d_out "assets" fn_asset) () map "/" join "dst_file" :
     (fn_asset "robots.txt" ==)
-        ((d_out fn_asset) () map "/" join "dst_file" store)
+        ((d_out fn_asset) () map "/" join "dst_file" :)
     when
-    (d_assets fn_asset) () map "/" join "src_file" store
+    (d_assets fn_asset) () map "/" join "src_file" :
     "  - Writing: " dst_file cat puts
     ("cp" src_file dst_file) () map " " join exec  
 ) each
