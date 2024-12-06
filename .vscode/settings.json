@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.erd": "json",
+        "*.vuerd": "json",
+        "__locale": "c",
+        "string": "c",
+        "string_view": "c",
+        "hex.h": "c"
+    }
+}

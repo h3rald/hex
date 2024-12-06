@@ -1,6 +1,7 @@
 #include "hex.h"
 
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__)
+
 #include <emscripten.h>
 
 EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
@@ -1272,7 +1273,7 @@ int hex_symbol_gets(hex_context_t *ctx)
 
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
     char *p = input;
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__)
     p = em_fgets(input, 1024);
 #else
     p = fgets(input, sizeof(input), stdin);
@@ -3912,6 +3913,34 @@ static void do_repl(void *v_ctx)
     return;
 }
 
+#elif defined(__EMSCRIPTEN__) && !defined(BROWSER)
+
+static void do_repl(void *v_ctx)
+{
+    hex_context_t *ctx = (hex_context_t *)v_ctx;
+    char line[1024];
+    printf("> "); // Prompt
+    fflush(stdout);
+    if (em_fgets(line, sizeof(line)) == NULL)
+    {
+        printf("\n"); // Handle EOF (Ctrl+D)
+        return;
+    }
+    // Normalize line endings (remove trailing \r\n or \n)
+    line[strcspn(line, "\r\n")] = '\0';
+
+    // Tokenize and process the input
+    hex_interpret(ctx, line, "<repl>", 1, 1);
+    // Print the top item of the stack
+    if (ctx->stack.top >= 0)
+    {
+        hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+        // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
+        printf("\n");
+    }
+    return;
+}
+
 #else
 
 static int do_repl(void *v_ctx)
@@ -3945,13 +3974,13 @@ static int do_repl(void *v_ctx)
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
 {
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__)
     printf("   _*_ _\n");
     printf("  / \\hex\\*\n");
     printf(" *\\_/_/_/  v%s - WASM Build\n", HEX_VERSION);
     printf("      *\n");
 
-    int fps = 0;
+    int fps = 30;
     int simulate_infinite_loop = 1;
     emscripten_set_main_loop_arg(do_repl, ctx, fps, simulate_infinite_loop);
 #else
