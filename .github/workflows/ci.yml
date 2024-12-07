@@ -59,7 +59,7 @@ jobs:
       # Generate APE binary
       - name: Generate APE binary
         run: |
-          mv hex hex.native
+          rm hex
           make ape
         if: matrix.os == 'ubuntu-latest'
         
