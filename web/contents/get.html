@@ -10,8 +10,17 @@
         <li>hex v{{release}} for Windows (x86_64)</li>
         <li>hex v{{release}} (<a href="https://justine.lol/ape.html" target="_blank">αcτµαlly pδrταblε εxεcµταblε</a>)
         </li>
-        <li>hex v{{release}} (<a href="https://webassembly.org" target="_blank">WebAssembly</a>)</li>
+        <li>hex v{{release}} (<a href="https://webassembly.org" target="_blank">WebAssembly</a> &mdash; <em>very</em>
+            experimental*)</li>
     </ul>
+
+    <blockquote>
+        <div>A note on the WASM build</div>
+        <p>The main purpose of the WASM build is to power the <a href="/play">playground</a>. If you try to run it with
+            NodeJS, the REPL will also <em>somewhat</em> work, except that file support and executing processes doesn't
+            seem to behave, at the moment, and neither does `printf` unless you add a new line so... use at your own
+            risk, or please use one of the other builds.</p>
+    </blockquote>
 
     <h3>Building from Source</h3>
 

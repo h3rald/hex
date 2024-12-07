@@ -124,3 +124,14 @@ pre {
 code {
     color: gold;
 }
+
+blockquote {
+    border: 1px solid lime;
+    padding: 1rem 1rem 0 1rem;
+    margin: 0;
+}
+
+blockquote div {
+    font-weight: 600;
+    color: gold;
+}
