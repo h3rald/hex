@@ -1,6 +1,6 @@
 #include "hex.h"
 
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__)
 #include <emscripten.h>
 
 EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
@@ -1272,7 +1272,7 @@ int hex_symbol_gets(hex_context_t *ctx)
 
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
     char *p = input;
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__)
     p = em_fgets(input, 1024);
 #else
     p = fgets(input, sizeof(input), stdin);
@@ -3883,13 +3883,26 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     fclose(file);
     return content;
 }
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
 
+#if defined(BROWSER)
+static void prompt()
+{
+    // no prompt needed on browser
+}
+#else
+static void prompt()
+{
+    printf("> "); // Prompt
+    fflush(stdout);
+}
+#endif
+
+#if defined(__EMSCRIPTEN__)
 static void do_repl(void *v_ctx)
 {
     hex_context_t *ctx = (hex_context_t *)v_ctx;
+    prompt();
     char line[1024];
-
     char *p = line;
     p = em_fgets(line, 1024);
     if (!p)
@@ -3918,8 +3931,7 @@ static int do_repl(void *v_ctx)
 {
     hex_context_t *ctx = (hex_context_t *)v_ctx;
     char line[1024];
-    printf("> "); // Prompt
-    fflush(stdout);
+    prompt();
     if (fgets(line, sizeof(line), stdin) == NULL)
     {
         printf("\n"); // Handle EOF (Ctrl+D)
@@ -3945,12 +3957,11 @@ static int do_repl(void *v_ctx)
 // REPL implementation
 void hex_repl(hex_context_t *ctx)
 {
-#if defined(__EMSCRIPTEN__) && defined(BROWSER)
+#if defined(__EMSCRIPTEN__)
     printf("   _*_ _\n");
     printf("  / \\hex\\*\n");
     printf(" *\\_/_/_/  v%s - WASM Build\n", HEX_VERSION);
     printf("      *\n");
-
     int fps = 0;
     int simulate_infinite_loop = 1;
     emscripten_set_main_loop_arg(do_repl, ctx, fps, simulate_infinite_loop);
@@ -4114,7 +4125,7 @@ int main(int argc, char *argv[])
             }
         }
     }
-#if !(__EMSCRIPTEN__) && !(BROWSER)
+#if !(__EMSCRIPTEN__)
     if (!isatty(fileno(stdin)))
     {
         ctx.settings.stack_trace_enabled = 0;
