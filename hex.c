@@ -3889,10 +3889,15 @@ static void prompt()
 {
     // no prompt needed on browser
 }
+#elif !defined(BROWSER) && defined(__EMSCRIPTEN__)
+static void prompt()
+{
+    printf(">\n");
+}
 #else
 static void prompt()
 {
-    printf("> "); // Prompt
+    printf("> ");
     fflush(stdout);
 }
 #endif
