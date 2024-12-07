@@ -3884,13 +3884,12 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     return content;
 }
 
-#if defined(BROWSER) && defined(__EMSCRIPTEN__)
+#if defined(__EMSCRIPTEN__) && defined(BROWSER)
 static void prompt()
 {
-    printf(">>\n");
     // no prompt needed on browser
 }
-#elif !defined(BROWSER) && defined(__EMSCRIPTEN__)
+#elif defined(__EMSCRIPTEN__) && !defined(BROWSER)
 static void prompt()
 {
     printf(">\n");
