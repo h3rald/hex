@@ -34,3 +34,37 @@ jobs:
 
       - name: Test
         run: make test
+
+      # Install cosmocc
+      - name: Install cosmocc
+        run: |
+          mkdir -p $HOME/cosmocc
+          cd $HOME/cosmocc
+          wget -q https://cosmo.zip/pub/cosmocc/cosmocc.zip
+          unzip -q cosmocc.zip
+          pwd
+          ls -l
+        if: matrix.os == 'ubuntu-latest'
+
+      # Add cosmocc to PATH + see https://redbean.dev/#install
+      - name: Add cosmocc to PATH
+        run: |
+          echo $HOME/cosmocc/bin >> $GITHUB_PATH
+          sudo wget -O /usr/bin/ape https://cosmo.zip/pub/cosmos/bin/ape-$(uname -m).elf
+          sudo chmod +x /usr/bin/ape
+          sudo sh -c "echo ':APE:M::MZqFpD::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+          sudo sh -c "echo ':APE-jart:M::jartsr::/usr/bin/ape:' >/proc/sys/fs/binfmt_misc/register"
+        if: matrix.os == 'ubuntu-latest'
+
+      # Generate APE binary
+      - name: Generate APE binary
+        run: |
+          mv hex hex.native
+          make ape
+        if: matrix.os == 'ubuntu-latest'
+        
+      # Run tests with APE binary
+      - name: Test (APE)
+        run: |
+          make test
+        if: matrix.os == 'ubuntu-latest'
