@@ -474,12 +474,12 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_doc(docs, ">>", "i1 12", "i", "Shifts 'i1' by 'i2' bytes to the right.");
 
     // Comparison
-    hex_doc(docs, "==", "i1 12", "i", "Returns 0x1 if 'i1' == 'i2', 0x0 otherwise.");
-    hex_doc(docs, "!=", "i1 12", "i", "Returns 0x1 if 'i1' != 'i2', 0x0 otherwise.");
-    hex_doc(docs, ">", "i1 12", "i", "Returns 0x1 if 'i1' > 'i2', 0x0 otherwise.");
-    hex_doc(docs, "<", "i1 12", "i", "Returns 0x1 if 'i1' < 'i2', 0x0 otherwise.");
-    hex_doc(docs, ">=", "i1 12", "i", "Returns 0x1 if 'i1' >= 'i2', 0x0 otherwise.");
-    hex_doc(docs, "<=", "i1 i2", "i", "Returns 0x1 if 'i1' <= 'i2', 0x0 otherwise.");
+    hex_doc(docs, "==", "a1 a2", "i", "Returns 0x1 if 'a1' == 'a2', 0x0 otherwise.");
+    hex_doc(docs, "!=", "a1 a2", "i", "Returns 0x1 if 'a1' != 'a2', 0x0 otherwise.");
+    hex_doc(docs, ">", "a1 a2", "i", "Returns 0x1 if 'a1' > 'a2', 0x0 otherwise.");
+    hex_doc(docs, "<", "a1 a2", "i", "Returns 0x1 if 'a1' < 'a2', 0x0 otherwise.");
+    hex_doc(docs, ">=", "a1 a2", "i", "Returns 0x1 if 'a1' >= 'a2', 0x0 otherwise.");
+    hex_doc(docs, "<=", "a1 a2", "i", "Returns 0x1 if 'a1' <= 'a2', 0x0 otherwise.");
 
     // Logical
     hex_doc(docs, "and", "i1 i2", "i", "Returns 0x1 if both 'i1' and 'i2' are not 0x0.");
@@ -1678,7 +1678,7 @@ int hex_symbol_hex(hex_context_t *ctx)
 
 // Comparison symbols
 
-int hex_equal(hex_item_t a, hex_item_t b)
+static int hex_equal(hex_item_t a, hex_item_t b)
 {
     if (a.type == HEX_TYPE_INVALID || b.type == HEX_TYPE_INVALID)
     {
@@ -1719,6 +1719,90 @@ int hex_equal(hex_item_t a, hex_item_t b)
         }
     }
     return 0;
+}
+
+static int hex_is_type_symbol(hex_item_t *item)
+{
+    if (item->type == HEX_TYPE_USER_SYMBOL || item->type == HEX_TYPE_NATIVE_SYMBOL)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *symbol)
+{
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
+    {
+        return a->data.int_value > b->data.int_value;
+    }
+    else if (a->type == HEX_TYPE_STRING && b->type == HEX_TYPE_STRING)
+    {
+        return strcmp(a->data.str_value, b->data.str_value) > 0;
+    }
+    else if (a->type == HEX_TYPE_QUOTATION && b->type == HEX_TYPE_QUOTATION)
+    {
+        // Compare quotations lexicographically
+        size_t min_size = a->quotation_size < b->quotation_size ? a->quotation_size : b->quotation_size;
+        int is_greater = 0;
+
+        for (size_t i = 0; i < min_size; i++)
+        {
+            hex_item_t *it_a = a->data.quotation_value[i];
+            hex_item_t *it_b = b->data.quotation_value[i];
+
+            // Perform element-wise comparison
+            if (it_a->type != it_b->type && !(hex_is_type_symbol(it_a) && hex_is_type_symbol(it_b)))
+            {
+                hex_error(ctx, "Cannot compare quotations with mismatched types");
+                return -1;
+            }
+
+            if (it_a->type == HEX_TYPE_INTEGER)
+            {
+                if (it_a->data.int_value != it_b->data.int_value)
+                {
+                    is_greater = it_a->data.int_value > it_b->data.int_value;
+                    break;
+                }
+            }
+            else if (it_a->type == HEX_TYPE_STRING)
+            {
+                int cmp = strcmp(it_a->data.str_value, it_b->data.str_value);
+                if (cmp != 0)
+                {
+                    is_greater = cmp > 0;
+                    break;
+                }
+            }
+            else if (hex_is_type_symbol(it_a))
+            {
+                int cmp = strcmp(it_a->token->value, it_b->token->value);
+                if (cmp != 0)
+                {
+                    is_greater = cmp > 0;
+                    break;
+                }
+            }
+            else
+            {
+                hex_error(ctx, "Unsupported element type in quotation comparison");
+                return -1;
+            }
+        }
+
+        if (!is_greater)
+        {
+            // If all compared elements are equal, compare sizes
+            return a->quotation_size > b->quotation_size;
+        }
+        return is_greater;
+    }
+    else
+    {
+        hex_error(ctx, "'%s' symbol requires two integers, two strings, or two quotations", symbol);
+        return -1;
+    }
 }
 
 int hex_symbol_equal(hex_context_t *ctx)
@@ -1775,13 +1859,13 @@ int hex_symbol_notequal(hex_context_t *ctx)
 
 int hex_symbol_greater(hex_context_t *ctx)
 {
-
     POP(ctx, b);
     if (b.type == HEX_TYPE_INVALID)
     {
         FREE(ctx, b);
         return 1;
     }
+
     POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -1789,18 +1873,17 @@ int hex_symbol_greater(hex_context_t *ctx)
         FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    hex_item_t *pa = &a;
+    hex_item_t *pb = &b;
+    int result = hex_greater(ctx, pa, pb, ">");
+    if (result < 0)
     {
-        return hex_push_integer(ctx, a.data.int_value > b.data.int_value);
+        FREE(ctx, a);
+        FREE(ctx, b);
+        return 1;
     }
-    else if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
-    {
-        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) > 0);
-    }
-    hex_error(ctx, "'>' symbol requires two integers or two strings");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    hex_push_integer(ctx, result);
+    return 0;
 }
 
 int hex_symbol_less(hex_context_t *ctx)
@@ -1819,18 +1902,17 @@ int hex_symbol_less(hex_context_t *ctx)
         FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    hex_item_t *pa = &a;
+    hex_item_t *pb = &b;
+    int result = hex_greater(ctx, pb, pa, "<");
+    if (result < 0)
     {
-        return hex_push_integer(ctx, a.data.int_value < b.data.int_value);
+        FREE(ctx, a);
+        FREE(ctx, b);
+        return 1;
     }
-    if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
-    {
-        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) < 0);
-    }
-    hex_error(ctx, "'<' symbol requires two integers or two strings");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    hex_push_integer(ctx, result);
+    return 0;
 }
 
 int hex_symbol_greaterequal(hex_context_t *ctx)
@@ -1849,18 +1931,18 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
         FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    hex_item_t *pa = &a;
+    hex_item_t *pb = &b;
+    int result = hex_greater(ctx, pa, pb, ">");
+    if (result < 0)
     {
-        return hex_push_integer(ctx, a.data.int_value >= b.data.int_value);
+        FREE(ctx, a);
+        FREE(ctx, b);
+        return 1;
     }
-    if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
-    {
-        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) >= 0);
-    }
-    hex_error(ctx, "'>=' symbol requires two integers or two strings");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    result = result || hex_equal(a, b);
+    hex_push_integer(ctx, result);
+    return 0;
 }
 
 int hex_symbol_lessequal(hex_context_t *ctx)
@@ -1879,18 +1961,17 @@ int hex_symbol_lessequal(hex_context_t *ctx)
         FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    hex_item_t *pa = &a;
+    hex_item_t *pb = &b;
+    int result = hex_greater(ctx, pb, pa, "<");
+    if (result < 0)
     {
-        return hex_push_integer(ctx, a.data.int_value <= b.data.int_value);
+        FREE(ctx, a);
+        FREE(ctx, b);
+        return 1;
     }
-    if (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING)
-    {
-        return hex_push_integer(ctx, strcmp(a.data.str_value, b.data.str_value) <= 0);
-    }
-    hex_error(ctx, "'<=' symbol requires two integers or two strings");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    hex_push_integer(ctx, !result) || hex_equal(a, b);
+    return 0;
 }
 
 // Boolean symbols

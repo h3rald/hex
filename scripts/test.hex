@@ -4,7 +4,7 @@
 () "errors" :
 () "fails" :
 
-(dup puts) "pp" :
+(dup puts) "_" :
 
 (
     "current-test" :
@@ -149,6 +149,12 @@
     (("3" 0x3 +) (error) try "Symbol '+' requires two integers" ==)
     (("3" 0x3 -) (error) try "Symbol '-' requires two integers" ==)
     ;76
+
+    ((0x2 0x3 0x3) (0x2 0x3) > 0x1 ==)
+    ((0x2 0x3) (0x2 0x1) > 0x1 ==)
+    ((test abc) (test cde) < 0x1 ==)
+    (("test" "abc") ("test" "abc") <= 0x1 ==)
+    ;80
     
 ) "tests" :
 
