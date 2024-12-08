@@ -2646,7 +2646,15 @@ int hex_symbol_split(hex_context_t *ctx)
                         break;
                     }
                     quotation[i]->type = HEX_TYPE_STRING;
-                    quotation[i]->data.str_value = strndup(&str.data.str_value[i], 1);
+                    quotation[i]->data.str_value = (char *)malloc(2); // Allocate 2 bytes: 1 for the character and 1 for null terminator
+                    if (!quotation[i]->data.str_value)
+                    {
+                        hex_error(ctx, "Memory allocation failed");
+                        result = 1;
+                        break;
+                    }
+                    quotation[i]->data.str_value[0] = str.data.str_value[i]; // Copy the single character
+                    quotation[i]->data.str_value[1] = '\0';                  // Null-terminate the string
                 }
                 if (result == 0)
                 {
