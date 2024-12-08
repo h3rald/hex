@@ -1,17 +1,17 @@
-"2024" "meta_year" :
-"0.1.0" "meta_release" :
-"web/assets" "d_assets" :
-"web/templates" "d_templates" :
-"web/contents" "d_contents" :
-"web/out" "d_out" :
+"2024" "meta-year" :
+"0.1.0" "meta-release" :
+"web/assets" "d-assets" :
+"web/templates" "d-templates" :
+"web/contents" "d-contents" :
+"web/out" "d-out" :
 
 ; Get all files from a directory
 ("ls " swap cat run 0x1 get "\n" split) "ls" :
 
 ; Get relevant files
-d_contents ls . "contents" :
-d_assets ls . "assets" :
-d_templates "/page.html" cat "t_page" :
+d-contents ls . "contents" :
+d-assets ls . "assets" :
+d-templates "/page.html" cat "t-page" :
 
 ; Convenience symbol for debugging
 (dup puts) "_" :
@@ -23,52 +23,52 @@ d_templates "/page.html" cat "t_page" :
 
 ; Replace tag
 (
-    "pt_repl" :
-    "pt_tag" :
-    "pt_content" :
-    (pt_content pt_tag tag . index 0x0 >)
-        (pt_content pt_tag tag . pt_repl replace "pt_content" :)
+    "pt-repl" :
+    "pt-tag" :
+    "pt-content" :
+    (pt-content pt-tag tag . index 0x0 >)
+        (pt-content pt-tag tag . pt-repl replace "pt-content" :)
     while 
-    pt_content
+    pt-content
 ) "process-tag" :
 
 "*** Generating hex web site..." puts
 ; Write contents
 contents
 (
-    "fn_content" :
-    fn_content ".html" "" replace "id_content" :
-    d_contents "/" fn_content cat cat read "content" :
-    t_page read
+    "fn-content" :
+    fn-content ".html" "" replace "id-content" :
+    d-contents "/" fn-content cat cat read "content" :
+    t-page read
     ; Replace tags
     "content" content process-tag .
-    "title" id_content process-tag .
-    "release" meta_release process-tag .
-    "year" meta_year process-tag .
-    "new_content" :
-    (fn_content "home.html" ==)
-        (d_out "/index.html" cat "dst_file" :) 
+    "title" id-content process-tag .
+    "release" meta-release process-tag .
+    "year" meta-year process-tag .
+    "new-content" :
+    (fn-content "home.html" ==)
+        (d-out "/index.html" cat "dst-file" :) 
         (
-            ("sh -c \"mkdir -p " d_out "/" id_content "\"") () map "" join exec
-            (d_out id_content "index.html") () map "/" join "dst_file" :
+            ("sh -c \"mkdir -p " d-out "/" id-content "\"") () map "" join exec
+            (d-out id-content "index.html") () map "/" join "dst-file" :
         )
     if
-    "  - Writing: " dst_file cat puts
-    new_content dst_file write
+    "  - Writing: " dst-file cat puts
+    new-content dst-file write
 ) each
 
 ; Write assets
-("sh -c \"mkdir -p " d_out "/assets\"") () map "" join exec
+("sh -c \"mkdir -p " d-out "/assets\"") () map "" join exec
 assets
 (
-    "fn_asset" :
-    (d_out "assets" fn_asset) () map "/" join "dst_file" :
-    (fn_asset "robots.txt" ==)
-        ((d_out fn_asset) () map "/" join "dst_file" :)
+    "fn-asset" :
+    (d-out "assets" fn-asset) () map "/" join "dst-file" :
+    (fn-asset "robots.txt" ==)
+        ((d-out fn-asset) () map "/" join "dst-file" :)
     when
-    (d_assets fn_asset) () map "/" join "src_file" :
-    "  - Writing: " dst_file cat puts
-    ("cp" src_file dst_file) () map " " join exec  
+    (d-assets fn-asset) () map "/" join "src-file" :
+    "  - Writing: " dst-file cat puts
+    ("cp" src-file dst-file) () map " " join exec  
 ) each
 
 "*** Done!" puts
