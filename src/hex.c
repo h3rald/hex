@@ -488,8 +488,8 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_doc(docs, "xor", "i1 i2", "i", "Returns 0x1 if only one item is not 0x0.");
 
     // Type
-    hex_doc(docs, "int", "(i|s)", "i", "Converts a string to a hex integer.");
-    hex_doc(docs, "str", "(i|s)", "s", "Converts a hex integer to a string.");
+    hex_doc(docs, "int", "s", "i", "Converts a string to a hex integer.");
+    hex_doc(docs, "str", "i", "s", "Converts a hex integer to a string.");
     hex_doc(docs, "dec", "i", "s", "Converts a hex integer to a decimal string.");
     hex_doc(docs, "hex", "s", "i", "Converter a decimal string to a hex integer.");
     hex_doc(docs, "type", "a", "s", "Pushes the data type of 'a' on the stack.");
@@ -1599,10 +1599,6 @@ int hex_symbol_int(hex_context_t *ctx)
         FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER)
-    {
-        return hex_push_integer(ctx, a.data.int_value);
-    }
     if (a.type == HEX_TYPE_STRING)
     {
         return hex_push_integer(ctx, strtol(a.data.str_value, NULL, 16));
@@ -1630,10 +1626,6 @@ int hex_symbol_str(hex_context_t *ctx)
     if (a.type == HEX_TYPE_INTEGER)
     {
         return hex_push_string(ctx, hex_itoa_hex(a.data.int_value));
-    }
-    if (a.type == HEX_TYPE_STRING)
-    {
-        return hex_push_string(ctx, a.data.str_value);
     }
     hex_error(ctx, "Unsupported data type: %s", hex_type(a.type));
     FREE(ctx, a);
