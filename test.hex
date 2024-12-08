@@ -116,7 +116,7 @@
 
     ("rm test.txt" exec 0x0 ==)
     ("rm test.txt" run 0x0 get 0x1 ==)
-    ("ls web/contents" run 0x1 get "\n" split len 0x6 ==)
+    ("ls web/contents" run 0x1 get "\n" split len 0x7 ==)
     (args 0x1 get "test.hex" ==)
     ;56
 
