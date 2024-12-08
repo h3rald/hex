@@ -132,6 +132,7 @@ blockquote {
 }
 
 blockquote div {
+    margin-top: 1rem;
     font-weight: 600;
     color: gold;
 }
