@@ -2616,7 +2616,6 @@ int hex_symbol_join(hex_context_t *ctx)
 
 int hex_symbol_split(hex_context_t *ctx)
 {
-
     POP(ctx, separator);
     if (separator.type == HEX_TYPE_INVALID)
     {
@@ -2633,39 +2632,73 @@ int hex_symbol_split(hex_context_t *ctx)
     int result = 0;
     if (str.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
     {
-        char *token = strtok(str.data.str_value, separator.data.str_value);
-        int capacity = 2;
-        int size = 0;
-        hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
-        if (!quotation)
+        if (strlen(separator.data.str_value) == 0)
         {
-            hex_error(ctx, "Memory allocation failed");
-            result = 1;
-        }
-        else
-        {
-            while (token)
+            // Separator is an empty string: split into individual characters
+            int size = strlen(str.data.str_value);
+            hex_item_t **quotation = (hex_item_t **)malloc(size * sizeof(hex_item_t *));
+            if (!quotation)
             {
-                if (size >= capacity)
+                hex_error(ctx, "Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                for (int i = 0; i < size; i++)
                 {
-                    capacity *= 2;
-                    quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
-                    if (!quotation)
+                    quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
+                    if (!quotation[i])
                     {
                         hex_error(ctx, "Memory allocation failed");
                         result = 1;
                         break;
                     }
+                    quotation[i]->type = HEX_TYPE_STRING;
+                    quotation[i]->data.str_value = strndup(&str.data.str_value[i], 1);
                 }
-                quotation[size] = (hex_item_t *)malloc(sizeof(hex_item_t));
-                quotation[size]->type = HEX_TYPE_STRING;
-                quotation[size]->data.str_value = strdup(token);
-                size++;
-                token = strtok(NULL, separator.data.str_value);
+                if (result == 0)
+                {
+                    result = hex_push_quotation(ctx, quotation, size);
+                }
             }
-            if (result == 0)
+        }
+        else
+        {
+            // Separator is not empty: split as usual
+            char *token = strtok(str.data.str_value, separator.data.str_value);
+            int capacity = 2;
+            int size = 0;
+            hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
+            if (!quotation)
             {
-                result = hex_push_quotation(ctx, quotation, size);
+                hex_error(ctx, "Memory allocation failed");
+                result = 1;
+            }
+            else
+            {
+                while (token)
+                {
+                    if (size >= capacity)
+                    {
+                        capacity *= 2;
+                        quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
+                        if (!quotation)
+                        {
+                            hex_error(ctx, "Memory allocation failed");
+                            result = 1;
+                            break;
+                        }
+                    }
+                    quotation[size] = (hex_item_t *)malloc(sizeof(hex_item_t));
+                    quotation[size]->type = HEX_TYPE_STRING;
+                    quotation[size]->data.str_value = strdup(token);
+                    size++;
+                    token = strtok(NULL, separator.data.str_value);
+                }
+                if (result == 0)
+                {
+                    result = hex_push_quotation(ctx, quotation, size);
+                }
             }
         }
     }

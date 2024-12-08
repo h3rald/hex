@@ -155,6 +155,8 @@
     ((test abc) (test cde) < 0x1 ==)
     (("test" "abc") ("test" "abc") <= 0x1 ==)
     ;80
+
+    ("hello" "" split ("h" "e" "l" "l" "o") ==)
     
 ) "tests" :
 
