@@ -2,16 +2,16 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDFLAGS =
 
-hex: hex.c
+hex: src/hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
 
-web/assets/hex.wasm: hex.c
-	 emcc -O2 -sASYNCIFY -DBROWSER -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
+web/assets/hex.wasm: src/hex.c
+	 emcc -O2 -sASYNCIFY -DBROWSER -sEXPORTED_RUNTIME_METHODS=stringToUTF8 src/hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
 
-hex.wasm: hex.c
-	 emcc -O2 -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o hex.js --pre-js hex.node.js
+hex.wasm: src/hex.c
+	 emcc -O2 -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 src/hex.c -o hex.js --pre-js src/hex.node.js
 
-ape: hex.c
+ape: src/hex.c
 	cosmocc $(CFLAGS) $(LDFLAGS) $< -o hex
 
 .PHONY: wasm
@@ -29,16 +29,8 @@ clean:
 
 .PHONY: test
 test:
-	./hex test.hex
-
-.PHONY: dtest
-dtest:
-	./hex -d test.hex
+	./hex scripts/test.hex
 
 .PHONY: web
 web: playground
-	./hex web.hex
-
-.PHONY: dweb
-dweb: playground
-	./hex -d web.hex
+	./hex scripts/web.hex
