@@ -1962,7 +1962,8 @@ int hex_symbol_lessequal(hex_context_t *ctx)
         FREE(ctx, b);
         return 1;
     }
-    hex_push_integer(ctx, !result) || hex_equal(a, b);
+    result = !result || hex_equal(a, b);
+    hex_push_integer(ctx, result);
     return 0;
 }
 
