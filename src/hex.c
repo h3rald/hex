@@ -1735,8 +1735,8 @@ static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *s
             // Perform element-wise comparison
             if (it_a->type != it_b->type && !(hex_is_type_symbol(it_a) && hex_is_type_symbol(it_b)))
             {
-                hex_error(ctx, "Cannot compare quotations with mismatched types");
-                return -1;
+                // Mismatched types, return false
+                return 0;
             }
 
             if (it_a->type == HEX_TYPE_INTEGER)
@@ -1806,10 +1806,8 @@ int hex_symbol_equal(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, hex_equal(a, b));
     }
-    hex_error(ctx, "Symbol '==' requires two integers, two strings, or two quotations");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    // Different types => false
+    return hex_push_integer(ctx, 0);
 }
 
 int hex_symbol_notequal(hex_context_t *ctx)
@@ -1832,10 +1830,8 @@ int hex_symbol_notequal(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, !hex_equal(a, b));
     }
-    hex_error(ctx, "Symbol '!=' requires two integers, two strings, or two quotations");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    // Different types => true
+    return hex_push_integer(ctx, 1);
 }
 
 int hex_symbol_greater(hex_context_t *ctx)
@@ -1856,14 +1852,7 @@ int hex_symbol_greater(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pa, pb, ">");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">"));
     return 0;
 }
 
@@ -1885,14 +1874,7 @@ int hex_symbol_less(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pb, pa, "<");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<"));
     return 0;
 }
 
@@ -1914,15 +1896,7 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pa, pb, ">");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    result = result || hex_equal(a, b);
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">") || hex_equal(a, b));
     return 0;
 }
 
@@ -1944,15 +1918,7 @@ int hex_symbol_lessequal(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pb, pa, "<");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    result = !result || hex_equal(a, b);
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, !hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
     return 0;
 }
 

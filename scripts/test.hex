@@ -181,9 +181,9 @@
     ((0x5 hex) (error) try "Symbol 'hex' requires a string representing a decimal integer" ==)
     ;96
 
-    (("0x2" 0x2 ==) (error) try "Symbol '==' requires two integers, two strings, or two quotations" ==)
-    (("0x2" (0x2) !=) (error) try "Symbol '!=' requires two integers, two strings, or two quotations" ==)
-    ( ((0x3 "aaa") ("aaa" 0x5) >) (error) try "Cannot compare quotations with mismatched types" ==)
+    ("0x2" 0x2 == 0x0 ==)
+    ("0x2" (0x2) !=)
+    ((0x3 "aaa") ("aaa" 0x5) > 0x0 ==)
     (("aaa" 0x5) ("aaa" 0x5 0x4) >= 0x0 ==)
     ;100
 
