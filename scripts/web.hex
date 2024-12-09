@@ -47,16 +47,16 @@ d-templates "/page.html" cat "t-page" :
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;;;;; Generate CHANGELOG.html
-"*** Updating CHANGELOG.html..." puts
+;;;;; Generate CHANGELOG
+"*** Updating CHANGELOG.md..." puts
 process-releases .
 
 ; Read changelog template and add generated release content
 d-contents "/" "changelog.html" cat cat read
 "releases" releases-content process-tag .
 
-; Write CHANGELOG.html
-"CHANGELOG.html" write
+; Write CHANGELOG.md
+"CHANGELOG.md" write
 "*** Done!" puts
 
 ;;;;; Write web site contents
