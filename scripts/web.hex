@@ -4,6 +4,7 @@
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
 "web/out" "d-out" :
+"releases" "d-releases" :
 
 ; Get all files from a directory
 ("ls " swap cat run 0x1 get "\n" split) "ls" :
@@ -11,6 +12,7 @@
 ; Get relevant files
 d-contents ls . "contents" :
 d-assets ls . "assets" :
+d-releases ls . "releases" :
 d-templates "/page.html" cat "t-page" :
 
 ; Convenience symbol for debugging
@@ -32,8 +34,33 @@ d-templates "/page.html" cat "t-page" :
     pt-content
 ) "process-tag" :
 
+"" "releases-content" :
+(
+    releases
+    (
+        "id-release" :
+        ; Update releases-content
+        d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
+    )
+    each
+) "process-releases" : 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;; Generate CHANGELOG.html
+"*** Updating CHANGELOG.html..." puts
+process-releases .
+
+; Read changelog template and add generated release content
+d-contents "/" "changelog.html" cat cat read
+"releases" releases-content process-tag .
+
+; Write CHANGELOG.html
+"CHANGELOG.html" write
+"*** Done!" puts
+
+;;;;; Write web site contents
 "*** Generating hex web site..." puts
-; Write contents
 contents
 (
     "fn-content" :
@@ -45,9 +72,13 @@ contents
     "title" id-content process-tag .
     "release" meta-release process-tag .
     "year" meta-year process-tag .
+    "releases" releases-content process-tag .
     "new-content" :
     (fn-content "home.html" ==)
-        (d-out "/index.html" cat "dst-file" :) 
+        (
+            ; Process home page
+            d-out "/index.html" cat "dst-file" :
+        ) 
         (
             ("sh -c \"mkdir -p " d-out "/" id-content "\"") () map "" join exec
             (d-out id-content "index.html") () map "/" join "dst-file" :
