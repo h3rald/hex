@@ -5,6 +5,7 @@
 0x0 "failures" :
 () "errors" :
 () "fails" :
+0x0 "result" :
 
 (dup puts) "_" :
 
@@ -159,6 +160,37 @@
     ;80
 
     ("hello" "" split ("h" "e" "l" "l" "o") ==)
+    (("3" 0x3 /) (error) try "Symbol '/' requires two integers" ==)
+    ((0x4 0x0 %) (error) try "Division by zero" ==)
+    ((() 0x3 %) (error) try "Symbol '%' requires two integers" ==)
+    ;84
+
+    ((() 0x3 &) (error) try "Symbol '&' requires two integers" ==)
+    ((0x2 "" |) (error) try "Symbol '|' requires two integers" ==)
+    ((() "" ^) (error) try "Symbol '^' requires two integers" ==)
+    ((() 0x1 >>) (error) try "Symbol '>>' requires two integers" ==)
+    ;88
+
+    ((() 0x1 <<) (error) try "Symbol '<<' requires two integers" ==)
+    (("" ~) (error) try "Symbol '~' requires an integer" ==)
+    ((0x5 int) (error) try "Symbol 'int' requires a string" ==)
+    (((0x3) int) (error) try "Symbol 'int' requires a string" ==)
+    ;92
+
+    (("5" str) (error) try "Symbol 'str' requires an integer" ==)
+    ((("aaa") str) (error) try "Symbol 'str' requires an integer" ==)
+    (("10" dec) (error) try "Symbol 'dec' requires an integer" ==)
+    ((0x5 hex) (error) try "Symbol 'hex' requires a string representing a decimal integer" ==)
+    ;96
+
+    ("0x2" 0x2 == 0x0 ==)
+    ("0x2" (0x2) !=)
+    ((0x3 "aaa") ("aaa" 0x5) > 0x0 ==)
+    (("aaa" 0x5) ("aaa" 0x5 0x4) >= 0x0 ==)
+    ;100
+
+    ((test "aaa") (test "aaa" 0x5) < 0x1 ==)
+    (("aaa" 0x5) ("" "aaa" 0x5) <= 0x0 ==)
     
 ) "tests" :
 
@@ -169,7 +201,6 @@ clear
 ; --- Run tests
 tests (test .) each
 
-
 ; --- Report
 "\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
 
@@ -178,15 +209,15 @@ tests (test .) each
     (
         "Errors:" warn
         errors (warn) each
-        0x1 exit
+        0x1 "result" :
     )
 when
 (fails len 0x0 >)
     (
         "Failed Tests: " fails ", " join cat warn
-        0x1 exit
+        0x1 "result" :
     )
 when
 
 
-0x0 exit
+result exit

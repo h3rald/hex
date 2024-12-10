@@ -1431,7 +1431,7 @@ int hex_symbol_divide(hex_context_t *ctx)
         }
         return hex_push_integer(ctx, a.data.int_value / b.data.int_value);
     }
-    hex_error(ctx, "'/' symbol requires two integers");
+    hex_error(ctx, "Symbol '/' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;
@@ -1458,10 +1458,11 @@ int hex_symbol_modulo(hex_context_t *ctx)
         if (b.data.int_value == 0)
         {
             hex_error(ctx, "Division by zero");
+            return 1;
         }
         return hex_push_integer(ctx, a.data.int_value % b.data.int_value);
     }
-    hex_error(ctx, "'%%' symbol requires two integers");
+    hex_error(ctx, "Symbol '%%' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;
@@ -1489,7 +1490,7 @@ int hex_symbol_bitand(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value & right.data.int_value);
     }
-    hex_error(ctx, "'&' symbol requires two integers");
+    hex_error(ctx, "Symbol '&' requires two integers");
     FREE(ctx, left);
     FREE(ctx, right);
     return 1;
@@ -1515,7 +1516,7 @@ int hex_symbol_bitor(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value | right.data.int_value);
     }
-    hex_error(ctx, "'|' symbol requires two integers");
+    hex_error(ctx, "Symbol '|' requires two integers");
     FREE(ctx, left);
     FREE(ctx, right);
     return 1;
@@ -1541,7 +1542,7 @@ int hex_symbol_bitxor(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value ^ right.data.int_value);
     }
-    hex_error(ctx, "'^' symbol requires two integers");
+    hex_error(ctx, "Symbol '^' requires two integers");
     FREE(ctx, left);
     FREE(ctx, right);
     return 1;
@@ -1567,7 +1568,7 @@ int hex_symbol_shiftleft(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value << right.data.int_value);
     }
-    hex_error(ctx, "'<<' symbol requires two integers");
+    hex_error(ctx, "Symbol '<<' requires two integers");
     FREE(ctx, left);
     FREE(ctx, right);
     return 1;
@@ -1593,7 +1594,7 @@ int hex_symbol_shiftright(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value >> right.data.int_value);
     }
-    hex_error(ctx, "'>>' symbol requires two integers");
+    hex_error(ctx, "Symbol '>>' requires two integers");
     FREE(ctx, left);
     FREE(ctx, right);
     return 1;
@@ -1612,7 +1613,7 @@ int hex_symbol_bitnot(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, ~item.data.int_value);
     }
-    hex_error(ctx, "'~' symbol requires one integer");
+    hex_error(ctx, "Symbol '~' requires an integer");
     FREE(ctx, item);
     return 1;
 }
@@ -1628,17 +1629,11 @@ int hex_symbol_int(hex_context_t *ctx)
         FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_QUOTATION)
-    {
-        hex_error(ctx, "Cannot convert a quotation to an integer");
-        FREE(ctx, a);
-        return 1;
-    }
     if (a.type == HEX_TYPE_STRING)
     {
         return hex_push_integer(ctx, strtol(a.data.str_value, NULL, 16));
     }
-    hex_error(ctx, "Unsupported data type: %s", hex_type(a.type));
+    hex_error(ctx, "Symbol 'int' requires a string");
     FREE(ctx, a);
     return 1;
 }
@@ -1652,17 +1647,11 @@ int hex_symbol_str(hex_context_t *ctx)
         FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_QUOTATION)
-    {
-        hex_error(ctx, "Cannot convert a quotation to a string");
-        FREE(ctx, a);
-        return 1;
-    }
     if (a.type == HEX_TYPE_INTEGER)
     {
         return hex_push_string(ctx, hex_itoa_hex(a.data.int_value));
     }
-    hex_error(ctx, "Unsupported data type: %s", hex_type(a.type));
+    hex_error(ctx, "Symbol 'str' requires an integer");
     FREE(ctx, a);
     return 1;
 }
@@ -1680,7 +1669,7 @@ int hex_symbol_dec(hex_context_t *ctx)
     {
         return hex_push_string(ctx, hex_itoa_dec(a.data.int_value));
     }
-    hex_error(ctx, "An integer is required");
+    hex_error(ctx, "Symbol 'dec' requires an integer");
     FREE(ctx, a);
     return 1;
 }
@@ -1698,7 +1687,7 @@ int hex_symbol_hex(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, strtol(item.data.str_value, NULL, 10));
     }
-    hex_error(ctx, "'hex' symbol requires a string representing a decimal integer");
+    hex_error(ctx, "Symbol 'hex' requires a string representing a decimal integer");
     FREE(ctx, item);
     return 1;
 }
@@ -1781,8 +1770,8 @@ static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *s
             // Perform element-wise comparison
             if (it_a->type != it_b->type && !(hex_is_type_symbol(it_a) && hex_is_type_symbol(it_b)))
             {
-                hex_error(ctx, "Cannot compare quotations with mismatched types");
-                return -1;
+                // Mismatched types, return false
+                return 0;
             }
 
             if (it_a->type == HEX_TYPE_INTEGER)
@@ -1813,8 +1802,8 @@ static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *s
             }
             else
             {
-                hex_error(ctx, "Unsupported element type in quotation comparison");
-                return -1;
+                // Mismatched types, return false
+                return 0;
             }
         }
 
@@ -1852,10 +1841,8 @@ int hex_symbol_equal(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, hex_equal(a, b));
     }
-    hex_error(ctx, "'==' symbol requires two integers, two strings, or two quotations");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    // Different types => false
+    return hex_push_integer(ctx, 0);
 }
 
 int hex_symbol_notequal(hex_context_t *ctx)
@@ -1878,10 +1865,8 @@ int hex_symbol_notequal(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, !hex_equal(a, b));
     }
-    hex_error(ctx, "'!=' symbol requires two integers, two strings, or two quotations");
-    FREE(ctx, a);
-    FREE(ctx, b);
-    return 1;
+    // Different types => true
+    return hex_push_integer(ctx, 1);
 }
 
 int hex_symbol_greater(hex_context_t *ctx)
@@ -1902,14 +1887,7 @@ int hex_symbol_greater(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pa, pb, ">");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">"));
     return 0;
 }
 
@@ -1931,14 +1909,7 @@ int hex_symbol_less(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pb, pa, "<");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<"));
     return 0;
 }
 
@@ -1960,15 +1931,7 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pa, pb, ">");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    result = result || hex_equal(a, b);
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">") || hex_equal(a, b));
     return 0;
 }
 
@@ -1990,15 +1953,7 @@ int hex_symbol_lessequal(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    int result = hex_greater(ctx, pb, pa, "<");
-    if (result < 0)
-    {
-        FREE(ctx, a);
-        FREE(ctx, b);
-        return 1;
-    }
-    result = !result || hex_equal(a, b);
-    hex_push_integer(ctx, result);
+    hex_push_integer(ctx, !hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
     return 0;
 }
 
