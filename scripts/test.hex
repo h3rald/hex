@@ -1,3 +1,5 @@
+#!/usr/bin/env hex
+ 
 0x0 "test-count" :
 0x0 "successes" :
 0x0 "failures" :

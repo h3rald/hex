@@ -579,6 +579,41 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         token->value[len] = '\0';
         token->type = HEX_TOKEN_COMMENT;
     }
+    else if (strncmp(ptr, "#|", 2) == 0)
+    {
+        // Block comment token
+        const char *start = ptr;
+        ptr += 2; // Skip the "#|" prefix
+        position->column += 2;
+        while (*ptr != '\0' && strncmp(ptr, "|#", 2) != 0)
+        {
+            if (*ptr == '\n')
+            {
+                position->line++;
+                position->column = 1;
+            }
+            else
+            {
+                position->column++;
+            }
+            ptr++;
+        }
+        if (*ptr == '\0')
+        {
+            token->type = HEX_TOKEN_INVALID;
+            token->position.line = position->line;
+            token->position.column = position->column;
+            hex_error(ctx, "(%d,%d) Unterminated block comment", position->line, position->column);
+            return token;
+        }
+        ptr += 2; // Skip the "|#" suffix
+        position->column += 2;
+        int len = ptr - start;
+        token->value = (char *)malloc(len + 1);
+        strncpy(token->value, start, len);
+        token->value[len] = '\0';
+        token->type = HEX_TOKEN_COMMENT;
+    }
     else if (*ptr == '"')
     {
         // String token
@@ -3954,6 +3989,17 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
 
     int bytesReadTotal = 0;
     int bytesRead = 0;
+
+    // Handle hashbang if present
+    char hashbangLine[1024];
+    if (fgets(hashbangLine, sizeof(hashbangLine), file) != NULL)
+    {
+        if (strncmp(hashbangLine, "#!", 2) != 0)
+        {
+            // Not a hashbang line, reset file pointer to the beginning
+            fseek(file, 0, SEEK_SET);
+        }
+    }
 
     while ((bytesRead = fread(content + bytesReadTotal, 1, bufferSize - bytesReadTotal, file)) > 0)
     {
