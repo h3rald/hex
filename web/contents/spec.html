@@ -22,147 +22,147 @@
     <h4 id="pushing-symbols">Pushing Symbols</h4>
     <h3 id="registry">Registry</h3>
     <h3 id="native-symbols">Native Symbols</h3>
-    <h4 id="memory-management">Memory Management</h4>
-    <h5 id="-symbol"><code>:</code> Symbol</h5>
-    <p>a s &rarr;</p>
-    <h5 id="-symbol"><code>#</code> Symbol</h5>
-    <p>s &rarr;</p>
-    <h4 id="control-flow">Control Flow</h4>
-    <h5 id="-if-symbol"><code>if</code> Symbol</h5>
-    <p>q q q &rarr; *</p>
-    <h5 id="-when-symbol"><code>when</code> Symbol</h5>
-    <p>q1 q2 &rarr; *</p>
-    <h5 id="-while-symbol"><code>while</code> Symbol</h5>
-    <p>q1 q2 &rarr; *</p>
-    <h5 id="-error-symbol"><code>error</code> Symbol</h5>
-    <p>&rarr; s</p>
-    <h5 id="-try-symbol"><code>try</code> Symbol</h5>
-    <p>q1 q2 &rarr; *</p>
-    <h4 id="stack">Stack</h4>
-    <h5 id="-dup-symbol"><code>dup</code> Symbol</h5>
-    <p> a &rarr; a a</p>
-    <h5 id="-stack-symbol"><code>stack</code> Symbol</h5>
-    <p> &rarr; q</p>
-    <h5 id="-clear-symbol"><code>clear</code> Symbol</h5>
-    <p> &rarr;</p>
-    <h5 id="-pop-symbol"><code>pop</code> Symbol</h5>
-    <p> a &rarr;</p>
-    <h5 id="-swap-symbol"><code>swap</code> Symbol</h5>
-    <p> a1 a2 &rarr; a2 a1</p>
-    <h4 id="evaluation">Evaluation</h4>
-    <h5 id="-symbol"><code>.</code> Symbol</h5>
-    <p>q &rarr; *</p>
-    <h5 id="-symbol"><code>!</code> Symbol</h5>
-    <p>s &rarr;</p>
-    <h5 id="-symbol"><code>&#39;</code> Symbol</h5>
-    <p>a &rarr; q</p>
-    <h4 id="arithmetic">Arithmetic</h4>
-    <h5 id="-symbol"><code>+</code> Symbol</h5>
-    <p> i1 i2 &rarr; i</p>
-    <h5 id="-symbol"><code>-</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>*</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>/</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>%</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h4 id="bitwise-operations">Bitwise Operations</h4>
-    <h5 id="-symbol"><code>&amp;</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>|</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>^</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>~</code> Symbol</h5>
-    <p> i &rarr; i</p>
-    <h5 id="-lt-lt-symbol"><code>&amp;lt;&amp;lt;</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-lt-lt-symbol"><code>&amp;lt;&amp;lt;</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h4 id="comparisons">Comparisons</h4>
-    <h5 id="-symbol"><code>==</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-symbol"><code>!=</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-gt-symbol"><code>&amp;gt;</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-lt-symbol"><code>&amp;lt;</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-gt-symbol"><code>&amp;gt;=</code> Symbol</h5>
-    <p> i1 12 &rarr; i</p>
-    <h5 id="-lt-symbol"><code>&amp;lt;=</code> Symbol</h5>
-    <p> i1 i2 &rarr; i</p>
-    <h4 id="boolean-logic">Boolean Logic</h4>
-    <h5 id="-and-symbol"><code>and</code> Symbol</h5>
-    <p> i1 i2 &rarr; i</p>
-    <h5 id="-or-symbol"><code>or</code> Symbol</h5>
-    <p> i1 i2 &rarr; i</p>
-    <h5 id="-not-symbol"><code>not</code> Symbol</h5>
-    <p> i &rarr; i</p>
-    <h5 id="-xor-symbol"><code>xor</code> Symbol</h5>
-    <p> i1 i2 &rarr; i</p>
-    <h4 id="datatype-conversions-and-checking">Datatype Conversions and Checking</h4>
-    <h5 id="-int-symbol"><code>int</code> Symbol</h5>
-    <p> (i|s) &rarr; i</p>
-    <h5 id="-str-symbol"><code>str</code> Symbol</h5>
-    <p> (i|s) &rarr; s</p>
-    <h5 id="-dec-symbol"><code>dec</code> Symbol</h5>
-    <p> i &rarr; s</p>
-    <h5 id="-hex-symbol"><code>hex</code> Symbol</h5>
-    <p> s &rarr; i</p>
-    <h5 id="-type-symbol"><code>type</code> Symbol</h5>
-    <p> a &rarr; s</p>
-    <h4 id="lists-strings-and-quotations-">Lists (Strings and Quotations)</h4>
-    <h5 id="-cat-symbol"><code>cat</code> Symbol</h5>
-    <p> (s s|q q) &rarr; (s|q)</p>
-    <h5 id="-slice-symbol"><code>slice</code> Symbol</h5>
-    <p> (s i1 i2|q i1 i2) &rarr; (s|q)</p>
-    <h5 id="-len-symbol"><code>len</code> Symbol</h5>
-    <p> (s|q) &rarr; i</p>
-    <h5 id="-get-symbol"><code>get</code> Symbol</h5>
-    <p> (s|q) &rarr; a</p>
-    <h5 id="-insert-symbol"><code>insert</code> Symbol</h5>
-    <p> (s a i|q a i) &rarr; (s|q)</p>
-    <h5 id="-index-symbol"><code>index</code> Symbol</h5>
-    <p> (s a|q a) &rarr; i</p>
-    <h5 id="-join-symbol"><code>join</code> Symbol</h5>
-    <p> q s &rarr; s</p>
-    <h4 id="strings">Strings</h4>
-    <h5 id="-split-symbol"><code>split</code> Symbol</h5>
-    <p> s1 s2 &rarr; q</p>
-    <h5 id="-replace-symbol"><code>replace</code> Symbol</h5>
-    <p> s1 s2 s3 &rarr;</p>
-    <h4 id="quotations">Quotations</h4>
-    <h5 id="-each-symbol"><code>each</code> Symbol</h5>
-    <p> q1 q2 &rarr; *</p>
-    <h5 id="-map-symbol"><code>map</code> Symbol</h5>
-    <p> q1 q2 &rarr; q</p>
-    <h5 id="-filter-symbol"><code>filter</code> Symbol</h5>
-    <p> q1 q2 &rarr; q</p>
-    <h4 id="input-output">Input/Output</h4>
-    <h5 id="-puts-symbol"><code>puts</code> Symbol</h5>
-    <p> a &rarr;</p>
-    <h5 id="-warn-symbol"><code>warn</code> Symbol</h5>
-    <p> a &rarr;</p>
-    <h5 id="-print-symbol"><code>print</code> Symbol</h5>
-    <p> a &rarr;</p>
-    <h5 id="-gets-symbol"><code>gets</code> Symbol</h5>
-    <p> &rarr; s</p>
-    <h4 id="files">Files</h4>
-    <h5 id="-read-symbol"><code>read</code> Symbol</h5>
-    <p> s &rarr; s</p>
-    <h5 id="-write-symbol"><code>write</code> Symbol</h5>
-    <p> s1 s2 &rarr; s</p>
-    <h5 id="-append-symbol"><code>append</code> Symbol</h5>
-    <p> s1 s2 &rarr; s</p>
-    <h4 id="shell">Shell</h4>
-    <h5 id="-args-symbol"><code>args</code> Symbol</h5>
-    <p> &rarr; q</p>
-    <h5 id="-exit-symbol"><code>exit</code> Symbol</h5>
-    <p> i &rarr;</p>
-    <h5 id="-exec-symbol"><code>exec</code> Symbol</h5>
-    <p> s &rarr;</p>
-    <h5 id="-run-symbol"><code>run</code> Symbol</h5>
-    <p> s &rarr; q</p>
+    <h4 id="memory-management-symbols">Memory Management Symbols</h4>
+    <h5 id="store-symbol"><code>:</code> Symbol</h5>
+    <p><mark>a s &rarr;</mark></p>
+    <h5 id="free-symbol"><code>#</code> Symbol</h5>
+    <p><mark>s &rarr;</mark></p>
+    <h4 id="control-flow-symbols">Control Flow Symbols</h4>
+    <h5 id="if-symbol"><code>if</code> Symbol</h5>
+    <p><mark>q q q &rarr; *</mark></p>
+    <h5 id="when-symbol"><code>when</code> Symbol</h5>
+    <p><mark>q1 q2 &rarr; *</mark></p>
+    <h5 id="while-symbol"><code>while</code> Symbol</h5>
+    <p><mark>q1 q2 &rarr; *</mark></p>
+    <h5 id="error-symbol"><code>error</code> Symbol</h5>
+    <p><mark>&rarr; s</mark></p>
+    <h5 id="try-symbol"><code>try</code> Symbol</h5>
+    <p><mark>q1 q2 &rarr; *</mark></p>
+    <h4 id="stack-management-symbols">Stack Management Symbol</h4>
+    <h5 id="dup-symbol"><code>dup</code> Symbol</h5>
+    <p><mark> a &rarr; a a</mark></p>
+    <h5 id="stack-symbol"><code>stack</code> Symbol</h5>
+    <p><mark> &rarr; q</mark></p>
+    <h5 id="clear-symbol"><code>clear</code> Symbol</h5>
+    <p><mark> &rarr;</mark></p>
+    <h5 id="pop-symbol"><code>pop</code> Symbol</h5>
+    <p><mark> a &rarr;</mark></p>
+    <h5 id="swap-symbol"><code>swap</code> Symbol</h5>
+    <p><mark> a1 a2 &rarr; a2 a1</mark></p>
+    <h4 id="evaluation-symbols">Evaluation Symbols</h4>
+    <h5 id="i-symbol"><code>.</code> Symbol</h5>
+    <p><mark>q &rarr; *</mark></p>
+    <h5 id="eval-symbol"><code>!</code> Symbol</h5>
+    <p><mark>s &rarr;</mark></p>
+    <h5 id="quote-symbol"><code>&#39;</code> Symbol</h5>
+    <p><mark>a &rarr; q</mark></p>
+    <h4 id="arithmetic-symbols">Arithmetic Symbols</h4>
+    <h5 id="add-symbol"><code>+</code> Symbol</h5>
+    <p><mark> i1 i2 &rarr; i</mark></p>
+    <h5 id="subtract-symbol"><code>-</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="multiply-symbol"><code>*</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="divide-symbol"><code>/</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="module-symbol"><code>%</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h4 id="bitwise-operations-symbols">Bitwise Operations Symbols</h4>
+    <h5 id="bitwise-and-symbol"><code>&amp;</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="bitwise-or-symbol"><code>|</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="bitwise-xor-symbol"><code>^</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="bitwise-not-symbol"><code>~</code> Symbol</h5>
+    <p><mark> i &rarr; i</mark></p>
+    <h5 id="bitwise-leftshift-symbol"><code>&lt;&lt;</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="bitwise-rightshift-symbol"><code>&gt;&gt;</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h4 id="comparisons-symbols">Comparisons Symbols</h4>
+    <h5 id="equal-symbol"><code>==</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="notequal-symbol"><code>!=</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="greaterthan-symbol"><code>&gt;</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="lessthan-symbol"><code>&lt;</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="greaterthanequal-symbol"><code>&gt;=</code> Symbol</h5>
+    <p><mark> i1 12 &rarr; i</mark></p>
+    <h5 id="lessthanequal-symbol"><code>&lt;=</code> Symbol</h5>
+    <p><mark> i1 i2 &rarr; i</mark></p>
+    <h4 id="boolean-logic-symbols">Boolean Logic Symbols</h4>
+    <h5 id="and-symbol"><code>and</code> Symbol</h5>
+    <p><mark> i1 i2 &rarr; i</mark></p>
+    <h5 id="or-symbol"><code>or</code> Symbol</h5>
+    <p><mark> i1 i2 &rarr; i</mark></p>
+    <h5 id="not-symbol"><code>not</code> Symbol</h5>
+    <p><mark> i &rarr; i</mark></p>
+    <h5 id="xor-symbol"><code>xor</code> Symbol</h5>
+    <p><mark> i1 i2 &rarr; i</mark></p>
+    <h4 id="datatype-conversions-and-checking-symbols">Datatype Conversions and Checking Symbols</h4>
+    <h5 id="int-symbol"><code>int</code> Symbol</h5>
+    <p><mark> (i|s) &rarr; i</mark></p>
+    <h5 id="str-symbol"><code>str</code> Symbol</h5>
+    <p><mark> (i|s) &rarr; s</mark></p>
+    <h5 id="dec-symbol"><code>dec</code> Symbol</h5>
+    <p><mark> i &rarr; s</mark></p>
+    <h5 id="hex-symbol"><code>hex</code> Symbol</h5>
+    <p><mark> s &rarr; i</mark></p>
+    <h5 id="type-symbol"><code>type</code> Symbol</h5>
+    <p><mark> a &rarr; s</mark></p>
+    <h4 id="list-symbols">List (Strings and Quotations) Symbols</h4>
+    <h5 id="cat-symbol"><code>cat</code> Symbol</h5>
+    <p><mark> (s s|q q) &rarr; (s|q)</mark></p>
+    <h5 id="slice-symbol"><code>slice</code> Symbol</h5>
+    <p><mark> (s i1 i2|q i1 i2) &rarr; (s|q)</mark></p>
+    <h5 id="len-symbol"><code>len</code> Symbol</h5>
+    <p><mark> (s|q) &rarr; i</mark></p>
+    <h5 id="get-symbol"><code>get</code> Symbol</h5>
+    <p><mark> (s|q) &rarr; a</mark></p>
+    <h5 id="insert-symbol"><code>insert</code> Symbol</h5>
+    <p><mark> (s a i|q a i) &rarr; (s|q)</mark></p>
+    <h5 id="index-symbol"><code>index</code> Symbol</h5>
+    <p><mark> (s a|q a) &rarr; i</mark></p>
+    <h5 id="join-symbol"><code>join</code> Symbol</h5>
+    <p><mark> q s &rarr; s</mark></p>
+    <h4 id="string-symbols">String Symbols</h4>
+    <h5 id="split-symbol"><code>split</code> Symbol</h5>
+    <p><mark> s1 s2 &rarr; q</mark></p>
+    <h5 id="replace-symbol"><code>replace</code> Symbol</h5>
+    <p><mark> s1 s2 s3 &rarr;</mark></p>
+    <h4 id="quotation-symbols">Quotation Symbols</h4>
+    <h5 id="each-symbol"><code>each</code> Symbol</h5>
+    <p><mark> q1 q2 &rarr; *</mark></p>
+    <h5 id="map-symbol"><code>map</code> Symbol</h5>
+    <p><mark> q1 q2 &rarr; q</mark></p>
+    <h5 id="filter-symbol"><code>filter</code> Symbol</h5>
+    <p><mark> q1 q2 &rarr; q</mark></p>
+    <h4 id="input-output-symbols">Input/Output Symbols</h4>
+    <h5 id="puts-symbol"><code>puts</code> Symbol</h5>
+    <p><mark> a &rarr;</mark></p>
+    <h5 id="warn-symbol"><code>warn</code> Symbol</h5>
+    <p><mark> a &rarr;</mark></p>
+    <h5 id="print-symbol"><code>print</code> Symbol</h5>
+    <p><mark> a &rarr;</mark></p>
+    <h5 id="gets-symbol"><code>gets</code> Symbol</h5>
+    <p><mark> &rarr; s</mark></p>
+    <h4 id="file-symbols">File Symbols</h4>
+    <h5 id="read-symbol"><code>read</code> Symbol</h5>
+    <p><mark> s &rarr; s</mark></p>
+    <h5 id="write-symbol"><code>write</code> Symbol</h5>
+    <p><mark> s1 s2 &rarr; s</mark></p>
+    <h5 id="append-symbol"><code>append</code> Symbol</h5>
+    <p><mark> s1 s2 &rarr; s</mark></p>
+    <h4 id="shell-symbols">Shell Symbols</h4>
+    <h5 id="args-symbol"><code>args</code> Symbol</h5>
+    <p><mark> &rarr; q</mark></p>
+    <h5 id="exit-symbol"><code>exit</code> Symbol</h5>
+    <p><mark> i &rarr;</mark></p>
+    <h5 id="exec-symbol"><code>exec</code> Symbol</h5>
+    <p><mark> s &rarr;</mark></p>
+    <h5 id="run-symbol"><code>run</code> Symbol</h5>
+    <p><mark> s &rarr; q</mark></p>
 </article>

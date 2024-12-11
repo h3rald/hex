@@ -16,15 +16,37 @@ body {
 
 h1,
 h2,
-h3 {
+h3,
+h4,
+h5 {
     margin: 1rem 0 0.5rem 0;
     font-size: 1.1rem;
     font-weight: 700;
     color: gold;
 }
 
+h2 {
+    font-size: 1.3rem
+}
+
 h3 {
+    font-size: 1.2rem;
+}
+
+h4 {
+    font-size: 1.1rem;
+}
+
+h5 {
     font-size: 1rem;
+}
+
+h5 code {
+    color: white;
+}
+
+h5::before {
+    content: "→ ";
 }
 
 header {
@@ -135,4 +157,11 @@ blockquote div {
     margin-top: 1rem;
     font-weight: 600;
     color: gold;
+}
+
+mark {
+    background-color: transparent;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border: 1px dotted gray;
 }
