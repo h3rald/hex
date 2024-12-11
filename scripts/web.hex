@@ -103,7 +103,6 @@ contents
             d-out "/index.html" cat "dst-file" :
         ) 
         (
-            ("sh -c \"mkdir -p " d-out "/" id-content "\"") () map "" join exec
             (d-out id-content "index.html") () map "/" join "dst-file" :
         )
     if
@@ -113,7 +112,7 @@ contents
 
 
 ; Write assets
-("sh -c \"mkdir -p " d-out "/assets\"") () map "" join exec
+("sh -c \"mkdir -p " d-out "/assets\"") () map ""  join exec
 assets
 (
     "fn-asset" :

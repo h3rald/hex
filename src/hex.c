@@ -214,9 +214,9 @@ char *hex_process_string(hex_context_t *ctx, const char *value)
             case 'v':
                 *dst++ = '\v';
                 break;
-            case '\\':
-                *dst++ = '\\';
-                break;
+            // case '\\':
+            //     *dst++ = '\\';
+            //     break;
             case '\"':
                 *dst++ = '\"';
                 break;
@@ -628,6 +628,12 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
                 len++;
                 position->column += 2;
             }
+            if (*ptr == '\\' && *(ptr + 1) == '\\')
+            {
+                ptr += 2;
+                len++;
+                position->column += 2;
+            }
             else if (*ptr == '"')
             {
                 break;
@@ -663,7 +669,13 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         ptr = start;
         while (*ptr != '\0' && *ptr != '"')
         {
-            if (*ptr == '\\' && *(ptr + 1) == '"')
+            if (*ptr == '\\' && *(ptr + 1) == '\\')
+            {
+                *dst++ = '\\';
+                *dst++ = '\\';
+                ptr += 2;
+            }
+            else if (*ptr == '\\' && *(ptr + 1) == '"')
             {
                 *dst++ = '"';
                 ptr += 2;
