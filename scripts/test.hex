@@ -218,6 +218,8 @@
     ((() 0x0 get) (error) try "Index out of range" ==)
     ((0x4 0x4 get) (error) try "Symbol 'get' requires a quotation or a string" ==)
     ;120
+
+    ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" replace "t-path" :) while t-path "a\\b\\c" == "t-path" #)
     
 ) "tests" :
 
