@@ -160,7 +160,6 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
     else if (item.type == HEX_TYPE_NATIVE_SYMBOL)
     {
         hex_debug_item(ctx, "CALL", item);
-        add_to_stack_trace(ctx, item.token);
         result = item.data.fn_value(ctx);
     }
     else
@@ -1979,7 +1978,7 @@ int hex_symbol_and(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value && b.data.int_value);
     }
-    hex_error(ctx, "'and' symbol requires two integers");
+    hex_error(ctx, "Symbol 'and' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;
@@ -2005,7 +2004,7 @@ int hex_symbol_or(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value || b.data.int_value);
     }
-    hex_error(ctx, "'or' symbol requires two integers");
+    hex_error(ctx, "Symbol 'or' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;
@@ -2024,7 +2023,7 @@ int hex_symbol_not(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, !a.data.int_value);
     }
-    hex_error(ctx, "'not' symbol requires an integer");
+    hex_error(ctx, "Symbol 'not' requires an integer");
     FREE(ctx, a);
     return 1;
 }
@@ -2049,7 +2048,7 @@ int hex_symbol_xor(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value ^ b.data.int_value);
     }
-    hex_error(ctx, "'xor' symbol requires two integers");
+    hex_error(ctx, "Symbol 'xor' requires two integers");
     FREE(ctx, a);
     FREE(ctx, b);
     return 1;
@@ -3953,6 +3952,11 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
         {
             // Not a hashbang line, reset file pointer to the beginning
             fseek(file, 0, SEEK_SET);
+            ctx->hashbang = 0;
+        }
+        else
+        {
+            ctx->hashbang = 1;
         }
     }
 
@@ -4241,7 +4245,7 @@ int main(int argc, char *argv[])
                 {
                     return 1;
                 }
-                hex_interpret(&ctx, fileContent, arg, 1, 1);
+                hex_interpret(&ctx, fileContent, arg, 1 + ctx.hashbang, 1);
                 return 0;
             }
         }

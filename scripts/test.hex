@@ -189,13 +189,31 @@
     (("aaa" 0x5) ("aaa" 0x5 0x4) >= 0x0 ==)
     ;100
 
-    ((test "aaa") (test "aaa" 0x5) < 0x1 ==)
+    ((test "aaa") (test "aaa" 0x5) < 0x1 ==) 
     (("aaa" 0x5) ("" "aaa" 0x5) <= 0x0 ==)
+    (("a" "b" and) (error) try "Symbol 'and' requires two integers" ==)
+    ((0x1 "a" or) (error) try "Symbol 'or' requires two integers" ==)
+    ;104
+
+    ((() not) (error) try "Symbol 'not' requires an integer" ==)
+    ((() 0x1 xor) (error) try "Symbol 'xor' requires two integers" ==)
+    (("" () cat) (error) try "Symbol 'cat' requires two quotations or two strings" ==)
+    (("abcde" 0x1 "2" slice ) (error) try "Slice indices must be integers" ==)
+    ;108
+
+    (("abcde" 0xffffffff 0x2 slice ) (error) try "Slice indices out of range" ==)
+    (("abcde" 0x2 0xf slice ) (error) try "Slice indices out of range" ==)
+    (((0x4 0x5) 0xffffffff 0x2 slice ) (error) try "Slice indices out of range" ==)
+    (((0x3 0x4 0x5 0x6) 0x2 0xf slice ) (error) try "Slice indices out of range" ==)
+    ;112
+
+    ((0x4 0x5 0x6 slice) (error) try "Symbol 'slice' requires a quotation or a string" ==)
+    ((0x4 len) (error) try "Symbol 'len' requires a quotation or a string" ==)
+    (("abc" "b" get) (error) try "Index must be an integer" ==)
+    (((0x4 "aa" test) "b" get) (error) try "Index must be an integer" ==)
+    ;116
     
 ) "tests" :
-
-; Cleanup
-clear
 
 
 ; --- Run tests

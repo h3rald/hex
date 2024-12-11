@@ -132,6 +132,7 @@ typedef struct hex_context_t
     hex_stack_trace_t stack_trace;
     hex_settings_t settings;
     hex_doc_dictionary_t docs;
+    int hashbang;
     char error[256];
     int argc;
     char **argv;
