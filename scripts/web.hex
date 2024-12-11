@@ -15,6 +15,10 @@ d-assets ls . "assets" :
 d-releases ls . "releases" :
 d-templates "/page.html" cat "t-page" :
 
+; Symbols to substitute with the corresponding links, 
+; if found in text.
+("split" "run" "get" "puts") "symbol-links" :
+
 ; Convenience symbol for debugging
 (dup puts) "_" :
 
@@ -34,6 +38,23 @@ d-templates "/page.html" cat "t-page" :
     pt-content
 ) "process-tag" :
 
+; Replace symbol placeholder with link to spec
+(
+    "t-symbol" :
+    "t-content" :
+    ("<a href=\"/spec#" t-symbol "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
+    ; Push replacement content on the stack
+    t-content 
+    "sym-" t-symbol cat 
+    t-repl 
+    process-tag .
+    ; Free temporary symbols
+    "t-repl" #
+    "t-symtag" #
+    "t-symbol" #
+) "process-symbol" : 
+
+; Load releases content for changelog
 "" "releases-content" :
 (
     releases
@@ -74,6 +95,8 @@ contents
     "year" meta-year process-tag .
     "releases" releases-content process-tag .
     "new-content" :
+    ; Replace symbols with links
+    symbol-links (new-content swap process-symbol . "new-content" :) each
     (fn-content "home.html" ==)
         (
             ; Process home page
@@ -87,6 +110,7 @@ contents
     "  - Writing: " dst-file cat puts
     new-content dst-file write
 ) each
+
 
 ; Write assets
 ("sh -c \"mkdir -p " d-out "/assets\"") () map "" join exec
