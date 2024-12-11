@@ -669,15 +669,15 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         ptr = start;
         while (*ptr != '\0' && *ptr != '"')
         {
-            if (*ptr == '\\' && *(ptr + 1) == '"')
-            {
-                *dst++ = '"';
-                ptr += 2;
-            }
             if (*ptr == '\\' && *(ptr + 1) == '\\')
             {
                 *dst++ = '\\';
                 *dst++ = '\\';
+                ptr += 2;
+            }
+            else if (*ptr == '\\' && *(ptr + 1) == '"')
+            {
+                *dst++ = '"';
                 ptr += 2;
             }
             else

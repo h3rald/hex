@@ -220,6 +220,7 @@
     ;120
 
     ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" replace "t-path" :) while t-path "a\\b\\c" == "t-path" #)
+    ("assets\"" "\"" "/" replace "assets/" ==)
     
 ) "tests" :
 
