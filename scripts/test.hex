@@ -212,6 +212,12 @@
     (("abc" "b" get) (error) try "Index must be an integer" ==)
     (((0x4 "aa" test) "b" get) (error) try "Index must be an integer" ==)
     ;116
+
+    (("abc" 0x3 get) (error) try "Index out of range" ==)
+    (((0x2) 0x2 get) (error) try "Index out of range" ==)
+    ((() 0x0 get) (error) try "Index out of range" ==)
+    ((0x4 0x4 get) (error) try "Symbol 'get' requires a quotation or a string" ==)
+    ;120
     
 ) "tests" :
 
