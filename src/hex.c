@@ -3970,15 +3970,16 @@ void hex_print_help()
 
 void hex_print_docs(hex_doc_dictionary_t *docs)
 {
-    printf("   _*_ _\n"
+    printf("\n"
+           "   _*_ _\n"
            "  / \\hex\\*\n"
            " *\\_/_/_/  v%s - (c) 2024 Fabio Cevasco\n"
            "      *   \n",
            HEX_VERSION);
     printf("\n"
            "BASICS\n"
-           "  hex is a minimalist, concatenative programming language that supports only integers,\n"
-           "  strings, symbols, and quotations (lists).\n"
+           "  hex is a minimalist, slightly-esoteric, concatenative programming language that supports\n"
+           "  only integers, strings, symbols, and quotations (lists).\n"
            "\n"
            "  It uses a stack-based execution model and provides 64 native symbols for stack\n"
            "  manipulation, arithmetic operations, control flow, reading and writing\n"
@@ -3986,11 +3987,12 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
            "\n"
            "  Symbols and literals are separated by whitespace and can be grouped in quotations using\n"
            "  parentheses.\n"
+           "\n"
            "  Symbols are evaluated only when they are pushed on the stack, therefore, symbols inside\n"
            "  quotations are not evaluated until the contents of the quotation are pushed on the stack.\n"
-           "  You can define your own symbols using the symbol 'store' and execute a quotation with 'i'.\n"
+           "  You can define your own symbols using the symbol ':' and execute a quotation with '.'.\n"
            "\n"
-           "  Oh, and of course all integers are hexadecimal! ;)\n"
+           "  Oh, and of course all integers are in hexadecimal format! ;)\n"
            "\n"
            "SYMBOLS\n"
            "  +---------+----------------------------+-------------------------------------------------+\n"
