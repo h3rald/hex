@@ -387,9 +387,9 @@ char *hex_type(hex_item_type_t type)
     case HEX_TYPE_QUOTATION:
         return "quotation";
     case HEX_TYPE_NATIVE_SYMBOL:
-        return "native symbol";
+        return "native-symbol";
     case HEX_TYPE_USER_SYMBOL:
-        return "user symbol";
+        return "user-symbol";
     case HEX_TYPE_INVALID:
         return "invalid";
     default:
