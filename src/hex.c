@@ -491,14 +491,14 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_doc(docs, "str", "i", "s", "Converts a hex integer to a string.");
     hex_doc(docs, "dec", "i", "s", "Converts a hex integer to a decimal string.");
     hex_doc(docs, "hex", "s", "i", "Converter a decimal string to a hex integer.");
+    hex_doc(docs, "chr", "i", "s", "Converts an integer to a single-character string.");
+    hex_doc(docs, "ord", "s", "i", "Converts a single-character string to an integer.");
     hex_doc(docs, "type", "a", "s", "Pushes the data type of 'a' on the stack.");
 
     // List
     hex_doc(docs, "cat", "(s s|q q) ", "(s|q)", "Concatenates two quotations or two strings.");
-    hex_doc(docs, "slice", "(s i1 i2|q i1 i2)", "(s|q)", "Removes 'i2' items 's' or 'q' at index 'i1'.");
     hex_doc(docs, "len", "(s|q)", "i ", "Returns the length of 's' or 'q'.");
     hex_doc(docs, "get", "(s|q)", "a", "Gets the item at position 'i' in 's' or 'q'.");
-    hex_doc(docs, "insert", "(s a i|q a i)", "(s|q)", "Inserts 'a' at position 'i'.");
     hex_doc(docs, "index", "(s a|q a)", "i", "Returns the index of 'a' within 's' or 'q'.");
     hex_doc(docs, "join", "q s", "s", "Joins the strings in 'q' using separator 's'.");
 
@@ -1703,6 +1703,60 @@ int hex_symbol_hex(hex_context_t *ctx)
     return 1;
 }
 
+int hex_symbol_ord(hex_context_t *ctx)
+{
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
+    {
+        FREE(ctx, item);
+        return 1;
+    }
+    if (item.type == HEX_TYPE_STRING)
+    {
+        if (strlen(item.data.str_value) > 1)
+        {
+            return hex_push_integer(ctx, -1);
+        }
+        unsigned char *str = (unsigned char *)item.data.str_value;
+        if (str[0] < 128)
+        {
+            return hex_push_integer(ctx, str[0]);
+        }
+        else
+        {
+            return hex_push_integer(ctx, -1);
+        }
+    }
+    hex_error(ctx, "Symbol 'ord' requires a string");
+    FREE(ctx, item);
+    return 1;
+}
+
+int hex_symbol_chr(hex_context_t *ctx)
+{
+    POP(ctx, item);
+    if (item.type == HEX_TYPE_INVALID)
+    {
+        FREE(ctx, item);
+        return 1;
+    }
+    if (item.type == HEX_TYPE_INTEGER)
+    {
+        if (item.data.int_value >= 0 && item.data.int_value < 128)
+        {
+            char str[2] = {(char)item.data.int_value, '\0'};
+            return hex_push_string(ctx, str);
+        }
+        else
+        {
+            return hex_push_string(ctx, "");
+        }
+    }
+    hex_error(ctx, "Symbol 'chr' requires an integer");
+    FREE(ctx, item);
+    return 1;
+}
+
 // Comparison symbols
 
 static int hex_equal(hex_item_t a, hex_item_t b)
@@ -2145,106 +2199,6 @@ int hex_symbol_cat(hex_context_t *ctx)
     return result;
 }
 
-int hex_symbol_slice(hex_context_t *ctx)
-{
-
-    POP(ctx, end);
-    if (end.type == HEX_TYPE_INVALID)
-    {
-        FREE(ctx, end);
-        return 1;
-    }
-    POP(ctx, start);
-    if (start.type == HEX_TYPE_INVALID)
-    {
-        FREE(ctx, start);
-        FREE(ctx, end);
-        return 1;
-    }
-    POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
-    {
-        FREE(ctx, list);
-        FREE(ctx, start);
-        FREE(ctx, end);
-        return 1;
-    }
-    int result = 0;
-    if (list.type == HEX_TYPE_QUOTATION)
-    {
-        if (start.type != HEX_TYPE_INTEGER || end.type != HEX_TYPE_INTEGER)
-        {
-            hex_error(ctx, "Slice indices must be integers");
-            result = 1;
-        }
-        else if (start.data.int_value < 0 || start.data.int_value >= list.quotation_size || end.data.int_value < 0 || end.data.int_value >= list.quotation_size)
-        {
-            hex_error(ctx, "Slice indices out of range");
-            result = 1;
-        }
-        else
-        {
-            int newSize = end.data.int_value - start.data.int_value + 1;
-            hex_item_t **newQuotation = (hex_item_t **)malloc(newSize * sizeof(hex_item_t *));
-            if (!newQuotation)
-            {
-                hex_error(ctx, "Memory allocation failed");
-                result = 1;
-            }
-            else
-            {
-                for (int i = 0; i < newSize; i++)
-                {
-                    newQuotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-                    *newQuotation[i] = *list.data.quotation_value[start.data.int_value + i];
-                }
-                result = hex_push_quotation(ctx, newQuotation, newSize);
-            }
-        }
-    }
-    else if (list.type == HEX_TYPE_STRING)
-    {
-        if (start.type != HEX_TYPE_INTEGER || end.type != HEX_TYPE_INTEGER)
-        {
-            hex_error(ctx, "Slice indices must be integers");
-            result = 1;
-        }
-        else if (start.data.int_value < 0 || start.data.int_value >= (int)strlen(list.data.str_value) || end.data.int_value < 0 || end.data.int_value >= (int)strlen(list.data.str_value))
-        {
-            hex_error(ctx, "Slice indices out of range");
-            result = 1;
-        }
-        else
-        {
-            int newSize = end.data.int_value - start.data.int_value + 1;
-            char *newStr = (char *)malloc(newSize + 1);
-            if (!newStr)
-            {
-                hex_error(ctx, "Memory allocation failed");
-                result = 1;
-            }
-            else
-            {
-                strncpy(newStr, list.data.str_value + start.data.int_value, newSize);
-                newStr[newSize] = '\0';
-                result = hex_push_string(ctx, newStr);
-            }
-        }
-    }
-    else
-    {
-        hex_error(ctx, "Symbol 'slice' requires a quotation or a string");
-        result = 1;
-    }
-    if (result != 0)
-    {
-        FREE(ctx, list);
-        FREE(ctx, start);
-        FREE(ctx, end);
-    }
-    return result;
-}
-
 int hex_symbol_len(hex_context_t *ctx)
 {
 
@@ -2339,155 +2293,6 @@ int hex_symbol_get(hex_context_t *ctx)
         FREE(ctx, index);
     }
     return result;
-}
-
-int hex_symbol_insert(hex_context_t *ctx)
-{
-
-    POP(ctx, index);
-    if (index.type == HEX_TYPE_INVALID)
-    {
-        FREE(ctx, index);
-        return 1;
-    }
-    POP(ctx, value);
-    if (value.type == HEX_TYPE_INVALID)
-    {
-        FREE(ctx, index);
-        FREE(ctx, value);
-        return 1;
-    }
-
-    POP(ctx, target);
-    if (target.type == HEX_TYPE_INVALID)
-    {
-        FREE(ctx, target);
-        FREE(ctx, index);
-        FREE(ctx, value);
-        return 1;
-    }
-
-    if (index.type != HEX_TYPE_INTEGER)
-    {
-        hex_error(ctx, "Index must be an integer");
-        FREE(ctx, target);
-        FREE(ctx, index);
-        FREE(ctx, value);
-        return 1;
-    }
-
-    if (target.type == HEX_TYPE_STRING)
-    {
-        if (value.type != HEX_TYPE_STRING)
-        {
-            hex_error(ctx, "Value must be a string when inserting into a string");
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1;
-        }
-
-        size_t target_len = strlen(target.data.str_value);
-        size_t value_len = strlen(value.data.str_value);
-        size_t pos = index.data.int_value;
-
-        if (index.data.int_value < 0 || pos > target_len)
-        {
-            hex_error(ctx, "Index out of range");
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1;
-        }
-
-        char *new_str = (char *)malloc(target_len + value_len + 1);
-        if (!new_str)
-        {
-            hex_error(ctx, "Memory allocation failed");
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1;
-        }
-
-        strncpy(new_str, target.data.str_value, pos);
-        strcpy(new_str + pos, value.data.str_value);
-        strcpy(new_str + pos + value_len, target.data.str_value + pos);
-
-        free(target.data.str_value);
-        target.data.str_value = new_str;
-
-        if (PUSH(ctx, target) != 0)
-        {
-            free(new_str);
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1; // Failed to push the result onto the stack
-        }
-
-        return 0;
-    }
-    else if (target.type == HEX_TYPE_QUOTATION)
-    {
-        if (index.data.int_value < 0 || index.data.int_value > target.quotation_size)
-        {
-            hex_error(ctx, "Index out of range");
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1;
-        }
-
-        hex_item_t **new_quotation = (hex_item_t **)realloc(
-            target.data.quotation_value,
-            (target.quotation_size + 1) * sizeof(hex_item_t *));
-        if (!new_quotation)
-        {
-            hex_error(ctx, "Memory allocation failed");
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1;
-        }
-
-        for (size_t i = target.quotation_size; i > (size_t)index.data.int_value; --i)
-        {
-            new_quotation[i] = new_quotation[i - 1];
-        }
-        new_quotation[index.data.int_value] = (hex_item_t *)malloc(sizeof(hex_item_t));
-        if (!new_quotation[index.data.int_value])
-        {
-            hex_error(ctx, "Memory allocation failed");
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1;
-        }
-
-        *new_quotation[index.data.int_value] = value;
-        target.data.quotation_value = new_quotation;
-        target.quotation_size++;
-
-        if (PUSH(ctx, target) != 0)
-        {
-            free(new_quotation[index.data.int_value]);
-            FREE(ctx, target);
-            FREE(ctx, index);
-            FREE(ctx, value);
-            return 1; // Failed to push the result onto the stack
-        }
-
-        return 0;
-    }
-    else
-    {
-        hex_error(ctx, "Target must be a string or quotation");
-        FREE(ctx, target);
-        FREE(ctx, index);
-        FREE(ctx, value);
-        return 1;
-    }
 }
 
 int hex_symbol_index(hex_context_t *ctx)
@@ -3806,6 +3611,8 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "str", hex_symbol_str);
     hex_set_native_symbol(ctx, "dec", hex_symbol_dec);
     hex_set_native_symbol(ctx, "hex", hex_symbol_hex);
+    hex_set_native_symbol(ctx, "chr", hex_symbol_chr);
+    hex_set_native_symbol(ctx, "ord", hex_symbol_ord);
     hex_set_native_symbol(ctx, "==", hex_symbol_equal);
     hex_set_native_symbol(ctx, "!=", hex_symbol_notequal);
     hex_set_native_symbol(ctx, ">", hex_symbol_greater);
@@ -3817,10 +3624,8 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "not", hex_symbol_not);
     hex_set_native_symbol(ctx, "xor", hex_symbol_xor);
     hex_set_native_symbol(ctx, "cat", hex_symbol_cat);
-    hex_set_native_symbol(ctx, "slice", hex_symbol_slice);
     hex_set_native_symbol(ctx, "len", hex_symbol_len);
     hex_set_native_symbol(ctx, "get", hex_symbol_get);
-    hex_set_native_symbol(ctx, "insert", hex_symbol_insert);
     hex_set_native_symbol(ctx, "index", hex_symbol_index);
     hex_set_native_symbol(ctx, "join", hex_symbol_join);
     hex_set_native_symbol(ctx, "split", hex_symbol_split);
