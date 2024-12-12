@@ -6,12 +6,113 @@
     </blockquote>
 
     <h3 id="introduction">Introduction</h3>
+    <p><strong>hex</strong> is a minimalist, concatenative, stack-based programming language designed for experimenting
+        with the concatenative programming paradigm. It is inspired by the <a href="https://min-lang.org"
+            target="_blank">min</a> programming language and aims to provide a small yet powerful language for creating
+        short scripts and automating common tasks.</p>
+    <p>hex supports 32-bit integers (written only in hexadecimal format), strings, and quotations (lists). It features
+        a set of built-in symbols that implement arithmetic operations, boolean logic, bitwise operations, comparison of
+        integers, I/O operations, file manipulation, external process execution, and stack manipulation. The language is
+        fully homoiconic, meaning that everything in hex is data.</p>
+    <p>hex was created with simplicity in mind, both in its implementation and usage. The language's design encourages a
+        minimalist
+        approach, focusing on essential features and avoiding unnecessary complexity.</p>
     <h3 id="syntax">Syntax</h3>
+    <p>The syntax of hex is designed to be simple and intuitive, following the principles of concatenative programming.
+        In hex, programs are composed of sequences of literals and symbols, which are evaluated from left to right.</p>
+    <p>
+        Literals push values onto the stack, while symbols manipulate the stack or perform operations. There are no
+        explicit control structures; instead, hex relies on stack manipulation and quotations to achieve flow control
+        and data management. Symbols in hex can be used to store values globally, providing a way to manage state across
+        different parts of a program.</p>
+    <p>hex programs are written as sequences of whitespace-separated tokens. Tokens can be literals, symbols, or
+        comments.</p>
+    <p>This is an example of a simple hex program:</p>
+    <pre><code>    ; Filters a quotation to keep only the even numbers
+    (0x2 0x3 0x4 0x5 0x6) (0x2 % 0x0 ==) filter</code></pre>
+    <p>This example includes:</p>
+    <ul>
+        <li>One single-line comment: <code>; Filters a quotation to keep only the even numbers</code></li>
+        <li>Two quotations: <code>(0x2 0x3 0x4 0x5 0x6)</code> and <code>(0x2 % 0x0 ==)</code></li>
+        <li>Three symbols: <code>%</code>, <code>==</code>, and <code>filter</code></li>
+    </ul>
     <h4 id="comments">Comments</h4>
+
+    <p>Comments in hex are used to annotate code and are ignored during execution. There are two types of comments:
+        single-line comments and multi-line comments.</p>
+
+    <h5 id="single-line-comments">Single-line Comments</h5>
+    <p>Single-line comments start with a semicolon (<code>;</code>) and continue until the end of the line. Everything
+        after the semicolon is ignored.</p>
+    <p>Example:</p>
+    <pre><code>    ; This is a single-line comment
+    0x2 0x3 + ; This adds 0x2 and 0x3</code></pre>
+
+    <h5 id="multi-line-comments">Multi-line Comments</h5>
+    <p>Multi-line comments start with <code>#|</code> and end with <code>|#</code>. Everything between these markers is
+        ignored, allowing comments to span multiple lines.</p>
+    <p>Example:</p>
+    <pre><code>    #|
+      This is a multi-line comment
+      It can span multiple lines
+    |#
+    0x2 0x3 + #| This adds 0x2 and 0x3 |#</code></pre>
     <h4 id="integer-literals">Integer Literals</h4>
+    <p>Integer literals in hex are always written in hexadecimal form, prefixed with <code>0x</code>. They can contain
+        up to 8 hexadecimal digits, representing 32-bit integers. Hexadecimal digits include the numbers
+        <code>0-9</code> and the letters <code>>a-f</code> (or <code>A-F</code>), which correspond to the decimal values
+        10-15.
+    </p>
+    <p>Integers in hex can be positive or negative, and are implemented using <a
+            href="https://en.wikipedia.org/wiki/Two%27s_complement" target="_blank">two's complement</a> representation.
+        For more information on two's complement, see .</p>
+    <p>Examples:</p>
+    <ul>
+        <li><code>0x1</code> represents the decimal value 1.</li>
+        <li><code>0xa</code> represents the decimal value 10.</li>
+        <li><code>0x1f</code> represents the decimal value 31.</li>
+        <li><code>0xffffffff</code> represents the decimal value -1 (in two's complement).</li>
+    </ul>
+    <p>Integers are case-insensitive; typically, lowercase letters are preferred but not mandatory.</p>
     <h4 id="string-literals">String Literals</h4>
+    <p>String literals in hex are delimited by double quotes (<code>"</code>). They can contain any character except for
+        a newline, meaning that strings must be on a single line. To include special characters within a string, hex
+        supports the following escape codes:</p>
+    <ul>
+        <li><code>&#92;n</code> - Newline</li>
+        <li><code>&#92;t</code> - Tab</li>
+        <li><code>&#92;r</code> - Carriage return</li>
+        <li><code>&#92;b</code> - Backspace</li>
+        <li><code>&#92;f</code> - Form feed</li>
+        <li><code>&#92;v</code> - Vertical tab</li>
+        <li><code>&#92;&#92;</code> - Backslash</li>
+        <li><code>&#92;"</code> - Double quote</li>
+    </ul>
+    <p>Example:</p>
+    <pre><code>"Hello, World!\nThis is a new line."</code></pre>
     <h4 id="quotation-literals">Quotation Literals</h4>
+    <p>Quotations in hex are delimited by parentheses (they must start with <code>(</code> and end with <code>)</code>).
+        They can contain integers, strings, symbols, and
+        even other quotations, allowing for nested structures.</p>
+    <p>Examples:</p>
+    <ul>
+        <li><code>(0x1 0x2 0x3)</code> - A quotation containing three integer literals.</li>
+        <li><code>(0x1 "hello" (0x2 0x3))</code> - A nested quotation containing an integer, a string, and another
+            quotation.</li>
+    </ul>
+    <p>Unlike string literals, quotations can span multiple lines, making them suitable for representing complex data
+        structures and control flow mechanisms.</p>
     <h4 id="symbol-identifiers">Symbol Identifiers</h4>
+    <p>Symbol identifiers in hex are used to represent built-in native symbols and user-defined symbols.</p>
+    <p>There are 0x40 (64) <a href="#native-symbols">native symbols</a> in hex, and some of them contain special
+        characters like <code>==</code> or <code>.</code></p>
+    <p>Instead, user-defined symbols:</p>
+    <ul>
+        <li>must start with a letter (<code>a-z</code> or <code>A-Z</code>) or an underscore (<code>_</code>)</li>
+        <li>can contain additional letters (<code>a-z</code> or <code>A-Z</code>), digits (<code>0-9</code>), dashes
+            (<code>-</code>) and underscores (<code>_</code>)</li>
+    </ul>
+    <p>Symbols are case-sensitive.</p>
     <h3 id="data-types">Data Types</h3>
     <h4 id="integers">Integers</h4>
     <h4 id="strings">Strings</h4>
@@ -37,10 +138,12 @@
         dequotes <code>q3</code>.</p>
     <h5 id="when-symbol"><code>when</code> Symbol</h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
-    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>.</p>
+    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>.
+    </p>
     <h5 id="while-symbol"><code>while</code> Symbol</h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
-    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code> and
+    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>
+        and
         repeats the process.</p>
     <h5 id="error-symbol"><code>error</code> Symbol</h5>
     <p><mark>&rarr; s</mark></p>
@@ -116,8 +219,10 @@
         otherwise.</p>
     <h5 id="notequal-symbol"><code>!=</code> Symbol</h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are not equal, or <code>0x0</code>
-        otherwise.</p>
+    <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are not equal, or
+        <code>0x0</code>
+        otherwise.
+    </p>
     <h5 id="greaterthan-symbol"><code>&gt;</code> Symbol</h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or <code>0x0</code>
@@ -152,28 +257,35 @@
     <p>Pushes <code>0x1</code> on the stack if <code>i</code> is zero, or <code>0x0</code> otherwise.</p>
     <h5 id="xor-symbol"><code>xor</code> Symbol</h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are different, or <code>0x0</code>
-        otherwise.</p>
+    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are different, or
+        <code>0x0</code>
+        otherwise.
+    </p>
     <h4 id="type-checking-and-conversion-symbols">Type Checking and Conversion Symbols</h4>
     <h5 id="int-symbol"><code>int</code> Symbol</h5>
     <p><mark>s &rarr; i</mark></p>
-    <p>Converts the string <code>s</code> representing a hexadecimal integer to an integer value and pushes it on the
+    <p>Converts the string <code>s</code> representing a hexadecimal integer to an integer value and pushes it on
+        the
         stack.</p>
     <h5 id="str-symbol"><code>str</code> Symbol</h5>
     <p><mark> i &rarr; s</mark></p>
-    <p>Converts the integer <code>i</code> to a string representing a hexadecimal integer and pushes it on the stack.
+    <p>Converts the integer <code>i</code> to a string representing a hexadecimal integer and pushes it on the
+        stack.
     </p>
     <h5 id="dec-symbol"><code>dec</code> Symbol</h5>
     <p><mark> i &rarr; s</mark></p>
-    <p>Converts the integer <code>i</code> to a string representing a decimal integer and pushes it on the stack.</p>
+    <p>Converts the integer <code>i</code> to a string representing a decimal integer and pushes it on the stack.
+    </p>
     <h5 id="hex-symbol"><code>hex</code> Symbol</h5>
     <p><mark> s &rarr; i</mark></p>
-    <p>Converts the string <code>s</code> representing a decimal integer to an integer value and pushes it on the stack.
+    <p>Converts the string <code>s</code> representing a decimal integer to an integer value and pushes it on the
+        stack.
     </p>
     <h5 id="ord-symbol"><code>ord</code> Symbol</h5>
     <p><mark> s &rarr; i</mark></p>
     <p>Pushes the ASCII value of the string <code>s</code> on the stack.</p>
-    <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between 0x0 and
+    <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between 0x0
+        and
         0x7f, <code>0xffffffff</code> is pushed on the stack.</p>
     <h5 id="chr-symbol"><code>chr</code> Symbol</h5>
     <p><mark> i &rarr; s</mark></p>
@@ -197,11 +309,13 @@
     <p>Pushes the <code>i</code>th item of a string or a quotation on the stack.</p>
     <h5 id="index-symbol"><code>index</code> Symbol</h5>
     <p><mark> (s a|q a) &rarr; i</mark></p>
-    <p>Pushes the index of the first occurrence of the literal <code>a</code> in a string or a quotation on the stack.
+    <p>Pushes the index of the first occurrence of the literal <code>a</code> in a string or a quotation on the
+        stack.
         If <code>a</code> is not found, <code>0xffffffff</code> is pushed on the stack.</p>
     <h5 id="join-symbol"><code>join</code> Symbol</h5>
     <p><mark> q s1 &rarr; s2</mark></p>
-    <p>Assuming that <code>q</code> is a quotation containing only strings, pushes the string <code>s2</code> obtained
+    <p>Assuming that <code>q</code> is a quotation containing only strings, pushes the string <code>s2</code>
+        obtained
         by joining each element of <code>q</code> together using <code>s1</code> as a delimiter. </p>
     <h4 id="string-symbols">String Symbols</h4>
     <h5 id="split-symbol"><code>split</code> Symbol</h5>
@@ -262,7 +376,8 @@
     <p>Executes the string <code>s</code> as a shell command.</p>
     <h5 id="run-symbol"><code>run</code> Symbol</h5>
     <p><mark> s &rarr; q</mark></p>
-    <p>Executes the string <code>s</code> as a shell command, capturing its output and errors. It pushes a quotation on
+    <p>Executes the string <code>s</code> as a shell command, capturing its output and errors. It pushes a quotation
+        on
         the stack containing the following items:
     </p>
     <ul>
