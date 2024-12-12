@@ -491,12 +491,12 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_doc(docs, "str", "i", "s", "Converts a hex integer to a string.");
     hex_doc(docs, "dec", "i", "s", "Converts a hex integer to a decimal string.");
     hex_doc(docs, "hex", "s", "i", "Converter a decimal string to a hex integer.");
-    hex_doc(docs, "chr", "i", "s", "Converts an integer to a single-character string.");
-    hex_doc(docs, "ord", "s", "i", "Converts a single-character string to an integer.");
+    hex_doc(docs, "chr", "i", "s", "Converts an integer to a single-character.");
+    hex_doc(docs, "ord", "s", "i", "Converts a single-character to an integer.");
     hex_doc(docs, "type", "a", "s", "Pushes the data type of 'a' on the stack.");
 
     // List
-    hex_doc(docs, "cat", "(s s|q q) ", "(s|q)", "Concatenates two quotations or two strings.");
+    hex_doc(docs, "cat", "(s1 s2|q1 q2) ", "(s3|q3)", "Concatenates two quotations or two strings.");
     hex_doc(docs, "len", "(s|q)", "i ", "Returns the length of 's' or 'q'.");
     hex_doc(docs, "get", "(s|q)", "a", "Gets the item at position 'i' in 's' or 'q'.");
     hex_doc(docs, "index", "(s a|q a)", "i", "Returns the index of 'a' within 's' or 'q'.");
@@ -508,8 +508,8 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
 
     // Quotation
     hex_doc(docs, "each", "q1 q2", "*", "Executes 'q2' for each item of 'q1'.");
-    hex_doc(docs, "map", "q1 q2", "q", "Applies 'q2' to 'q1' items and returns results.");
-    hex_doc(docs, "filter", "q1 q2", "q", "Filters 'q2' by applying 'q1'.");
+    hex_doc(docs, "map", "q1 q2", "q3", "Applies 'q2' to 'q1' items and returns results.");
+    hex_doc(docs, "filter", "q1 q2", "q3", "Filters 'q2' by applying 'q1'.");
 
     // I/O
     hex_doc(docs, "puts", "a", "", "Prints 'a' and a new line to standard output.");
@@ -518,9 +518,9 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_doc(docs, "gets", "", "s", "Gets a string from standard input.");
 
     // File
-    hex_doc(docs, "read", "s", "s", "Returns the contents of the specified file.");
-    hex_doc(docs, "write", "s1 s2", "s", "Writes 's2' to the file 's1'.");
-    hex_doc(docs, "append", "s1 s2", "s", "Appends 's2' to the file 's1'.");
+    hex_doc(docs, "read", "s1", "s2", "Returns the contents of the specified file.");
+    hex_doc(docs, "write", "s1 s2", "", "Writes 's2' to the file 's1'.");
+    hex_doc(docs, "append", "s1 s2", "", "Appends 's2' to the file 's1'.");
 
     // Shell
     hex_doc(docs, "args", "", "q", "Returns the program arguments.");
@@ -4001,9 +4001,9 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
         printf("  | ");
         hex_rpad(docs->entries[i].name, 7);
         printf(" | ");
-        hex_lpad(docs->entries[i].input, 17);
+        hex_lpad(docs->entries[i].input, 15);
         printf(" -> ");
-        hex_rpad(docs->entries[i].output, 5);
+        hex_rpad(docs->entries[i].output, 7);
         printf(" | ");
         hex_rpad(docs->entries[i].description, 47);
         printf(" |\n");
