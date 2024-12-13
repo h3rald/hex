@@ -3964,7 +3964,7 @@ void hex_print_help()
            "OPTIONS\n"
            "  -d, --debug     Enable debug mode.\n"
            "  -h, --help      Display this help message.\n"
-           "  -m --manual     Display the manual.\n"
+           "  -m, --manual    Display the manual.\n"
            "  -v, --version   Display hex version.\n\n");
 }
 
