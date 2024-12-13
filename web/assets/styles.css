@@ -11,7 +11,7 @@ body {
     font-family: Monospace;
     font-size: 1rem;
     background-color: black;
-    color: white;
+    color: lightgray;
 }
 
 h1,
@@ -19,24 +19,27 @@ h2,
 h3,
 h4,
 h5 {
-    margin: 1rem 0 0.5rem 0;
     font-weight: 700;
-    color: gold;
+    color: white;
 }
 
 h2 {
+    margin: 2rem 0 0;
     font-size: 1.4rem
 }
 
 h3 {
+    margin: 1.8rem 0 0;
     font-size: 1.3rem;
 }
 
 h4 {
+    margin: 1.6rem 0 0;
     font-size: 1.1rem;
 }
 
 h5 {
+    margin: 1.4rem 0 0;
     font-size: 1rem;
 }
 
