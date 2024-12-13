@@ -109,7 +109,7 @@ li {
 article>section {
     display: flex;
     flex-direction: column;
-    border: 1px solid lime;
+    border: 1px solid gold;
 }
 
 article>section>section {
@@ -157,9 +157,9 @@ code {
 }
 
 blockquote {
+    margin: 1rem;
     border: 1px solid gold;
     padding: 0 1rem 0 1rem;
-    margin: 0;
 }
 
 blockquote div {
