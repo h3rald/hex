@@ -20,9 +20,11 @@
         <li>Fully <strong>homoiconic</strong> (everything is data).</li>
         <li>Includes a simple <strong>REPL</strong>.</li>
         <li>Includes an integrated <strong>help system</strong>.</li>
-        <li>Implemented as <strong>a single <a href="https://github.com/h3rald/hex/blob/master/src/hex.c" target="_blank">.c
+        <li>Implemented as <strong>a single <a href="https://github.com/h3rald/hex/blob/master/src/hex.c"
+                    target="_blank">.c
                     file</a> and a
-                single <a href="https://github.com/h3rald/hex/blob/master/src/hex.h" target="_blank">.h file</a></strong>,
+                single <a href="https://github.com/h3rald/hex/blob/master/src/hex.h" target="_blank">.h
+                    file</a></strong>,
             making it easier
             to
             embed in other programs and port to different platforms.</li>
@@ -31,7 +33,7 @@
     <p> The following code executes the <em>ls</em> command, retrieves the files returned in standard output, and stores
         them
         inside a quotation that is then printed:</p>
-    <pre><code>"ls" run 0x1 get "&bsol;n" split puts</code></pre>
+    <pre><code>$"ls"$$ $:run$$ $0x1$$ $:get$$ $"&bsol;n"$$ $:split$$ $:puts$$</code></pre>
     <p>Note that <strong>no variable is used in the code above</strong>! Let's break it down:</p>
     <ul>
         <li>The string <code>"ls"</code> is pushed on the stack.</li>

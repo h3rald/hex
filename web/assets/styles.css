@@ -120,8 +120,8 @@ aside {
 }
 
 aside span {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 article input {
@@ -164,4 +164,20 @@ mark {
     color: white;
     padding: 0.25rem 0.5rem;
     border: 1px dotted gray;
+}
+
+span.hex-comment {
+    color: gray;
+}
+
+span.hex-string {
+    color: orange;
+}
+
+span.hex-integer {
+    color: lightgreen;
+}
+
+span.hex-symbol {
+    color: lightblue
 }

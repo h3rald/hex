@@ -19,6 +19,53 @@ d-templates "/page.html" cat "t-page" :
 ; if found in text.
 ("split" "run" "get" "puts") "symbol-links" :
 
+;; Syntax highlighting
+
+; Delimiters and replacements for syntax highlighting
+(
+    ";$" 
+    "#|$" 
+    "$|#" 
+    "$\"" 
+    "$0x" 
+    "$:" 
+    "$$"
+) "highlight-delimiters" :
+(
+    "<span class=\"hex-comment\">;" 
+    "<span class=\"hex-comment\">#|" 
+    "|#</span>" 
+    "<span class=\"hex-string\">\""
+    "<span class=\"hex-integer\">0x"
+    "<span class=\"hex-symbol\">"
+    "</span>"
+) "highlight-replacements" :
+
+; Highlight syntax in text
+(
+    "t-text" :
+    0x0 "t-count" :
+    (t-count highlight-delimiters len <)
+        (
+            t-text highlight-delimiters t-count get "t-delimiter" :
+            t-text highlight-replacements t-count get "t-replacement" :
+            (t-text t-delimiter index 0x0 >)
+                (
+                    t-text t-delimiter t-replacement replace "t-text" :
+                ) 
+            while
+            t-count 0x1 + "t-count" :
+        )
+    while
+    ; Push highlighted text on the stack
+    t-text
+    ; Free temporary symbols
+    "t-text" #
+    "t-count" #
+    "t-delimiter" #
+    "t-replacement" #
+) "highlight" :
+
 ; Convenience symbol for debugging
 (dup puts) "_" :
 
@@ -97,6 +144,8 @@ contents
     "new-content" :
     ; Replace symbols with links
     symbol-links (new-content swap process-symbol . "new-content" :) each
+    ; Highlight syntax
+    new-content highlight . "new-content" :
     (fn-content "home.html" ==)
         (
             ; Process home page
