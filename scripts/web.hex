@@ -15,17 +15,16 @@ d-assets ls . "assets" :
 d-releases ls . "releases" :
 d-templates "/page.html" cat "t-page" :
 
-; Symbols to substitute with the corresponding links, 
-; if found in text.
-("split" "run" "get" "puts") "symbol-links" :
+; Symbols to substitute with the corresponding links 
+("split" "run" "get" "puts" ":" "." "#" "==" "'" "swap") "symbol-links" :
 
 ;; Syntax highlighting
 
 ; Delimiters and replacements for syntax highlighting
 (
-    ";$" 
-    "#|$" 
-    "$|#" 
+    "$;" 
+    "$#|" 
+    "|#$" 
     "$\"" 
     "$0x" 
     "$:" 
@@ -85,11 +84,20 @@ d-templates "/page.html" cat "t-page" :
     pt-content
 ) "process-tag" :
 
+
 ; Replace symbol placeholder with link to spec
 (
     "t-symbol" :
     "t-content" :
-    ("<a href=\"/spec#" t-symbol "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
+    t-symbol "t-href" :
+    ; Handle "special" symbols
+    (t-symbol ":" ==)("store" "t-href" :) when
+    (t-symbol "==" ==)("equal" "t-href" :) when
+    (t-symbol "." ==)("i" "t-href" :) when
+    (t-symbol "#" ==)("free" "t-href" :) when
+    (t-symbol "!" ==)("eval" "t-href" :) when
+    (t-symbol "'" ==)("quote" "t-href" :) when
+    ("<a href=\"/spec#" t-href "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
     ; Push replacement content on the stack
     t-content 
     "sym-" t-symbol cat 
@@ -98,6 +106,7 @@ d-templates "/page.html" cat "t-page" :
     ; Free temporary symbols
     "t-repl" #
     "t-symtag" #
+    "t-href" #
     "t-symbol" #
 ) "process-symbol" : 
 

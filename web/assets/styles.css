@@ -181,3 +181,17 @@ span.hex-integer {
 span.hex-symbol {
     color: lightblue
 }
+
+article nav {
+    font-size: 90%;
+}
+
+a[href^="#top"]::before {
+    content: "↑ ";
+}
+
+a[href^="#top"] {
+    font-size: 80%;
+    text-decoration: none;
+    vertical-align: super;
+}

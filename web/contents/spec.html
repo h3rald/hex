@@ -1,11 +1,50 @@
 <article>
     <h2>Specification</h2>
+    <nav>
+        <h3>Table of Contents</h3>
+        <ul>
+            <li><a href="#syntax">Syntax</a></li>
+            <li><a href="#quotation-literals">Quotation Literals</a></li>
+            <li><a href="#symbol-identifiers">Symbol Identifiers</a></li>
+            <li><a href="#data-types">Data Types</a>
+                <ul>
+                    <li><a href="#integers">Integers</a></li>
+                    <li><a href="#strings">Strings</a></li>
+                    <li><a href="#quotations">Quotations</a></li>
+                    <li><a href="#symbols">Symbols</a></li>
+                </ul>
+            </li>
+            <li><a href="#stack">Stack</a>
+                <ul>
+                    <li><a href="#pushing-literals">Pushing Literals</a></li>
+                    <li><a href="#pushing-symbols">Pushing Symbols</a></li>
+                </ul>
+            </li>
+            <li><a href="#registry">Registry</a></li>
+            <li><a href="#native-symbols">Native Symbols</a>
+                <ul>
+                    <li><a href="#memory-management-symbols">Memory Management Symbols</a></li>
+                    <li><a href="#control-flow-symbols">Control Flow Symbols</a></li>
+                    <li><a href="#stack-management-symbols">Stack Management Symbols</a></li>
+                    <li><a href="#evaluation-symbols">Evaluation Symbols</a></li>
+                    <li><a href="#arithmetic-symbols">Arithmetic Symbols</a></li>
+                    <li><a href="#bitwise-operations-symbols">Bitwise Operations Symbols</a></li>
+                    <li><a href="#comparisons-symbols">Comparisons Symbols</a></li>
+                    <li><a href="#boolean-logic-symbols">Boolean Logic Symbols</a></li>
+                    <li><a href="#type-checking-and-conversion-symbols">Type Checking and Conversion Symbols</a></li>
+                    <li><a href="#list-symbols">List (Strings and Quotations) Symbols</a></li>
+                    <li><a href="#string-symbols">String Symbols</a></li>
+                    <li><a href="#quotation-symbols">Quotation Symbols</a></li>
+                    <li><a href="#input-output-symbols">Input/Output Symbols</a></li>
+                    <li><a href="#file-symbols">File Symbols</a></li>
+                    <li><a href="#shell-symbols">Shell Symbols</a></li>
+                </ul>
+            </li>
+        </ul>
+    </nav>
 
-    <blockquote>
-        <p>Under construction.</p>
-    </blockquote>
 
-    <h3 id="introduction">Introduction</h3>
+    <h3 id="introduction">Introduction<a href="#top"></a></h3>
     <p><strong>hex</strong> is a minimalist, concatenative, stack-based programming language designed for experimenting
         with the concatenative programming paradigm. It is inspired by the <a href="https://min-lang.org"
             target="_blank">min</a> programming language and aims to provide a small yet powerful language for creating
@@ -17,7 +56,7 @@
     <p>hex was created with simplicity in mind, both in its implementation and usage. The language's design encourages a
         minimalist
         approach, focusing on essential features and avoiding unnecessary complexity.</p>
-    <h3 id="syntax">Syntax</h3>
+    <h3 id="syntax">Syntax<a href="#top"></a></h3>
     <p>The syntax of hex is designed to be simple and intuitive, following the principles of concatenative programming.
         In hex, programs are composed of sequences of literals and symbols, which are evaluated from left to right.</p>
     <p>
@@ -28,7 +67,7 @@
     <p>hex programs are written as sequences of whitespace-separated tokens. Tokens can be literals, symbols, or
         comments.</p>
     <p>This is an example of a simple hex program:</p>
-    <pre><code>    ;$ Filters a quotation to keep only the even numbers$$
+    <pre><code>    $; Filters a quotation to keep only the even numbers$$
     ($0x2$$ $0x3$$ $0x4$$ $0x5$$ $0x6$$) ($0x2$$ $:%$$ $0x0$$ $:==$$) $:filter$$</code></pre>
     <p>This example includes:</p>
     <ul>
@@ -38,28 +77,28 @@
         </li>
         <li>Three symbols: <code>$:%$$</code>, <code>$:==$$</code>, and <code>$:filter$$</code></li>
     </ul>
-    <h4 id="comments">Comments</h4>
+    <h4 id="comments">Comments<a href="#top"></a></h4>
 
     <p>Comments in hex are used to annotate code and are ignored during execution. There are two types of comments:
         single-line comments and multi-line comments.</p>
 
-    <h5 id="single-line-comments">Single-line Comments</h5>
+    <h5 id="single-line-comments">Single-line Comments<a href="#top"></a></h5>
     <p>Single-line comments start with a semicolon (<code>;</code>) and continue until the end of the line. Everything
         after the semicolon is ignored.</p>
     <p>Example:</p>
-    <pre><code>    ;$ This is a single-line comment$$
-    $0x2$$ $0x3$$ $:+$$ ;$ This adds 0x2 and 0x3$</code></pre>
+    <pre><code>    $; This is a single-line comment$$
+    $0x2$$ $0x3$$ $:+$$ $; This adds 0x2 and 0x3$</code></pre>
 
-    <h5 id="multi-line-comments">Multi-line Comments</h5>
+    <h5 id="multi-line-comments">Multi-line Comments<a href="#top"></a></h5>
     <p>Multi-line comments start with <code>#|</code> and end with <code>|#</code>. Everything between these markers is
         ignored, allowing comments to span multiple lines.</p>
     <p>Example:</p>
-    <pre><code>    #|$
+    <pre><code>    $#|
       This is a multi-line comment
       It can span multiple lines
-    $|#
-    $0x2$$ $0x3$$ $:+$$ #|$ This adds 0x2 and 0x3 $|#</code></pre>
-    <h4 id="integer-literals">Integer Literals</h4>
+    |#$
+    $0x2$$ $0x3$$ $:+$$ $#| This adds 0x2 and 0x3 |#$</code></pre>
+    <h4 id="integer-literals">Integer Literals<a href="#top"></a></h4>
     <p>Integer literals in hex are always written in hexadecimal form, prefixed with <code>0x</code>. They can contain
         up to 8 hexadecimal digits, representing 32-bit integers. Hexadecimal digits include the numbers
         <code>0-9</code> and the letters <code>>a-f</code> (or <code>A-F</code>), which correspond to the decimal values
@@ -76,7 +115,7 @@
         <li><code>$0xffffffff$$</code> represents the decimal value -1 (in two's complement).</li>
     </ul>
     <p>Integers are case-insensitive; typically, lowercase letters are preferred but not mandatory.</p>
-    <h4 id="string-literals">String Literals</h4>
+    <h4 id="string-literals">String Literals<a href="#top"></a></h4>
     <p>String literals in hex are delimited by double quotes (<code>"</code>). They can contain any character except for
         a newline, meaning that strings must be on a single line. To include special characters within a string, hex
         supports the following escape codes:</p>
@@ -92,7 +131,7 @@
     </ul>
     <p>Example:</p>
     <pre><code>$"Hello, World!&bsol;nThis is a new line."$$</code></pre>
-    <h4 id="quotation-literals">Quotation Literals</h4>
+    <h4 id="quotation-literals">Quotation Literals<a href="#top"></a></h4>
     <p>Quotations in hex are delimited by parentheses (they must start with <code>(</code> and end with <code>)</code>).
         They can contain integers, strings, symbols, and
         even other quotations, allowing for nested structures.</p>
@@ -105,7 +144,7 @@
     </ul>
     <p>Unlike string literals, quotations can span multiple lines, making them suitable for representing complex data
         structures and control flow mechanisms.</p>
-    <h4 id="symbol-identifiers">Symbol Identifiers</h4>
+    <h4 id="symbol-identifiers">Symbol Identifiers<a href="#top"></a></h4>
     <p>Symbol identifiers in hex are used to represent built-in native symbols and user-defined symbols.</p>
     <p>There are 0x40 (64) <a href="#native-symbols">native symbols</a> in hex, and some of them contain special
         characters like <code>==</code> or <code>.</code></p>
@@ -116,268 +155,430 @@
             (<code>-</code>) and underscores (<code>_</code>)</li>
     </ul>
     <p>Symbols are case-sensitive.</p>
-    <h3 id="data-types">Data Types</h3>
-    <h4 id="integers">Integers</h4>
-    <h4 id="strings">Strings</h4>
-    <h4 id="quotations">Quotations</h4>
-    <h4 id="symbols">Symbols</h4>
-    <h3 id="stack">Stack</h3>
-    <h4 id="pushing-literals">Pushing Literals</h4>
-    <h4 id="pushing-symbols">Pushing Symbols</h4>
-    <h3 id="registry">Registry</h3>
-    <h3 id="native-symbols">Native Symbols</h3>
-    <h4 id="memory-management-symbols">Memory Management Symbols</h4>
-    <h5 id="store-symbol"><code>$::$$</code> Symbol</h5>
+    <h3 id="data-types">Data Types<a href="#top"></a></h3>
+    <p>hex supports the following data types:</p>
+    <ul>
+        <li><a href="#integers">Integers</a> &mdash; 32-bit signed integers represented in hexadecimal form.</li>
+        <li><a href="#strings">Strings</a> &mdash; Sequences of characters delimited by double quotes.</li>
+        <li><a href="#quotations">Quotations</a> &mdash; Lists of literals, symbols, and other quotations delimited by
+            parentheses.</li>
+        <li><a href="#symbols">Symbols</a> &mdash; Identifiers representing native or user-defined symbols.</li>
+    </ul>
+    <h4 id="integers">Integers<a href="#top"></a></h4>
+    <p>Integers in hex are 32-bit signed values represented in hexadecimal form. They can be positive or negative (using
+        two's complement), and range from <code>-2,147,483,647</code> (<code>-2<sup>31</sup></code>) and
+        <code>2,147,483,647</code> (<code>2<sup>31</sup> - 1</code>)
+    </p>
+    <p>Integers are written using the prefix <code>$0x$$</code> followed by up to 8 hexadecimal digits.</p>
+    <p>hex integers are case-insensitive, meaning that <code>$0x1f$$</code> and
+        <code><span class="hex-integer">0X1F</span></code> are equivalent
+        (however, lowercase letters are preferred).
+    </p>
+    computations.</p>
+    <p>Because hex has no boolean data type, $0x0$$ is assumed to be false, and any other integer value is assumed to be
+        true.</p>
+    <p>Examples:</p>
+    <ul>
+        <li><code>$0x1$$</code> &mdash; Represents the decimal value 1.</li>
+        <li><code>$0xffffffff$$</code> &mdash; Represents the decimal value -1.</li>
+        <li><code>$0x10$$</code> &mdash; Represents the decimal value 16.</li>
+    </ul>
+    <h4 id="strings">Strings<a href="#top"></a></h4>
+    <p>Strings in hex are sequences of characters delimited by double quotes (<code>"</code>). They can contain any
+        character except for a newline character, and special characters can be escaped using backslashes.</p>
+    <p>Strings are used to represent textual data and can be manipulated using various string manipulation symbols in
+        hex.</p>
+    <p>Examples:</p>
+    <ul>
+        <li><code>$"Hello, World!"$$</code> &mdash; Represents the string <code>Hello, World!</code>.</li>
+        <li><code>$"This is a string with a newline:&bsol;nSecond line."$$</code> &mdash; Represents a string with a
+            newline character.</li>
+    </ul>
+    <h4 id="quotations">Quotations<a href="#top"></a></h4>
+    <p>Quotations in hex are lists of literals (including other quotations) and symbols delimited by parentheses
+        (<code>(</code>
+        and <code>)</code>). They are used to represent structured data and are a fundamental part of the language's
+        syntax.</p>
+    <p>An important thing to remember about quotations is that any symbol contained in them will not be executed, and
+        this is a fundamental property of hex and other concatenative programming languages, because it means that
+        quotation effectively acts as code blocks, holding code that can be executed later on using appropriate
+        dequoting symbols.</p>
+    <p>Consider the following example:</p>
+    <pre><code>    $0x0$$ $"t-count"$$ $::$$
+    ($:t-count$$ $0xa$$ $:&lt;$$)
+        (
+            $:t-count$$ $:puts$$
+            $:t-count$$ $0x1$$ $:+$$ $"t-count"$$ $::$$
+        )
+    $:while$$
+    $"t-count"$$ $:#$$</code></pre>
+    <p>This example defines a symbol <code>$:t-count$$</code> that counts from 0 to 9 and prints each number to the
+        standard
+        output. The quotation <code>($:t-count$$ $0xa$$ $:&lt;$$)</code> is used to check if the count is less than 10,
+        and the
+        <code>$:while$$</code> symbol repeats the process until the condition is no longer met.
+    </p>
+    <p>In this case, the first two quotations are first pushed on the stack, and the the <code>$:while$$</code> symbols
+        perform the dequoting necessary to implement the expected control flow.</p>
+    <h4 id="symbols">Symbols<a href="#top"></a></h4>
+    <p>In hex there native symbols and user-defined symbols. Native symbols are
+        built-in functions that perform specific operations, while user-defined symbols are created by the user to store
+        values or define custom behavior.</p>
+    <p>hex provides 64 ($0x40$$) native symbols that cover a wide range of functionality, including arithmetic
+        operations, control flow, I/O operations, file manipulation, and stack manipulation.</p>
+    <p>You can think of symbols as both functions that manipulate the <a href="#stack">stack</a>, or
+        variables that can be used to store literal values.</p>
+    <p>While native symbol identifiers sometimes are comprised of special characters, like {{sym-==}}, user-defined
+        symbol identifier must adhere to
+        <a href="symbol-identifiers">specific rules</a>.
+    </p>
+    <p>All symbols are stored in a single <a href="#registry">registry</a>, implemented as a simple dictionary.
+        Therefore, all symbols in hex are global, and not lexically scoped. The main driver for this is to keep the
+        language as simple as possible.</p>
+    <p>You can define your own symbols and delete them using the <a href="#memory-management-symbols">memory management
+            symbols</a> provided natively. However, native symbols <em>cannot</em> be deleted.</p>
+    <h3 id="stack">Stack<a href="#top"></a></h3>
+    <p>The stack is a fundamental data structure in hex that holds values and controls the flow of execution. hex is a
+        stack-based language, meaning that all operations are performed on a stack of values. The order according to
+        which items are added (pushed) to or removed (popped) from the stack is <abbr
+            title="Last In, First Out">LIFO</abbr>.</p>
+    <p>In the canonical implementation, the hex stack can contain up to 128 items. If you try to push more items on the
+        stack, a stack overflow error will be raised and the program will terminate. While this may seem a relatively
+        low number, it is important to note that typically there will not be more than 5-10 items on the stack at any
+        time, because typically symbols are used to frequently pop them out of the stacks.</p>
+    <h4 id="pushing-literals">Pushing Literals<a href="#top"></a></h4>
+    <p>Literals are values that are directly pushed onto the stack. In hex, literals can be integers, strings, or
+        quotations. When a literal is encountered in a hex program, it is pushed onto the stack for further processing.
+    </p>
+    <p>Examples:</p>
+    <ul>
+        <li><code>$0x1$$</code> &mdash; Pushes the integer 1 onto the stack.</li>
+        <li><code>$"Hello, World!"$$</code> &mdash; Pushes the string <code>Hello, World!</code> onto the stack.</li>
+        <li><code>($0x1$$ $0x2$$ $0x3$$)</code> &mdash; Pushes the quotation <code>($0x1$$ $0x2$$ $0x3$$)</code> onto
+            the stack.
+        </li>
+    </ul>
+    <h4 id="pushing-symbols">Pushing Symbols<a href="#top"></a></h4>
+    <p>Symbols in hex are used to represent native or user-defined functions and values. When a symbol is encountered in
+        a hex program, it is looked up in the registry, and its associated value or function is pushed onto the stack.
+    </p>
+    <p>Native symbols can perform manipulations on the stack; they can pop values from the stack and push values back
+        in.</p>
+    <p>By contrast, you can only define literals as user-defined symbols, but you can define a quotation which can then
+        be <em>dequoted</em> through symbols like {{sym-.}}, which pushes all the items in a quotations
+        on the stack, one by one.</p>
+    <p>Consider the following example hex program:</p>
+    <pre><code>    ($:dup$$ $:*$$ $:*$$) $"square"$$ $::$$
+    $0x3$$ $:square$$ $:.$$ $:puts$$ $; prints 9$$</code></pre>
+    <p>This program defines a symbol $:square$$ that can be used to calculate the square value of an integer, using the
+        symbol {{sym-:}}. From then on, if $:square$$ is found anywhere in the same hex program, it
+        will be substituted with <code>($:*$$ $:*$$)</code>. However, this is not enough to calculate the square value,
+        because the logic to do so is in a quotation. To "execute" (dequote) a quotation, you must use the {{sym-.}}
+        symbol, which pushes all the items in the quotation on the stack, which is equivalent
+        to the following program:</p>
+    <pre><code>    $0x3$$ $:dup$$ $:*$$ $:*$$ $:puts$$ $; prints 9$$</code></pre>
+    <h3 id="registry">Registry<a href="#top"></a></h3>
+    <p>The registry in hex is a simple dictionary that stores symbols and their associated values or functions. The
+        registry is used to look up symbols when they are encountered in a hex program and to store user-defined symbols
+        and their values.</p>
+    <p>When a symbol is pushed onto the stack, hex looks up the symbol in the registry and pushes its associated value
+        or function onto the stack. If the symbol is not found in the registry, an error is raised.</p>
+    <p>The registry is implemented as a simple key-value store, where the keys are symbol identifiers and the values are
+        the associated values or functions. The registry is global and shared across the entire hex program.</p>
+    <p>hex provides a set of <a href="#native-symbols">native symbols</a> that are pre-defined in the registry and
+        cannot be deleted or modified. These symbols provide basic functionality for arithmetic operations, control
+        flow,
+        I/O operations, file manipulation, and stack manipulation.</p>
+    <p>hex also allows users to define their own symbols and store values in the registry. User-defined symbols can be
+        created, modified, and deleted using the <a href="#memory-management-symbols">memory management symbols</a>
+        provided natively.</p>
+    <p>It is important to note that the registry is a global store, meaning that symbols are not lexically scoped and
+        can be accessed from anywhere in the program. This design choice was made to keep the language simple and
+        straightforward.</p>
+    <p>In the canonical hex implementation, the registry can hold up to 1024 symbols.</p>
+    <h3 id="native-symbols">Native Symbol Reference<a href="#top"></a></h3>
+    <p>hex provides a set of 64 ($0x40$$) native symbols that are built-in and pre-defined in the registry. The
+        following section provides details on each of these symbols, including a signature illustrating how each symbol
+        manipulates the stack.</p>
+    <p>The notation used to specify the signature of a symbol is as follows:</p>
+    <pre><code>    <mark>input1 input2 ... inputN &rarr; output1 output2 ... outputM</mark></code></pre>
+    <p>Where <code>input1</code>, <code>input2</code>, ..., <code>inputN</code> are the items consumed from the stack,
+        and <code>output1</code>, <code>output2</code>, ..., <code>outputM</code> are the items pushed back onto the
+        stack.</p>
+    <p> Note that the <code>&rarr;</code> character represents the symbol being described, and: </p>
+    <ul>
+        <li><code>inputN</code> is the first element on the stack <em>before</em> the symbol is pushed on the stack.
+        </li>
+        <li><code>outputM</code> is the first element on the stack <em>after</em> the symbol is pushed on the stack.
+        </li>
+    </ul>
+    <p>The following abbreviations are used to represent different types of literals (and each can have a numerical
+        suffix for differentiation within the signature):</p>
+    <ul>
+        <li><code>a</code> &mdash; Any literal value</li>
+        <li><code>s</code> &mdash; String</li>
+        <li><code>q</code> &mdash; Quotation</li>
+        <li><code>i</code> &mdash; Integer</li>
+    </ul>
+    <p>Additionally, <code>*</code> is used to represent zero or more literals of any type.</p>
+    <p>Consider, for example, the following signature for the {{sym-swap}} symbol:</p>
+    <p><mark> a1 a2 &rarr; a2 a1</mark></p>
+    <p>This signature indicates that the symbol {{sym-swap}} pops two items from the stack (<code>a1</code> and
+        <code>a2</code>), and then pushes them back onto the stack in reverse order (<code>a2</code> and
+        <code>a1</code>).
+    </p>
+    <h4 id="memory-management-symbols">Memory Management Symbols<a href="#top"></a></h4>
+    <h5 id="store-symbol"><code>$::$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>a s &rarr;</mark></p>
     <p>Stores the literal <code>a</code> in the registry as the symbol <code>s</code>.</p>
-    <h5 id="free-symbol"><code>$:#$$</code> Symbol</h5>
+    <h5 id="free-symbol"><code>$:#$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr;</mark></p>
     <p>Frees the symbol <code>s</code> from the registry.</p>
-    <h4 id="control-flow-symbols">Control Flow Symbols</h4>
-    <h5 id="if-symbol"><code>$:if$$</code> Symbol</h5>
+    <h4 id="control-flow-symbols">Control Flow Symbols<a href="#top"></a></h4>
+    <h5 id="if-symbol"><code>$:if$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 q3 &rarr; *</mark></p>
     <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>,
         otherwise
         dequotes <code>q3</code>.</p>
-    <h5 id="when-symbol"><code>$:when$$</code> Symbol</h5>
+    <h5 id="when-symbol"><code>$:when$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
     <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>.
     </p>
-    <h5 id="while-symbol"><code>$:while$$</code> Symbol</h5>
+    <h5 id="while-symbol"><code>$:while$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
     <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>
         and
         repeats the process.</p>
-    <h5 id="error-symbol"><code>$:error$$</code> Symbol</h5>
+    <h5 id="error-symbol"><code>$:error$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>&rarr; s</mark></p>
     <p>Pushes the last error message to the stack.</p>
-    <h5 id="try-symbol"><code>$:try$$</code> Symbol</h5>
+    <h5 id="try-symbol"><code>$:try$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
     <p>Dequotes quotation <code>q1</code>, if it throws an error it dequotes <code>q2</code>.</p>
-    <h4 id="stack-management-symbols">Stack Management Symbol</h4>
-    <h5 id="dup-symbol"><code>$:dup$$</code> Symbol</h5>
+    <h4 id="stack-management-symbols">Stack Management Symbol<a href="#top"></a></h4>
+    <h5 id="dup-symbol"><code>$:dup$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr; a a</mark></p>
     <p>Duplicates literal <code>a</code> and pushes it on the stack.</p>
-    <h5 id="stack-symbol"><code>$:stack$$</code> Symbol</h5>
+    <h5 id="stack-symbol"><code>$:stack$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr; q</mark></p>
     <p>Pushes the items currently on the stack as a quotation on the stack.</p>
-    <h5 id="clear-symbol"><code>$:clear$$</code> Symbol</h5>
+    <h5 id="clear-symbol"><code>$:clear$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr;</mark></p>
     <p>Clears the stack.</p>
-    <h5 id="pop-symbol"><code>$:pop$$</code> Symbol</h5>
+    <h5 id="pop-symbol"><code>$:pop$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
     <p>Removes the top item from the stack.</p>
-    <h5 id="swap-symbol"><code>$:swap$$</code> Symbol</h5>
+    <h5 id="swap-symbol"><code>$:swap$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a1 a2 &rarr; a2 a1</mark></p>
     <p>Swaps the top two items on the stack.</p>
-    <h4 id="evaluation-symbols">Evaluation Symbols</h4>
-    <h5 id="i-symbol"><code>$:.$$</code> Symbol</h5>
+    <h4 id="evaluation-symbols">Evaluation Symbols<a href="#top"></a></h4>
+    <h5 id="i-symbol"><code>$:.$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q &rarr; *</mark></p>
     <p>Dequotes quotation <code>q</code>.</p>
-    <h5 id="eval-symbol"><code>$:!$$</code> Symbol</h5>
+    <h5 id="eval-symbol"><code>$:!$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr;</mark></p>
     <p>Evaluates the string <code>s</code> as an hex program.</p>
-    <h5 id="quote-symbol"><code>$:&#39; $$</code> Symbol</h5>
+    <h5 id="quote-symbol"><code>$:&#39;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>a &rarr; q</mark></p>
     <p>Pushes the literal <code>a</code> wrapped in a quotation on the stack.</p>
-    <h4 id="arithmetic-symbols">Arithmetic Symbols</h4>
-    <h5 id="add-symbol"><code>$:+$$</code> Symbol</h5>
+    <h4 id="arithmetic-symbols">Arithmetic Symbols<a href="#top"></a></h4>
+    <h5 id="add-symbol"><code>$:+$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <p>Pushes the result of the sum of <code>i1</code> and <code>i2</code> on the stack.</p>
-    <h5 id="subtract-symbol"><code>$:-$$</code> Symbol</h5>
+    <h5 id="subtract-symbol"><code>$:-$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of the subtraction of <code>12</code> from <code>i1</code> on the stack.</p>
-    <h5 id="multiply-symbol"><code>$:*$$</code> Symbol</h5>
+    <h5 id="multiply-symbol"><code>$:*$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of the multiplication of <code>i1</code> and <code>12</code> on the stack.</p>
-    <h5 id="divide-symbol"><code>$:/$$</code> Symbol</h5>
+    <h5 id="divide-symbol"><code>$:/$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of the division of <code>i1</code> by <code>12</code> on the stack.</p>
-    <h5 id="modulo-symbol"><code>$:%$$</code> Symbol</h5>
+    <h5 id="modulo-symbol"><code>$:%$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of the modulo of <code>i1</code> by <code>12</code> on the stack.</p>
-    <h4 id="bitwise-operations-symbols">Bitwise Operations Symbols</h4>
-    <h5 id="bitwise-and-symbol"><code>$:&amp; $$</code> Symbol</h5>
+    <h4 id="bitwise-operations-symbols">Bitwise Operations Symbols<a href="#top"></a></h4>
+    <h5 id="bitwise-and-symbol"><code>$:&amp;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of a bitwise and of <code>i1</code> and <code>i2</code> on the stack.</p>
-    <h5 id="bitwise-or-symbol"><code>$:|$$</code> Symbol</h5>
+    <h5 id="bitwise-or-symbol"><code>$:|$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of a bitwise or of <code>i1</code> and <code>i2</code> on the stack.</p>
-    <h5 id="bitwise-xor-symbol"><code>$:^$$</code> Symbol</h5>
+    <h5 id="bitwise-xor-symbol"><code>$:^$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of a bitwise xor of <code>i1</code> and <code>i2</code> on the stack.</p>
-    <h5 id="bitwise-not-symbol"><code>$:~$$</code> Symbol</h5>
+    <h5 id="bitwise-not-symbol"><code>$:~$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; i</mark></p>
     <p>Pushes the result of a bitwise not of <code>i</code> on the stack.</p>
-    <h5 id="bitwise-leftshift-symbol"><code>$:&lt;&lt; $$</code> Symbol</h5>
+    <h5 id="bitwise-leftshift-symbol"><code>$:&lt;&lt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of shifting <code>i1</code> by <code>i2</code> bits to the left.</p>
-    <h5 id="bitwise-rightshift-symbol"><code>$:&gt;&gt; $$</code> Symbol</h5>
+    <h5 id="bitwise-rightshift-symbol"><code>$:&gt;&gt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes the result of shifting <code>i1</code> by <code>i2</code> bits to the right.</p>
-    <h4 id="comparisons-symbols">Comparisons Symbols</h4>
-    <h5 id="equal-symbol"><code>$:==$$</code> Symbol</h5>
+    <h4 id="comparisons-symbols">Comparisons Symbols<a href="#top"></a></h4>
+    <h5 id="equal-symbol"><code>$:==$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a1 a2 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are equal, or <code>0x0</code>
         otherwise.</p>
-    <h5 id="notequal-symbol"><code>$:!=$$</code> Symbol</h5>
+    <h5 id="notequal-symbol"><code>$:!=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are not equal, or
         <code>0x0</code>
         otherwise.
     </p>
-    <h5 id="greaterthan-symbol"><code>$:&gt; $$</code> Symbol</h5>
+    <h5 id="greaterthan-symbol"><code>$:&gt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or <code>0x0</code>
         otherwise.</p>
-    <h5 id="lessthan-symbol"><code>$:&lt; $$</code> Symbol</h5>
+    <h5 id="lessthan-symbol"><code>$:&lt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is less than <code>i2</code>, or <code>0x0</code>
         otherwise.</p>
-    <h5 id="greaterthanequal-symbol"><code>$:&gt;=$$</code> Symbol</h5>
+    <h5 id="greaterthanequal-symbol"><code>$:&gt;=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than or equal to <code>i2</code>, or
         <code>0x0</code> otherwise.
     </p>
-    <h5 id="lessthanequal-symbol"><code>$:&lt;=$$</code> Symbol</h5>
+    <h5 id="lessthanequal-symbol"><code>$:&lt;=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is less than or equal to <code>i2</code>, or
         <code>0x0</code> otherwise.
     </p>
-    <h4 id="boolean-logic-symbols">Boolean Logic Symbols</h4>
-    <h5 id="and-symbol"><code>$:and$$</code> Symbol</h5>
+    <h4 id="boolean-logic-symbols">Boolean Logic Symbols<a href="#top"></a></h4>
+    <h5 id="and-symbol"><code>$:and$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are non-zero integers, or
         <code>0x0</code> otherwise.
     </p>
-    <h5 id="or-symbol"><code>$:or$$</code> Symbol</h5>
+    <h5 id="or-symbol"><code>$:or$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> or <code>i2</code> are non-zero integers, or
         <code>0x0</code> otherwise.
     </p>
-    <h5 id="not-symbol"><code>$:not$$</code> Symbol</h5>
+    <h5 id="not-symbol"><code>$:not$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i</code> is zero, or <code>0x0</code> otherwise.</p>
-    <h5 id="xor-symbol"><code>$:xor$$</code> Symbol</h5>
+    <h5 id="xor-symbol"><code>$:xor$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are different, or
         <code>0x0</code>
         otherwise.
     </p>
-    <h4 id="type-checking-and-conversion-symbols">Type Checking and Conversion Symbols</h4>
-    <h5 id="int-symbol"><code>$:int$$</code> Symbol</h5>
+    <h4 id="type-checking-and-conversion-symbols">Type Checking and Conversion Symbols<a href="#top"></a></h4>
+    <h5 id="int-symbol"><code>$:int$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr; i</mark></p>
     <p>Converts the string <code>s</code> representing a hexadecimal integer to an integer value and pushes it on
         the
         stack.</p>
-    <h5 id="str-symbol"><code>$:str$$</code> Symbol</h5>
+    <h5 id="str-symbol"><code>$:str$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
     <p>Converts the integer <code>i</code> to a string representing a hexadecimal integer and pushes it on the
         stack.
     </p>
-    <h5 id="dec-symbol"><code>$:dec$$</code> Symbol</h5>
+    <h5 id="dec-symbol"><code>$:dec$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
     <p>Converts the integer <code>i</code> to a string representing a decimal integer and pushes it on the stack.
     </p>
-    <h5 id="hex-symbol"><code>$:hex$$</code> Symbol</h5>
+    <h5 id="hex-symbol"><code>$:hex$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
     <p>Converts the string <code>s</code> representing a decimal integer to an integer value and pushes it on the
         stack.
     </p>
-    <h5 id="ord-symbol"><code>$:ord$$</code> Symbol</h5>
+    <h5 id="ord-symbol"><code>$:ord$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
     <p>Pushes the ASCII value of the string <code>s</code> on the stack.</p>
     <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between $0x0$$
         and
         $0x7f$$, <code>$0xffffffff$$</code> is pushed on the stack.</p>
-    <h5 id="chr-symbol"><code>$:chr$$</code> Symbol</h5>
+    <h5 id="chr-symbol"><code>$:chr$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
     <p>Pushes the ASCII character represented by the integer <code>i</code> on the stack.</p>
     <p>If <code>i</code> is not between $0x0$$ and $0x7f$$, an empty string is pushed on the stack.</p>
-    <h5 id="type-symbol"><code>$:type$$</code> Symbol</h5>
+    <h5 id="type-symbol"><code>$:type$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr; s</mark></p>
     <p>Pushes the type of the literal <code>a</code> on the stack (<code>integer</code>, <code>string</code>,
         <code>quotation</code>, <code>native-symbol</code>, <code>user-symbol</code>, <code>invalid</code>, or
         <code>unknown</code>).
     </p>
-    <h4 id="list-symbols">List (Strings and Quotations) Symbols</h4>
-    <h5 id="cat-symbol"><code>$:cat$$</code> Symbol</h5>
+    <h4 id="list-symbols">List (Strings and Quotations) Symbols<a href="#top"></a></h4>
+    <h5 id="cat-symbol"><code>$:cat$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s1 s2|q1 q2) &rarr; (s|q)</mark></p>
     <p>Pushes the result of the concatenation of two strings or two quotations on the stack.</p>
-    <h5 id="len-symbol"><code>$:len$$</code> Symbol</h5>
+    <h5 id="len-symbol"><code>$:len$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s|q) &rarr; i</mark></p>
     <p>Pushes the length of a string or a quotation on the stack.</p>
-    <h5 id="get-symbol"><code>$:get$$</code> Symbol</h5>
+    <h5 id="get-symbol"><code>$:get$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s|q) i &rarr; a</mark></p>
     <p>Pushes the <code>i</code>th item of a string or a quotation on the stack.</p>
-    <h5 id="index-symbol"><code>$:index$$</code> Symbol</h5>
+    <h5 id="index-symbol"><code>$:index$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s a|q a) &rarr; i</mark></p>
     <p>Pushes the index of the first occurrence of the literal <code>a</code> in a string or a quotation on the
         stack.
         If <code>a</code> is not found, <code>$0xffffffff$$</code> is pushed on the stack.</p>
-    <h5 id="join-symbol"><code>$:join$$</code> Symbol</h5>
+    <h5 id="join-symbol"><code>$:join$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q s1 &rarr; s2</mark></p>
     <p>Assuming that <code>q</code> is a quotation containing only strings, pushes the string <code>s2</code>
         obtained
         by joining each element of <code>q</code> together using <code>s1</code> as a delimiter. </p>
-    <h4 id="string-symbols">String Symbols</h4>
-    <h5 id="split-symbol"><code>$:split$$</code> Symbol</h5>
+    <h4 id="string-symbols">String Symbols<a href="#top"></a></h4>
+    <h5 id="split-symbol"><code>$:split$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s1 s2 &rarr; q</mark></p>
     <p>Pushes a quotation <code>q</code> containing the strings obtained by splitting <code>s1</code> using
         <code>s2</code> as a delimiter.
     </p>
-    <h5 id="replace-symbol"><code>$:replace$$</code> Symbol</h5>
+    <h5 id="replace-symbol"><code>$:replace$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s1 s2 s3 &rarr; s4</mark></p>
     <p>Pushes the string <code>s4</code> obtained by replacing the first occurrence of <code>s2</code> in
         <code>s1</code> by
         <code>s3</code>.
     </p>
-    <h4 id="quotation-symbols">Quotation Symbols</h4>
-    <h5 id="each-symbol"><code>$:each$$</code> Symbol</h5>
+    <h4 id="quotation-symbols">Quotation Symbols<a href="#top"></a></h4>
+    <h5 id="each-symbol"><code>$:each$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; *</mark></p>
     <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code>.</p>
-    <h5 id="map-symbol"><code>$:map$$</code> Symbol</h5>
+    <h5 id="map-symbol"><code>$:map$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; q3</mark></p>
     <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a new
         quotation <code>q3</code>.
-    <h5 id="filter-symbol"><code>$:filter$$</code> Symbol</h5>
+    <h5 id="filter-symbol"><code>$:filter$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; q</mark></p>
     <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a new
         quotation <code>q</code> containing only the items that returned a positive integer.</p>
-    <h4 id="input-output-symbols">Input/Output Symbols</h4>
-    <h5 id="puts-symbol"><code>$:puts$$</code> Symbol</h5>
+    <h4 id="input-output-symbols">Input/Output Symbols<a href="#top"></a></h4>
+    <h5 id="puts-symbol"><code>$:puts$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
     <p>Prints <code>a</code> to standard output, followed by a new line.</p>
-    <h5 id="warn-symbol"><code>$:warn$$</code> Symbol</h5>
+    <h5 id="warn-symbol"><code>$:warn$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
     <p>Prints <code>a</code> to standard error, followed by a new line.</p>
-    <h5 id="print-symbol"><code>$:print$$</code> Symbol</h5>
+    <h5 id="print-symbol"><code>$:print$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
     <p>Prints <code>a</code> to standard output.</p>
-    <h5 id="gets-symbol"><code>$:gets$$</code> Symbol</h5>
+    <h5 id="gets-symbol"><code>$:gets$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr; s</mark></p>
     <p>Reads a line from standard input and pushes it on the stack as a string.</p>
-    <h4 id="file-symbols">File Symbols</h4>
-    <h5 id="read-symbol"><code>$:read$$</code> Symbol</h5>
+    <h4 id="file-symbols">File Symbols<a href="#top"></a></h4>
+    <h5 id="read-symbol"><code>$:read$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s1 &rarr; s2</mark></p>
     <p>Reads the content of the file <code>s1</code> and pushes it on the stack as a string.</p>
-    <h5 id="write-symbol"><code>$:write$$</code> Symbol</h5>
+    <h5 id="write-symbol"><code>$:write$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s1 s2 &rarr;</mark></p>
     <p>Writes the string <code>s1</code> to the file <code>s2</code>.
-    <h5 id="append-symbol"><code>$:append$$</code> Symbol</h5>
+    <h5 id="append-symbol"><code>$:append$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s1 s2 &rarr;</mark></p>
     <p>Appends the string <code>s1</code> to the file <code>s2</code>.</p>
-    <h4 id="shell-symbols">Shell Symbols</h4>
-    <h5 id="args-symbol"><code>$:args$$</code> Symbol</h5>
+    <h4 id="shell-symbols">Shell Symbols<a href="#top"></a></h4>
+    <h5 id="args-symbol"><code>$:args$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr; q</mark></p>
     <p>Pushes the command line arguments as a quotation on the stack.</p>
-    <h5 id="exit-symbol"><code>$:exit$$</code> Symbol</h5>
+    <h5 id="exit-symbol"><code>$:exit$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr;</mark></p>
     <p>Exits the program with the exit code <code>i</code>.</p>
-    <h5 id="exec-symbol"><code>$:exec$$</code> Symbol</h5>
+    <h5 id="exec-symbol"><code>$:exec$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr;</mark></p>
     <p>Executes the string <code>s</code> as a shell command.</p>
-    <h5 id="run-symbol"><code>$:run$$</code> Symbol</h5>
+    <h5 id="run-symbol"><code>$:run$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; q</mark></p>
     <p>Executes the string <code>s</code> as a shell command, capturing its output and errors. It pushes a quotation
         on
