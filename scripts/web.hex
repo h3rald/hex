@@ -30,6 +30,7 @@ d-templates "/page.html" cat "t-page" :
     "$:" 
     "$$"
 ) "highlight-delimiters" :
+
 (
     "<span class=\"hex-comment\">;" 
     "<span class=\"hex-comment\">#|" 
@@ -48,7 +49,8 @@ d-templates "/page.html" cat "t-page" :
         (
             t-text highlight-delimiters t-count get "t-delimiter" :
             t-text highlight-replacements t-count get "t-replacement" :
-            (t-text t-delimiter index 0x0 >)
+            ; Find delimiter in text and replace it with the corresponding replacement
+            (t-text t-delimiter index 0x0 >=)
                 (
                     t-text t-delimiter t-replacement replace "t-text" :
                 ) 
