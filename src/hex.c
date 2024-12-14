@@ -4030,6 +4030,8 @@ int main(int argc, char *argv[])
     hex_register_symbols(&ctx);
     hex_create_docs(&ctx.docs);
 
+    char *file;
+
     if (argc > 1)
     {
         for (int i = 1; i < argc; i++)
@@ -4039,11 +4041,6 @@ int main(int argc, char *argv[])
             {
                 printf("%s\n", HEX_VERSION);
                 return 0;
-            }
-            else if ((strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0))
-            {
-                ctx.settings.debugging_enabled = 1;
-                printf("*** Debug mode enabled ***\n");
             }
             else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0))
             {
@@ -4055,18 +4052,21 @@ int main(int argc, char *argv[])
                 hex_print_docs(&ctx.docs);
                 return 0;
             }
+            else if ((strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0))
+            {
+                ctx.settings.debugging_enabled = 1;
+                printf("*** Debug mode enabled ***\n");
+            }
             else
             {
-
-                // Process a file
-                char *fileContent = hex_read_file(&ctx, arg);
-                if (!fileContent)
-                {
-                    return 1;
-                }
-                hex_interpret(&ctx, fileContent, arg, 1 + ctx.hashbang, 1);
-                return 0;
+                file = arg;
             }
+        }
+        if (file)
+        {
+            char *fileContent = hex_read_file(&ctx, file);
+            hex_interpret(&ctx, fileContent, file, 1 + ctx.hashbang, 1);
+            return 0;
         }
     }
 #if !(__EMSCRIPTEN__)
