@@ -1,7 +1,214 @@
 <article>
-    <h2>Manual</h2>
+    <h2>The Tutorial</h2>
+    <ul>
+        <li><a href="#hey">Hey!</a></li>
+        <li><a href="#setting-things-up">Setting things up</a></li>
+        <li><a href="#working-with-things">Working with things</a></li>
+        <li><a href="#the-stack">The Stack</a></li>
+        <li><a href="#the-registry">The Registry</a></li>
+        <li><a href="#hexxing-all-the-way">Hexxing all the way!</a></li>
+    </ul>
+    <h3 id="hey">Hey!<a href="#top"></a></h3>
+    <p>So you want to learn <em>hex</em> huh? Well, you are in the right place.</p>
+    <p><em>hex</em> is...</p>
+    <ul>
+        <li>...<strong>tiny</strong>: a single executable, just a few hundreds KBs in size.</li>
+        <li>...<strong>minimalist</strong>: just integers, strings, arrays, and symbols. No statements, no expressions,
+            and (almost) no variables.</li>
+        <li>...<strong>concatenative</strong>: think <em>reverse Polish notation</em>, postfix syntax, stack-based.</li>
+        <li>...<strong>slightly-esoteric</strong>. It definitely got quirks: hexadecimal-only integers, global-only
+            symbols, ...things like that.</li>
+    </ul>
+    <p>In a word: <em>magical</em>! Hence the name. Really. And the hexadecimal integer thing of course, that too.</p>
+    <h3 id="setting-things-up">Setting things up<a href="#top"></a></h3>
+    <p>Now that you know what <em>hex</em> is, you have to <a href="/get">get</a> it, <em>then</em> you can run it. Or
+        not really, you can just go <a href="/play">here</a> and play with it.</p>
+    <p><em>If</em> you got hex, it's just a single executable. You can run it with options, or without, as explained
+        on the <a href="/get">Get</a> page. </p>
+    <p>You can even double-click it, especially if you are on Windows. That will bring up the REPL, which well... reads
+        from input, evaluates what you enter, prints the result (or better, the first item on <em>The Stack</em>), and
+        then loops again.</p>
+    <h3 id="working-with-things">Working with things<a href="#top"></a></h3>
+    <p><em>hex</em> is tiny. I may have said that already. It is also <em>simple</em>. As such, it doesn't really
+        have fancy things like objects, or... floating-point numbers, for example.</p>
+    <p>Instead, it focuses on making do with just a few things, or better, <em>data types</em>.</p>
+    <p>It understands <strong>integers</strong> like 27 or -19, except that if you type any of those in the REPL (go on,
+        <a href="/play">try it</a>!) and press ENTER, you'll get something like this:
+    </p>
+    <pre><code>[error] Invalid symbol: 27</code></pre>
+    <p>Right, because <em>hex</em> only understands integers in hexadecimal format. </p>
+    <p>Now, if you type <code>$0x1b$$</code> instead... well, at least it doesn't complain, right? You can try
+        entering <code>$0xffffffed$$</code> now (that's -19 in hexadecimal format using <a
+            href="https://en.wikipedia.org/wiki/Two%27s_complement">two's complement</a>), and that works too.</p>
+    <p>Now what just happened is that you pushed two values (integers, even) on <em>The Stack</em> (more on this later).
+        Since you have two numbers on The Stack already, you may as well enter {{+}} to add them up, and that gives you:
+    </p>
+    <pre><code>0x8</code></pre>
+    <p>Jolly good. </p>
+    <p>Now... <code>$:+$$</code> is actually a <strong>symbol</strong>; and symbols... well, they do tricks, those
+        symbols, every time you try to push them on the stack. </p>
+    <p>For example, <code>$:+$$</code> takes the first two items on the stack, adds them together, and puts the result
+        on the stack. </p>
+    <p>You can now enter <code>"eight"</code> in the REPL. See the double quotes? That's a
+        <strong>string</strong>. Strings work in the same way as in other programming languages. Nothing weird, I
+        promise. Of course strings can only be delimited via double quotes, not single, angular, circular, or whatever
+        quotes. Just <em>double</em> quotes.
+    </p>
+    <p>Next... let's see. You can type {{:}} (which is another symbol), and... nothing happens! </p>
+    <p>Or better, nothing gets pushed back on The Stack. <code>$::$$</code> is a greedy, selfish symbol that just eats a
+        value (any literal) and a string, and doesn't put anything back on The Stack.</p>
+    <p>Now type <code>$:eight$$</code> (with no quotes) and press ENTER:</p>
+    <pre><code>0x8</code></pre>
+    <p>Aha! It turns out that our <code>$::$$</code> friend works for <em>The Registry</em>. The Registry likes to keep
+        things for itself. Values don't just get pushed and popped from The Registry, no sir! It ain't like The
+        Stack. Once you are in, you are in, and you can't get out that easily (unless you are <a
+            href="/spec#free-symbol">freed</a>).</p>
+    <p>Clear? No? Well, you'll get there kid, eventually. </p>
+    <p>What's missing? Let's see, we talked about <em>integers</em>, <em>strings</em>, and even a little bit
+        about <em>symbols</em>... Ah! Right: <strong>quotations</strong>, of course!</p>
+    <p>A quotation is a fancy name for an array, or a list. In <em>hex</em> quotations have no internal separators
+        between items, and are delimited by ~~square~~ round brackets, like this:</p>
+    <pre><code>($0x1$$ $"two"$$ $:three$$ $:!$$)</code></pre>
+    <p>Oh my! You really can put <em>anything</em> in quotations, right? Assuming that it's a valid literal, a known
+        native symbol (like {{!}}), or a syntactically-valid user-defined symbol (even if it doesn't exist, like
+        <code>$:three$$</code>). You can even nest a quotation in another quotation, and another, and another...
+    </p>
+    <p>...And nothing will happen by the way: quotations sit neatly on the stack like other literals. Until some pesky
+        symbol decides to dequote them, like {{.}}, which strips a quotation and puts all its items on the stack! Oi!
+        The naughty boy!</p>
+    <h3 id="the-stack">The Stack<a href="#top"></a></h3>
+    <p>We had to mention The Stack earlier, it was unavoidable. See, The Stack is where the magic happens! But what is
+        it, you ask? Well, let's try a simple example and try to use hex to subtract 3 from 5, and take it reeeally
+        slow.</p>
+    <p>Fiiiirst we start a hex REPL.</p>
+    <p>Then, we enter <code>$0x5$$</code> and press <code>ENTER</code>. <code>$0x5</code> gets <em>pushed on The
+            Stack</em>, like this:</p>
+    <pre><code>    +-----------+
+    |    0x5    |
+    +-----------+</code></pre>
+    <p>Then, we enter <code>$0x3$$</code> on The Stack. Now there are two items on The Stack, like this:</p>
+    <pre><code>    +-----------+
+    |    0x3    |
+    +-----------+
+    |    0x5    |
+    +-----------+</code></pre>
+    <p>Great, and finally, we are going to push the symbol {{-}} on the stack, because that's how postfix notation
+        (a.k.a. <a href="https://en.wikipedia.org/wiki/Reverse_Polish_notation">Reverse Polish Notation</a>) works:
+        <em>first</em> the operands, and <em>then</em> the operators.
+    </p>
+    <p>Anyhow, what happens to The Stack now? Waait... wait...</p>
+    <pre><code>         *
+      *   -   *
+    +-----------+
+    |    0x3    |
+    +-----------+
+    |    0x5    |
+    +-----------+</code></pre>
+    <p>...magic! Real quick, <code>$:-$$</code> takes two items from The Stack, performs the subtraction, aaaand pushes
+        the result back on The Stack, that now looks like this:</p>
+    <pre><code>    +-----------+
+    |    0x2    |
+    +-----------+</code></pre>
+    <p>Symbols ain't that bad after all. And yes, The Stack is AWESOME! Did you know that if you use postfix
+        notation you will NEVER ever need to use parenthesis when performing math operations to tweak operator
+        preference? No? Let's try it. Let's calculate <code>(3 + 2) * 7</code>:</p>
 
-    <blockquote>
-        <p>Under construction.</p>
-    </blockquote>
+    <p>First, the sum, right? so:</p>
+    <pre><code>$0x3$$ $0x2$$ $:+$$</code></pre>
+    <p>...then we simply add the multiplication, and so we have it:</p>
+    <pre><code>$0x3$$ $0x2$$ $:+$$ $0x7$$ $:*$$</code></pre>
+    <p>If we take this further, you can use The Stack as an accumulator for your program state, and <em>never, ever use
+            a variable</em>.</p>
+    <p>Whaaaaaaat?</p>
+    <p>Yeah, mind blown. That's how purists of concatenative programming languages would write programs huh? Well,
+        the problem with it is that programs written like that tend to become a wee bit hard to read (but definitely not
+        for purists of concatenative programming languages).</p>
+    <p>Sooooo that's why next to <em>The Stack</em>, we also have... <em>The Registry</em>!</p>
+    <h3 id="the-registry">The Registry<a href="#top"></a></h3>
+    <p><em>The Registry</em> knows everything. It is the place that contains all the definitions of all <em>hex</em>
+        symbols, both the 64 native symbols that are built-in, and also any symbol that you may want to create.</p>
+    <p>The one thing to remember about The Registry is that it is only one. You can't have more than one, no sir, so
+        anything you put in there will become available <em>anywhere</em> within an hex program. Yes you read it right:
+    </p>
+    <p><strong>every symbol in hex is global</strong></p>
+    <p>Let that sink in. </p>
+    <p>Sure, it's not the best design in the world, but it has the advantage of being a very simple thing to
+        implement and use. You have to know it, and you have to be very careful with it.</p>
+    <p>Now... to add a new symbol to The Registry, you use the {{:}} symbol. That can also be used to overwrite existing
+        symbols with new values, but not native symbols.</p>
+    <p>Say we want to teach hex some Roman numerals... we could do this:</p>
+    <pre><code>    $0x1$$ $"I"$$   $::$$
+    $0x2$$ $"II"$$  $::$$
+    $0x3$$ $"III"$$ $::$$
+    $0x4$$ $"IV"$$  $::$$
+    $; ...$$</code></pre>
+    <p>Then, you could use them like ordinary symbols:</p>
+    <pre><code>$:I$$ $:IV$$ $:+$$ $; Pushes 0x5 on the stack</code></pre>
+    <p>If you don't need a symbol anymore, you can use the {{#}} symbol to free it from The Registry. See? Simple.
+    </p>
+    <p>Of course The Registry is smart enough to stop you from freeing native symbols!</p>
+    <p>So if you try to remove $:+$$:</p>
+    <pre><code>$"+"$$ $:#$$</code></pre>
+    <p>...you'll get:</p>
+    <pre><code>[error] Cannot free native symbol '+'</code></pre>
+    <h3 id="hexxing-all-the-way">Hexxing all the way!<a href="#top"></a></h3>
+    <p>An there you have it! Now <em>technically</em> you know everything you need about <em>hex</em>, and you can go
+        off hexxing away on your own! Off you go then!</p>
+    <p>...What? You don't even know how to implement a loop or a condition? But it's all the same! It's
+        always values pushed and popped from the stack using symbols!</p>
+    <p>Say you want to print the size of each file in the current directory, for example.</p>
+
+    <p>Let's start with creating our own symbol to read the contents of the current directory and put them in a
+        quotation:</p>
+    <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"\n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
+    <p>Basically, when dequoted, this quotation will:</p>
+    <ol>
+        <li>Run the <code>ls</code> command (it will work on *nix at least) using the {{run}} symbol.</li>
+        <li>Get the content of the standard output of the command result via {{get}}.</li>
+        <li>Now you have a single string with all the directory contents, so you want to just split it by
+            $"\n"$$ to get the file names in a quotation.</li>
+    </ol>
+    <p>Let's try it in the REPL:</p>
+    <pre><code>$:ls$$ $:.$$</code></pre>
+    <p>Remember the dot? {{.}} is that naughty boy that likes stripping quotations! It removes their parenthesis and
+        push all the items on The Stack, essentially <em>executing</em> your logic.</p>
+    <p>That should show you something like this:</p>
+    <pre><code>("CHANGELOG.md" "LICENSE" "Makefile" "README.md" "example.hex" "hex" "hex.js" "hex.vim" "hex.wasm" "releases" "scripts" "src" "web")</code></pre>
+    <p>...at least that's what it shows on my machine in the hex directory.</p>
+    <p>How do we print each of those along with their file size? The keyword here is {{each}}, and here's the full
+        program:</p>
+    <pre><code>    $:ls$$ $:.$$
+        ($:dup$$ $": "$$ $:cat$$ $:print$$ 
+        $:read$$ $:len$$ $:dec$$ $:puts$$) 
+    each</code></pre>
+    <p>Woah, that's a lot. Let's break it down:</p>
+    <ol>
+        <li>First we execute our quotation to get the. list of all the file names.</li>
+        <li>Then we push a quotation on The Stack. This code will be executed by $:each$$ for <em>each item</em> in the
+            previous quotation (the list of files).</li>
+        <li>Inside that, first we use {{dup}} to duplicate the current item. We'll need one to print, adding a
+            ": " after it via {{cat}}.</li>
+        <li>Then we can use {{print}} to print file name and colon without a new line.</li>
+        <li>Then there's still going to be a duplicate of the file name on the stack, which we are going to use to
+            calculate its size by reading its contents via {{read}}.</li>
+        <li>Now.. you'll get a nice hexadecimal number corresponding to the size in bytes (and zero for
+            directories). You can use {{dec}} to convert it to a string in decimal representation...</li>
+        <li>...and finally print it with a new line at the end, using {{puts}}.</li>
+    </ol>
+    <p><em>If everything went well</em>, you should get something like this printed on the screen:</p>
+    <pre><code>    CHANGELOG.md: 124
+    LICENSE: 1070
+    Makefile: 711
+    README.md: 211
+    hex.js: 79923
+    hex.vim: 2881
+    releases: 0
+    scripts: 0
+    src: 0
+    web: 0</code></pre>
+    <p>Phew... that was fun, wasn't it?!</p>
+    <p>Hopefully you should have the basics down by now. If you are not yet bored after all this, then I recommend going
+        over the <a href="/spec">Specification</a> which is known to cure insomnia and get you to sleep by the time you
+        get to the middle of the <a href="/spec#native-symbols">Native Symbol Reference</a>. </p>
+    <p>Sweet dreams, and <em>happy hexxing!</em></p>
 </article>

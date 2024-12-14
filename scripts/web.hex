@@ -16,7 +16,8 @@ d-releases ls . "releases" :
 d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
-("split" "run" "get" "puts" ":" "." "#" "==" "'" "swap") "symbol-links" :
+("split" "run" "get" "puts" ":" "." "#" "==" "'" "swap" 
+"+" "*" "-" "each" "cat" "print" "read" "dec") "symbol-links" :
 
 ;; Syntax highlighting
 
@@ -99,6 +100,9 @@ d-templates "/page.html" cat "t-page" :
     (t-symbol "#" ==)("free" "t-href" :) when
     (t-symbol "!" ==)("eval" "t-href" :) when
     (t-symbol "'" ==)("quote" "t-href" :) when
+    (t-symbol "+" ==)("add" "t-href" :) when
+    (t-symbol "*" ==)("multiply" "t-href" :) when
+    (t-symbol "-" ==)("subtract" "t-href" :) when
     ("<a href=\"/spec#" t-href "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
     ; Push replacement content on the stack
     t-content 
