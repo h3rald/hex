@@ -73,9 +73,9 @@ jobs:
               run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_arm64.zip hex
               if:  matrix.os == 'macos-latest'
 
-            # Generate WASM binary
-            - name: Generate WASM binary
-              run: emcc -O2 -sASYNCIFY -sEXPORTED_RUNTIME_METHODS=stringToUTF8 hex.c -o hex.js
+            # Build WASM binary
+            - name: Build WASM binary
+              run: make wasm 
               if: matrix.os == 'ubuntu-latest'
 
             # Package the resulting WASM binary
