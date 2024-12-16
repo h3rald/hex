@@ -2,8 +2,18 @@
 
 # Files to combine
 header_file="src/hex.h"
-source_files=(  "src/stack.c" "src/registry.c" "src/error.c" "src/help.c" "src/stacktrace.c" 
-                "src/parser.c" "src/interpreter.c" "src/helpers.c" "src/symbols.c" "src/main.c")
+source_files=(
+    "src/stack.c" 
+    "src/registry.c" 
+    "src/error.c" 
+    "src/help.c" 
+    "src/stacktrace.c" 
+    "src/parser.c" 
+    "src/interpreter.c" 
+    "src/helpers.c" 
+    "src/symbols.c" 
+    "src/main.c"
+)
 output_file="src/hex.c"
 
 # Start with a clean output file

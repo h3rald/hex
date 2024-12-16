@@ -8,7 +8,7 @@ hex: src/hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
 
 src/hex.c:
-	sh scripts/amalgamate.sh
+	bash scripts/amalgamate.sh
 
 web/assets/hex.wasm: src/hex.c
 	 emcc -O2 -sASYNCIFY -DBROWSER -sEXPORTED_RUNTIME_METHODS=stringToUTF8 src/hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
