@@ -27,7 +27,7 @@ int isatty(int fd);
 #define HEX_STACK_TRACE_SIZE 16
 #define HEX_NATIVE_SYMBOLS 64
 
-const uint8_t HEX_BYTECODE_HEADER[6] = {0x01, 0x48, 0x45, 0x78, 0x01, 0x02};
+const uint8_t HEX_BYTECODE_HEADER[6] = {0x01, 0x68, 0x65, 0x78, 0x01, 0x02};
 
 // Type Definitions
 typedef enum hex_item_type_t
@@ -360,6 +360,7 @@ hex_context_t hex_init();
 void hex_repl(hex_context_t *ctx);
 void hex_process_stdin(hex_context_t *ctx);
 void hex_handle_sigint(int sig);
+int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecode, size_t size);
 char *hex_read_file(hex_context_t *ctx, const char *filename);
 
 // Common operations

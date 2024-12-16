@@ -222,6 +222,7 @@ void hex_print_help()
            "  file            A .hex file to interpret\n"
            "\n"
            "OPTIONS\n"
+           "  -b, --bytecode  Generate bytecode file.\n"
            "  -d, --debug     Enable debug mode.\n"
            "  -h, --help      Display this help message.\n"
            "  -m, --manual    Display the manual.\n"
@@ -271,6 +272,20 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
         printf(" |\n");
     }
     printf("  +---------+----------------------------+-------------------------------------------------+\n");
+}
+
+int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecode, size_t size)
+{
+    FILE *file = fopen(filename, "wb");
+    if (file == NULL)
+    {
+        hex_error(ctx, "Failed to write file: %s", filename);
+        return 1;
+    }
+    fwrite(HEX_BYTECODE_HEADER, 1, 6, file);
+    fwrite(bytecode, 1, size, file);
+    fclose(file);
+    return 0;
 }
 
 ////////////////////////////////////////
@@ -343,15 +358,10 @@ int main(int argc, char *argv[])
                     hex_error(&ctx, "Failed to generate bytecode");
                     return 1;
                 }
-                for (size_t i = 0; i < 6; i++)
+                if (hex_write_bytecode_file(&ctx, strcat(file, "b"), bytecode, bytecode_size) != 0)
                 {
-                    printf("%02x ", HEX_BYTECODE_HEADER[i]);
+                    return 1;
                 }
-                for (size_t i = 0; i < bytecode_size; i++)
-                {
-                    printf("%02x ", bytecode[i]);
-                }
-                printf("\n");
             }
             else
             {
