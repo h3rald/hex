@@ -32,12 +32,12 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         hex_item_t value;
         if (hex_get_symbol(ctx, item.token->value, &value))
         {
-            result = PUSH(ctx, value);
+            result = HEX_PUSH(ctx, value);
         }
         else
         {
             hex_error(ctx, "Undefined user symbol: %s", item.token->value);
-            FREE(ctx, value);
+            HEX_FREE(ctx, value);
             result = 1;
         }
     }
@@ -142,17 +142,17 @@ hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, int si
 
 int hex_push_string(hex_context_t *ctx, const char *value)
 {
-    return PUSH(ctx, hex_string_item(ctx, value));
+    return HEX_PUSH(ctx, hex_string_item(ctx, value));
 }
 
 int hex_push_integer(hex_context_t *ctx, int value)
 {
-    return PUSH(ctx, hex_integer_item(ctx, value));
+    return HEX_PUSH(ctx, hex_integer_item(ctx, value));
 }
 
 int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size)
 {
-    return PUSH(ctx, hex_quotation_item(ctx, quotation, size));
+    return HEX_PUSH(ctx, hex_quotation_item(ctx, quotation, size));
 }
 
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
@@ -162,7 +162,7 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
     if (hex_get_symbol(ctx, token->value, &value))
     {
         value.token = token;
-        return PUSH(ctx, value);
+        return HEX_PUSH(ctx, value);
     }
     else
     {
@@ -226,6 +226,6 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size)
 {
     for (int i = 0; i < size; i++)
     {
-        FREE(ctx, *quotation[i]);
+        HEX_FREE(ctx, *quotation[i]);
     }
 }

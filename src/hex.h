@@ -268,8 +268,8 @@ void hex_handle_sigint(int sig);
 char *hex_read_file(hex_context_t *ctx, const char *filename);
 
 // Common operations
-#define POP(ctx, x) hex_item_t x = hex_pop(ctx)
-#define FREE(ctx, x) hex_free_item(ctx, x)
-#define PUSH(ctx, x) hex_push(ctx, x)
+#define HEX_POP(ctx, x) hex_item_t x = hex_pop(ctx)
+#define HEX_FREE(ctx, x) hex_free_item(ctx, x)
+#define HEX_PUSH(ctx, x) hex_push(ctx, x)
 
 #endif // HEX_H
