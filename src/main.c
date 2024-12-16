@@ -149,12 +149,8 @@ static int do_repl(void *v_ctx)
     // Tokenize and process the input
     hex_interpret(ctx, line, "<repl>", 1, 1);
     // Print the top item of the stack
-    if (ctx->stack.top >= 0)
-    {
-        hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
-        // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
-        printf("\n");
-    }
+    hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+    printf("\n");
     return 0;
 }
 
@@ -262,7 +258,7 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
            "  +---------+----------------------------+-------------------------------------------------+\n"
            "  | Symbol  | Input -> Output            | Description                                     |\n"
            "  +---------+----------------------------+-------------------------------------------------+\n");
-    for (int i = 0; i < docs->size; i++)
+    for (size_t i = 0; i < docs->size; i++)
     {
         printf("  | ");
         hex_rpad(docs->entries[i].name, 7);
@@ -336,17 +332,26 @@ int main(int argc, char *argv[])
             char *fileContent = hex_read_file(&ctx, file);
             if (generate_bytecode)
             {
-                uint8_t **bytecode;
-                size_t *bytecode_size;
-                if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, file, 1, 1) != 0)
+                uint8_t *bytecode;
+                size_t bytecode_size = 0;
+                hex_file_position_t position;
+                position.column = 1;
+                position.line = 1 + ctx.hashbang;
+                position.filename = file;
+                if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
                 {
                     hex_error(&ctx, "Failed to generate bytecode");
                     return 1;
                 }
-                for (int i = 0; i < *bytecode_size; i++)
+                for (size_t i = 0; i < 6; i++)
                 {
-                    printf("%02x ", (*bytecode)[i]);
+                    printf("%02x ", HEX_BYTECODE_HEADER[i]);
                 }
+                for (size_t i = 0; i < bytecode_size; i++)
+                {
+                    printf("%02x ", bytecode[i]);
+                }
+                printf("\n");
             }
             else
             {

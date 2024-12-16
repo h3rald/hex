@@ -16,7 +16,7 @@ void hex_doc(hex_doc_dictionary_t *dict, const char *name, const char *input, co
 
 int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *result)
 {
-    for (int i = 0; i < docs->size; i++)
+    for (size_t i = 0; i < docs->size; i++)
     {
         if (strcmp(docs->entries[i].name, key) == 0)
         {

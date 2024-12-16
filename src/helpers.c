@@ -118,7 +118,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
         break;
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (int i = 0; i < item.quotation_size; i++)
+        for (size_t i = 0; i < item.quotation_size; i++)
         {
             if (i > 0)
             {
@@ -199,7 +199,7 @@ void hex_print_item(FILE *stream, hex_item_t item)
 
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (int i = 0; i < item.quotation_size; i++)
+        for (size_t i = 0; i < item.quotation_size; i++)
         {
             if (i > 0)
             {
@@ -217,9 +217,4 @@ void hex_print_item(FILE *stream, hex_item_t item)
         fprintf(stream, "<unknown>");
         break;
     }
-}
-
-int hex_is_symbol(hex_token_t *token, char *value)
-{
-    return strcmp(token->value, value) == 0;
 }

@@ -34,7 +34,7 @@ void print_stack_trace(hex_context_t *ctx)
     }
     fprintf(stderr, "[stack trace] (most recent symbol first):\n");
 
-    for (int i = 0; i < ctx->stack_trace.size; i++)
+    for (size_t i = 0; i < ctx->stack_trace.size; i++)
     {
         int index = (ctx->stack_trace.start + ctx->stack_trace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
         hex_token_t token = ctx->stack_trace.entries[index];

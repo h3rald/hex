@@ -39,7 +39,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int na
     {
         return 1;
     }
-    for (int i = 0; i < ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry.size; i++)
     {
         if (strcmp(ctx->registry.entries[i].key, key) == 0)
         {
@@ -85,7 +85,7 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
 
-    for (int i = 0; i < ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry.size; i++)
     {
         if (strcmp(ctx->registry.entries[i].key, key) == 0)
         {

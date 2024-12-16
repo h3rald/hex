@@ -133,7 +133,7 @@ hex_item_t hex_integer_item(hex_context_t *ctx, int value)
     return item;
 }
 
-hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, int size)
+hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
     (void)(ctx);
     hex_item_t item = {.type = HEX_TYPE_QUOTATION, .data.quotation_value = quotation, .quotation_size = size};
@@ -150,7 +150,7 @@ int hex_push_integer(hex_context_t *ctx, int value)
     return HEX_PUSH(ctx, hex_integer_item(ctx, value));
 }
 
-int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, int size)
+int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
     return HEX_PUSH(ctx, hex_quotation_item(ctx, quotation, size));
 }
@@ -222,9 +222,9 @@ void hex_free_item(hex_context_t *ctx, hex_item_t item)
     }
 }
 
-void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, int size)
+void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
-    for (int i = 0; i < size; i++)
+    for (size_t i = 0; i < size; i++)
     {
         HEX_FREE(ctx, *quotation[i]);
     }

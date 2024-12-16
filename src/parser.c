@@ -247,8 +247,8 @@ int32_t hex_parse_integer(const char *hex_str)
 int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position)
 {
     hex_item_t **quotation = NULL;
-    int capacity = 2;
-    int size = 0;
+    size_t capacity = 2;
+    size_t size = 0;
     int balanced = 1;
 
     quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
