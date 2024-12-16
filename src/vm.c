@@ -333,6 +333,7 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
             encode_length(&bytecode, &size, &capacity, sizeof(int32_t));
             memcpy(&bytecode[size], &value, sizeof(int32_t));
             size += sizeof(int32_t);
+            hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
             break;
 
         case HEX_TOKEN_STRING:
@@ -340,12 +341,15 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
             size_t len = strlen(token->value);
             encode_length(&bytecode, &size, &capacity, len);
             memcpy(&bytecode[size], token->value, len);
+            hex_debug(ctx, "PUSHST[%d]: %s", len, token->value);
             size += len;
             break;
         case HEX_TOKEN_SYMBOL:
             if (hex_valid_native_symbol(ctx, token->value))
             {
-                bytecode[size++] = get_opcode(token->value);
+                char *symbol = token->value;
+                bytecode[size++] = get_opcode(symbol);
+                hex_debug(ctx, "NATSYM[1]: %s", symbol);
             }
             else
             {
@@ -355,6 +359,7 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
                 encode_length(&bytecode, &size, &capacity, sym_len);
                 memcpy(&bytecode[size], token->value, sym_len);
                 size += sym_len;
+                hex_debug(ctx, "LOOKUP[%d]: %s", sym_len, token->value);
             }
             break;
         case HEX_TOKEN_QUOTATION_START:
@@ -363,17 +368,21 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
             hex_item_t quotation;
             if (hex_parse_quotation(ctx, &input, &quotation, position) != 0)
             {
+                hex_error(ctx, "Failed to parse quotation");
                 hex_free_token(token);
                 free(bytecode);
                 return 1;
             }
+            hex_debug(ctx, "PUSHQT[%d]: <start>", quotation.quotation_size);
             encode_length(&bytecode, &size, &capacity, quotation.quotation_size);
             if (hex_quotation_bytecode(ctx, &quotation, input, position, &bytecode, &size, &capacity) != 0)
             {
+                hex_error(ctx, "Failed to generate bytecode for quotation");
                 hex_free_token(token);
                 free(bytecode);
                 return 1;
             }
+            hex_debug(ctx, "PUSHQT[%d]: <end>", quotation.quotation_size);
             break;
         }
         default:
@@ -392,58 +401,53 @@ int hex_quotation_bytecode(hex_context_t *ctx, hex_item_t *quotation, const char
 {
     for (size_t i = 0; i < quotation->quotation_size; ++i)
     {
-        hex_token_t *token = quotation->data.quotation_value[i]->token;
-        switch (token->type)
+        hex_item_t *item = quotation->data.quotation_value[i];
+        switch (item->type)
         {
-        case HEX_TOKEN_INTEGER:
+        case HEX_TYPE_INTEGER:
             (*bytecode)[(*size)++] = HEX_OP_PUSHIN;
-            int32_t value = hex_parse_integer(token->value);
             encode_length(bytecode, size, capacity, sizeof(int32_t));
-            memcpy(&(*bytecode)[*size], &value, sizeof(int32_t));
+            memcpy(&(*bytecode)[*size], &item->data.int_value, sizeof(int32_t));
             *size += sizeof(int32_t);
+            hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), item->data.int_value);
             break;
-
-        case HEX_TOKEN_STRING:
+        case HEX_TYPE_STRING:
             (*bytecode)[(*size)++] = HEX_OP_PUSHST;
-            size_t len = strlen(token->value);
+            size_t len = strlen(item->data.str_value);
             encode_length(bytecode, size, capacity, len);
-            memcpy(&(*bytecode)[*size], token->value, len);
+            memcpy(&(*bytecode)[*size], item->data.str_value, len);
             *size += len;
+            hex_debug(ctx, "PUSHST[%d]: %s", len, item->data.str_value);
             break;
-
-        case HEX_TOKEN_SYMBOL:
-            if (hex_valid_native_symbol(ctx, token->value))
-            {
-                (*bytecode)[(*size)++] = get_opcode(token->value);
-            }
-            else
-            {
-                // Lookup user symbol
-                (*bytecode)[(*size)++] = HEX_OP_LOOKUP;
-                size_t sym_len = strlen(token->value);
-                encode_length(bytecode, size, capacity, sym_len);
-                memcpy(&(*bytecode)[*size], token->value, sym_len);
-                *size += sym_len;
-            }
+        case HEX_TYPE_NATIVE_SYMBOL:
+            char *symbol = item->token->value;
+            (*bytecode)[(*size)++] = get_opcode(symbol);
+            hex_debug(ctx, "NATSYM[1]: %s", symbol);
             break;
-
-        case HEX_TOKEN_QUOTATION_START:
-        {
+        case HEX_TYPE_USER_SYMBOL:
+            // Lookup user symbol
+            (*bytecode)[(*size)++] = HEX_OP_LOOKUP;
+            size_t sym_len = strlen(item->token->value);
+            encode_length(bytecode, size, capacity, sym_len);
+            memcpy(&(*bytecode)[*size], item->token->value, sym_len);
+            *size += sym_len;
+            hex_debug(ctx, "LOOKUP[%d]: %s", sym_len, item->token->value);
+            break;
+        case HEX_TYPE_QUOTATION:
             (*bytecode)[(*size)++] = HEX_OP_PUSHQT;
-            hex_item_t nested_quotation;
-            if (hex_parse_quotation(ctx, &input, &nested_quotation, position) != 0)
+            hex_item_t *quotation = item;
+            hex_debug(ctx, "PUSHQT[%d]: <start>", quotation->quotation_size);
+            encode_length(bytecode, size, capacity, quotation->quotation_size);
+            if (hex_quotation_bytecode(ctx, quotation, input, position, bytecode, size, capacity) != 0)
             {
+                hex_error(ctx, "Failed to generate bytecode for quotation");
                 return 1;
             }
-            encode_length(bytecode, size, capacity, nested_quotation.quotation_size);
-            if (hex_quotation_bytecode(ctx, &nested_quotation, input, position, bytecode, size, capacity) != 0)
-            {
-                return 1;
-            }
+            hex_debug(ctx, "PUSHQT[%d]: <end>", quotation->quotation_size);
             break;
-        }
         default:
-            // Ignore other tokens
+            // Ignore other types
+            // Review in case of invalid items
             break;
         }
     }
