@@ -2,8 +2,13 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDFLAGS =
 
+.PHONY: wasm, playground, clean, test, web
+
 hex: src/hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
+
+src/hex.c:
+	sh scripts/amalgamate.sh
 
 web/assets/hex.wasm: src/hex.c
 	 emcc -O2 -sASYNCIFY -DBROWSER -sEXPORTED_RUNTIME_METHODS=stringToUTF8 src/hex.c -o web/assets/hex.js --pre-js web/assets/hex-playground.js
@@ -14,23 +19,19 @@ hex.wasm: src/hex.c
 ape: src/hex.c
 	cosmocc $(CFLAGS) $(LDFLAGS) $< -o hex
 
-.PHONY: wasm
 wasm: hex.wasm
 
-.PHONY: playground
 playground: web/assets/hex.wasm
 
-.PHONY: clean
 clean:
+	rm -f src/hex.c
 	rm -f hex
 	rm -f hex.exe
 	rm -f hex.js
 	rm -f hex.wasm
 
-.PHONY: test
 test:
 	./hex scripts/test.hex
 
-.PHONY: web
 web: playground
 	./hex scripts/web.hex
