@@ -295,6 +295,7 @@ int main(int argc, char *argv[])
     hex_create_docs(&ctx.docs);
 
     char *file;
+    int generate_bytecode = 0;
 
     if (argc > 1)
     {
@@ -321,6 +322,10 @@ int main(int argc, char *argv[])
                 ctx.settings.debugging_enabled = 1;
                 printf("*** Debug mode enabled ***\n");
             }
+            else if ((strcmp(arg, "-b") == 0 || strcmp(arg, "--bytecode") == 0))
+            {
+                generate_bytecode = 1;
+            }
             else
             {
                 file = arg;
@@ -329,7 +334,24 @@ int main(int argc, char *argv[])
         if (file)
         {
             char *fileContent = hex_read_file(&ctx, file);
-            hex_interpret(&ctx, fileContent, file, 1 + ctx.hashbang, 1);
+            if (generate_bytecode)
+            {
+                uint8_t **bytecode;
+                size_t *bytecode_size;
+                if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, file, 1, 1) != 0)
+                {
+                    hex_error(&ctx, "Failed to generate bytecode");
+                    return 1;
+                }
+                for (int i = 0; i < *bytecode_size; i++)
+                {
+                    printf("%02x ", (*bytecode)[i]);
+                }
+            }
+            else
+            {
+                hex_interpret(&ctx, fileContent, file, 1 + ctx.hashbang, 1);
+            }
             return 0;
         }
     }
