@@ -353,9 +353,15 @@ int main(int argc, char *argv[])
                 position.column = 1;
                 position.line = 1 + ctx.hashbang;
                 position.filename = file;
-                if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
+                int open_quotations = 0;
+                if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position, &open_quotations) != 0)
                 {
                     hex_error(&ctx, "Failed to generate bytecode");
+                    return 1;
+                }
+                if (open_quotations != 0)
+                {
+                    hex_error(&ctx, "File contains unbalanced quotations");
                     return 1;
                 }
                 if (hex_write_bytecode_file(&ctx, strcat(file, "b"), bytecode, bytecode_size) != 0)

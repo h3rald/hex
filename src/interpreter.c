@@ -34,11 +34,11 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
         int result = 0;
         if (token->type == HEX_TOKEN_INTEGER)
         {
-            result = hex_push_integer(ctx, hex_parse_integer(token->value));
+            result = hex_push_integer(ctx, hex_parse_integer(token->data.value));
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
-            result = hex_push_string(ctx, token->value);
+            result = hex_push_string(ctx, token->data.value);
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {

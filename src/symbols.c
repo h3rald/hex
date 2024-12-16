@@ -638,7 +638,7 @@ static int hex_equal(hex_item_t a, hex_item_t b)
     }
     if (a.type == HEX_TYPE_NATIVE_SYMBOL || a.type == HEX_TYPE_USER_SYMBOL)
     {
-        return (strcmp(a.token->value, b.token->value) == 0);
+        return (strcmp(a.token->data.value, b.token->data.value) == 0);
     }
     if (a.type != b.type)
     {
@@ -729,7 +729,7 @@ static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *s
             }
             else if (hex_is_type_symbol(it_a))
             {
-                int cmp = strcmp(it_a->token->value, it_b->token->value);
+                int cmp = strcmp(it_a->token->data.value, it_b->token->data.value);
                 if (cmp != 0)
                 {
                     is_greater = cmp > 0;

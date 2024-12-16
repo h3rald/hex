@@ -114,7 +114,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
         break;
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", item.token->value);
+        fprintf(stream, "%s", item.token->data.value);
         break;
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
@@ -194,7 +194,7 @@ void hex_print_item(FILE *stream, hex_item_t item)
 
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", item.token->value);
+        fprintf(stream, "%s", item.token->data.value);
         break;
 
     case HEX_TYPE_QUOTATION:

@@ -32,7 +32,7 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
     }
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
-    token->value = NULL;
+    token->data.value = NULL;
     token->position.line = position->line;
     token->position.column = position->column;
 
@@ -46,9 +46,9 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
             position->column++;
         }
         int len = ptr - start;
-        token->value = (char *)malloc(len + 1);
-        strncpy(token->value, start, len);
-        token->value[len] = '\0';
+        token->data.value = (char *)malloc(len + 1);
+        strncpy(token->data.value, start, len);
+        token->data.value[len] = '\0';
         token->type = HEX_TOKEN_COMMENT;
     }
     else if (strncmp(ptr, "#|", 2) == 0)
@@ -81,9 +81,9 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         ptr += 2; // Skip the "|#" suffix
         position->column += 2;
         int len = ptr - start;
-        token->value = (char *)malloc(len + 1);
-        strncpy(token->value, start, len);
-        token->value[len] = '\0';
+        token->data.value = (char *)malloc(len + 1);
+        strncpy(token->data.value, start, len);
+        token->data.value[len] = '\0';
         token->type = HEX_TOKEN_COMMENT;
     }
     else if (*ptr == '"')
@@ -136,8 +136,8 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
             return token;
         }
 
-        token->value = (char *)malloc(len + 1);
-        char *dst = token->value;
+        token->data.value = (char *)malloc(len + 1);
+        char *dst = token->data.value;
 
         ptr = start;
         while (*ptr != '\0' && *ptr != '"')
@@ -175,9 +175,9 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
             position->column++;
         }
         int len = ptr - start;
-        token->value = (char *)malloc(len + 1);
-        strncpy(token->value, start, len);
-        token->value[len] = '\0';
+        token->data.value = (char *)malloc(len + 1);
+        strncpy(token->data.value, start, len);
+        token->data.value[len] = '\0';
         token->type = HEX_TOKEN_INTEGER;
     }
     else if (*ptr == '(')
@@ -203,10 +203,10 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         }
 
         int len = ptr - start;
-        token->value = (char *)malloc(len + 1);
-        strncpy(token->value, start, len);
-        token->value[len] = '\0';
-        if (hex_valid_native_symbol(ctx, token->value) || hex_valid_user_symbol(ctx, token->value))
+        token->data.value = (char *)malloc(len + 1);
+        strncpy(token->data.value, start, len);
+        token->data.value[len] = '\0';
+        if (hex_valid_native_symbol(ctx, token->data.value) || hex_valid_user_symbol(ctx, token->data.value))
         {
             token->type = HEX_TOKEN_SYMBOL;
         }
@@ -282,23 +282,23 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         if (token->type == HEX_TOKEN_INTEGER)
         {
 
-            *item = hex_integer_item(ctx, hex_parse_integer(token->value));
+            *item = hex_integer_item(ctx, hex_parse_integer(token->data.value));
             quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
-            *item = hex_string_item(ctx, token->value);
+            *item = hex_string_item(ctx, token->data.value);
             quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            if (hex_valid_native_symbol(ctx, token->value))
+            if (hex_valid_native_symbol(ctx, token->data.value))
             {
                 item->type = HEX_TYPE_NATIVE_SYMBOL;
                 hex_item_t value;
-                if (hex_get_symbol(ctx, token->value, &value))
+                if (hex_get_symbol(ctx, token->data.value, &value))
                 {
                     item->token = token;
                     item->type = HEX_TYPE_NATIVE_SYMBOL;
@@ -306,7 +306,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
                 }
                 else
                 {
-                    hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s", position->line, position->column, token->value);
+                    hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s", position->line, position->column, token->data.value);
                     hex_free_token(token);
                     hex_free_list(ctx, quotation, size);
                     return 1;
@@ -339,7 +339,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         }
         else
         {
-            hex_error(ctx, "(%d,%d) Unexpected token in quotation: %d", position->line, position->column, token->value);
+            hex_error(ctx, "(%d,%d) Unexpected token in quotation: %d", position->line, position->column, token->data.value);
             hex_free_token(token);
             hex_free_list(ctx, quotation, size);
             return 1;
