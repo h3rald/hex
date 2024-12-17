@@ -41,7 +41,7 @@
         entering <code>$0xffffffed$$</code> now (that's -19 in hexadecimal format using <a
             href="https://en.wikipedia.org/wiki/Two%27s_complement">two's complement</a>), and that works too.</p>
     <p>Now what just happened is that you pushed two values (integers, even) on <em>The Stack</em> (more on this later).
-        Since you have two numbers on The Stack already, you may as well enter {{+}} to add them up, and that gives you:
+        Since you have two numbers on The Stack already, you may as well enter {{sym-+}} to add them up, and that gives you:
     </p>
     <pre><code>0x8</code></pre>
     <p>Jolly good. </p>
@@ -54,7 +54,7 @@
         promise. Of course strings can only be delimited via double quotes, not single, angular, circular, or whatever
         quotes. Just <em>double</em> quotes.
     </p>
-    <p>Next... let's see. You can type {{:}} (which is another symbol), and... nothing happens! </p>
+    <p>Next... let's see. You can type {{sym-:}} (which is another symbol), and... nothing happens! </p>
     <p>Or better, nothing gets pushed back on The Stack. <code>$::$$</code> is a greedy, selfish symbol that just eats a
         value (any literal) and a string, and doesn't put anything back on The Stack.</p>
     <p>Now type <code>$:eight$$</code> (with no quotes) and press ENTER:</p>
@@ -70,11 +70,11 @@
         between items, and are delimited by ~~square~~ round brackets, like this:</p>
     <pre><code>($0x1$$ $"two"$$ $:three$$ $:!$$)</code></pre>
     <p>Oh my! You really can put <em>anything</em> in quotations, right? Assuming that it's a valid literal, a known
-        native symbol (like {{!}}), or a syntactically-valid user-defined symbol (even if it doesn't exist, like
+        native symbol (like {{sym-!}}), or a syntactically-valid user-defined symbol (even if it doesn't exist, like
         <code>$:three$$</code>). You can even nest a quotation in another quotation, and another, and another...
     </p>
     <p>...And nothing will happen by the way: quotations sit neatly on the stack like other literals. Until some pesky
-        symbol decides to dequote them, like {{.}}, which strips a quotation and puts all its items on the stack! Oi!
+        symbol decides to dequote them, like {{sym-.}}, which strips a quotation and puts all its items on the stack! Oi!
         The naughty boy!</p>
     <h3 id="the-stack">The Stack<a href="#top"></a></h3>
     <p>We had to mention The Stack earlier, it was unavoidable. See, The Stack is where the magic happens! But what is
@@ -92,7 +92,7 @@
     +-----------+
     |    0x5    |
     +-----------+</code></pre>
-    <p>Great, and finally, we are going to push the symbol {{-}} on the stack, because that's how postfix notation
+    <p>Great, and finally, we are going to push the symbol {{sym--}} on the stack, because that's how postfix notation
         (a.k.a. <a href="https://en.wikipedia.org/wiki/Reverse_Polish_notation">Reverse Polish Notation</a>) works:
         <em>first</em> the operands, and <em>then</em> the operators.
     </p>
@@ -134,7 +134,7 @@
     <p>Let that sink in. </p>
     <p>Sure, it's not the best design in the world, but it has the advantage of being a very simple thing to
         implement and use. You have to know it, and you have to be very careful with it.</p>
-    <p>Now... to add a new symbol to The Registry, you use the {{:}} symbol. That can also be used to overwrite existing
+    <p>Now... to add a new symbol to The Registry, you use the {{sym-:}} symbol. That can also be used to overwrite existing
         symbols with new values, but not native symbols.</p>
     <p>Say we want to teach hex some Roman numerals... we could do this:</p>
     <pre><code>    $0x1$$ $"I"$$   $::$$
@@ -144,7 +144,7 @@
     $; ...$$</code></pre>
     <p>Then, you could use them like ordinary symbols:</p>
     <pre><code>$:I$$ $:IV$$ $:+$$ $; Pushes 0x5 on the stack</code></pre>
-    <p>If you don't need a symbol anymore, you can use the {{#}} symbol to free it from The Registry. See? Simple.
+    <p>If you don't need a symbol anymore, you can use the {{sym-#}} symbol to free it from The Registry. See? Simple.
     </p>
     <p>Of course The Registry is smart enough to stop you from freeing native symbols!</p>
     <p>So if you try to remove $:+$$:</p>
@@ -163,19 +163,19 @@
     <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"&bsol;n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
     <p>Basically, when dequoted, this quotation will:</p>
     <ol>
-        <li>Run the <code>ls</code> command (it will work on *nix at least) using the {{run}} symbol.</li>
-        <li>Get the content of the standard output of the command result via {{get}}.</li>
+        <li>Run the <code>ls</code> command (it will work on *nix at least) using the {{sym-run}} symbol.</li>
+        <li>Get the content of the standard output of the command result via {{sym-get}}.</li>
         <li>Now you have a single string with all the directory contents, so you want to just split it by
             $"&bsol;n"$$ to get the file names in a quotation.</li>
     </ol>
     <p>Let's try it in the REPL:</p>
     <pre><code>$:ls$$ $:.$$</code></pre>
-    <p>Remember the dot? {{.}} is that naughty boy that likes stripping quotations! It removes their parenthesis and
+    <p>Remember the dot? {{sym-.}} is that naughty boy that likes stripping quotations! It removes their parenthesis and
         push all the items on The Stack, essentially <em>executing</em> your logic.</p>
     <p>That should show you something like this:</p>
     <pre><code>("CHANGELOG.md" "LICENSE" "Makefile" "README.md" "example.hex" "hex" "hex.js" "hex.vim" "hex.wasm" "releases" "scripts" "src" "web")</code></pre>
     <p>...at least that's what it shows on my machine in the hex directory.</p>
-    <p>How do we print each of those along with their file size? The keyword here is {{each}}, and here's the full
+    <p>How do we print each of those along with their file size? The keyword here is {{sym-each}}, and here's the full
         program:</p>
     <pre><code>    $:ls$$ $:.$$
         ($:dup$$ $": "$$ $:cat$$ $:print$$ 
@@ -186,14 +186,14 @@
         <li>First we execute our quotation to get the. list of all the file names.</li>
         <li>Then we push a quotation on The Stack. This code will be executed by $:each$$ for <em>each item</em> in the
             previous quotation (the list of files).</li>
-        <li>Inside that, first we use {{dup}} to duplicate the current item. We'll need one to print, adding a
-            ": " after it via {{cat}}.</li>
-        <li>Then we can use {{print}} to print file name and colon without a new line.</li>
+        <li>Inside that, first we use {{sym-dup}} to duplicate the current item. We'll need one to print, adding a
+            ": " after it via {{sym-cat}}.</li>
+        <li>Then we can use {{sym-print}} to print file name and colon without a new line.</li>
         <li>Then there's still going to be a duplicate of the file name on the stack, which we are going to use to
-            calculate its size by reading its contents via {{read}}.</li>
+            calculate its size by reading its contents via {{sym-read}}.</li>
         <li>Now.. you'll get a nice hexadecimal number corresponding to the size in bytes (and zero for
-            directories). You can use {{dec}} to convert it to a string in decimal representation...</li>
-        <li>...and finally print it with a new line at the end, using {{puts}}.</li>
+            directories). You can use {{sym-dec}} to convert it to a string in decimal representation...</li>
+        <li>...and finally print it with a new line at the end, using {{sym-puts}}.</li>
     </ol>
     <p><em>If everything went well</em>, you should get something like this printed on the screen:</p>
     <pre><code>    CHANGELOG.md: 124
