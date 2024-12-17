@@ -314,7 +314,8 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t *bytecode, size_t *size, si
             return 1;
         }
     }
-    bytecode[*size++] = HEX_OP_PUSHIN;
+    *size += 1; // opcode
+    bytecode[*size] = HEX_OP_PUSHIN;
     encode_length(&bytecode, size, capacity, sizeof(int32_t));
     memcpy(&bytecode[*size], &value, sizeof(int32_t));
     *size += sizeof(int32_t);
@@ -332,14 +333,14 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
         // TODO: Review capacity sizing
         *capacity = (*size + len + 1 + 4 + *capacity) * 2;
         bytecode = (uint8_t *)realloc(bytecode, *capacity);
-        printf("reallocating to %d\n", (int)*capacity);
         if (!bytecode)
         {
             hex_error(ctx, "Memory allocation failed");
             return 1;
         }
     }
-    bytecode[*size++] = HEX_OP_PUSHST;
+    *size += 1; // opcode
+    bytecode[*size] = HEX_OP_PUSHST;
     encode_length(&bytecode, size, capacity, len);
     memcpy(&bytecode[*size], value, len);
     *size += len;
@@ -362,7 +363,8 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
                 return 1;
             }
         }
-        bytecode[*size++] = get_opcode(value);
+        *size += 1; // opcode
+        bytecode[*size] = get_opcode(value);
         hex_debug(ctx, "NATSYM[1]: (total size: %d) %s", *size, value);
     }
     else
@@ -379,7 +381,8 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
                 return 1;
             }
         }
-        bytecode[*size++] = HEX_OP_LOOKUP;
+        *size += 1; // opcode
+        bytecode[*size] = HEX_OP_LOOKUP;
         encode_length(&bytecode, size, capacity, strlen(value));
         memcpy(&bytecode[*size], value, strlen(value));
         *size += strlen(value);
@@ -401,11 +404,12 @@ int hex_bytecode_quotation(hex_context_t *ctx, uint8_t *bytecode, size_t *size, 
             return 1;
         }
     }
-    bytecode[*size++] = HEX_OP_PUSHQT;
+    *size += 1; // opcode
+    bytecode[*size] = HEX_OP_PUSHQT;
     encode_length(&bytecode, size, capacity, *n_items);
     memcpy(&bytecode[*size], *output, *output_size);
     *size += *output_size;
-    hex_debug(ctx, "PUSHQT[%d]: (bytes: %d) <end>", *n_items, *output_size);
+    hex_debug(ctx, "PUSHQT[%d]: (total size: %d) <end>", *n_items, *output_size);
     return 0;
 }
 
@@ -422,7 +426,6 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
     }
     while ((token = hex_next_token(ctx, &input, position)) != NULL)
     {
-        printf("Token value: %s - Size: %d\n", token->value, (int)size);
         if (token->type == HEX_TOKEN_INTEGER)
         {
             int32_t value = hex_parse_integer(token->value);
@@ -431,7 +434,6 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
         else if (token->type == HEX_TOKEN_STRING)
         {
             hex_bytecode_string(ctx, bytecode, &size, &capacity, token->value);
-            printf("String value: %s\n", token->value);
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
