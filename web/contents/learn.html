@@ -160,7 +160,7 @@
 
     <p>Let's start with creating our own symbol to read the contents of the current directory and put them in a
         quotation:</p>
-    <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"\n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
+    <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"\\n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
     <p>Basically, when dequoted, this quotation will:</p>
     <ol>
         <li>Run the <code>ls</code> command (it will work on *nix at least) using the {{run}} symbol.</li>
