@@ -160,13 +160,13 @@
 
     <p>Let's start with creating our own symbol to read the contents of the current directory and put them in a
         quotation:</p>
-    <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"\n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
+    <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"&bsol;n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
     <p>Basically, when dequoted, this quotation will:</p>
     <ol>
         <li>Run the <code>ls</code> command (it will work on *nix at least) using the {{run}} symbol.</li>
         <li>Get the content of the standard output of the command result via {{get}}.</li>
         <li>Now you have a single string with all the directory contents, so you want to just split it by
-            $"\n"$$ to get the file names in a quotation.</li>
+            $"&bsol;n"$$ to get the file names in a quotation.</li>
     </ol>
     <p>Let's try it in the REPL:</p>
     <pre><code>$:ls$$ $:.$$</code></pre>
