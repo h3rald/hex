@@ -61,12 +61,7 @@ typedef struct hex_file_position_t
 typedef struct hex_token_t
 {
     hex_token_type_t type;
-    union
-    {
-        char *value;
-        struct hex_token_t **quotation_value;
-
-    } data;
+    char *value;
     size_t quotation_size;
     hex_file_position_t position;
 } hex_token_t;
@@ -358,8 +353,7 @@ int hex_symbol_pop(hex_context_t *ctx);
 
 // VM
 int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t *output_size, hex_file_position_t *position, int *open_quotations);
-// int hex_quotation_bytecode(hex_context_t *ctx, hex_item_t *quotation, const char *input, hex_file_position_t *position, uint8_t **bytecode, size_t *size, size_t *capacity);
-int hex_tokenize_quotation(hex_context_t *ctx, const char **input, hex_token_t *result, hex_file_position_t *position);
+int hex_bytecode_quotation(hex_context_t *ctx, const char **input, uint8_t **output, size_t *ouput_size, size_t *n_items, hex_file_position_t *position);
 
 // REPL and initialization
 void hex_register_symbols(hex_context_t *ctx);

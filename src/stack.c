@@ -11,7 +11,7 @@ void hex_free_token(hex_token_t *token)
 {
     if (token)
     {
-        free(token->data.value);
+        free(token->value);
         free(token);
     }
 }
@@ -30,13 +30,13 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
     if (item.type == HEX_TYPE_USER_SYMBOL)
     {
         hex_item_t value;
-        if (hex_get_symbol(ctx, item.token->data.value, &value))
+        if (hex_get_symbol(ctx, item.token->value, &value))
         {
             result = HEX_PUSH(ctx, value);
         }
         else
         {
-            hex_error(ctx, "Undefined user symbol: %s", item.token->data.value);
+            hex_error(ctx, "Undefined user symbol: %s", item.token->value);
             HEX_FREE(ctx, value);
             result = 1;
         }
@@ -159,14 +159,14 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 {
     add_to_stack_trace(ctx, token);
     hex_item_t value;
-    if (hex_get_symbol(ctx, token->data.value, &value))
+    if (hex_get_symbol(ctx, token->value, &value))
     {
         value.token = token;
         return HEX_PUSH(ctx, value);
     }
     else
     {
-        hex_error(ctx, "Undefined symbol: %s", token->data.value);
+        hex_error(ctx, "Undefined symbol: %s", token->value);
         return 1;
     }
 }
@@ -202,14 +202,14 @@ void hex_free_item(hex_context_t *ctx, hex_item_t item)
         item.data.quotation_value = NULL;
         hex_debug(ctx, "FREE: ** quotation end");
     }
-    else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->data.value != NULL)
+    else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->value != NULL)
     {
         hex_debug(ctx, "FREE: ** native symbol start");
         item.token = NULL;
         hex_free_token(item.token);
         hex_debug(ctx, "FREE: ** native symbol end");
     }
-    else if (item.type == HEX_TYPE_USER_SYMBOL && item.token->data.value != NULL)
+    else if (item.type == HEX_TYPE_USER_SYMBOL && item.token->value != NULL)
     {
         hex_debug(ctx, "FREE: ** user symbol start");
         item.token = NULL;

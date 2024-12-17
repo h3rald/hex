@@ -38,6 +38,6 @@ void print_stack_trace(hex_context_t *ctx)
     {
         int index = (ctx->stack_trace.start + ctx->stack_trace.size - 1 - i) % HEX_STACK_TRACE_SIZE;
         hex_token_t token = ctx->stack_trace.entries[index];
-        fprintf(stderr, "  %s (%s:%d:%d)\n", token.data.value, token.position.filename, token.position.line, token.position.column);
+        fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.position.filename, token.position.line, token.position.column);
     }
 }
