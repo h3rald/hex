@@ -295,7 +295,13 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     (*bytecode)[*size] = HEX_OP_PUSHIN;
     *size += 1; // opcode
     encode_length(bytecode, size, sizeof(int32_t));
-    memcpy(&(*bytecode)[*size], &value, sizeof(int32_t));
+    //memcpy(&(*bytecode)[*size], &value, sizeof(int32_t));
+    memcpy(&(*bytecode)[*size], (uint8_t[]){ 
+      (value >> 24) & 0xFF, 
+      (value >> 16) & 0xFF, 
+      (value >> 8)  & 0xFF, 
+      value & 0xFF 
+    }, 4);
     *size += sizeof(int32_t);
     return 0;
 }
