@@ -38,7 +38,7 @@ static void encode_length(uint8_t **bytecode, size_t *size, size_t *capacity, si
     }
 }
 
-static uint8_t get_opcode(char *symbol)
+static uint8_t get_opcode(const char *symbol)
 {
     // Native Symbols
     if (strcmp(symbol, ":") == 0)
@@ -300,6 +300,115 @@ static uint8_t get_opcode(char *symbol)
     return 0;
 }
 
+int hex_bytecode_integer(hex_context_t *ctx, uint8_t *bytecode, size_t *size, size_t *capacity, int32_t value)
+{
+    hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
+    // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
+    if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
+    {
+        *capacity *= 2;
+        bytecode = (uint8_t *)realloc(bytecode, *capacity);
+        if (!bytecode)
+        {
+            hex_error(ctx, "Memory allocation failed");
+            return 1;
+        }
+    }
+    bytecode[*size++] = HEX_OP_PUSHIN;
+    encode_length(&bytecode, size, capacity, sizeof(int32_t));
+    memcpy(&bytecode[*size], &value, sizeof(int32_t));
+    *size += sizeof(int32_t);
+    return 0;
+}
+
+int hex_bytecode_string(hex_context_t *ctx, uint8_t *bytecode, size_t *size, size_t *capacity, const char *value)
+{
+    size_t len = strlen(value);
+    hex_debug(ctx, "PUSHST[%d]: (total size start: %d) %s", len, *size, value);
+    // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
+    if (*size + len + 1 + 4 > *capacity)
+    {
+        //*capacity *= 2;
+        // TODO: Review capacity sizing
+        *capacity = (*size + len + 1 + 4 + *capacity) * 2;
+        bytecode = (uint8_t *)realloc(bytecode, *capacity);
+        printf("reallocating to %d\n", (int)*capacity);
+        if (!bytecode)
+        {
+            hex_error(ctx, "Memory allocation failed");
+            return 1;
+        }
+    }
+    bytecode[*size++] = HEX_OP_PUSHST;
+    encode_length(&bytecode, size, capacity, len);
+    memcpy(&bytecode[*size], value, len);
+    *size += len;
+    hex_debug(ctx, "PUSHST[%d]: (total size: %d) %s", len, *size, value);
+    return 0;
+}
+
+int hex_bytecode_symbol(hex_context_t *ctx, uint8_t *bytecode, size_t *size, size_t *capacity, const char *value)
+{
+    if (hex_valid_native_symbol(ctx, value))
+    {
+        // Check if we need to resize the buffer (size + opcode (1))
+        if (*size + 1 > *capacity)
+        {
+            *capacity = (*size + 1 + *capacity) * 2;
+            bytecode = (uint8_t *)realloc(bytecode, *capacity);
+            if (!bytecode)
+            {
+                hex_error(ctx, "Memory allocation failed");
+                return 1;
+            }
+        }
+        bytecode[*size++] = get_opcode(value);
+        hex_debug(ctx, "NATSYM[1]: (total size: %d) %s", *size, value);
+    }
+    else
+    {
+        hex_debug(ctx, "LOOKUP[%d]: %s", strlen(value), value);
+        // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
+        if (*size + strlen(value) + 1 + 4 > *capacity)
+        {
+            *capacity = (*size + strlen(value) + 1 + 4) * 2;
+            bytecode = (uint8_t *)realloc(bytecode, *capacity);
+            if (!bytecode)
+            {
+                hex_error(ctx, "Memory allocation failed");
+                return 1;
+            }
+        }
+        bytecode[*size++] = HEX_OP_LOOKUP;
+        encode_length(&bytecode, size, capacity, strlen(value));
+        memcpy(&bytecode[*size], value, strlen(value));
+        *size += strlen(value);
+    }
+    return 0;
+}
+
+int hex_bytecode_quotation(hex_context_t *ctx, uint8_t *bytecode, size_t *size, size_t *capacity, uint8_t **output, size_t *output_size, size_t *n_items)
+{
+    // hex_debug(ctx, "PUSHQT[%d]: (bytes: %d) <start>", *n_items, *output_size);
+    //  Check if we need to resize the buffer (size + opcode (1) + max encoded length (4) + quotation bytecode size)
+    if (*size + 1 + 4 + *output_size > *capacity)
+    {
+        *capacity = (*size + 1 + 4 + *output_size + *capacity) * 2;
+        bytecode = (uint8_t *)realloc(bytecode, *capacity);
+        if (!bytecode)
+        {
+            hex_error(ctx, "Memory allocation failed");
+            return 1;
+        }
+    }
+    bytecode[*size++] = HEX_OP_PUSHQT;
+    encode_length(&bytecode, size, capacity, *n_items);
+    memcpy(&bytecode[*size], *output, *output_size);
+    *size += *output_size;
+    hex_debug(ctx, "PUSHQT[%d]: (bytes: %d) <end>", *n_items, *output_size);
+    return 0;
+}
+
 int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t *output_size, hex_file_position_t *position, int *open_quotations)
 {
     hex_token_t *token;
@@ -313,89 +422,59 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
     }
     while ((token = hex_next_token(ctx, &input, position)) != NULL)
     {
-        if (size >= capacity)
+        printf("Token value: %s - Size: %d\n", token->value, (int)size);
+        if (token->type == HEX_TOKEN_INTEGER)
         {
-            capacity *= 2;
-            bytecode = (uint8_t *)realloc(bytecode, capacity);
-            if (!bytecode)
+            int32_t value = hex_parse_integer(token->value);
+            hex_bytecode_integer(ctx, bytecode, &size, &capacity, value);
+        }
+        else if (token->type == HEX_TOKEN_STRING)
+        {
+            hex_bytecode_string(ctx, bytecode, &size, &capacity, token->value);
+            printf("String value: %s\n", token->value);
+        }
+        else if (token->type == HEX_TOKEN_SYMBOL)
+        {
+            hex_bytecode_symbol(ctx, bytecode, &size, &capacity, token->value);
+        }
+        else if (token->type == HEX_TOKEN_QUOTATION_START)
+        {
+            size_t n_items = 0;
+            uint8_t *quotation_bytecode = NULL;
+            size_t quotation_size = 0;
+            hex_debug(ctx, "PUSHQT[-]: <start>");
+            if (hex_generate_quotation_bytecode(ctx, &input, &quotation_bytecode, &quotation_size, &n_items, position) != 0)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "Failed to generate quotation bytecode");
                 return 1;
             }
+            hex_bytecode_quotation(ctx, bytecode, &size, &capacity, &quotation_bytecode, &quotation_size, &n_items);
         }
-
-        switch (token->type)
+        else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-        case HEX_TOKEN_INTEGER:
-            bytecode[size++] = HEX_OP_PUSHIN;
-            int32_t value = hex_parse_integer(token->value);
-            encode_length(&bytecode, &size, &capacity, sizeof(int32_t));
-            memcpy(&bytecode[size], &value, sizeof(int32_t));
-            size += sizeof(int32_t);
-            hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
-            break;
-
-        case HEX_TOKEN_STRING:
-            bytecode[size++] = HEX_OP_PUSHST;
-            size_t len = strlen(token->value);
-            encode_length(&bytecode, &size, &capacity, len);
-            memcpy(&bytecode[size], token->value, len);
-            hex_debug(ctx, "PUSHST[%d]: %s", len, token->value);
-            size += len;
-            break;
-        case HEX_TOKEN_SYMBOL:
-            if (hex_valid_native_symbol(ctx, token->value))
-            {
-                char *symbol = token->value;
-                bytecode[size++] = get_opcode(symbol);
-                hex_debug(ctx, "NATSYM[1]: %s", symbol);
-            }
-            else
-            {
-                // Lookup user symbol
-                bytecode[size++] = HEX_OP_LOOKUP;
-                size_t sym_len = strlen(token->value);
-                encode_length(&bytecode, &size, &capacity, sym_len);
-                memcpy(&bytecode[size], token->value, sym_len);
-                size += sym_len;
-                hex_debug(ctx, "LOOKUP[%d]: %s", sym_len, token->value);
-            }
-            break;
-        case HEX_TOKEN_QUOTATION_START:
-        {
-            bytecode[size++] = HEX_OP_PUSHQT;
-            size_t q_size = 0;
-            uint8_t *q_bytecode = NULL;
-            size_t n_items = 0;
-            hex_debug(ctx, "PUSHQT[-]: <start>");
-            hex_bytecode_quotation(ctx, &input, &q_bytecode, &q_size, &n_items, position);
-            encode_length(&bytecode, &size, &capacity, n_items);
-            memcpy(&bytecode[size], q_bytecode, q_size);
-            size += q_size;
-            hex_debug(ctx, "PUSHQT[%d]: (bytes: %d) <end>", n_items, q_size);
-            break;
-        }
-        case HEX_TOKEN_QUOTATION_END:
             open_quotations--;
-            break;
-        default:
-            // Ignore other tokens
-            break;
         }
-        hex_free_token(token);
+        else
+        {
+            // printf("Ignoring: %s\n", token->value);
+            //   Ignore other tokens
+        }
+        // hex_free_token(token);
     }
+    hex_debug(ctx, "Bytecode generated: %d bytes", size);
     *output = bytecode;
     *output_size = size;
     return 0;
 }
 
-int hex_bytecode_quotation(hex_context_t *ctx, const char **input, uint8_t **output, size_t *output_size, size_t *n_items, hex_file_position_t *position)
+int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint8_t **output, size_t *output_size, size_t *n_items, hex_file_position_t *position)
 {
     hex_token_t *token;
     size_t capacity = 128;
     size_t size = 0;
+    int balanced = 1;
     uint8_t *bytecode = (uint8_t *)malloc(capacity);
-    if (!bytecode)
+    if (!*bytecode)
     {
         hex_error(ctx, "Memory allocation failed");
         return 1;
@@ -404,85 +483,52 @@ int hex_bytecode_quotation(hex_context_t *ctx, const char **input, uint8_t **out
 
     while ((token = hex_next_token(ctx, input, position)) != NULL)
     {
-        if (token->type == HEX_TOKEN_QUOTATION_END)
+        // printf("Token: %s\n", token->value);
+        if (token->type == HEX_TOKEN_INTEGER)
         {
-            hex_free_token(token);
-            break;
+            int32_t value = hex_parse_integer(token->value);
+            hex_bytecode_integer(ctx, bytecode, &size, &capacity, value);
         }
-
-        if (size >= capacity)
+        else if (token->type == HEX_TOKEN_STRING)
         {
-            capacity *= 2;
-            bytecode = (uint8_t *)realloc(bytecode, capacity);
-            if (!bytecode)
+            hex_bytecode_string(ctx, bytecode, &size, &capacity, token->value);
+        }
+        else if (token->type == HEX_TOKEN_SYMBOL)
+        {
+            hex_bytecode_symbol(ctx, bytecode, &size, &capacity, token->value);
+        }
+        else if (token->type == HEX_TOKEN_QUOTATION_START)
+        {
+            size_t n_items = 0;
+            uint8_t *quotation_bytecode;
+            size_t quotation_size = 0;
+            hex_debug(ctx, "PUSHQT[-]: <start>");
+            if (hex_generate_quotation_bytecode(ctx, input, &quotation_bytecode, &quotation_size, &n_items, position) != 0)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "Failed to generate quotation bytecode");
                 return 1;
             }
+            hex_bytecode_quotation(ctx, bytecode, &size, &capacity, &quotation_bytecode, &quotation_size, &n_items);
         }
-
-        switch (token->type)
+        else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-        case HEX_TOKEN_INTEGER:
-            bytecode[size++] = HEX_OP_PUSHIN;
-            int32_t value = hex_parse_integer(token->value);
-            encode_length(&bytecode, &size, &capacity, sizeof(int32_t));
-            memcpy(&bytecode[size], &value, sizeof(int32_t));
-            size += sizeof(int32_t);
-            hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
-            break;
-
-        case HEX_TOKEN_STRING:
-            bytecode[size++] = HEX_OP_PUSHST;
-            size_t len = strlen(token->value);
-            encode_length(&bytecode, &size, &capacity, len);
-            memcpy(&bytecode[size], token->value, len);
-            hex_debug(ctx, "PUSHST[%d]: %s", len, token->value);
-            size += len;
-            break;
-
-        case HEX_TOKEN_SYMBOL:
-            if (hex_valid_native_symbol(ctx, token->value))
-            {
-                char *symbol = token->value;
-                bytecode[size++] = get_opcode(symbol);
-                hex_debug(ctx, "NATSYM[1]: %s", symbol);
-            }
-            else
-            {
-                bytecode[size++] = HEX_OP_LOOKUP;
-                size_t sym_len = strlen(token->value);
-                encode_length(&bytecode, &size, &capacity, sym_len);
-                memcpy(&bytecode[size], token->value, sym_len);
-                size += sym_len;
-                hex_debug(ctx, "LOOKUP[%d]: %s", sym_len, token->value);
-            }
-            break;
-
-        case HEX_TOKEN_QUOTATION_START:
-        {
-            bytecode[size++] = HEX_OP_PUSHQT;
-            size_t q_size = 0;
-            uint8_t *q_bytecode = NULL;
-            size_t q_items = 0;
-            hex_debug(ctx, "PUSHQT[-]: <start>");
-            hex_bytecode_quotation(ctx, input, &q_bytecode, &q_size, &q_items, position);
-            encode_length(&bytecode, &size, &capacity, q_size);
-            memcpy(&bytecode[size], q_bytecode, q_size);
-            size += q_size;
-            hex_debug(ctx, "PUSHQT[%d]: (bytes: %d)<end>", q_items, q_size);
-            free(q_bytecode);
+            balanced--;
             break;
         }
-
-        default:
-            break;
+        else
+        {
+            // hex_debug(ctx, "Ignoring token: %s", token->value);
         }
 
         (*n_items)++;
         hex_free_token(token);
     }
-
+    if (balanced != 0)
+    {
+        hex_error(ctx, "(%d,%d) Unterminated quotation", position->line, position->column);
+        hex_free_token(token);
+        return 1;
+    }
     *output = bytecode;
     *output_size = size;
     return 0;

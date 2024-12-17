@@ -282,9 +282,11 @@ int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecod
         hex_error(ctx, "Failed to write file: %s", filename);
         return 1;
     }
+    hex_debug(ctx, "Writing bytecode to file: %s", filename);
     fwrite(HEX_BYTECODE_HEADER, 1, 6, file);
     fwrite(bytecode, 1, size, file);
     fclose(file);
+    hex_debug(ctx, "Bytecode file written: %s", filename);
     return 0;
 }
 

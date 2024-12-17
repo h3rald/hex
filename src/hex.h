@@ -353,7 +353,7 @@ int hex_symbol_pop(hex_context_t *ctx);
 
 // VM
 int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t *output_size, hex_file_position_t *position, int *open_quotations);
-int hex_bytecode_quotation(hex_context_t *ctx, const char **input, uint8_t **output, size_t *ouput_size, size_t *n_items, hex_file_position_t *position);
+int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint8_t **output, size_t *output_size, size_t *n_items, hex_file_position_t *position);
 
 // REPL and initialization
 void hex_register_symbols(hex_context_t *ctx);
