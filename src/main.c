@@ -356,6 +356,16 @@ int main(int argc, char *argv[])
                 position.line = 1 + ctx.hashbang;
                 position.filename = file;
                 int open_quotations = 0;
+                char *bytecode_file = strdup(file);
+                char *ext = strrchr(bytecode_file, '.');
+                if (ext != NULL)
+                {
+                    strcpy(ext, ".hbx");
+                }
+                else
+                {
+                    strcat(bytecode_file, ".hbx");
+                }
                 if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position, &open_quotations) != 0)
                 {
                     hex_error(&ctx, "Failed to generate bytecode");
@@ -366,7 +376,7 @@ int main(int argc, char *argv[])
                     hex_error(&ctx, "File contains unbalanced quotations");
                     return 1;
                 }
-                if (hex_write_bytecode_file(&ctx, strcat(file, "b"), bytecode, bytecode_size) != 0)
+                if (hex_write_bytecode_file(&ctx, bytecode_file, bytecode, bytecode_size) != 0)
                 {
                     return 1;
                 }

@@ -54,7 +54,7 @@ dkms.conf
 hex
 
 # Other
-*.hexb
+*.hbx
 src/hex.c
 example.hex
 web/out/
