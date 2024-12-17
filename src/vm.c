@@ -6,36 +6,13 @@
 // Virtual Machine                    //
 ////////////////////////////////////////
 
-static void encode_length(uint8_t **bytecode, size_t *size, size_t *capacity, size_t length)
+static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
 {
-    if (length < 0x80)
-    {
-        (*bytecode)[(*size)++] = (uint8_t)length;
-    }
-    else if (length < 0x8000)
-    {
-        (*bytecode)[(*size)++] = 0x80;
-        if (*size + 2 > *capacity)
-        {
-            *capacity *= 2;
-            *bytecode = (uint8_t *)realloc(*bytecode, *capacity);
-        }
-        (*bytecode)[(*size)++] = (uint8_t)(length >> 8);
-        (*bytecode)[(*size)++] = (uint8_t)(length & 0xFF);
-    }
-    else
-    {
-        (*bytecode)[(*size)++] = 0x81;
-        if (*size + 4 > *capacity)
-        {
-            *capacity *= 2;
-            *bytecode = (uint8_t *)realloc(*bytecode, *capacity);
-        }
-        (*bytecode)[(*size)++] = (uint8_t)(length >> 24);
-        (*bytecode)[(*size)++] = (uint8_t)((length >> 16) & 0xFF);
-        (*bytecode)[(*size)++] = (uint8_t)((length >> 8) & 0xFF);
-        (*bytecode)[(*size)++] = (uint8_t)(length & 0xFF);
-    }
+    (*bytecode)[*size] = (length >> 24) & 0xFF;
+    (*bytecode)[*size + 1] = (length >> 16) & 0xFF;
+    (*bytecode)[*size + 2] = (length >> 8) & 0xFF;
+    (*bytecode)[*size + 3] = length & 0xFF;
+    *size += 4;
 }
 
 static uint8_t get_opcode(const char *symbol)
@@ -306,17 +283,19 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t *bytecode, size_t *size, si
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
-        *capacity *= 2;
-        bytecode = (uint8_t *)realloc(bytecode, *capacity);
-        if (!bytecode)
+        *capacity = (*size + sizeof(int32_t) + 1 + 4 + *capacity) * 2;
+        printf("int - Resizing buffer to %d\n", (int)*capacity);
+        uint8_t *new_bytecode = (uint8_t *)realloc(bytecode, *capacity);
+        if (!new_bytecode)
         {
             hex_error(ctx, "Memory allocation failed");
             return 1;
         }
+        bytecode = new_bytecode;
     }
-    *size += 1; // opcode
     bytecode[*size] = HEX_OP_PUSHIN;
-    encode_length(&bytecode, size, capacity, sizeof(int32_t));
+    *size += 1; // opcode
+    encode_length(&bytecode, size, sizeof(int32_t));
     memcpy(&bytecode[*size], &value, sizeof(int32_t));
     *size += sizeof(int32_t);
     return 0;
@@ -331,17 +310,21 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
     {
         //*capacity *= 2;
         // TODO: Review capacity sizing
+        printf("str - Resizing buffer: %d -> %d\n", (int)*capacity, (int)(*size + len + 1 + 4 + *capacity) * 2);
         *capacity = (*size + len + 1 + 4 + *capacity) * 2;
-        bytecode = (uint8_t *)realloc(bytecode, *capacity);
-        if (!bytecode)
+        uint8_t *new_bytecode = (uint8_t *)realloc(bytecode, *capacity);
+        printf("Resized.\n");
+        if (!new_bytecode)
         {
             hex_error(ctx, "Memory allocation failed");
             return 1;
         }
+        printf("Reassigning.\n");
+        bytecode = new_bytecode;
     }
-    *size += 1; // opcode
     bytecode[*size] = HEX_OP_PUSHST;
-    encode_length(&bytecode, size, capacity, len);
+    *size += 1; // opcode
+    encode_length(&bytecode, size, len);
     memcpy(&bytecode[*size], value, len);
     *size += len;
     hex_debug(ctx, "PUSHST[%d]: (total size: %d) %s", len, *size, value);
@@ -356,15 +339,17 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
         if (*size + 1 > *capacity)
         {
             *capacity = (*size + 1 + *capacity) * 2;
-            bytecode = (uint8_t *)realloc(bytecode, *capacity);
-            if (!bytecode)
+            printf("nsym - Resizing buffer to %d\n", (int)*capacity);
+            uint8_t *new_bytecode = (uint8_t *)realloc(bytecode, *capacity);
+            if (!new_bytecode)
             {
                 hex_error(ctx, "Memory allocation failed");
                 return 1;
             }
+            bytecode = new_bytecode;
         }
-        *size += 1; // opcode
         bytecode[*size] = get_opcode(value);
+        *size += 1; // opcode
         hex_debug(ctx, "NATSYM[1]: (total size: %d) %s", *size, value);
     }
     else
@@ -374,16 +359,18 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
         if (*size + strlen(value) + 1 + 4 > *capacity)
         {
             *capacity = (*size + strlen(value) + 1 + 4) * 2;
-            bytecode = (uint8_t *)realloc(bytecode, *capacity);
-            if (!bytecode)
+            printf("usyn - Resizing buffer to %d\n", (int)*capacity);
+            uint8_t *new_bytecode = (uint8_t *)realloc(bytecode, *capacity);
+            if (!new_bytecode)
             {
                 hex_error(ctx, "Memory allocation failed");
                 return 1;
             }
+            bytecode = new_bytecode;
         }
-        *size += 1; // opcode
         bytecode[*size] = HEX_OP_LOOKUP;
-        encode_length(&bytecode, size, capacity, strlen(value));
+        *size += 1; // opcode
+        encode_length(&bytecode, size, strlen(value));
         memcpy(&bytecode[*size], value, strlen(value));
         *size += strlen(value);
     }
@@ -392,21 +379,26 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t *bytecode, size_t *size, siz
 
 int hex_bytecode_quotation(hex_context_t *ctx, uint8_t *bytecode, size_t *size, size_t *capacity, uint8_t **output, size_t *output_size, size_t *n_items)
 {
-    // hex_debug(ctx, "PUSHQT[%d]: (bytes: %d) <start>", *n_items, *output_size);
     //  Check if we need to resize the buffer (size + opcode (1) + max encoded length (4) + quotation bytecode size)
     if (*size + 1 + 4 + *output_size > *capacity)
     {
+        printf("Original capacity: %d\n", (int)*capacity);
         *capacity = (*size + 1 + 4 + *output_size + *capacity) * 2;
-        bytecode = (uint8_t *)realloc(bytecode, *capacity);
-        if (!bytecode)
+        printf("Bytecode size: %d\n", (int)*size);
+        printf("Quotation size: %d\n", (int)*output_size);
+        printf("quot - Resizing buffer to %d\n", (int)*capacity);
+        printf("Bytecode size1: %d\n", (int)*size);
+        uint8_t *new_bytecode = (uint8_t *)realloc(bytecode, *capacity);
+        if (!new_bytecode)
         {
             hex_error(ctx, "Memory allocation failed");
             return 1;
         }
+        bytecode = new_bytecode;
     }
-    *size += 1; // opcode
     bytecode[*size] = HEX_OP_PUSHQT;
-    encode_length(&bytecode, size, capacity, *n_items);
+    *size += 1; // opcode
+    encode_length(&bytecode, size, *n_items);
     memcpy(&bytecode[*size], *output, *output_size);
     *size += *output_size;
     hex_debug(ctx, "PUSHQT[%d]: (total size: %d) <end>", *n_items, *output_size);
