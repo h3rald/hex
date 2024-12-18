@@ -36,7 +36,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         }
         else
         {
-            hex_error(ctx, "Undefined user symbol: %s", item.token->value);
+            hex_error(ctx, "Undefined user symbol: '%s'", item.token->value);
             HEX_FREE(ctx, value);
             result = 1;
         }
