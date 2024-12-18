@@ -698,9 +698,9 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, "PUSHST[%d]: %s", length, value);
     hex_item_t item = hex_string_item(ctx, value);
     *result = item;
+    hex_debug(ctx, "PUSHST[%zu]: %s", length, value);
     free(value);
     return 0;
 }
@@ -739,7 +739,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     return 0;
 }
 
-int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
+int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
 {
     if (*size < 4)
     {
@@ -767,9 +767,14 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     *bytecode += length;
     *size -= length;
 
+    hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
+    token->value = (char *)value;
+    token->position.line = 0;
+    token->position.column = position;
+
     hex_item_t item;
     item.type = HEX_TYPE_USER_SYMBOL;
-    item.data.str_value = value;
+    item.token = token;
 
     hex_debug(ctx, "LOOKUP[%d]: %s", length, value);
     free(value);
@@ -777,7 +782,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     return 0;
 }
 
-int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
+int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
 {
     if (*size < 4)
     {
@@ -789,8 +794,8 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     *size -= 4;
     hex_debug(ctx, "PUSHQT[%zu]: <start>", n_items);
 
-    hex_item_t **items = NULL;
-    items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
+    hex_item_t **items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
+
     if (!items)
     {
         hex_error(ctx, "Memory allocation failed");
@@ -803,41 +808,41 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         (*bytecode)++;
         (*size)--;
 
-        hex_item_t *item = malloc(sizeof(hex_item_t));
+        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
         switch (opcode)
         {
         case HEX_OP_PUSHIN:
             if (hex_interpret_bytecode_integer(ctx, bytecode, size, item) != 0)
             {
-                free(items);
+                hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
         case HEX_OP_PUSHST:
             if (hex_interpret_bytecode_string(ctx, bytecode, size, item) != 0)
             {
-                free(items);
+                hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
         case HEX_OP_LOOKUP:
-            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, item) != 0)
+            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, position, item) != 0)
             {
-                free(items);
+                hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
         case HEX_OP_PUSHQT:
-            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, item) != 0)
+            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, position, item) != 0)
             {
-                free(items);
+                hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
         default:
             if (hex_interpret_bytecode_native_symbol(ctx, opcode, *size, item) != 0)
             {
-                free(items);
+                hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
@@ -845,12 +850,10 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         items[i] = item;
     }
 
-    hex_item_t quotation;
-    quotation.type = HEX_TYPE_QUOTATION;
-    quotation.data.quotation_value = items;
-    quotation.quotation_size = n_items;
+    result->type = HEX_TYPE_QUOTATION;
+    result->data.quotation_value = items;
+    result->quotation_size = n_items;
 
-    *result = quotation;
     hex_debug(ctx, "PUSHQT[%zu]: <end>", n_items);
     return 0;
 }
@@ -870,11 +873,11 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     {
         position = bytecode_size - size;
         uint8_t opcode = *bytecode;
-        hex_debug(ctx, "Processing bytecode at position: %zu, opcode: %u", position, opcode);
+        hex_debug(ctx, "Bytecode Position: %zu - opcode: %u", position, opcode);
         bytecode++;
         size--;
 
-        hex_item_t *item = malloc(sizeof(hex_item_t));
+        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
         switch (opcode)
         {
         case HEX_OP_PUSHIN:
@@ -890,13 +893,14 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
             }
             break;
         case HEX_OP_LOOKUP:
-            if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size, item) != 0)
+            if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size, position, item) != 0)
             {
                 return 1;
             }
             break;
         case HEX_OP_PUSHQT:
-            if (hex_interpret_bytecode_quotation(ctx, &bytecode, &size, item) != 0)
+
+            if (hex_interpret_bytecode_quotation(ctx, &bytecode, &size, position, item) != 0)
             {
                 return 1;
             }
