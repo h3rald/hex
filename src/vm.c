@@ -17,14 +17,6 @@ static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
     (*bytecode)[*size] = length & 0x7F;
     (*size)++;
 }
-/*static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
-{
-    (*bytecode)[*size] = (length >> 24) & 0xFF;
-    (*bytecode)[*size + 1] = (length >> 16) & 0xFF;
-    (*bytecode)[*size + 2] = (length >> 8) & 0xFF;
-    (*bytecode)[*size + 3] = length & 0xFF;
-    *size += 4;
-}*/
 
 uint8_t hex_symbol_to_opcode(const char *symbol)
 {
@@ -442,9 +434,52 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     }
     (*bytecode)[*size] = HEX_OP_PUSHIN;
     *size += 1; // opcode
-    encode_length(bytecode, size, sizeof(int32_t));
-    memcpy(&(*bytecode)[*size], (uint8_t[]){(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF}, 4);
-    *size += sizeof(int32_t);
+    // Encode the length of the integer value
+    size_t int_length = 0;
+    if (value >= -0x80 && value < 0x80)
+    {
+        int_length = 1;
+    }
+    else if (value >= -0x8000 && value < 0x8000)
+    {
+        int_length = 2;
+    }
+    else if (value >= -0x800000 && value < 0x800000)
+    {
+        int_length = 3;
+    }
+    else
+    {
+        int_length = 4;
+    }
+    encode_length(bytecode, size, int_length);
+    // Encode the integer value in the minimum number of bytes, in big endian
+    if (value >= -0x80 && value < 0x80)
+    {
+        (*bytecode)[*size] = value & 0xFF;
+        *size += 1;
+    }
+    else if (value >= -0x8000 && value < 0x8000)
+    {
+        (*bytecode)[*size] = (value >> 8) & 0xFF;
+        (*bytecode)[*size + 1] = value & 0xFF;
+        *size += 2;
+    }
+    else if (value >= -0x800000 && value < 0x800000)
+    {
+        (*bytecode)[*size] = (value >> 16) & 0xFF;
+        (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
+        (*bytecode)[*size + 2] = value & 0xFF;
+        *size += 3;
+    }
+    else
+    {
+        (*bytecode)[*size] = (value >> 24) & 0xFF;
+        (*bytecode)[*size + 1] = (value >> 16) & 0xFF;
+        (*bytecode)[*size + 2] = (value >> 8) & 0xFF;
+        (*bytecode)[*size + 3] = value & 0xFF;
+        *size += 4;
+    }
     return 0;
 }
 
@@ -666,59 +701,40 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     uint32_t value = 0;
     int shift = 0;
 
-    // Decode the variable-length integer
+    // Decode the variable-length integer for the length
     do
     {
         if (*size == 0)
         {
-            hex_error(ctx, "Bytecode size too small to contain an integer");
+            hex_error(ctx, "Bytecode size too small to contain an integer length");
             return 1;
         }
-        value |= ((**bytecode & 0x7F) << shift);
+        length |= ((**bytecode & 0x7F) << shift);
         shift += 7;
-        length++;
     } while (*(*bytecode)++ & 0x80);
 
+    *size -= shift / 7;
+
+    if (*size < length)
+    {
+        hex_error(ctx, "Bytecode size too small to contain the integer value");
+        return 1;
+    }
+
+    // Decode the integer value based on the length
+    value = 0;
+    for (size_t i = 0; i < length; i++)
+    {
+        value = (value << 8) | (*bytecode)[i];
+    }
+    *bytecode += length;
     *size -= length;
 
-    if (*size < 4)
-    {
-        hex_error(ctx, "Bytecode size too small to contain an integer value");
-        return 1;
-    }
-
-    value = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
-    *bytecode += 4;
-    *size -= 4;
-
-    hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
+    hex_debug(ctx, "PUSHIN[%zu]: %d", length, value);
     hex_item_t item = hex_integer_item(ctx, value);
     *result = item;
     return 0;
 }
-/*
-int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
-{
-    if (*size < 4)
-    {
-        hex_error(ctx, "Bytecode size too small to contain an integer");
-        return 1;
-    }
-    // TODO: Optimize: we are always using 4 bytes for the length, but we could use a variable length encoding
-    // size_t int_size = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
-    // Integers are always 4 bytes, big-endian, but at the moment we are always setting the size to 4
-    // So just shifting the bytes to the right should be enough (no need to actually compute the size)
-    *bytecode += 4;
-    *size -= 4;
-    uint32_t value = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
-    *bytecode += 4;
-    *size -= 4;
-    hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
-    hex_item_t item = hex_integer_item(ctx, value);
-    *result = item;
-    return 0;
-}
-*/
 
 int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
 {
@@ -762,43 +778,6 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     free(value);
     return 0;
 }
-/*
-int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
-{
-    if (*size < 4)
-    {
-        hex_error(ctx, "Bytecode size too small to contain a string length");
-        return 1;
-    }
-    // TODO: Optimize: we are always using 4 bytes for the length, but we could use a variable length encoding
-    size_t length = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
-    *bytecode += 4;
-    *size -= 4;
-
-    if (*size < length)
-    {
-        hex_error(ctx, "Bytecode size too small to contain the string");
-        return 1;
-    }
-
-    char *value = (char *)malloc(length + 1);
-    if (!value)
-    {
-        hex_error(ctx, "Memory allocation failed");
-        return 1;
-    }
-    memcpy(value, *bytecode, length);
-    value[length] = '\0';
-    *bytecode += length;
-    *size -= length;
-
-    hex_item_t item = hex_string_item(ctx, value);
-    *result = item;
-    hex_debug(ctx, "PUSHST[%zu]: %s", length, value);
-    free(value);
-    return 0;
-}
-*/
 
 int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, hex_item_t *result)
 {
@@ -884,52 +863,6 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     *result = item;
     return 0;
 }
-
-/*
-int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
-{
-    if (*size < 4)
-    {
-        hex_error(ctx, "Bytecode size too small to contain a symbol length");
-        return 1;
-    }
-    // TODO: Optimize: we are always using 4 bytes for the length, but we could use a variable length encoding
-    size_t length = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
-    *bytecode += 4;
-    *size -= 4;
-
-    if (*size < length)
-    {
-        hex_error(ctx, "Bytecode size too small to contain the symbol");
-        return 1;
-    }
-
-    char *value = (char *)malloc(length + 1);
-    if (!value)
-    {
-        hex_error(ctx, "Memory allocation failed");
-        return 1;
-    }
-    memcpy(value, *bytecode, length);
-    value[length] = '\0';
-    *bytecode += length;
-    *size -= length;
-
-    hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
-    token->value = (char *)value;
-    token->position.line = 0;
-    token->position.column = position;
-
-    hex_item_t item;
-    item.type = HEX_TYPE_USER_SYMBOL;
-    item.token = token;
-
-    hex_debug(ctx, "LOOKUP[%d]: %s", length, value);
-    free(value);
-    *result = item;
-    return 0;
-}
-*/
 
 int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
 {
