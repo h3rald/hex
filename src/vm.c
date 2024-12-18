@@ -8,12 +8,23 @@
 
 static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
 {
+    while (length >= 0x80)
+    {
+        (*bytecode)[*size] = (length & 0x7F) | 0x80;
+        length >>= 7;
+        (*size)++;
+    }
+    (*bytecode)[*size] = length & 0x7F;
+    (*size)++;
+}
+/*static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
+{
     (*bytecode)[*size] = (length >> 24) & 0xFF;
     (*bytecode)[*size + 1] = (length >> 16) & 0xFF;
     (*bytecode)[*size + 2] = (length >> 8) & 0xFF;
     (*bytecode)[*size + 3] = length & 0xFF;
     *size += 4;
-}
+}*/
 
 uint8_t hex_symbol_to_opcode(const char *symbol)
 {
@@ -651,6 +662,43 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
 
 int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
 {
+    size_t length = 0;
+    uint32_t value = 0;
+    int shift = 0;
+
+    // Decode the variable-length integer
+    do
+    {
+        if (*size == 0)
+        {
+            hex_error(ctx, "Bytecode size too small to contain an integer");
+            return 1;
+        }
+        value |= ((**bytecode & 0x7F) << shift);
+        shift += 7;
+        length++;
+    } while (*(*bytecode)++ & 0x80);
+
+    *size -= length;
+
+    if (*size < 4)
+    {
+        hex_error(ctx, "Bytecode size too small to contain an integer value");
+        return 1;
+    }
+
+    value = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
+    *bytecode += 4;
+    *size -= 4;
+
+    hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
+    hex_item_t item = hex_integer_item(ctx, value);
+    *result = item;
+    return 0;
+}
+/*
+int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
+{
     if (*size < 4)
     {
         hex_error(ctx, "Bytecode size too small to contain an integer");
@@ -670,7 +718,51 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *result = item;
     return 0;
 }
+*/
 
+int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
+{
+    size_t length = 0;
+    int shift = 0;
+
+    // Decode the variable-length integer for the string length
+    do
+    {
+        if (*size == 0)
+        {
+            hex_error(ctx, "Bytecode size too small to contain a string length");
+            return 1;
+        }
+        length |= ((**bytecode & 0x7F) << shift);
+        shift += 7;
+        (*bytecode)++;
+        (*size)--;
+    } while (**bytecode & 0x80);
+
+    if (*size < length)
+    {
+        hex_error(ctx, "Bytecode size too small to contain the string");
+        return 1;
+    }
+
+    char *value = (char *)malloc(length + 1);
+    if (!value)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+    memcpy(value, *bytecode, length);
+    value[length] = '\0';
+    *bytecode += length;
+    *size -= length;
+
+    hex_item_t item = hex_string_item(ctx, value);
+    *result = item;
+    hex_debug(ctx, "PUSHST[%zu]: %s", length, value);
+    free(value);
+    return 0;
+}
+/*
 int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
 {
     if (*size < 4)
@@ -706,6 +798,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     free(value);
     return 0;
 }
+*/
 
 int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, hex_item_t *result)
 {
@@ -741,6 +834,58 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     return 0;
 }
 
+int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
+{
+    size_t length = 0;
+    int shift = 0;
+
+    // Decode the variable-length integer for the symbol length
+    do
+    {
+        if (*size == 0)
+        {
+            hex_error(ctx, "Bytecode size too small to contain a symbol length");
+            return 1;
+        }
+        length |= ((**bytecode & 0x7F) << shift);
+        shift += 7;
+        (*bytecode)++;
+        (*size)--;
+    } while (**bytecode & 0x80);
+
+    if (*size < length)
+    {
+        hex_error(ctx, "Bytecode size too small to contain the symbol");
+        return 1;
+    }
+
+    char *value = (char *)malloc(length + 1);
+    if (!value)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+    memcpy(value, *bytecode, length);
+    value[length] = '\0';
+    *bytecode += length;
+    *size -= length;
+
+    hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
+    token->value = (char *)value;
+    token->position.line = 0;
+    token->position.column = position;
+
+    hex_item_t item;
+    item.type = HEX_TYPE_USER_SYMBOL;
+    item.token = token;
+
+    hex_debug(ctx, "LOOKUP[%zu]: %s", length, value);
+    free(value);
+    *result = item;
+    return 0;
+}
+
+/*
 int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
 {
     if (*size < 4)
@@ -784,7 +929,92 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     *result = item;
     return 0;
 }
+*/
 
+int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
+{
+    size_t n_items = 0;
+    int shift = 0;
+
+    // Decode the variable-length integer for the number of items
+    do
+    {
+        if (*size == 0)
+        {
+            hex_error(ctx, "Bytecode size too small to contain a quotation length");
+            return 1;
+        }
+        n_items |= ((**bytecode & 0x7F) << shift);
+        shift += 7;
+        (*bytecode)++;
+        (*size)--;
+    } while (**bytecode & 0x80);
+
+    hex_debug(ctx, "PUSHQT[%zu]: <start>", n_items);
+
+    hex_item_t **items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
+    if (!items)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+
+    for (size_t i = 0; i < n_items; i++)
+    {
+        uint8_t opcode = **bytecode;
+        (*bytecode)++;
+        (*size)--;
+
+        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+        switch (opcode)
+        {
+        case HEX_OP_PUSHIN:
+            if (hex_interpret_bytecode_integer(ctx, bytecode, size, item) != 0)
+            {
+                hex_free_list(ctx, items, n_items);
+                return 1;
+            }
+            break;
+        case HEX_OP_PUSHST:
+            if (hex_interpret_bytecode_string(ctx, bytecode, size, item) != 0)
+            {
+                hex_free_list(ctx, items, n_items);
+                return 1;
+            }
+            break;
+        case HEX_OP_LOOKUP:
+            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, position, item) != 0)
+            {
+                hex_free_list(ctx, items, n_items);
+                return 1;
+            }
+            break;
+        case HEX_OP_PUSHQT:
+            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, position, item) != 0)
+            {
+                hex_free_list(ctx, items, n_items);
+                return 1;
+            }
+            break;
+        default:
+            if (hex_interpret_bytecode_native_symbol(ctx, opcode, *size, item) != 0)
+            {
+                hex_free_list(ctx, items, n_items);
+                return 1;
+            }
+            break;
+        }
+        items[i] = item;
+    }
+
+    result->type = HEX_TYPE_QUOTATION;
+    result->data.quotation_value = items;
+    result->quotation_size = n_items;
+
+    hex_debug(ctx, "PUSHQT[%zu]: <end>", n_items);
+    return 0;
+}
+/*
 int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
 {
     if (*size < 4)
@@ -861,6 +1091,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     hex_debug(ctx, "PUSHQT[%zu]: <end>", n_items);
     return 0;
 }
+*/
 
 int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
 {
