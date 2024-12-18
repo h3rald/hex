@@ -432,7 +432,6 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     (*bytecode)[*size] = HEX_OP_PUSHIN;
     *size += 1; // opcode
     encode_length(bytecode, size, sizeof(int32_t));
-    // memcpy(&(*bytecode)[*size], &value, sizeof(int32_t));
     memcpy(&(*bytecode)[*size], (uint8_t[]){(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF}, 4);
     *size += sizeof(int32_t);
     return 0;
@@ -657,9 +656,10 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
         hex_error(ctx, "Bytecode size too small to contain an integer");
         return 1;
     }
+    // TODO: Optimize: we are always using 4 bytes for the length, but we could use a variable length encoding
+    // size_t int_size = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
     // Integers are always 4 bytes, big-endian, but at the moment we are always setting the size to 4
     // So just shifting the bytes to the right should be enough (no need to actually compute the size)
-    // size_t int_size = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
     *bytecode += 4;
     *size -= 4;
     uint32_t value = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
@@ -678,6 +678,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
         hex_error(ctx, "Bytecode size too small to contain a string length");
         return 1;
     }
+    // TODO: Optimize: we are always using 4 bytes for the length, but we could use a variable length encoding
     size_t length = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
     *bytecode += 4;
     *size -= 4;
@@ -747,6 +748,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
         hex_error(ctx, "Bytecode size too small to contain a symbol length");
         return 1;
     }
+    // TODO: Optimize: we are always using 4 bytes for the length, but we could use a variable length encoding
     size_t length = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
     *bytecode += 4;
     *size -= 4;
@@ -790,6 +792,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         hex_error(ctx, "Bytecode size too small to contain a quotation length");
         return 1;
     }
+    // TODO: Optimize: we are always using 4 bytes for the number of items, but we could use a variable length encoding
     size_t n_items = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
     *bytecode += 4;
     *size -= 4;
