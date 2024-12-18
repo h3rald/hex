@@ -358,10 +358,10 @@ int hex_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size,
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value);
 int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, const char *value);
 int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, const char *value);
-int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size);
-int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size);
-int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position);
-int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size);
+int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result);
+int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result);
+int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, hex_item_t *result);
+int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result);
 int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size);
 
 // REPL and initialization
