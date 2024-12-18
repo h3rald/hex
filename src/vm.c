@@ -18,6 +18,101 @@ static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
     (*size)++;
 }
 
+void encode_signed_integer(uint8_t **bytecode, size_t *size, int32_t value)
+{
+    int more = 1; // Whether more bytes are needed
+    while (more)
+    {
+        // Extract the least significant 7 bits of the value
+        uint8_t byte = value & 0x7F;
+
+        // Determine if more bytes are needed
+        // - If the remaining bits are all 0 or all 1, and the MSB of the current byte matches the sign, we are done
+        int32_t sign_bit = (value & 0x40) != 0; // Check the 7th bit for the sign
+        more = !((value >> 7 == 0 && !sign_bit) || (value >> 7 == -1 && sign_bit));
+
+        // If more bytes are needed, set the continuation bit (MSB)
+        if (more)
+        {
+            byte |= 0x80;
+        }
+
+        // Write the byte to the bytecode
+        (*bytecode)[*size] = byte;
+        (*size)++;
+
+        // Arithmetic shift the value by 7 bits
+        value >>= 7;
+    }
+}
+
+int decode_length(const uint8_t *bytecode, size_t *offset, size_t *result)
+{
+    size_t length = 0;
+    size_t shift = 0;
+
+    while (1)
+    {
+        // Read the current byte
+        uint8_t byte = bytecode[*offset];
+        (*offset)++; // Advance the offset after reading
+        printf("Current byte: %hhu\n", byte);
+
+        // Extract the 7 bits of data and add them to length
+        length |= (size_t)(byte & 0x7F) << shift;
+
+        // Check the continuation bit (MSB)
+        if ((byte & 0x80) == 0)
+        {
+            // Successfully decoded the length
+            printf("LENGTH: %zu\n", length);
+            *result = length;
+            return 0; // Success
+        }
+
+        // Prepare for the next 7 bits
+        shift += 7;
+
+        // Safety check: prevent overflow of size_t
+        if (shift >= sizeof(size_t) * 8)
+        {
+            return -1; // Error: overflow or invalid LEB128 encoding
+        }
+    }
+}
+
+int decode_signed_integer(const uint8_t *bytecode, size_t *offset, int32_t *result)
+{
+    int32_t value = 0;
+    size_t shift = 0;
+
+    while (1)
+    {
+        uint8_t byte = bytecode[*offset];
+        (*offset)++; // Advance the offset
+
+        value |= (int32_t)(byte & 0x7F) << shift; // Apply the 7 bits
+
+        if ((byte & 0x80) == 0) // Check if the MSB (continuation bit) is 0
+        {
+            // Sign extend if necessary (based on the continuation bit)
+            if ((byte & 0x40) != 0) // Negative value
+            {
+                value |= -(1 << shift); // Sign extend the value
+            }
+            *result = value;
+            return 0; // Success
+        }
+
+        shift += 7;
+
+        if (shift >= 32) // Maximum for 32-bit signed integers
+        {
+            return -1; // Error: invalid encoding
+        }
+    }
+}
+
 uint8_t hex_symbol_to_opcode(const char *symbol)
 {
     // Native Symbols
@@ -420,6 +515,7 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
     hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
+
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
@@ -432,8 +528,11 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
         }
         *bytecode = new_bytecode;
     }
+
+    // Write the opcode
     (*bytecode)[*size] = HEX_OP_PUSHIN;
-    *size += 1; // opcode
+    *size += 1; // opcode size
+
     // Encode the length of the integer value
     size_t int_length = 0;
     if (value >= -0x80 && value < 0x80)
@@ -452,34 +551,13 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     {
         int_length = 4;
     }
-    encode_length(bytecode, size, int_length);
-    // Encode the integer value in the minimum number of bytes, in big endian
-    if (value >= -0x80 && value < 0x80)
-    {
-        (*bytecode)[*size] = value & 0xFF;
-        *size += 1;
-    }
-    else if (value >= -0x8000 && value < 0x8000)
-    {
-        (*bytecode)[*size] = (value >> 8) & 0xFF;
-        (*bytecode)[*size + 1] = value & 0xFF;
-        *size += 2;
-    }
-    else if (value >= -0x800000 && value < 0x800000)
-    {
-        (*bytecode)[*size] = (value >> 16) & 0xFF;
-        (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
-        (*bytecode)[*size + 2] = value & 0xFF;
-        *size += 3;
-    }
-    else
-    {
-        (*bytecode)[*size] = (value >> 24) & 0xFF;
-        (*bytecode)[*size + 1] = (value >> 16) & 0xFF;
-        (*bytecode)[*size + 2] = (value >> 8) & 0xFF;
-        (*bytecode)[*size + 3] = value & 0xFF;
-        *size += 4;
-    }
+
+    // Encode the length of the integer value
+    encode_length(bytecode, size, int_length); // Ensure *size is updated
+
+    // Now encode the actual integer value
+    encode_signed_integer(bytecode, size, value); // Ensure *size is updated
+
     return 0;
 }
 
@@ -697,43 +775,47 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
 
 int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
 {
+    // Decode the variable-length integer for the length using decode_length
     size_t length = 0;
-    uint32_t value = 0;
-    int shift = 0;
-
-    // Decode the variable-length integer for the length
-    do
+    printf("Offset: %zu\n", *size);
+    int status = decode_length(*bytecode, size, &length); // Correct use of bytecode and size
+    if (status != 0)
     {
-        if (*size == 0)
-        {
-            hex_error(ctx, "Bytecode size too small to contain an integer length");
-            return 1;
-        }
-        length |= ((**bytecode & 0x7F) << shift);
-        shift += 7;
-    } while (*(*bytecode)++ & 0x80);
+        hex_error(ctx, "Failed to decode length");
+        return 1; // Failure in decoding the length
+    }
+    printf("Length %zu\n", length);
+    printf("-> Offset: %zu\n", *size);
 
-    *size -= shift / 7;
+    // After decoding the length, update the bytecode and size pointers
+    *bytecode += length; // Update bytecode to point to the integer value bytes
+    *size -= length;     // Decrease the size of remaining bytes
+    printf("=> Offset: %zu\n", *size);
 
+    // Check if we have enough bytes left for the integer value
     if (*size < length)
     {
         hex_error(ctx, "Bytecode size too small to contain the integer value");
-        return 1;
+        return 1; // Not enough bytes left for the integer value
     }
 
-    // Decode the integer value based on the length
-    value = 0;
-    for (size_t i = 0; i < length; i++)
+    // Decode the signed integer value using decode_signed_integer
+    int32_t value = 0;
+    status = decode_signed_integer(*bytecode, size, &value); // Decode signed integer value
+    if (status != 0)
     {
-        value = (value << 8) | (*bytecode)[i];
+        hex_error(ctx, "Failed to decode signed integer value");
+        return 1; // Failure in decoding the integer value
     }
-    *bytecode += length;
-    *size -= length;
 
+    printf(">> Offset: %zu\n", *size);
+
+    // Create the result item
     hex_debug(ctx, "PUSHIN[%zu]: %d", length, value);
     hex_item_t item = hex_integer_item(ctx, value);
     *result = item;
-    return 0;
+
+    return 0; // Success
 }
 
 int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
