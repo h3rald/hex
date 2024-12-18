@@ -120,6 +120,6 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     // Shell
     hex_doc(docs, "args", "", "q", "Returns the program arguments.");
     hex_doc(docs, "exit", "i", "", "Exits the program with exit code 'i'.");
-    hex_doc(docs, "exec", "s", "", "Executes the command 's'.");
+    hex_doc(docs, "exec", "s", "i", "Executes the command 's'.");
     hex_doc(docs, "run", "s", "q", "Executes 's' and returns code, stdout, stderr.");
 }

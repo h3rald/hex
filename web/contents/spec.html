@@ -581,8 +581,8 @@
     <p><mark> i &rarr;</mark></p>
     <p>Exits the program with the exit code <code>i</code>.</p>
     <h5 id="exec-symbol"><code>$:exec$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark> s &rarr;</mark></p>
-    <p>Executes the string <code>s</code> as a shell command.</p>
+    <p><mark> s &rarr; i</mark></p>
+    <p>Executes the string <code>s</code> as a shell command, and pushes the command return code on the stack.</p>
     <h5 id="run-symbol"><code>$:run$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; q</mark></p>
     <p>Executes the string <code>s</code> as a shell command, capturing its output and errors. It pushes a quotation
