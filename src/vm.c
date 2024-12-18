@@ -698,7 +698,7 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
 int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result)
 {
     size_t length = 0;
-    uint32_t value = 0;
+    int32_t value = 0; // Use signed 32-bit integer to handle negative values
     int shift = 0;
 
     // Decode the variable-length integer for the length
@@ -727,6 +727,17 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     {
         value |= (*bytecode)[i] << (8 * i); // Accumulate in little-endian order
     }
+
+    // Handle sign extension for 32-bit value
+    if (length == 4)
+    {
+        // If the value is negative, we need to sign-extend it.
+        if (value & 0x80000000)
+        {                        // If the sign bit is set (negative value)
+            value |= 0xFF000000; // Sign-extend to 32 bits
+        }
+    }
+
     *bytecode += length;
     *size -= length;
 
