@@ -787,15 +787,15 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     size_t n_items = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
     *bytecode += 4;
     *size -= 4;
-    hex_debug(ctx, "PUSHQT[%d]: <start>", n_items);
+    hex_debug(ctx, "PUSHQT[%zu]: <start>", n_items);
 
-    hex_item_t *items = (hex_item_t *)malloc(n_items * sizeof(hex_item_t));
+    hex_item_t **items = NULL;
+    items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
     if (!items)
     {
         hex_error(ctx, "Memory allocation failed");
         return 1;
     }
-    size_t bytecode_size = *size;
 
     for (size_t i = 0; i < n_items; i++)
     {
@@ -803,40 +803,39 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         (*bytecode)++;
         (*size)--;
 
-        hex_item_t item;
-        hex_debug(ctx, "[Quotation] Processing bytecode at absolute position: %zu, opcode: %u", bytecode_size - *size, opcode);
+        hex_item_t *item = malloc(sizeof(hex_item_t));
         switch (opcode)
         {
         case HEX_OP_PUSHIN:
-            if (hex_interpret_bytecode_integer(ctx, bytecode, size, &item) != 0)
+            if (hex_interpret_bytecode_integer(ctx, bytecode, size, item) != 0)
             {
                 free(items);
                 return 1;
             }
             break;
         case HEX_OP_PUSHST:
-            if (hex_interpret_bytecode_string(ctx, bytecode, size, &item) != 0)
+            if (hex_interpret_bytecode_string(ctx, bytecode, size, item) != 0)
             {
                 free(items);
                 return 1;
             }
             break;
         case HEX_OP_LOOKUP:
-            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, &item) != 0)
+            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, item) != 0)
             {
                 free(items);
                 return 1;
             }
             break;
         case HEX_OP_PUSHQT:
-            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, &item) != 0)
+            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, item) != 0)
             {
                 free(items);
                 return 1;
             }
             break;
         default:
-            if (hex_interpret_bytecode_native_symbol(ctx, opcode, *size, &item) != 0)
+            if (hex_interpret_bytecode_native_symbol(ctx, opcode, *size, item) != 0)
             {
                 free(items);
                 return 1;
@@ -848,11 +847,11 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
 
     hex_item_t quotation;
     quotation.type = HEX_TYPE_QUOTATION;
-    quotation.data.quotation_value = &items;
+    quotation.data.quotation_value = items;
     quotation.quotation_size = n_items;
 
     *result = quotation;
-    hex_debug(ctx, "PUSHQT[%d]: <end>", n_items);
+    hex_debug(ctx, "PUSHQT[%zu]: <end>", n_items);
     return 0;
 }
 
