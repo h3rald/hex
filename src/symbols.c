@@ -540,7 +540,6 @@ int hex_symbol_str(hex_context_t *ctx)
 
 int hex_symbol_dec(hex_context_t *ctx)
 {
-
     HEX_POP(ctx, a);
     if (a.type == HEX_TYPE_INVALID)
     {
@@ -549,7 +548,9 @@ int hex_symbol_dec(hex_context_t *ctx)
     }
     if (a.type == HEX_TYPE_INTEGER)
     {
-        return hex_push_string(ctx, hex_itoa_dec(a.data.int_value));
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%d", a.data.int_value);
+        return hex_push_string(ctx, buffer);
     }
     hex_error(ctx, "Symbol 'dec' requires an integer");
     HEX_FREE(ctx, a);

@@ -219,6 +219,8 @@
     ((() chr) (error) try "Symbol 'chr' requires an integer" ==)
     ;120
 
+    (0xffffffff dec "-1" ==)
+
     
 ) "tests" :
 
