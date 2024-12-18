@@ -380,7 +380,6 @@ int main(int argc, char *argv[])
                     position.column = 1;
                     position.line = 1 + ctx.hashbang;
                     position.filename = file;
-                    int open_quotations = 0;
                     char *bytecode_file = strdup(file);
                     char *ext = strrchr(bytecode_file, '.');
                     if (ext != NULL)
@@ -391,14 +390,9 @@ int main(int argc, char *argv[])
                     {
                         strcat(bytecode_file, ".hbx");
                     }
-                    if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position, &open_quotations) != 0)
+                    if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
                     {
                         hex_error(&ctx, "Failed to generate bytecode");
-                        return 1;
-                    }
-                    if (open_quotations != 0)
-                    {
-                        hex_error(&ctx, "File contains unbalanced quotations");
                         return 1;
                     }
                     if (hex_write_bytecode_file(&ctx, bytecode_file, bytecode, bytecode_size) != 0)

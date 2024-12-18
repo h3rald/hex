@@ -530,7 +530,7 @@ int hex_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size,
     return 0;
 }
 
-int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t *output_size, hex_file_position_t *position, int *open_quotations)
+int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t *output_size, hex_file_position_t *position)
 {
     hex_token_t *token;
     size_t capacity = 128;
@@ -571,7 +571,8 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
-            open_quotations--;
+            hex_error(ctx, "(%d, %d) Unexpected end of quotation", position->line, position->column);
+            return 1;
         }
         else
         {
@@ -883,18 +884,21 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
         case HEX_OP_PUSHIN:
             if (hex_interpret_bytecode_integer(ctx, &bytecode, &size, item) != 0)
             {
+                HEX_FREE(ctx, *item);
                 return 1;
             }
             break;
         case HEX_OP_PUSHST:
             if (hex_interpret_bytecode_string(ctx, &bytecode, &size, item) != 0)
             {
+                HEX_FREE(ctx, *item);
                 return 1;
             }
             break;
         case HEX_OP_LOOKUP:
             if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size, position, item) != 0)
             {
+                HEX_FREE(ctx, *item);
                 return 1;
             }
             break;
@@ -902,18 +906,21 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
 
             if (hex_interpret_bytecode_quotation(ctx, &bytecode, &size, position, item) != 0)
             {
+                HEX_FREE(ctx, *item);
                 return 1;
             }
             break;
         default:
             if (hex_interpret_bytecode_native_symbol(ctx, opcode, position, item) != 0)
             {
+                HEX_FREE(ctx, *item);
                 return 1;
             }
             break;
         }
         if (hex_push(ctx, *item) != 0)
         {
+            HEX_FREE(ctx, *item);
             return 1;
         }
     }
