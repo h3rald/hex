@@ -453,7 +453,7 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
         int_length = 4;
     }
     encode_length(bytecode, size, int_length);
-    // Encode the integer value in the minimum number of bytes, in big endian
+    // Encode the integer value in the minimum number of bytes, in little endian
     if (value >= -0x80 && value < 0x80)
     {
         (*bytecode)[*size] = value & 0xFF;
@@ -461,23 +461,23 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     }
     else if (value >= -0x8000 && value < 0x8000)
     {
-        (*bytecode)[*size] = (value >> 8) & 0xFF;
-        (*bytecode)[*size + 1] = value & 0xFF;
+        (*bytecode)[*size] = value & 0xFF;
+        (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
         *size += 2;
     }
     else if (value >= -0x800000 && value < 0x800000)
     {
-        (*bytecode)[*size] = (value >> 16) & 0xFF;
+        (*bytecode)[*size] = value & 0xFF;
         (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
-        (*bytecode)[*size + 2] = value & 0xFF;
+        (*bytecode)[*size + 2] = (value >> 16) & 0xFF;
         *size += 3;
     }
     else
     {
-        (*bytecode)[*size] = (value >> 24) & 0xFF;
-        (*bytecode)[*size + 1] = (value >> 16) & 0xFF;
-        (*bytecode)[*size + 2] = (value >> 8) & 0xFF;
-        (*bytecode)[*size + 3] = value & 0xFF;
+        (*bytecode)[*size] = value & 0xFF;
+        (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
+        (*bytecode)[*size + 2] = (value >> 16) & 0xFF;
+        (*bytecode)[*size + 3] = (value >> 24) & 0xFF;
         *size += 4;
     }
     return 0;
@@ -721,11 +721,11 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
         return 1;
     }
 
-    // Decode the integer value based on the length
+    // Decode the integer value based on the length in little-endian format
     value = 0;
     for (size_t i = 0; i < length; i++)
     {
-        value = (value << 8) | (*bytecode)[i];
+        value |= (*bytecode)[i] << (8 * i); // Accumulate in little-endian order
     }
     *bytecode += length;
     *size -= length;
