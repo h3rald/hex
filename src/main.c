@@ -346,44 +346,70 @@ int main(int argc, char *argv[])
         }
         if (file)
         {
-            char *fileContent = hex_read_file(&ctx, file);
-            if (generate_bytecode)
+            if (strstr(file, ".hbx") != NULL)
             {
-                uint8_t *bytecode;
-                size_t bytecode_size = 0;
-                hex_file_position_t position;
-                position.column = 1;
-                position.line = 1 + ctx.hashbang;
-                position.filename = file;
-                int open_quotations = 0;
-                char *bytecode_file = strdup(file);
-                char *ext = strrchr(bytecode_file, '.');
-                if (ext != NULL)
+                FILE *bytecode_file = fopen(file, "rb");
+                if (bytecode_file == NULL)
                 {
-                    strcpy(ext, ".hbx");
-                }
-                else
-                {
-                    strcat(bytecode_file, ".hbx");
-                }
-                if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position, &open_quotations) != 0)
-                {
-                    hex_error(&ctx, "Failed to generate bytecode");
+                    hex_error(&ctx, "Failed to open bytecode file: %s", file);
                     return 1;
                 }
-                if (open_quotations != 0)
+                fseek(bytecode_file, 0, SEEK_END);
+                size_t bytecode_size = ftell(bytecode_file);
+                fseek(bytecode_file, 0, SEEK_SET);
+                uint8_t *bytecode = (uint8_t *)malloc(bytecode_size);
+                if (bytecode == NULL)
                 {
-                    hex_error(&ctx, "File contains unbalanced quotations");
+                    hex_error(&ctx, "Memory allocation failed");
+                    fclose(bytecode_file);
                     return 1;
                 }
-                if (hex_write_bytecode_file(&ctx, bytecode_file, bytecode, bytecode_size) != 0)
-                {
-                    return 1;
-                }
+                fread(bytecode, 1, bytecode_size, bytecode_file);
+                fclose(bytecode_file);
+                hex_interpret_bytecode(&ctx, bytecode, bytecode_size);
+                free(bytecode);
             }
             else
             {
-                hex_interpret(&ctx, fileContent, file, 1 + ctx.hashbang, 1);
+                char *fileContent = hex_read_file(&ctx, file);
+                if (generate_bytecode)
+                {
+                    uint8_t *bytecode;
+                    size_t bytecode_size = 0;
+                    hex_file_position_t position;
+                    position.column = 1;
+                    position.line = 1 + ctx.hashbang;
+                    position.filename = file;
+                    int open_quotations = 0;
+                    char *bytecode_file = strdup(file);
+                    char *ext = strrchr(bytecode_file, '.');
+                    if (ext != NULL)
+                    {
+                        strcpy(ext, ".hbx");
+                    }
+                    else
+                    {
+                        strcat(bytecode_file, ".hbx");
+                    }
+                    if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position, &open_quotations) != 0)
+                    {
+                        hex_error(&ctx, "Failed to generate bytecode");
+                        return 1;
+                    }
+                    if (open_quotations != 0)
+                    {
+                        hex_error(&ctx, "File contains unbalanced quotations");
+                        return 1;
+                    }
+                    if (hex_write_bytecode_file(&ctx, bytecode_file, bytecode, bytecode_size) != 0)
+                    {
+                        return 1;
+                    }
+                }
+                else
+                {
+                    hex_interpret(&ctx, fileContent, file, 1 + ctx.hashbang, 1);
+                }
             }
             return 0;
         }

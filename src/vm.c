@@ -15,7 +15,7 @@ static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
     *size += 4;
 }
 
-static uint8_t get_opcode(const char *symbol)
+uint8_t hex_symbol_to_opcode(const char *symbol)
 {
     // Native Symbols
     if (strcmp(symbol, ":") == 0)
@@ -277,6 +277,143 @@ static uint8_t get_opcode(const char *symbol)
     return 0;
 }
 
+const char *hex_opcode_to_symbol(uint8_t opcode)
+{
+    switch (opcode)
+    {
+    case HEX_OP_STORE:
+        return ":";
+    case HEX_OP_FREE:
+        return "#";
+    case HEX_OP_IF:
+        return "if";
+    case HEX_OP_WHEN:
+        return "when";
+    case HEX_OP_WHILE:
+        return "while";
+    case HEX_OP_ERROR:
+        return "error";
+    case HEX_OP_TRY:
+        return "try";
+    case HEX_OP_DUP:
+        return "dup";
+    case HEX_OP_STACK:
+        return "stack";
+    case HEX_OP_CLEAR:
+        return "clear";
+    case HEX_OP_POP:
+        return "pop";
+    case HEX_OP_SWAP:
+        return "swap";
+    case HEX_OP_I:
+        return ".";
+    case HEX_OP_EVAL:
+        return "!";
+    case HEX_OP_QUOTE:
+        return "'";
+    case HEX_OP_ADD:
+        return "+";
+    case HEX_OP_SUB:
+        return "-";
+    case HEX_OP_MUL:
+        return "*";
+    case HEX_OP_DIV:
+        return "/";
+    case HEX_OP_MOD:
+        return "%";
+    case HEX_OP_BITAND:
+        return "&";
+    case HEX_OP_BITOR:
+        return "|";
+    case HEX_OP_BITXOR:
+        return "^";
+    case HEX_OP_BITNOT:
+        return "~";
+    case HEX_OP_SHL:
+        return "<<";
+    case HEX_OP_SHR:
+        return ">>";
+    case HEX_OP_EQUAL:
+        return "==";
+    case HEX_OP_NOTEQUAL:
+        return "!=";
+    case HEX_OP_GREATER:
+        return ">";
+    case HEX_OP_LESS:
+        return "<";
+    case HEX_OP_GREATEREQUAL:
+        return ">=";
+    case HEX_OP_LESSEQUAL:
+        return "<=";
+    case HEX_OP_AND:
+        return "and";
+    case HEX_OP_OR:
+        return "or";
+    case HEX_OP_NOT:
+        return "not";
+    case HEX_OP_XOR:
+        return "xor";
+    case HEX_OP_INT:
+        return "int";
+    case HEX_OP_STR:
+        return "str";
+    case HEX_OP_DEC:
+        return "dec";
+    case HEX_OP_HEX:
+        return "hex";
+    case HEX_OP_ORD:
+        return "ord";
+    case HEX_OP_CHR:
+        return "chr";
+    case HEX_OP_TYPE:
+        return "type";
+    case HEX_OP_CAT:
+        return "cat";
+    case HEX_OP_LEN:
+        return "len";
+    case HEX_OP_GET:
+        return "get";
+    case HEX_OP_INDEX:
+        return "index";
+    case HEX_OP_JOIN:
+        return "join";
+    case HEX_OP_SPLIT:
+        return "split";
+    case HEX_OP_REPLACE:
+        return "replace";
+    case HEX_OP_EACH:
+        return "each";
+    case HEX_OP_MAP:
+        return "map";
+    case HEX_OP_FILTER:
+        return "filter";
+    case HEX_OP_PUTS:
+        return "puts";
+    case HEX_OP_WARN:
+        return "warn";
+    case HEX_OP_PRINT:
+        return "print";
+    case HEX_OP_GETS:
+        return "gets";
+    case HEX_OP_READ:
+        return "read";
+    case HEX_OP_WRITE:
+        return "write";
+    case HEX_OP_APPEND:
+        return "append";
+    case HEX_OP_ARGS:
+        return "args";
+    case HEX_OP_EXIT:
+        return "exit";
+    case HEX_OP_EXEC:
+        return "exec";
+    case HEX_OP_RUN:
+        return "run";
+    default:
+        return NULL;
+    }
+}
+
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
     hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
@@ -295,13 +432,8 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     (*bytecode)[*size] = HEX_OP_PUSHIN;
     *size += 1; // opcode
     encode_length(bytecode, size, sizeof(int32_t));
-    //memcpy(&(*bytecode)[*size], &value, sizeof(int32_t));
-    memcpy(&(*bytecode)[*size], (uint8_t[]){ 
-      (value >> 24) & 0xFF, 
-      (value >> 16) & 0xFF, 
-      (value >> 8)  & 0xFF, 
-      value & 0xFF 
-    }, 4);
+    // memcpy(&(*bytecode)[*size], &value, sizeof(int32_t));
+    memcpy(&(*bytecode)[*size], (uint8_t[]){(value >> 24) & 0xFF, (value >> 16) & 0xFF, (value >> 8) & 0xFF, value & 0xFF}, 4);
     *size += sizeof(int32_t);
     return 0;
 }
@@ -347,7 +479,7 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
             }
             *bytecode = new_bytecode;
         }
-        (*bytecode)[*size] = get_opcode(value);
+        (*bytecode)[*size] = hex_symbol_to_opcode(value);
         *size += 1; // opcode
         hex_debug(ctx, "NATSYM[1]: (total size: %d) %s", *size, value);
     }
@@ -514,5 +646,179 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
     }
     *output = bytecode;
     *output_size = size;
+    return 0;
+}
+
+int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size)
+{
+    if (*size < 4)
+    {
+        hex_error(ctx, "Bytecode size too small to contain an integer");
+        return 1;
+    }
+    // Integers are always 4 bytes, big-endian, but at the moment we are always setting the size to 4
+    // So just shifting the bytes to the right should be enough (no need to actually compute the size)
+    // size_t int_size = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
+    *bytecode += 4;
+    *size -= 4;
+    uint32_t value = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
+    *bytecode += 4;
+    *size -= 4;
+    hex_debug(ctx, "PUSHIN[%d]: %d", sizeof(int32_t), value);
+    return hex_push_integer(ctx, value);
+}
+
+int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size)
+{
+    if (*size < 4)
+    {
+        hex_error(ctx, "Bytecode size too small to contain a string length");
+        return 1;
+    }
+    size_t length = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
+    *bytecode += 4;
+    *size -= 4;
+
+    if (*size < length)
+    {
+        hex_error(ctx, "Bytecode size too small to contain the string");
+        return 1;
+    }
+
+    char *value = (char *)malloc(length + 1);
+    if (!value)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+    memcpy(value, *bytecode, length);
+    value[length] = '\0';
+    *bytecode += length;
+    *size -= length;
+
+    hex_debug(ctx, "PUSHST[%d]: %s", length, value);
+    int result = hex_push_string(ctx, value);
+    free(value);
+    return result;
+}
+
+int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position)
+{
+
+    const char *symbol = hex_opcode_to_symbol(opcode);
+    if (!symbol)
+    {
+        hex_error(ctx, "Invalid opcode for symbol");
+        return 1;
+    }
+
+    hex_item_t item;
+    item.type = HEX_TYPE_NATIVE_SYMBOL;
+    hex_item_t value;
+    hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
+    token->value = (char *)symbol;
+    token->position.line = 0;
+    token->position.column = position;
+    if (hex_get_symbol(ctx, token->value, &value))
+    {
+        item.token = token;
+        item.type = HEX_TYPE_NATIVE_SYMBOL;
+        item.data.fn_value = value.data.fn_value;
+    }
+    else
+    {
+        hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s (bytecode)", token->position.line, token->position.column, token->value);
+        hex_free_token(token);
+        return 1;
+    }
+    hex_debug(ctx, "NATSYM[1]: %d (%s)", opcode, symbol);
+    return hex_push(ctx, item);
+}
+
+int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size)
+{
+    if (*size < 4)
+    {
+        hex_error(ctx, "Bytecode size too small to contain a symbol length");
+        return 1;
+    }
+    size_t length = ((*bytecode)[0] << 24) | ((*bytecode)[1] << 16) | ((*bytecode)[2] << 8) | (*bytecode)[3];
+    *bytecode += 4;
+    *size -= 4;
+
+    if (*size < length)
+    {
+        hex_error(ctx, "Bytecode size too small to contain the symbol");
+        return 1;
+    }
+
+    char *value = (char *)malloc(length + 1);
+    if (!value)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+    memcpy(value, *bytecode, length);
+    value[length] = '\0';
+    *bytecode += length;
+    *size -= length;
+
+    hex_item_t item;
+    item.type = HEX_TYPE_USER_SYMBOL;
+    item.data.str_value = value;
+
+    hex_debug(ctx, "LOOKUP[%d]: %s", length, value);
+    int result = hex_push(ctx, item);
+    free(value);
+    return result;
+}
+
+int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
+{
+    size_t bytecode_size = size;
+    size_t position = bytecode_size;
+    if (size < 6 || memcmp(bytecode, HEX_BYTECODE_HEADER, 6) != 0)
+    {
+        hex_error(ctx, "Invalid or missing bytecode header");
+        return 1;
+    }
+    bytecode += 6;
+    size -= 6;
+    while (size > 0)
+    {
+        position = bytecode_size - size;
+        uint8_t opcode = *bytecode;
+        hex_debug(ctx, "Processing bytecode at position: %zu, opcode: %u", position, opcode);
+        bytecode++;
+        size--;
+
+        switch (opcode)
+        {
+        case HEX_OP_PUSHIN:
+            if (hex_interpret_bytecode_integer(ctx, &bytecode, &size) != 0)
+            {
+                return 1;
+            }
+            break;
+        case HEX_OP_PUSHST:
+            if (hex_interpret_bytecode_string(ctx, &bytecode, &size) != 0)
+            {
+                return 1;
+            }
+            break;
+        case HEX_OP_LOOKUP:
+            if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size) != 0)
+            {
+                return 1;
+            }
+            break;
+        default:
+            if (hex_interpret_bytecode_native_symbol(ctx, opcode, position) != 0)
+            {
+                return 1;
+            }
+            break;
+        }
+    }
     return 0;
 }
