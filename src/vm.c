@@ -346,7 +346,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, "PUSHIN[%zu]: %d", length, value);
+    hex_debug(ctx, ">> PUSHIN: %d", value);
     hex_item_t item = hex_integer_item(ctx, value);
     *result = item;
     return 0;
@@ -390,7 +390,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
 
     hex_item_t item = hex_string_item(ctx, value);
     *result = item;
-    hex_debug(ctx, "PUSHST[%zu]: %s", length, value);
+    hex_debug(ctx, ">> PUSHST: \"%s\"", hex_process_string(ctx, value));
     return 0;
 }
 
@@ -423,7 +423,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         hex_free_token(token);
         return 1;
     }
-    hex_debug(ctx, "NATSYM[1]: %d (%s)", opcode, symbol);
+    hex_debug(ctx, ">> NATSYM: %02X (%s)", opcode, symbol);
     *result = item;
     return 0;
 }
@@ -468,7 +468,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     item.type = HEX_TYPE_USER_SYMBOL;
     item.token = token;
 
-    hex_debug(ctx, "LOOKUP[%zu]: %s", length, value);
+    hex_debug(ctx, ">> LOOKUP: #%zu -> %s", index, value);
     *result = item;
     return 0;
 }
@@ -492,7 +492,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         (*size)--;
     } while (**bytecode & 0x80);
 
-    hex_debug(ctx, "PUSHQT[%zu]: <start>", n_items);
+    hex_debug(ctx, ">> PUSHQT: <start> (items: %zu)", n_items);
 
     hex_item_t **items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
     if (!items)
@@ -553,7 +553,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     result->data.quotation_value = items;
     result->quotation_size = n_items;
 
-    hex_debug(ctx, "PUSHQT[%zu]: <end>", n_items);
+    hex_debug(ctx, ">> PUSHQT: <end> (items: %zu)", n_items);
     return 0;
 }
 
@@ -587,16 +587,17 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
         }
     }
     // Debug: Print all symbols in the symbol table
-    hex_debug(ctx, "Symbol Table:");
+    hex_debug(ctx, "--- Symbol Table Start ---");
     for (size_t i = 0; i < ctx->symbol_table.count; i++)
     {
-        hex_debug(ctx, "Symbol %zu: %s", i, ctx->symbol_table.symbols[i]);
+        hex_debug(ctx, "%03d: %s", i, ctx->symbol_table.symbols[i]);
     }
+    hex_debug(ctx, "---  Symbol Table End  ---");
     while (size > 0)
     {
         position = bytecode_size - size;
         uint8_t opcode = *bytecode;
-        hex_debug(ctx, "Bytecode Position: %zu - opcode: %02X", position, opcode);
+        hex_debug(ctx, "-- [%08d] OPCODE: %02X", position, opcode);
         bytecode++;
         size--;
 
