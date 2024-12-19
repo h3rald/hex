@@ -1,57 +1,67 @@
 <article>
-    <h2>Get Started</h2>
-    <p>The following pre-built binaries are available for download:</p>
-    <ul>
-        <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_linux_x86_64.zip"
-                target="_blank">hex v{{release}} for Linux</a> (x86_64)</a></li>
-        <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_macos_x86_64.zip"
-                target="_blank">hex v{{release}} for MacOS</a> (x86_64)</li>
-        <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_macos_arm64.zip"
-                target="_blank">hex v{{release}} for MacOS</a> (ARM64)</li>
-        <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_windows_x86_64.zip"
-                target="_blank">hex v{{release}} for Windows</a> (x86_64)</li>
-        <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_ape.zip"
-                target="_blank">hex v{{release}}</a> (<a href="https://justine.lol/ape.html" target="_blank">αcτµαlly
-                pδrταblε εxεcµταblε</a>)
-        </li>
-        <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_wasm.zip"
-                target="_blank">hex
-                v{{release}}</a> (<a href="https://webassembly.org" target="_blank">WebAssembly</a> &mdash;
-            <em>very</em>
-            experimental)
-        </li>
-    </ul>
+        <h2>Get Started</h2>
+        <p>The following pre-built binaries are available for download:</p>
+        <ul>
+                <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_linux_x86_64.zip"
+                                target="_blank">hex v{{release}} for Linux</a> (x86_64)</a></li>
+                <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_macos_x86_64.zip"
+                                target="_blank">hex v{{release}} for MacOS</a> (x86_64)</li>
+                <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_macos_arm64.zip"
+                                target="_blank">hex v{{release}} for MacOS</a> (ARM64)</li>
+                <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_windows_x86_64.zip"
+                                target="_blank">hex v{{release}} for Windows</a> (x86_64)</li>
+                <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_ape.zip"
+                                target="_blank">hex v{{release}}</a> (<a href="https://justine.lol/ape.html"
+                                target="_blank">αcτµαlly
+                                pδrταblε εxεcµταblε</a>)
+                </li>
+                <li><a href="https://github.com/h3rald/hex/releases/download/v{{release}}/hex_v{{release}}_wasm.zip"
+                                target="_blank">hex
+                                v{{release}}</a> (<a href="https://webassembly.org" target="_blank">WebAssembly</a>
+                        &mdash;
+                        <em>very</em>
+                        experimental)
+                </li>
+        </ul>
 
-    <blockquote>
-        <div>A note on the WASM build</div>
-        <p>The main purpose of the WASM build is to power the <a href="/play">playground</a>. If you try to run it with
-            NodeJS, the REPL will also <em>somewhat</em> work, except that file support and executing processes doesn't
-            seem to behave, at the moment, and neither does `printf` unless you add a new line so... use at your own
-            risk, or please use one of the other builds.</p>
-    </blockquote>
+        <blockquote>
+                <div>A note on the WASM build</div>
+                <p>The main purpose of the WASM build is to power the <a href="/play">playground</a>. If you try to run
+                        it with
+                        NodeJS, the REPL will also <em>somewhat</em> work, except that file support and executing
+                        processes doesn't
+                        seem to behave, at the moment, and neither does `printf` unless you add a new line so... use at
+                        your own
+                        risk, or please use one of the other builds.</p>
+        </blockquote>
 
-    <h3>Building from Source</h3>
+        <h3>Building from Source</h3>
 
-    <p>Building from source is easy: just run <code>make</code> after <a href="https://github.com/h3rald/hex">cloning
-            the repo</a> to build the hex executable for
-        your platform.</p>
-    <p>This assumes that you have a C compiler like GCC and the make command installed. On Windows, you may want to look
-        into <a href="https://www.msys2.org" target="_blank">MSYS2</a>.</p>
-    <p>You can also:</p>
-    <ul>
-        <li>Run <code>make test</code> to run the test suite.</li>
-        <li>Run <code>make ape</code> to generate an αcτµαlly pδrταblε εxεcµταblε (requires <a
-                href="https://github.com/jart/cosmopolitan" target="_blank">Cosmopolitan</a>). </li>
-        <li>Run <code>make wasm</code> to generate a <code>hex.js</code> and a <code>hex.wasm</code> (WebAssembly) file
-            (requires the <a href="https://github.com/emscripten-core/emsdk" target="_blank">Emscripten SDK</a>). </li>
-    </ul>
+        <p>Building from source is easy: just run <code>make</code> after <a
+                        href="https://github.com/h3rald/hex">cloning
+                        the repo</a> to build the hex executable for
+                your platform.</p>
+        <p>This assumes that you have a C compiler like GCC and the make command installed. On Windows, you may want to
+                look
+                into <a href="https://www.msys2.org" target="_blank">MSYS2</a>.</p>
+        <p>You can also:</p>
+        <ul>
+                <li>Run <code>make test</code> to run the test suite.</li>
+                <li>Run <code>make ape</code> to generate an αcτµαlly pδrταblε εxεcµταblε (requires <a
+                                href="https://github.com/jart/cosmopolitan" target="_blank">Cosmopolitan</a>). </li>
+                <li>Run <code>make wasm</code> to generate a <code>hex.js</code> and a <code>hex.wasm</code>
+                        (WebAssembly) file
+                        (requires the <a href="https://github.com/emscripten-core/emsdk" target="_blank">Emscripten
+                                SDK</a>). </li>
+        </ul>
 
-    <h3>Command Line Options</h3>
+        <h3>Command Line Options</h3>
 
-    <p>Running <code>hex -h</code> will print the following list of all the available command line options for the hex
-        executable:</p>
+        <p>Running <code>hex -h</code> will print the following list of all the available command line options for the
+                hex
+                executable:</p>
 
-    <pre>
+        <pre>
   _*_ _
  / \hex\* 
 *\_/_/_/  v{{release}} - (c) {{year}} Fabio Cevasco
@@ -61,25 +71,28 @@
  hex [options] [file]
  
  ARGUMENTS
- file            A .hex file to interpret
+ file            A .hex or .hbx file to interpret
  
  OPTIONS
+ -b, --bytecode  Generate a .hbx bytecode file.
  -d, --debug     Enable debug mode.
  -h, --help      Display this help message.
  -m, --manual    Display the manual.
  -v, --version   Display hex version.
     </pre>
 
-    <p>If you do not specify any option or argument, a simple <abbr title="Read-Eval-Print-Loop">REPL</abbr> will be
-        started.</p>
-    <p>Alternatively, you can also pipe input from standard input:
-    <p>
-    <pre><code>echo "0x2 0x2 + puts" | hex</code></pre>
-    <h3>Syntax Highlighting</h3>
-    <p>If you use the Vim editor, you can use <a href="https://github.com/h3rald/hex/blob/master/hex.vim"
-            target="_blank">hex.vim</a> to highlight hex files.</p>
-    <p>If you use Visual Studio Code, you can use the <a
-            href="https://marketplace.visualstudio.com/items?itemName=h3rald.vscode-hex-lang">hex</a> extension to
-        highlight hex files. </p>
+        <p>If you do not specify any option or argument, a simple <abbr title="Read-Eval-Print-Loop">REPL</abbr> will be
+                started.</p>
+        <p>Alternatively, you can also pipe input from standard input:
+        <p>
+        <pre><code>echo "0x2 0x2 + puts" | hex</code></pre>
+
+        <h3>Syntax Highlighting</h3>
+        <p>If you use the Vim editor, you can use <a href="https://github.com/h3rald/hex/blob/master/hex.vim"
+                        target="_blank">hex.vim</a> to highlight hex files.</p>
+        <p>If you use Visual Studio Code, you can use the <a
+                        href="https://marketplace.visualstudio.com/items?itemName=h3rald.vscode-hex-lang">hex</a>
+                extension to
+                highlight hex files. </p>
 
 </article>
