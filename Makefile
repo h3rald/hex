@@ -7,7 +7,7 @@ LDFLAGS =
 hex: src/hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
 
-src/hex.c: src/hex.h src/error.c src/help.c src/helpers.c src/interpreter.c src/main.c src/parser.c src/registry.c src/stack.c src/stacktrace.c src/symbols.c src/vm.c src/symboltable.c src/opcodes.c
+src/hex.c: src/hex.h src/error.c src/doc.c src/utils.c src/interpreter.c src/main.c src/parser.c src/registry.c src/stack.c src/stacktrace.c src/symbols.c src/vm.c src/symboltable.c src/opcodes.c
 	bash scripts/amalgamate.sh
 
 web/assets/hex.wasm: src/hex.c web/assets/hex-playground.js

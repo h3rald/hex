@@ -285,12 +285,15 @@ int32_t hex_parse_integer(const char *hex_str);
 int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position);
 int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, int line, int column);
 
-// Helpers
+// Utils
 char *hex_itoa(int num, int base);
 char *hex_itoa_dec(int num);
 char *hex_itoa_hex(int num);
 void hex_raw_print_item(FILE *stream, hex_item_t item);
 char *hex_type(hex_item_type_t type);
+void hex_rpad(const char *str, int total_length);
+void hex_lpad(const char *str, int total_length);
+void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length);
 
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);
@@ -357,6 +360,10 @@ int hex_symbol_dup(hex_context_t *ctx);
 int hex_symbol_stack(hex_context_t *ctx);
 int hex_symbol_clear(hex_context_t *ctx);
 int hex_symbol_pop(hex_context_t *ctx);
+
+// Opcodes
+uint8_t hex_symbol_to_opcode(const char *symbol);
+const char *hex_opcode_to_symbol(uint8_t opcode);
 
 // VM
 int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t *output_size, hex_file_position_t *position);

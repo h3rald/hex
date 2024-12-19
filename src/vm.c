@@ -6,18 +6,6 @@
 // Virtual Machine                    //
 ////////////////////////////////////////
 
-static void encode_length(uint8_t **bytecode, size_t *size, size_t length)
-{
-    while (length >= 0x80)
-    {
-        (*bytecode)[*size] = (length & 0x7F) | 0x80;
-        length >>= 7;
-        (*size)++;
-    }
-    (*bytecode)[*size] = length & 0x7F;
-    (*size)++;
-}
-
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
     hex_debug(ctx, "PUSHIN: %d", value);
@@ -53,7 +41,7 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     {
         int_length = 4;
     }
-    encode_length(bytecode, size, int_length);
+    hex_encode_length(bytecode, size, int_length);
     // Encode the integer value in the minimum number of bytes, in little endian
     if (value >= -0x80 && value < 0x80)
     {
@@ -102,7 +90,7 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
     }
     (*bytecode)[*size] = HEX_OP_PUSHST;
     *size += 1; // opcode
-    encode_length(bytecode, size, len);
+    hex_encode_length(bytecode, size, len);
     memcpy(&(*bytecode)[*size], value, len);
     *size += len;
     return 0;
@@ -172,7 +160,7 @@ int hex_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size,
     }
     (*bytecode)[*size] = HEX_OP_PUSHQT;
     *size += 1; // opcode
-    encode_length(bytecode, size, *n_items);
+    hex_encode_length(bytecode, size, *n_items);
     memcpy(&(*bytecode)[*size], *output, *output_size);
     *size += *output_size;
     hex_debug(ctx, "PUSHQT: <end> (items: %d)", *n_items);

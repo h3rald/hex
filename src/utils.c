@@ -35,7 +35,7 @@ EM_ASYNC_JS(char *, em_fgets, (const char *buf, size_t bufsize), {
 
 #endif
 
-static void hex_rpad(const char *str, int total_length)
+void hex_rpad(const char *str, int total_length)
 {
     int len = strlen(str);
     printf("%s", str);
@@ -44,7 +44,7 @@ static void hex_rpad(const char *str, int total_length)
         printf(" ");
     }
 }
-static void hex_lpad(const char *str, int total_length)
+void hex_lpad(const char *str, int total_length)
 {
     int len = strlen(str);
     for (int i = len; i < total_length; i++)
@@ -217,4 +217,16 @@ void hex_print_item(FILE *stream, hex_item_t item)
         fprintf(stream, "<unknown>");
         break;
     }
+}
+
+void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length)
+{
+    while (length >= 0x80)
+    {
+        (*bytecode)[*size] = (length & 0x7F) | 0x80;
+        length >>= 7;
+        (*size)++;
+    }
+    (*bytecode)[*size] = length & 0x7F;
+    (*size)++;
 }
