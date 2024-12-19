@@ -18,16 +18,11 @@
             processes, work with quotations and strings, create and delete user symbols (variables), error handling, and
             manipulate the stack.</li>
         <li>Fully <strong>homoiconic</strong> (everything is data).</li>
+        <li>Implements a simple virtual machine with a bytecode compiler and interpreter.</li>
         <li>Includes a simple <strong>REPL</strong>.</li>
         <li>Includes an integrated <strong>help system</strong>.</li>
-        <li>Implemented as <strong>a single <a href="https://github.com/h3rald/hex/blob/master/src/hex.c"
-                    target="_blank">.c
-                    file</a> and a
-                single <a href="https://github.com/h3rald/hex/blob/master/src/hex.h" target="_blank">.h
-                    file</a></strong>,
-            making it easier
-            to
-            embed in other programs and port to different platforms.</li>
+        <li>Distributable through a single, amalgamated C file, making it easier to embed in other programs and port to
+            different platforms.</li>
     </ul>
     <h3>Example</h3>
     <p> The following code executes the <em>ls</em> command, retrieves the files returned in standard output, and stores

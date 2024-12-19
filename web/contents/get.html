@@ -44,6 +44,9 @@
         <p>This assumes that you have a C compiler like GCC and the make command installed. On Windows, you may want to
                 look
                 into <a href="https://www.msys2.org" target="_blank">MSYS2</a>.</p>
+        <p> Note that <code>make</code> will first generate a single, amalgamated <code>hex.c</code> file containing all
+                the concatenated sources in the right order. You can use this file for easily embedding hex in your own
+                C projects.</p>
         <p>You can also:</p>
         <ul>
                 <li>Run <code>make test</code> to run the test suite.</li>
