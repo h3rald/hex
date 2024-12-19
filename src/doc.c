@@ -49,7 +49,7 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
 
     // Evaluation
     hex_doc(docs, ".", "q", "*", "Pushes each item of 'q' on the stack.");
-    hex_doc(docs, "!", "s", "", "Evaluates 's' as a hex program.");
+    hex_doc(docs, "!", "(s|q)", "*", "Evaluates 's' as a hex program or 'q' as hex bytecode.");
     hex_doc(docs, "'", "a", "q", "Wraps 'a' in a quotation.");
 
     // Arithmetic

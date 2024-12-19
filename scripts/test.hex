@@ -148,7 +148,7 @@
     ;72
 
     (("puts" .) (error) try "Symbol '.' requires a quotation" ==)
-    (((puts) !) (error) try "Symbol '!' requires a string" ==)
+    (((puts) !) (error) try "Quotation must contain only integers" ==)
     (("3" 0x3 +) (error) try "Symbol '+' requires two integers" ==)
     (("3" 0x3 -) (error) try "Symbol '-' requires two integers" ==)
     ;76

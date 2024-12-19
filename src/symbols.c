@@ -121,23 +121,58 @@ int hex_symbol_i(hex_context_t *ctx)
     return 0;
 }
 
-// evaluate a string
+// evaluate a string or bytecode array
 int hex_symbol_eval(hex_context_t *ctx)
 {
-
     HEX_POP(ctx, item);
     if (item.type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type != HEX_TYPE_STRING)
+    if (item.type == HEX_TYPE_STRING)
     {
-        hex_error(ctx, "Symbol '!' requires a string");
+        return hex_interpret(ctx, item.data.str_value, "<!>", 1, 1);
+    }
+    else if (item.type == HEX_TYPE_QUOTATION)
+    {
+        for (size_t i = 0; i < item.quotation_size; i++)
+        {
+            if (item.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+            {
+                hex_error(ctx, "Quotation must contain only integers");
+                HEX_FREE(ctx, item);
+                return 1;
+            }
+        }
+        uint8_t *bytecode = (uint8_t *)malloc(item.quotation_size * sizeof(uint8_t));
+        if (!bytecode)
+        {
+            hex_error(ctx, "Memory allocation failed");
+            HEX_FREE(ctx, item);
+            return 1;
+        }
+        for (size_t i = 0; i < item.quotation_size; i++)
+        {
+            if (item.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+            {
+                hex_error(ctx, "Quotation must contain only integers");
+                free(bytecode);
+                HEX_FREE(ctx, item);
+                return 1;
+            }
+            bytecode[i] = (uint8_t)item.data.quotation_value[i]->data.int_value;
+        }
+        int result = hex_interpret_bytecode(ctx, bytecode, item.quotation_size);
+        free(bytecode);
+        return result;
+    }
+    else
+    {
+        hex_error(ctx, "Symbol '!' requires a string or a quotation of integers");
         HEX_FREE(ctx, item);
         return 1;
     }
-    return hex_interpret(ctx, item.data.str_value, "<!>", 1, 1);
 }
 
 // IO Symbols

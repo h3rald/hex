@@ -16,8 +16,8 @@ d-releases ls . "releases" :
 d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
-("split" "run" "get" "puts" ":" "." "#" "==" "'" "swap" 
-"+" "*" "-" "each" "cat" "print" "read" "dec" "write" "append") "symbol-links" :
+("split" "run" "get" "puts" ":" "." "#" "==" "'" "swap" "dup"
+"+" "*" "-" "each" "cat" "print" "read" "dec" "write" "append" "!") "symbol-links" :
 
 ;; Syntax highlighting
 
