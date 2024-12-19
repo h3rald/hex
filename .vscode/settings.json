@@ -3,6 +3,7 @@
         "*.erd": "json",
         "*.vuerd": "json",
         "*.mjs": "javascript",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "hex.h": "c"
     }
 }

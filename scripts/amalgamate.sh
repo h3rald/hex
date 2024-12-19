@@ -10,6 +10,7 @@ source_files=(
     "src/stacktrace.c" 
     "src/parser.c" 
     "src/symboltable.c"
+    "src/opcodes.c"
     "src/vm.c"
     "src/interpreter.c" 
     "src/helpers.c" 
