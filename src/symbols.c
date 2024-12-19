@@ -1563,7 +1563,6 @@ int hex_symbol_read(hex_context_t *ctx)
                     {
                     hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
                         result = HEX_PUSH(ctx, item);
-                        free(str);
                     }
                 }
                 free(buffer);
