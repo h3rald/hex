@@ -39,7 +39,6 @@ int hex_symboltable_set(hex_context_t *ctx, const char *symbol)
 // Get the index of a symbol in the table, or -1 if not found
 int hex_symboltable_get_index(hex_context_t *ctx, const char *symbol)
 {
-    hex_debug(ctx, "Symbol Table - looking up symbol: %s", symbol);
     hex_symbol_table_t *table = &ctx->symbol_table;
     for (uint16_t i = 0; i < table->count; ++i)
     {
