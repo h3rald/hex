@@ -119,13 +119,17 @@ d-templates "/page.html" cat "t-page" :
 ; Load releases content for changelog
 "" "releases-content" :
 (
-    releases
-    (
-        "id-release" :
-        ; Update releases-content
-        d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
-    )
-    each
+    releases len 0x1 - "_count" :
+    ; Reverse releases order
+    (_count 0x0 <=)
+        (
+            releases _count get "id-release" :
+            ; Update releases-content
+            d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
+            _count 0x1 - "_count" :
+        )
+    while
+    "_count" #
 ) "process-releases" : 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
