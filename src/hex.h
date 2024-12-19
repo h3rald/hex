@@ -375,11 +375,10 @@ void hex_header(hex_context_t *ctx, uint8_t header[8]);
 int hex_validate_header(uint8_t header[8]);
 
 // Symbol table
-void hex_symboltable_init(hex_context_t *ctx);
-void hex_symboltable_free(hex_context_t *ctx);
 int hex_symboltable_set(hex_context_t *ctx, const char *symbol);
-int hex_symboltable_get(hex_context_t *ctx, const char *symbol);
-void hex_decode_bytecode_symboltable(hex_context_t *ctx, const uint8_t *bytecode, size_t size);
+int hex_symboltable_get_index(hex_context_t *ctx, const char *symbol);
+char *hex_symboltable_get_value(hex_context_t *ctx, uint16_t index);
+int hex_decode_bytecode_symboltable(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t count);
 uint8_t *hex_encode_bytecode_symboltable(hex_context_t *ctx, size_t *out_size);
 
 // REPL and initialization

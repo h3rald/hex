@@ -2,22 +2,6 @@
 #include "hex.h"
 #endif
 
-void hex_symboltable_init(hex_context_t *ctx)
-{
-    ctx->symbol_table.count = 0;
-    ctx->symbol_table.symbols = malloc(HEX_MAX_USER_SYMBOLS * sizeof(char *));
-}
-
-void hex_symboltable_free(hex_context_t *ctx)
-{
-    for (uint16_t i = 0; i < ctx->symbol_table.count; ++i)
-    {
-        free(ctx->symbol_table.symbols[i]);
-    }
-    free(ctx->symbol_table.symbols);
-    ctx->symbol_table.count = 0;
-}
-
 // Add a symbol to the table if it does not already exist
 // Returns 0 on success, -1 if the symbol is too long or table is full
 int hex_symboltable_set(hex_context_t *ctx, const char *symbol)
@@ -53,8 +37,9 @@ int hex_symboltable_set(hex_context_t *ctx, const char *symbol)
 }
 
 // Get the index of a symbol in the table, or -1 if not found
-int hex_symboltable_get(hex_context_t *ctx, const char *symbol)
+int hex_symboltable_get_index(hex_context_t *ctx, const char *symbol)
 {
+    hex_debug(ctx, "Symbol Table - looking up symbol: %s", symbol);
     hex_symbol_table_t *table = &ctx->symbol_table;
     for (uint16_t i = 0; i < table->count; ++i)
     {
@@ -66,30 +51,45 @@ int hex_symboltable_get(hex_context_t *ctx, const char *symbol)
     return -1; // Symbol not found
 }
 
+// Get a symbol from the table by index
+char *hex_symboltable_get_value(hex_context_t *ctx, uint16_t index)
+{
+    if (index >= ctx->symbol_table.count)
+    {
+        return NULL;
+    }
+    return ctx->symbol_table.symbols[index];
+}
+
 // Decode a bytecode's symbol table into the hex_symbol_table_t structure
 // Assumes input is well-formed
-void hex_decode_bytecode_symboltable(hex_context_t *ctx, const uint8_t *bytecode, size_t size)
+int hex_decode_bytecode_symboltable(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t total)
 {
     hex_symbol_table_t *table = &ctx->symbol_table;
     table->count = 0;
-    size_t offset = 0;
 
-    while (offset < size)
+    for (size_t i = 0; i < total; i++)
     {
-        if (table->count >= HEX_MAX_USER_SYMBOLS)
+        hex_debug(ctx, "Decoding symbol %zu", i);
+        size_t len = (size_t)(*bytecode)[0];
+        (*bytecode)++;
+        *size -= 1;
+
+        char *symbol = malloc(len + 1);
+        if (symbol == NULL)
         {
-            break; // Prevent overflow
+            hex_error(ctx, "Memory allocation failed");
+            // Handle memory allocation failure
+            return -1;
         }
-
-        uint8_t str_len = bytecode[offset++];
-        char *symbol = malloc(str_len + 1);
-        memcpy(symbol, bytecode + offset, str_len);
-        symbol[str_len] = '\0';
-        offset += str_len;
-
+        memcpy(symbol, *bytecode, len);
+        symbol[len] = '\0';
         hex_symboltable_set(ctx, symbol);
         free(symbol);
+        *bytecode += len;
+        *size -= len;
     }
+    return 0;
 }
 
 // Encode the symbol table into a bytecode representation

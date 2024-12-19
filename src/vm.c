@@ -532,8 +532,8 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
     {
         // Add to symbol table
         hex_symboltable_set(ctx, value);
-        int index = hex_symboltable_get(ctx, value);
-        hex_debug(ctx, "LOOKUP[%d]: %d (%s)", index, value);
+        int index = hex_symboltable_get_index(ctx, value);
+        hex_debug(ctx, "LOOKUP[1]: %d (%s)", index, value);
         // Check if we need to resize the buffer (size + 1 opcode + 2 max index)
         if (*size + 1 + 2 > *capacity)
         {
@@ -585,7 +585,6 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
     size_t capacity = 128;
     size_t size = 0;
     uint8_t *bytecode = (uint8_t *)malloc(capacity);
-    hex_symboltable_init(ctx);
     if (!bytecode)
     {
         hex_error(ctx, "Memory allocation failed");
@@ -791,7 +790,6 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     hex_item_t item = hex_string_item(ctx, value);
     *result = item;
     hex_debug(ctx, "PUSHST[%zu]: %s", length, value);
-    free(value);
     return 0;
 }
 
@@ -831,41 +829,35 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
 
 int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
 {
-    size_t length = 0;
-    int shift = 0;
-
-    // Decode the variable-length integer for the symbol length
-    do
+    // Get the index of the symbol (one byte)
+    if (*size == 0)
     {
-        if (*size == 0)
-        {
-            hex_error(ctx, "Bytecode size too small to contain a symbol length");
-            return 1;
-        }
-        length |= ((**bytecode & 0x7F) << shift);
-        shift += 7;
-        (*bytecode)++;
-        (*size)--;
-    } while (**bytecode & 0x80);
-
-    if (*size < length)
-    {
-        hex_error(ctx, "Bytecode size too small to contain the symbol");
+        hex_error(ctx, "Bytecode size too small to contain a symbol length");
         return 1;
     }
+    size_t index = **bytecode;
+    (*bytecode)++;
+    (*size)--;
 
-    char *value = (char *)malloc(length + 1);
+    if (index >= ctx->symbol_table.count)
+    {
+        hex_error(ctx, "Symbol index out of bounds");
+        return 1;
+    }
+    char *value = hex_symboltable_get_value(ctx, index);
+    size_t length = strlen(value);
+
     if (!value)
     {
         hex_error(ctx, "Memory allocation failed");
         return 1;
     }
-    memcpy(value, *bytecode, length);
-    value[length] = '\0';
-    *bytecode += length;
-    *size -= length;
+
+    *bytecode += 1;
+    *size -= 1;
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
+
     token->value = (char *)malloc(length + 1);
     strncpy(token->value, value, length + 1);
     token->position.line = 0;
@@ -876,7 +868,6 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     item.token = token;
 
     hex_debug(ctx, "LOOKUP[%zu]: %s", length, value);
-    free(value);
     *result = item;
     return 0;
 }
@@ -970,8 +961,14 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     size_t bytecode_size = size;
     size_t position = bytecode_size;
     uint8_t header[8];
+    if (size < 8)
+    {
+        hex_error(ctx, "Bytecode size too small to contain a header");
+        return 1;
+    }
     memcpy(header, bytecode, 8);
     int symbol_table_size = hex_validate_header(header);
+    hex_debug(ctx, "hex executable file - version: %d - symbols: %d", header[4], symbol_table_size);
     if (symbol_table_size < 0)
     {
         hex_error(ctx, "Invalid bytecode header");
@@ -982,9 +979,11 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     // Extract the symbol table
     if (symbol_table_size > 0)
     {
-        hex_decode_bytecode_symboltable(ctx, bytecode, symbol_table_size);
-        bytecode += symbol_table_size;
-        size -= symbol_table_size;
+        if (hex_decode_bytecode_symboltable(ctx, &bytecode, &size, symbol_table_size) != 0)
+        {
+            hex_error(ctx, "Failed to decode the symbol table");
+            return 1;
+        }
     }
     // Debug: Print all symbols in the symbol table
     hex_debug(ctx, "Symbol Table:");
@@ -996,7 +995,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     {
         position = bytecode_size - size;
         uint8_t opcode = *bytecode;
-        hex_debug(ctx, "Bytecode Position: %zu - opcode: %u", position, opcode);
+        hex_debug(ctx, "Bytecode Position: %zu - opcode: %02X", position, opcode);
         bytecode++;
         size--;
 

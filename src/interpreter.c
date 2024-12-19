@@ -19,6 +19,8 @@ hex_context_t hex_init()
     context.settings.debugging_enabled = 0;
     context.settings.errors_enabled = 1;
     context.settings.stack_trace_enabled = 1;
+    context.symbol_table.count = 0;
+    context.symbol_table.symbols = malloc(HEX_MAX_USER_SYMBOLS * sizeof(char *));
     return context;
 }
 
