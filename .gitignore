@@ -54,6 +54,7 @@ dkms.conf
 hex
 
 # Other
+.vscode/
 *.hbx
 src/hex.c
 example.hex

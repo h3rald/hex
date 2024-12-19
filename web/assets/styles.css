@@ -83,15 +83,19 @@ footer {
 a {
     color: lime;
     text-decoration: underline;
+    text-decoration-thickness: from-font;
 }
 
 a:visited {
     color: limegreen;
 }
 
-a[href^=http] {
+a[href^="http"] {
     text-decoration-style: dotted;
-    text-decoration-thickness: from-font;
+}
+
+a[href^="https://hex.2c.fyi"] {
+    text-decoration: underline;
 }
 
 strong {

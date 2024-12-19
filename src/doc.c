@@ -113,9 +113,9 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_doc(docs, "gets", "", "s", "Gets a string from standard input.");
 
     // File
-    hex_doc(docs, "read", "s1", "s2", "Returns the contents of the specified file.");
-    hex_doc(docs, "write", "s1 s2", "", "Writes 's2' to the file 's1'.");
-    hex_doc(docs, "append", "s1 s2", "", "Appends 's2' to the file 's1'.");
+    hex_doc(docs, "read", "s1", "(s2|q)", "Returns the contents of the specified file.");
+    hex_doc(docs, "write", "(s1|q) s2", "", "Writes 's1' or 'q' to the file 's2'.");
+    hex_doc(docs, "append", "(s1|q) s2", "", "Appends 's1' or 'q' to the file 's2'.");
 
     // Shell
     hex_doc(docs, "args", "", "q", "Returns the program arguments.");

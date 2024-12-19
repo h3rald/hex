@@ -565,14 +565,18 @@
     <p>Reads a line from standard input and pushes it on the stack as a string.</p>
     <h4 id="file-symbols">File Symbols<a href="#top"></a></h4>
     <h5 id="read-symbol"><code>$:read$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark>s1 &rarr; s2</mark></p>
-    <p>Reads the content of the file <code>s1</code> and pushes it on the stack as a string.</p>
+    <p><mark>s1 &rarr; (s2|q)</mark></p>
+    <p>Reads the content of the file <code>s1</code> and pushes it on the stack as a string, if the file is in textual
+        format, or as a quotation of integers representing bytes, if the file is in binary format.</p>
     <h5 id="write-symbol"><code>$:write$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark>s1 s2 &rarr;</mark></p>
-    <p>Writes the string <code>s1</code> to the file <code>s2</code>.
+    <p><mark>(s1|q) s2 &rarr;</mark></p>
+    <p>Writes the string <code>s1</code> or the array of integers representing bytes <code>q</code> to the file
+        <code>s2</code>.
     <h5 id="append-symbol"><code>$:append$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark> s1 s2 &rarr;</mark></p>
-    <p>Appends the string <code>s1</code> to the file <code>s2</code>.</p>
+    <p><mark>(s1|q) s2 &rarr;</mark></p>
+    <p>Appends the string <code>s1</code> or the array of integers representing bytes <code>q</code> to the file
+        <code>s2</code>.
+    </p>
     <h4 id="shell-symbols">Shell Symbols<a href="#top"></a></h4>
     <h5 id="args-symbol"><code>$:args$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr; q</mark></p>

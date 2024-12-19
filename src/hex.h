@@ -294,6 +294,8 @@ char *hex_type(hex_item_type_t type);
 void hex_rpad(const char *str, int total_length);
 void hex_lpad(const char *str, int total_length);
 void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length);
+int hex_is_binary(const uint8_t *data, size_t size);
+char *hex_bytes_to_string(const uint8_t *bytes, size_t size);
 
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);

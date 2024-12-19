@@ -1467,7 +1467,6 @@ int hex_symbol_replace(hex_context_t *ctx)
 
 int hex_symbol_read(hex_context_t *ctx)
 {
-
     HEX_POP(ctx, filename);
     if (filename.type == HEX_TYPE_INVALID)
     {
@@ -1477,7 +1476,7 @@ int hex_symbol_read(hex_context_t *ctx)
     int result = 0;
     if (filename.type == HEX_TYPE_STRING)
     {
-        FILE *file = fopen(filename.data.str_value, "r");
+        FILE *file = fopen(filename.data.str_value, "rb");
         if (!file)
         {
             hex_error(ctx, "Could not open file for reading: %s", filename.data.str_value);
@@ -1489,7 +1488,7 @@ int hex_symbol_read(hex_context_t *ctx)
             long length = ftell(file);
             fseek(file, 0, SEEK_SET);
 
-            char *buffer = (char *)malloc(length + 1);
+            uint8_t *buffer = (uint8_t *)malloc(length);
             if (!buffer)
             {
                 hex_error(ctx, "Memory allocation failed");
@@ -1498,8 +1497,39 @@ int hex_symbol_read(hex_context_t *ctx)
             else
             {
                 size_t bytesRead = fread(buffer, 1, length, file);
-                buffer[bytesRead] = '\0';
-                result = hex_push_string(ctx, buffer);
+                if (hex_is_binary(buffer, bytesRead))
+                {
+                    hex_item_t **quotation = (hex_item_t **)malloc(bytesRead * sizeof(hex_item_t *));
+                    if (!quotation)
+                    {
+                        hex_error(ctx, "Memory allocation failed");
+                        result = 1;
+                    }
+                    else
+                    {
+                        for (size_t i = 0; i < bytesRead; i++)
+                        {
+                            quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
+                            quotation[i]->type = HEX_TYPE_INTEGER;
+                            quotation[i]->data.int_value = buffer[i];
+                        }
+                        result = hex_push_quotation(ctx, quotation, bytesRead);
+                    }
+                }
+                else
+                {
+                    char *str = hex_bytes_to_string(buffer, bytesRead);
+                    if (!str)
+                    {
+                        hex_error(ctx, "Memory allocation failed");
+                        result = 1;
+                    }
+                    else
+                    {
+                        result = hex_push_string(ctx, str);
+                        free(str);
+                    }
+                }
                 free(buffer);
             }
             fclose(file);
@@ -1551,9 +1581,34 @@ int hex_symbol_write(hex_context_t *ctx)
                 result = 1;
             }
         }
+        else if (data.type == HEX_TYPE_QUOTATION)
+        {
+            FILE *file = fopen(filename.data.str_value, "wb");
+            if (file)
+            {
+                for (size_t i = 0; i < data.quotation_size; i++)
+                {
+                    if (data.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+                    {
+                        hex_error(ctx, "Quotation must contain only integers");
+                        result = 1;
+                        break;
+                    }
+                    uint8_t byte = (uint8_t)data.data.quotation_value[i]->data.int_value;
+                    fwrite(&byte, 1, 1, file);
+                }
+                fclose(file);
+                result = 0;
+            }
+            else
+            {
+                hex_error(ctx, "Could not open file for writing: %s", filename.data.str_value);
+                result = 1;
+            }
+        }
         else
         {
-            hex_error(ctx, "Symbol 'write' requires a string");
+            hex_error(ctx, "Symbol 'write' requires a string or a quotation of integers");
             result = 1;
         }
     }
@@ -1604,9 +1659,34 @@ int hex_symbol_append(hex_context_t *ctx)
                 result = 1;
             }
         }
+        else if (data.type == HEX_TYPE_QUOTATION)
+        {
+            FILE *file = fopen(filename.data.str_value, "ab");
+            if (file)
+            {
+                for (size_t i = 0; i < data.quotation_size; i++)
+                {
+                    if (data.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+                    {
+                        hex_error(ctx, "Quotation must contain only integers");
+                        result = 1;
+                        break;
+                    }
+                    uint8_t byte = (uint8_t)data.data.quotation_value[i]->data.int_value;
+                    fwrite(&byte, 1, 1, file);
+                }
+                fclose(file);
+                result = 0;
+            }
+            else
+            {
+                hex_error(ctx, "Could not open file for appending: %s", filename.data.str_value);
+                result = 1;
+            }
+        }
         else
         {
-            hex_error(ctx, "Symbol 'append' requires a string");
+            hex_error(ctx, "Symbol 'append' requires a string or a quotation of integers");
             result = 1;
         }
     }
