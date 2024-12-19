@@ -283,7 +283,14 @@ int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecod
         return 1;
     }
     hex_debug(ctx, "Writing bytecode to file: %s", filename);
-    fwrite(HEX_BYTECODE_HEADER, 1, 6, file);
+    uint8_t header[8];
+    hex_header(ctx, header);
+    fwrite(header, 1, sizeof(header), file);
+    uint8_t *symbol_table = NULL;
+    size_t symbol_table_size = 0;
+    symbol_table = hex_encode_bytecode_symboltable(ctx, &symbol_table_size);
+    fwrite(symbol_table, 1, symbol_table_size, file);
+    free(symbol_table);
     fwrite(bytecode, 1, size, file);
     fclose(file);
     hex_debug(ctx, "Bytecode file written: %s", filename);

@@ -9,6 +9,7 @@ source_files=(
     "src/help.c" 
     "src/stacktrace.c" 
     "src/parser.c" 
+    "src/symboltable.c"
     "src/vm.c"
     "src/interpreter.c" 
     "src/helpers.c" 

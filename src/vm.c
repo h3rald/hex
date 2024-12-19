@@ -530,11 +530,14 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
     }
     else
     {
-        hex_debug(ctx, "LOOKUP[%d]: %s", strlen(value), value);
-        // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
-        if (*size + strlen(value) + 1 + 4 > *capacity)
+        // Add to symbol table
+        hex_symboltable_set(ctx, value);
+        int index = hex_symboltable_get(ctx, value);
+        hex_debug(ctx, "LOOKUP[%d]: %d (%s)", index, value);
+        // Check if we need to resize the buffer (size + 1 opcode + 2 max index)
+        if (*size + 1 + 2 > *capacity)
         {
-            *capacity = (*size + strlen(value) + 1 + 4) * 2;
+            *capacity = (*size + 1 + 2) * 2;
             uint8_t *new_bytecode = (uint8_t *)realloc(*bytecode, *capacity);
             if (!new_bytecode)
             {
@@ -545,9 +548,10 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         }
         (*bytecode)[*size] = HEX_OP_LOOKUP;
         *size += 1; // opcode
-        encode_length(bytecode, size, strlen(value));
-        memcpy(&(*bytecode)[*size], value, strlen(value));
-        *size += strlen(value);
+        // Add index to bytecode (little endian)
+        (*bytecode)[*size] = index & 0xFF;
+        (*bytecode)[*size + 1] = (index >> 8) & 0xFF;
+        *size += 2;
     }
     return 0;
 }
@@ -581,6 +585,7 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
     size_t capacity = 128;
     size_t size = 0;
     uint8_t *bytecode = (uint8_t *)malloc(capacity);
+    hex_symboltable_init(ctx);
     if (!bytecode)
     {
         hex_error(ctx, "Memory allocation failed");
@@ -964,13 +969,29 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
 {
     size_t bytecode_size = size;
     size_t position = bytecode_size;
-    if (size < 6 || memcmp(bytecode, HEX_BYTECODE_HEADER, 6) != 0)
+    uint8_t header[8];
+    memcpy(header, bytecode, 8);
+    int symbol_table_size = hex_validate_header(header);
+    if (symbol_table_size < 0)
     {
-        hex_error(ctx, "Invalid or missing bytecode header");
+        hex_error(ctx, "Invalid bytecode header");
         return 1;
     }
-    bytecode += 6;
-    size -= 6;
+    bytecode += 8;
+    size -= 8;
+    // Extract the symbol table
+    if (symbol_table_size > 0)
+    {
+        hex_decode_bytecode_symboltable(ctx, bytecode, symbol_table_size);
+        bytecode += symbol_table_size;
+        size -= symbol_table_size;
+    }
+    // Debug: Print all symbols in the symbol table
+    hex_debug(ctx, "Symbol Table:");
+    for (size_t i = 0; i < ctx->symbol_table.count; i++)
+    {
+        hex_debug(ctx, "Symbol %zu: %s", i, ctx->symbol_table.symbols[i]);
+    }
     while (size > 0)
     {
         position = bytecode_size - size;
@@ -1026,4 +1047,27 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
         }
     }
     return 0;
+}
+
+void hex_header(hex_context_t *ctx, uint8_t header[8])
+{
+    header[0] = 0x01;
+    header[1] = 'h';
+    header[2] = 'e';
+    header[3] = 'x';
+    header[4] = 0x01; // version
+    uint16_t symbol_table_size = (uint16_t)ctx->symbol_table.count;
+    header[5] = symbol_table_size & 0xFF;
+    header[6] = (symbol_table_size >> 8) & 0xFF;
+    header[7] = 0x02;
+}
+
+int hex_validate_header(uint8_t header[8])
+{
+    if (header[0] != 0x01 || header[1] != 'h' || header[2] != 'e' || header[3] != 'x' || header[4] != 0x01 || header[7] != 0x02)
+    {
+        return -1;
+    }
+    uint16_t symbol_table_size = header[5] | (header[6] << 8);
+    return symbol_table_size;
 }

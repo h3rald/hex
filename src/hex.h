@@ -26,8 +26,8 @@ int isatty(int fd);
 #define HEX_STACK_SIZE 128
 #define HEX_STACK_TRACE_SIZE 16
 #define HEX_NATIVE_SYMBOLS 64
-
-const uint8_t HEX_BYTECODE_HEADER[6] = {0x01, 0x68, 0x65, 0x78, 0x01, 0x02};
+#define HEX_MAX_SYMBOL_LENGTH 255
+#define HEX_MAX_USER_SYMBOLS 65535
 
 // Type Definitions
 typedef enum hex_item_type_t
@@ -128,6 +128,12 @@ typedef struct hex_settings_t
     int stack_trace_enabled;
 } hex_settings_t;
 
+typedef struct hex_symbol_table_t
+{
+    char **symbols;
+    uint16_t count;
+} hex_symbol_table_t;
+
 typedef struct hex_context_t
 {
     hex_stack_t stack;
@@ -135,6 +141,7 @@ typedef struct hex_context_t
     hex_stack_trace_t stack_trace;
     hex_settings_t settings;
     hex_doc_dictionary_t docs;
+    hex_symbol_table_t symbol_table;
     int hashbang;
     char error[256];
     int argc;
@@ -364,6 +371,16 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
 int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result);
 int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result);
 int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size);
+void hex_header(hex_context_t *ctx, uint8_t header[8]);
+int hex_validate_header(uint8_t header[8]);
+
+// Symbol table
+void hex_symboltable_init(hex_context_t *ctx);
+void hex_symboltable_free(hex_context_t *ctx);
+int hex_symboltable_set(hex_context_t *ctx, const char *symbol);
+int hex_symboltable_get(hex_context_t *ctx, const char *symbol);
+void hex_decode_bytecode_symboltable(hex_context_t *ctx, const uint8_t *bytecode, size_t size);
+uint8_t *hex_encode_bytecode_symboltable(hex_context_t *ctx, size_t *out_size);
 
 // REPL and initialization
 void hex_register_symbols(hex_context_t *ctx);
