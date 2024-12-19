@@ -254,7 +254,7 @@ int hex_is_binary(const uint8_t *data, size_t size)
 
 char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
 {
-    char *str = (char *)malloc(size * 4 + 1); // Allocate enough space for worst case
+    char *str = (char *)malloc(size * 6 + 1); // Allocate enough space for worst case (\uXXXX format)
     if (!str)
     {
         return NULL; // Allocation failed
@@ -294,24 +294,16 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
             *ptr++ = '\\';
             *ptr++ = 'v';
             break;
-        case '\\':
-            *ptr++ = '\\';
-            *ptr++ = '\\';
-            break;
+        //case '\\':
+        //    *ptr++ = '\\'; // Correctly handle backslash
+        //    *ptr++ = '\\';
+        //    break;
         case '\"':
             *ptr++ = '\\';
             *ptr++ = '\"';
             break;
         default:
-            if (byte < 32 || byte > 126)
-            {
-                // Escape non-printable characters as hex (e.g., \x1F)
-                ptr += sprintf(ptr, "\\x%02x", byte);
-            }
-            else
-            {
-                *ptr++ = byte;
-            }
+            *ptr++ = byte; // Copy printable ASCII characters as is
             break;
         }
     }
