@@ -1561,7 +1561,8 @@ int hex_symbol_read(hex_context_t *ctx)
                     }
                     else
                     {
-                        result = hex_push_string(ctx, str);
+                    hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
+                        result = HEX_PUSH(ctx, item);
                         free(str);
                     }
                 }
