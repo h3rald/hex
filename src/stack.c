@@ -32,6 +32,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         hex_item_t value;
         if (hex_get_symbol(ctx, item.token->value, &value))
         {
+            add_to_stack_trace(ctx, item.token);
             result = HEX_PUSH(ctx, value);
         }
         else
@@ -43,6 +44,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
     }
     else if (item.type == HEX_TYPE_NATIVE_SYMBOL)
     {
+        add_to_stack_trace(ctx, item.token);
         hex_debug_item(ctx, "CALL", item);
         result = item.data.fn_value(ctx);
     }
@@ -104,7 +106,6 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 {
-    add_to_stack_trace(ctx, token);
     hex_item_t value;
     if (hex_get_symbol(ctx, token->value, &value))
     {
