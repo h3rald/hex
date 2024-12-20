@@ -1,5 +1,5 @@
 "2024" "meta-year" :
-"0.1.0" "meta-release" :
+"0.2.0" "meta-release" :
 "web/assets" "d-assets" :
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
@@ -103,7 +103,7 @@ d-templates "/page.html" cat "t-page" :
     (t-symbol "+" ==)("add" "t-href" :) when
     (t-symbol "*" ==)("multiply" "t-href" :) when
     (t-symbol "-" ==)("subtract" "t-href" :) when
-    ("<a href=\"/spec#" t-href "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
+    ("<a href=\"https://hex.2c.fyi/spec#" t-href "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
     ; Push replacement content on the stack
     t-content 
     "sym-" t-symbol cat 
