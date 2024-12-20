@@ -294,6 +294,7 @@ void hex_rpad(const char *str, int total_length);
 void hex_lpad(const char *str, int total_length);
 void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length);
 int hex_is_binary(const uint8_t *data, size_t size);
+void hex_print_string(FILE *stream, char *value);
 char *hex_bytes_to_string(const uint8_t *bytes, size_t size);
 char *hex_process_string(const char *value);
 size_t hex_min_bytes_to_encode_integer(int32_t value);

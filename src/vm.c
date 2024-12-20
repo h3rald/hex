@@ -8,7 +8,7 @@
 
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
-    hex_debug(ctx, "PUSHIN: %d", value);
+    hex_debug(ctx, "PUSHIN[01]: 0x%X", value);
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
@@ -64,7 +64,7 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         hex_error(ctx, "[add bytecode string] Memory allocation failed");
         return 1;
     }
-    hex_debug(ctx, "PUSHST: \"%s\"", str);
+    hex_debug(ctx, "PUSHST[02]: \"%s\"", str);
     size_t len = strlen(value);
     // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
     if (*size + len + 1 + 4 > *capacity)
@@ -100,7 +100,6 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
 {
     if (hex_valid_native_symbol(ctx, value))
     {
-        hex_debug(ctx, "NATSYM: %s", value);
         // Check if we need to resize the buffer (size + opcode (1))
         if (*size + 1 > *capacity)
         {
@@ -113,7 +112,9 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
             }
             *bytecode = new_bytecode;
         }
-        (*bytecode)[*size] = hex_symbol_to_opcode(value);
+        uint8_t opcode = hex_symbol_to_opcode(value);
+        hex_debug(ctx, "NATSYM[%02X]: %s", opcode, value);
+        (*bytecode)[*size] = opcode;
         *size += 1; // opcode
     }
     else
@@ -121,7 +122,7 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         // Add to symbol table
         hex_symboltable_set(ctx, value);
         int index = hex_symboltable_get_index(ctx, value);
-        hex_debug(ctx, "LOOKUP: #%d -> %s", index, value);
+        hex_debug(ctx, "LOOKUP[00]: %02X -> %s", index, value);
         //  Check if we need to resize the buffer (size + 1 opcode + 2 max index)
         if (*size + 1 + 2 > *capacity)
         {
@@ -163,7 +164,7 @@ int hex_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size,
     hex_encode_length(bytecode, size, *n_items);
     memcpy(&(*bytecode)[*size], *output, *output_size);
     *size += *output_size;
-    hex_debug(ctx, "PUSHQT: <end> (items: %d)", *n_items);
+    hex_debug(ctx, "PUSHQT[03]: <end> (items: %d)", *n_items);
     return 0;
 }
 
@@ -199,7 +200,7 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
             size_t n_items = 0;
             uint8_t *quotation_bytecode = NULL;
             size_t quotation_size = 0;
-            hex_debug(ctx, "PUSHQT: <start>");
+            hex_debug(ctx, "PUSHQT[03]: <start>");
             if (hex_generate_quotation_bytecode(ctx, &input, &quotation_bytecode, &quotation_size, &n_items, position) != 0)
             {
                 hex_error(ctx, "[generate quotation bytecode] Failed to generate quotation bytecode (main)");
@@ -257,7 +258,7 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
             size_t n_items = 0;
             uint8_t *quotation_bytecode = NULL;
             size_t quotation_size = 0;
-            hex_debug(ctx, "PUSHQT: <start>");
+            hex_debug(ctx, "PUSHQT[03]: <start>");
             if (hex_generate_quotation_bytecode(ctx, input, &quotation_bytecode, &quotation_size, &n_items, position) != 0)
             {
                 hex_error(ctx, "[generate quotation bytecode] Failed to generate quotation bytecode");
@@ -335,7 +336,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, ">> PUSHIN: 0x%X", value);
+    hex_debug(ctx, ">> PUSHIN[01]: 0x%X", value);
     hex_item_t item = hex_integer_item(ctx, value);
     *result = item;
     return 0;
@@ -385,7 +386,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
         hex_error(ctx, "[interpret bytecode string] Memory allocation failed");
         return 1;
     }
-    hex_debug(ctx, ">> PUSHST: \"%s\"", str);
+    hex_debug(ctx, ">> PUSHST[02]: \"%s\"", str);
     return 0;
 }
 
@@ -418,7 +419,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         hex_free_token(token);
         return 1;
     }
-    hex_debug(ctx, ">> NATSYM: 0x%02X (%s)", opcode, symbol);
+    hex_debug(ctx, ">> NATSYM[%02X]: %s", opcode, symbol);
     *result = item;
     return 0;
 }
@@ -463,7 +464,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     item.type = HEX_TYPE_USER_SYMBOL;
     item.token = token;
 
-    hex_debug(ctx, ">> LOOKUP: #%zu -> %s", index, value);
+    hex_debug(ctx, ">> LOOKUP[00]: %02X -> %s", index, value);
     *result = item;
     return 0;
 }
@@ -487,7 +488,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         (*size)--;
     } while (**bytecode & 0x80);
 
-    hex_debug(ctx, ">> PUSHQT: <start> (items: %zu)", n_items);
+    hex_debug(ctx, ">> PUSHQT[03]: <start> (items: %zu)", n_items);
 
     hex_item_t **items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
     if (!items)
@@ -548,7 +549,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     result->data.quotation_value = items;
     result->quotation_size = n_items;
 
-    hex_debug(ctx, ">> PUSHQT: <end> (items: %zu)", n_items);
+    hex_debug(ctx, ">> PUSHQT[03]: <end> (items: %zu)", n_items);
     return 0;
 }
 
@@ -564,7 +565,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     }
     memcpy(header, bytecode, 8);
     int symbol_table_size = hex_validate_header(header);
-    hex_debug(ctx, "hex executable file - version: %d - symbols: %d", header[4], symbol_table_size);
+    hex_debug(ctx, "[Hex Bytecode eXecutable File - version: %d - symbols: %d]", header[4], symbol_table_size);
     if (symbol_table_size < 0)
     {
         hex_error(ctx, "[interpret bytecode header] Invalid bytecode header");

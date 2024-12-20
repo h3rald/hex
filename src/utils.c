@@ -171,6 +171,45 @@ int hex_is_binary(const uint8_t *data, size_t size)
     return 0;
 }
 
+void hex_print_string(FILE *stream, char *value)
+{
+    fprintf(stream, "\"");
+    for (char *c = value; *c != '\0'; c++)
+    {
+        switch (*c)
+        {
+        case '\n':
+            fprintf(stream, "\\n");
+            break;
+        case '\t':
+            fprintf(stream, "\\t");
+            break;
+        case '\r':
+            fprintf(stream, "\\r");
+            break;
+        case '\b':
+            fprintf(stream, "\\b");
+            break;
+        case '\f':
+            fprintf(stream, "\\f");
+            break;
+        case '\v':
+            fprintf(stream, "\\v");
+            break;
+        case '\\':
+            fprintf(stream, "\\\\");
+            break;
+        case '\"':
+            fprintf(stream, "\\\"");
+            break;
+        default:
+            fputc(*c, stream);
+            break;
+        }
+    }
+    fprintf(stream, "\"");
+}
+
 void hex_print_item(FILE *stream, hex_item_t item)
 {
     switch (item.type)
@@ -180,41 +219,7 @@ void hex_print_item(FILE *stream, hex_item_t item)
         break;
 
     case HEX_TYPE_STRING:
-        fprintf(stream, "\"");
-        for (char *c = item.data.str_value; *c != '\0'; c++)
-        {
-            switch (*c)
-            {
-            case '\n':
-                fprintf(stream, "\\n");
-                break;
-            case '\t':
-                fprintf(stream, "\\t");
-                break;
-            case '\r':
-                fprintf(stream, "\\r");
-                break;
-            case '\b':
-                fprintf(stream, "\\b");
-                break;
-            case '\f':
-                fprintf(stream, "\\f");
-                break;
-            case '\v':
-                fprintf(stream, "\\v");
-                break;
-            case '\\':
-                fprintf(stream, "\\\\");
-                break;
-            case '\"':
-                fprintf(stream, "\\\"");
-                break;
-            default:
-                fputc(*c, stream);
-                break;
-            }
-        }
-        fprintf(stream, "\"");
+        hex_print_string(stream, item.data.str_value);
         break;
 
     case HEX_TYPE_USER_SYMBOL:

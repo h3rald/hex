@@ -59,7 +59,6 @@ int hex_decode_bytecode_symboltable(hex_context_t *ctx, uint8_t **bytecode, size
 
     for (size_t i = 0; i < total; i++)
     {
-        hex_debug(ctx, "Decoding symbol %zu", i);
         size_t len = (size_t)(*bytecode)[0];
         (*bytecode)++;
         *size -= 1;
