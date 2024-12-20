@@ -140,9 +140,11 @@ process-releases .
 
 ; Read changelog template and add generated release content
 d-contents "/" "changelog.html" cat cat read
-"releases" releases-content process-tag .
+"releases" releases-content process-tag . "changelog-content" :
+ symbol-links (changelog-content swap process-symbol . "changelog-content" :) each
 
 ; Write CHANGELOG.md
+changelog-content
 "CHANGELOG.md" write
 "*** Done!" puts
 
