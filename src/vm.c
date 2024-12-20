@@ -24,37 +24,21 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
     (*bytecode)[*size] = HEX_OP_PUSHIN;
     *size += 1; // opcode
     // Encode the length of the integer value
-    size_t int_length = 0;
-    if (value >= -0x80 && value < 0x80)
-    {
-        int_length = 1;
-    }
-    else if (value >= -0x8000 && value < 0x8000)
-    {
-        int_length = 2;
-    }
-    else if (value >= -0x800000 && value < 0x800000)
-    {
-        int_length = 3;
-    }
-    else
-    {
-        int_length = 4;
-    }
-    hex_encode_length(bytecode, size, int_length);
+    size_t bytes = hex_min_bytes_to_encode_integer(value);
+    hex_encode_length(bytecode, size, bytes);
     // Encode the integer value in the minimum number of bytes, in little endian
-    if (value >= -0x80 && value < 0x80)
+    if (bytes == 1)
     {
         (*bytecode)[*size] = value & 0xFF;
         *size += 1;
     }
-    else if (value >= -0x8000 && value < 0x8000)
+    else if (bytes == 2)
     {
         (*bytecode)[*size] = value & 0xFF;
         (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
         *size += 2;
     }
-    else if (value >= -0x800000 && value < 0x800000)
+    else if (bytes == 3)
     {
         (*bytecode)[*size] = value & 0xFF;
         (*bytecode)[*size + 1] = (value >> 8) & 0xFF;
@@ -96,6 +80,16 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
     }
     (*bytecode)[*size] = HEX_OP_PUSHST;
     *size += 1; // opcode
+    // Check for multi-byte characters
+    for (size_t i = 0; i < len; i++)
+    {
+        if ((value[i] & 0x80) != 0)
+        {
+            hex_error(ctx, "[add bytecode string] Multi-byte characters are not supported - Cannot encode string: \"%s\"", value);
+            free(str);
+            return 1;
+        }
+    }
     hex_encode_length(bytecode, size, len);
     memcpy(&(*bytecode)[*size], value, len);
     *size += len;
@@ -278,6 +272,7 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
         }
         else
         {
+            (*n_items)--; // Decrement the number of items if it's not a valid token (it will be incremeneted anyway)
             // Ignore other tokens
         }
 
@@ -340,7 +335,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, ">> PUSHIN: %d", value);
+    hex_debug(ctx, ">> PUSHIN: 0x%X", value);
     hex_item_t item = hex_integer_item(ctx, value);
     *result = item;
     return 0;
@@ -367,7 +362,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
 
     if (*size < length)
     {
-        hex_error(ctx, "[interpret bytecode string] Bytecode size too small to contain the string");
+        hex_error(ctx, "[interpret bytecode string] Bytecode size (%d) too small to contain a string of length %d", *size, length);
         return 1;
     }
 
@@ -423,7 +418,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         hex_free_token(token);
         return 1;
     }
-    hex_debug(ctx, ">> NATSYM: %02X (%s)", opcode, symbol);
+    hex_debug(ctx, ">> NATSYM: 0x%02X (%s)", opcode, symbol);
     *result = item;
     return 0;
 }

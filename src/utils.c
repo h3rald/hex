@@ -356,3 +356,27 @@ char *hex_process_string(const char *value)
     *dst = '\0';
     return processed_str;
 }
+
+size_t hex_min_bytes_to_encode_integer(int32_t value)
+{
+    // If value is negative, we need to return 4 bytes because we must preserve the sign bits.
+    if (value < 0)
+    {
+        return 4;
+    }
+
+    // For positive values, check the minimal number of bytes needed.
+    for (int bytes = 1; bytes <= 4; bytes++)
+    {
+        int32_t mask = (1 << (bytes * 8)) - 1;
+        int32_t truncated_value = value & mask;
+
+        // If the truncated value is equal to the original, this is the minimal byte size
+        if (truncated_value == value)
+        {
+            return bytes;
+        }
+    }
+
+    return 4; // Default to 4 bytes if no smaller size is found.
+}

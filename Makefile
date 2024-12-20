@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Wextra -g
 LDFLAGS =
 
-.PHONY: wasm, playground, clean, test, web
+.PHONY: wasm, playground, clean
 
 hex: src/hex.c
 	$(CC) $(CFLAGS) $(LDFLAGS) $< -o hex
@@ -30,8 +30,10 @@ clean:
 	rm -f hex.js
 	rm -f hex.wasm
 
-test:
-	./hex scripts/test.hex
+test: hex
+	./hex -b scripts/test.hex
+	./hex scripts/test.hbx
 
-web: playground
-	./hex scripts/web.hex
+web: playground hex
+	./hex -b scripts/web.hex
+	./hex scripts/web.hbx

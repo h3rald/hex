@@ -120,7 +120,7 @@
     ("rm test.txt" exec 0x0 ==)
     ("rm test.txt" run 0x0 get 0x1 ==)
     ("ls web/contents" run 0x1 get "\n" split len 0x7 ==)
-    (args 0x1 get "scripts/test.hex" ==)
+    (args 0x1 get "scripts/test.hbx" ==)
     ;56
 
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
@@ -209,7 +209,7 @@
 
     ("=" ord 0x3d ==)
     (0x3d chr "=" ==)
-    ("é" ord 0xffffffff ==)
+    (0xffffffff dec "-1" ==)
     (0x80 chr "" ==)
     ;116
 
@@ -219,7 +219,6 @@
     ((() chr) (error) try "[symbol chr] Integer required" ==)
     ;120
 
-    (0xffffffff dec "-1" ==)
 
     
 ) "tests" :

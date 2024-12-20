@@ -279,7 +279,6 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
 hex_item_t hex_pop(hex_context_t *ctx);
 
 // Parser and interpreter
-char *hex_process_string(const char *value);
 hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);
 int32_t hex_parse_integer(const char *hex_str);
 int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position);
@@ -296,6 +295,8 @@ void hex_lpad(const char *str, int total_length);
 void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length);
 int hex_is_binary(const uint8_t *data, size_t size);
 char *hex_bytes_to_string(const uint8_t *bytes, size_t size);
+char *hex_process_string(const char *value);
+size_t hex_min_bytes_to_encode_integer(int32_t value);
 
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);

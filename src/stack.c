@@ -137,32 +137,24 @@ void hex_free_item(hex_context_t *ctx, hex_item_t item)
     hex_debug_item(ctx, "FREE", item);
     if (item.type == HEX_TYPE_STRING && item.data.str_value != NULL)
     {
-        hex_debug(ctx, "FREE: ** string start");
         item.data.str_value = NULL;
         free(item.data.str_value);
-        hex_debug(ctx, "FREE: ** string end");
     }
 
     else if (item.type == HEX_TYPE_QUOTATION && item.data.quotation_value != NULL)
     {
-        hex_debug(ctx, "FREE: ** quotation start");
         hex_free_list(ctx, item.data.quotation_value, item.quotation_size);
         item.data.quotation_value = NULL;
-        hex_debug(ctx, "FREE: ** quotation end");
     }
     else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->value != NULL)
     {
-        hex_debug(ctx, "FREE: ** native symbol start");
         item.token = NULL;
         hex_free_token(item.token);
-        hex_debug(ctx, "FREE: ** native symbol end");
     }
     else if (item.type == HEX_TYPE_USER_SYMBOL && item.token->value != NULL)
     {
-        hex_debug(ctx, "FREE: ** user symbol start");
         item.token = NULL;
         hex_free_token(item.token);
-        hex_debug(ctx, "FREE: ** user symbol end");
     }
     else
     {
