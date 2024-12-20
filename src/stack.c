@@ -61,68 +61,15 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
     return result;
 }
 
-char *hex_process_string(hex_context_t *ctx, const char *value)
-{
-    int len = strlen(value);
-    char *processed_str = (char *)malloc(len + 1);
-    if (!processed_str)
-    {
-        hex_error(ctx, "Memory allocation failed");
-        return NULL;
-    }
-
-    char *dst = processed_str;
-    const char *src = value;
-    while (*src)
-    {
-        if (*src == '\\' && *(src + 1))
-        {
-            src++;
-            switch (*src)
-            {
-            case 'n':
-                *dst++ = '\n';
-                break;
-            case 't':
-                *dst++ = '\t';
-                break;
-            case 'r':
-                *dst++ = '\r';
-                break;
-            case 'b':
-                *dst++ = '\b';
-                break;
-            case 'f':
-                *dst++ = '\f';
-                break;
-            case 'v':
-                *dst++ = '\v';
-                break;
-            // case '\\':
-            //     *dst++ = '\\';
-            //     break;
-            case '\"':
-                *dst++ = '\"';
-                break;
-            default:
-                *dst++ = '\\';
-                *dst++ = *src;
-                break;
-            }
-        }
-        else
-        {
-            *dst++ = *src;
-        }
-        src++;
-    }
-    *dst = '\0';
-    return processed_str;
-}
-
 hex_item_t hex_string_item(hex_context_t *ctx, const char *value)
 {
-    hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = hex_process_string(ctx, value)};
+    char *str = hex_process_string(value);
+    if (str == NULL)
+    {
+        hex_error(ctx, "Failed to allocate memory for string");
+        return (hex_item_t){.type = HEX_TYPE_INVALID};
+    }
+    hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
     return item;
 }
 

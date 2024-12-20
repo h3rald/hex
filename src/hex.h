@@ -279,7 +279,7 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
 hex_item_t hex_pop(hex_context_t *ctx);
 
 // Parser and interpreter
-char *hex_process_string(hex_context_t *ctx, const char *value);
+char *hex_process_string(const char *value);
 hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);
 int32_t hex_parse_integer(const char *hex_str);
 int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *result, hex_file_position_t *position);

@@ -1,37 +1,1 @@
-<article>
-    <h2>Changelog</h2>
-    <h3>v0.2.0 &mdash; <em>Under development</em></h3>
-
-<h4>New Features</h4>
-<ul>
-    <li>Implemented a virtual machine with a bytecode compiler and interpreter.</li>
-    <li>{{sym-read}}, {{sym-write}}, {{sym-append}} now support reading and writing from/to binary files as well.</li>
-    <li>{{sym-!}} can now evaluate a quotation of integers as hex bytecode.</li>
-</ul>
-
-<h4>Fixes</h4>
-<ul>
-    <li>Ensured that {{sym-dec}} is able to print negative integers in decimal format.</li>
-</ul>
-
-<h4>Chores</h4>
-<ul>
-    <li>Split the source code to different files, and now relying on an <a
-            href="https://github.com/h3rald/hex/blob/master/scripts/amalgamate.sh">amalgamate.sh</a> script to
-        concatenate them together before compiling</li>
-</ul>
-<h3>v0.1.0 &mdash; 2024-12-14</h3>
-
-<p>Initial release, featuring:</p>
-<ul>
-    <li>A multi-platform executable for the <em>hex</em> interpreter.</li>
-    <li>Integrated REPL.</li>
-    <li>Integrated help and manual.</li>
-    <li>Debug mode.</li>
-    <li>0x40 (64) native symbols.</li>
-    <li>Support for 32bit hexadecimal integers, strings, and quotations (lists).</li>
-    <li>A complete <a href="https://hex.2c.fyi">web site</a> with more documentation and even an interactive playground.
-    </li>
-</ul>
-
-</article>
+<article>    <h2>Changelog</h2>    <h3>v0.2.0 &mdash; <em>Under development</em></h3><h4>New Features</h4><ul>    <li>Implemented a virtual machine with a bytecode compiler and interpreter.</li>    <li>{{sym-read}}, {{sym-write}}, {{sym-append}} now support reading and writing from/to binary files as well.</li>    <li>{{sym-!}} can now evaluate a quotation of integers as hex bytecode.</li>    <li>Increased maximum stack size to 256 items.</li></ul><h4>Fixes</h4><ul>    <li>Ensured that {{sym-dec}} is able to print negative integers in decimal format.</li>    <li>Ensured that symbol identifiers cannot be longer than 256 characters.</li></ul><h4>Chores</h4><ul>    <li>Split the source code to different files, and now relying on an <a            href="https://github.com/h3rald/hex/blob/master/scripts/amalgamate.sh">amalgamate.sh</a> script to        concatenate them together before compiling</li></ul><h3>v0.1.0 &mdash; 2024-12-14</h3><p>Initial release, featuring:</p><ul>    <li>A multi-platform executable for the <em>hex</em> interpreter.</li>    <li>Integrated REPL.</li>    <li>Integrated help and manual.</li>    <li>Debug mode.</li>    <li>0x40 (64) native symbols.</li>    <li>Support for 32bit hexadecimal integers, strings, and quotations (lists).</li>    <li>A complete <a href="https://hex.2c.fyi">web site</a> with more documentation and even an interactive playground.    </li></ul></article>

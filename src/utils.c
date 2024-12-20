@@ -138,6 +138,39 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
     }
 }
 
+void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length)
+{
+    while (length >= 0x80)
+    {
+        (*bytecode)[*size] = (length & 0x7F) | 0x80;
+        length >>= 7;
+        (*size)++;
+    }
+    (*bytecode)[*size] = length & 0x7F;
+    (*size)++;
+}
+
+int hex_is_binary(const uint8_t *data, size_t size)
+{
+    const double binary_threshold = 0.1; // 10% of bytes being non-printable
+    size_t non_printable_count = 0;
+    for (size_t i = 0; i < size; i++)
+    {
+        uint8_t byte = data[i];
+        // Check if the byte is a printable ASCII character or a common control character.
+        if (!((byte >= 32 && byte <= 126) || byte == 9 || byte == 10 || byte == 13))
+        {
+            non_printable_count++;
+        }
+        // Early exit if the threshold is exceeded.
+        if ((double)non_printable_count / size > binary_threshold)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 void hex_print_item(FILE *stream, hex_item_t item)
 {
     switch (item.type)
@@ -177,15 +210,7 @@ void hex_print_item(FILE *stream, hex_item_t item)
                 fprintf(stream, "\\\"");
                 break;
             default:
-                if ((unsigned char)*c < 32 || (unsigned char)*c > 126)
-                {
-                    // Escape non-printable characters as hex (e.g., \x1F)
-                    fprintf(stream, "\\x%02x", (unsigned char)*c);
-                }
-                else
-                {
-                    fputc(*c, stream);
-                }
+                fputc(*c, stream);
                 break;
             }
         }
@@ -219,39 +244,6 @@ void hex_print_item(FILE *stream, hex_item_t item)
     }
 }
 
-void hex_encode_length(uint8_t **bytecode, size_t *size, size_t length)
-{
-    while (length >= 0x80)
-    {
-        (*bytecode)[*size] = (length & 0x7F) | 0x80;
-        length >>= 7;
-        (*size)++;
-    }
-    (*bytecode)[*size] = length & 0x7F;
-    (*size)++;
-}
-
-int hex_is_binary(const uint8_t *data, size_t size)
-{
-    const double binary_threshold = 0.1; // 10% of bytes being non-printable
-    size_t non_printable_count = 0;
-    for (size_t i = 0; i < size; i++)
-    {
-        uint8_t byte = data[i];
-        // Check if the byte is a printable ASCII character or a common control character.
-        if (!((byte >= 32 && byte <= 126) || byte == 9 || byte == 10 || byte == 13))
-        {
-            non_printable_count++;
-        }
-        // Early exit if the threshold is exceeded.
-        if ((double)non_printable_count / size > binary_threshold)
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
 char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
 {
     char *str = (char *)malloc(size * 6 + 1); // Allocate enough space for worst case (\uXXXX format)
@@ -280,7 +272,7 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
                 i++; // Skip the '\n' part of the '\r\n' sequence
             }
             *ptr++ = '\\';
-            *ptr++ = 'n';
+            *ptr++ = 'r';
             break;
         case '\b':
             *ptr++ = '\\';
@@ -294,20 +286,73 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
             *ptr++ = '\\';
             *ptr++ = 'v';
             break;
-        //case '\\':
-        //    *ptr++ = '\\'; // Correctly handle backslash
-        //    *ptr++ = '\\';
-        //    break;
+        case '\\':
+            *ptr++ = '\\';
+            break;
         case '\"':
             *ptr++ = '\\';
             *ptr++ = '\"';
             break;
         default:
-            *ptr++ = byte; // Copy printable ASCII characters as is
+            *ptr++ = byte;
             break;
         }
     }
-    *ptr = '\0'; // Null-terminate the string
-
+    *ptr = '\0';
     return str;
+}
+
+char *hex_process_string(const char *value)
+{
+    int len = strlen(value);
+    char *processed_str = (char *)malloc(len + 1);
+    if (!processed_str)
+    {
+        return NULL;
+    }
+
+    char *dst = processed_str;
+    const char *src = value;
+    while (*src)
+    {
+        if (*src == '\\' && *(src + 1))
+        {
+            src++;
+            switch (*src)
+            {
+            case 'n':
+                *dst++ = '\n';
+                break;
+            case 't':
+                *dst++ = '\t';
+                break;
+            case 'r':
+                *dst++ = '\r';
+                break;
+            case 'b':
+                *dst++ = '\b';
+                break;
+            case 'f':
+                *dst++ = '\f';
+                break;
+            case 'v':
+                *dst++ = '\v';
+                break;
+            case '\"':
+                *dst++ = '\"';
+                break;
+            default:
+                *dst++ = '\\';
+                *dst++ = *src;
+                break;
+            }
+        }
+        else
+        {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+    return processed_str;
 }

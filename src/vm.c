@@ -74,7 +74,13 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
 
 int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, const char *value)
 {
-    hex_debug(ctx, "PUSHST: \"%s\"", hex_process_string(ctx, value));
+    char *str = hex_process_string(value);
+    if (!str)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+    hex_debug(ctx, "PUSHST: \"%s\"", str);
     size_t len = strlen(value);
     // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
     if (*size + len + 1 + 4 > *capacity)
@@ -378,7 +384,13 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
 
     hex_item_t item = hex_string_item(ctx, value);
     *result = item;
-    hex_debug(ctx, ">> PUSHST: \"%s\"", hex_process_string(ctx, value));
+    char *str = hex_process_string(value);
+    if (!str)
+    {
+        hex_error(ctx, "Memory allocation failed");
+        return 1;
+    }
+    hex_debug(ctx, ">> PUSHST: \"%s\"", str);
     return 0;
 }
 
