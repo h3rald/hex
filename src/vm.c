@@ -8,7 +8,7 @@
 
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
-    hex_debug(ctx, "PUSHIN[01]: 0x%X", value);
+    hex_debug(ctx, "PUSHIN[01]: 0x%x", value);
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
@@ -113,7 +113,7 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
             *bytecode = new_bytecode;
         }
         uint8_t opcode = hex_symbol_to_opcode(value);
-        hex_debug(ctx, "NATSYM[%02X]: %s", opcode, value);
+        hex_debug(ctx, "NATSYM[%02x]: %s", opcode, value);
         (*bytecode)[*size] = opcode;
         *size += 1; // opcode
     }
@@ -122,7 +122,7 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         // Add to symbol table
         hex_symboltable_set(ctx, value);
         int index = hex_symboltable_get_index(ctx, value);
-        hex_debug(ctx, "LOOKUP[00]: %02X -> %s", index, value);
+        hex_debug(ctx, "LOOKUP[00]: %02x -> %s", index, value);
         //  Check if we need to resize the buffer (size + 1 opcode + 2 max index)
         if (*size + 1 + 2 > *capacity)
         {
@@ -336,7 +336,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, ">> PUSHIN[01]: 0x%X", value);
+    hex_debug(ctx, ">> PUSHIN[01]: 0x%x", value);
     hex_item_t item = hex_integer_item(ctx, value);
     *result = item;
     return 0;
@@ -419,7 +419,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         hex_free_token(token);
         return 1;
     }
-    hex_debug(ctx, ">> NATSYM[%02X]: %s", opcode, symbol);
+    hex_debug(ctx, ">> NATSYM[X]: %s", opcode, symbol);
     *result = item;
     return 0;
 }
@@ -464,7 +464,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     item.type = HEX_TYPE_USER_SYMBOL;
     item.token = token;
 
-    hex_debug(ctx, ">> LOOKUP[00]: %02X -> %s", index, value);
+    hex_debug(ctx, ">> LOOKUP[00]: %02x -> %s", index, value);
     *result = item;
     return 0;
 }
@@ -593,7 +593,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     {
         position = bytecode_size - size;
         uint8_t opcode = *bytecode;
-        hex_debug(ctx, "-- [%08d] OPCODE: %02X", position, opcode);
+        hex_debug(ctx, "-- [%08d] OPCODE: %02x", position, opcode);
         bytecode++;
         size--;
 
