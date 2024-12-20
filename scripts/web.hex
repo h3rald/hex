@@ -85,6 +85,9 @@ d-templates "/page.html" cat "t-page" :
         (pt-content pt-tag tag . pt-repl replace "pt-content" :)
     while 
     pt-content
+    "pt-repl"    #
+    "pt-tag"     #
+    "pt-content" #
 ) "process-tag" :
 
 
@@ -129,8 +132,36 @@ d-templates "/page.html" cat "t-page" :
             _count 0x1 - "_count" :
         )
     while
-    "_count" #
-) "process-releases" : 
+    "_count"        #
+    "id-release"    #
+) "process-releases" :
+
+; Create changelog toc
+(
+    "" "changelog-toc" : ;external
+    releases len 0x1 - "_count" :
+    ; Reverse releases order
+    (_count 0x0 <=)
+        (
+            releases _count get ".html" "" replace "id-release" :
+            changelog-toc
+            ("<li><a href=\"#v" id-release "\">v" id-release "</a></li>\n") () map "" join 
+            cat
+            "changelog-toc" :
+            _count 0x1 - "_count" :
+        )
+    while
+    "<ul>\n"
+    changelog-toc
+    "</ul>\n" 
+    cat cat
+    "changelog-toc" : 
+    "_count"        #
+    "id-release"    #
+
+) "generate-changelog-toc" :
+
+generate-changelog-toc .
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -140,8 +171,10 @@ process-releases .
 
 ; Read changelog template and add generated release content
 d-contents "/" "changelog.html" cat cat read
-"releases" releases-content process-tag . "changelog-content" :
- symbol-links (changelog-content swap process-symbol . "changelog-content" :) each
+"changelog-toc" changelog-toc process-tag .
+"releases" releases-content process-tag .
+"changelog-content" :
+symbol-links (changelog-content swap process-symbol . "changelog-content" :) each
 
 ; Write CHANGELOG.md
 changelog-content
@@ -161,6 +194,7 @@ contents
     "title" id-content process-tag .
     "release" meta-release process-tag .
     "year" meta-year process-tag .
+    "changelog-toc" changelog-toc process-tag .
     "releases" releases-content process-tag .
     "new-content" :
     ; Replace symbols with links

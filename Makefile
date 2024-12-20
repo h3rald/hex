@@ -35,5 +35,4 @@ test: hex
 	./hex scripts/test.hbx
 
 web: playground hex
-	./hex -b scripts/web.hex
-	./hex scripts/web.hbx
+	./hex scripts/web.hex
