@@ -26,6 +26,14 @@
                 </ul>
             </li>
             <li><a href="#registry">Registry</a></li>
+            <li><a href="#hbx">Hex Bytecode eXecutable (HBX) Format</a>
+                <ul>
+                    <li><a href="#bytecode-header">Bytecode Header</a></li>
+                    <li><a href="#bytecode-symbol-table">Bytecode Symbol Table</a></li>
+                    <li><a href="#bytecode">Bytecode Program</a></li>
+                    <li><a href="#bytecode-example">Full Bytecode Example</a></li>
+                </ul>
+            </li>
             <li><a href="#native-symbols">Native Symbol Reference</a>
                 <ul>
                     <li><a href="#memory-management-symbols">Memory Management Symbols</a></li>
@@ -302,9 +310,187 @@
         straightforward.</p>
     <p>In the canonical hex implementation, the registry can hold up to 1024 symbols (960 of which can be user-defined
         symbols).</p>
+    <h3 id="hbx">Hex Bytecode eXecutable (HBX) Format<a href="#top"></a></h3>
+    <p>hex programs can be compiled to a binary format called Hex Bytecode eXecutable (HBX). HBX is a compact binary
+        representation of hex programs that can be executed by the hex interpreter. HBX files are typically smaller and
+        faster to load than hex source files, making them ideal for distribution and execution.</p>
+    <p>HBX files are structured as follows:</p>
+    <ul>
+        <li>Bytecode Header (8 bytes)</li>
+        <li>Bytecode Symbol Table &mdash; containing the list of all symbols that have been defined by the user in the
+            compiled
+            program.</li>
+        <li>Bytecode Program &mdash; containing the compiled hex program as a sequence of opcodes and payload.</li>
+    </ul>
+    <h4 id="bytecode-header">Bytecode Header<a href="#top"></a></h4>
+    <p>The header of an HBX file consists of 8 bytes:</p>
+    <ul>
+        <li><code>01</code> &mdash; Header Start</li>
+        <li><code>68</code> &mdash; The letter 'h'</li>
+        <li><code>65</code> &mdash; The letter 'e'</li>
+        <li><code>78</code> &mdash; The letter 'x'</li>
+        <li><code>01</code> &mdash; Version</li>
+        <li><code>00</code> &mdash; First byte indicating the size of the symbol table (little endian)</li>
+        <li><code>00</code> &mdash; Second byte indicating the size of the symbol table (little-endian)</li>
+        <li><code>02</code> &mdash; Header End</li>
+    </ul>
+    <h4 id="bytecode-symbol-table">Bytecode Symbol Table<a href="#top"></a></h4>
+    <p>The symbol table in an HBX file contains the list of all symbols that have been defined by the user in the
+        compiled program. Symbols are stored sequentially using the following format:</p>
+    <ul>
+        <li>Symbol Length (1 byte) &mdash; The length of the symbol identifier (Can be up to 255 characters long).</li>
+        <li>Symbol Identifier (variable length) &mdash; The symbol identifier as a sequence of ASCII characters (not
+            null-terminated).</li>
+    </ul>
+    <p>The symbol table can theoretically contain up to 65536 entries (the maximum size representable in two bytes);
+        however, the maximum number of user-defined symbols is currently limited to 960, since the <a
+            href="#registry">registry</a> has a maximum size of 1024 items and 64 are reserved for native symbols.
+    </p>
+    <h4 id="bytecode">Bytecode Program<a href="#top"></a></h4>
+    <p>The bytecode program in an HBX file contains the compiled hex program as a sequence of opcodes and payload. Each
+        opcode is represented by a single byte, and some opcodes may have an associated payload.</p>
+    <p>The following opcodes are defined for pushing different types of values on the stack</p>
+    <ul>
+        <li><code>00</code> &mdash; (LOOKUP) Lookup user symbol</li>
+        <li><code>01</code> &mdash; (PUSHIN) Push Integer</li>
+        <li><code>02</code> &mdash; (PUSHST) Push String</li>
+        <li><code>03</code> &mdash; (PUSHQT) Push Quotation</li>
+    </ul>
+    <p>Other opcodes are assigned to each <a href="#native-symbols">native symbol</a>, and range from <code>10</code> to
+        <code>4f</code>.
+    </p>
+    <p>Each of the four opcodes for pushing data has an associated payload, which is used to provide additional
+        information to the opcode. The
+        payload is represented as a sequence of bytes following the opcode byte.</p>
+    <p>Opcodes for native symbols, instead, do not have any associated payload.</p>
+    <h5 id="lookup">00 - LOOKUP<a href="#top"></a></h5>
+    <p>The <code>00</code> (LOOKUP) opcode is used to look up a user-defined symbol in the symbol table and push its
+        associated value onto
+        the stack. The <code>00</code> opcode is followed by two bytes representing the index of the symbol in the
+        symbol table, in
+        little-endian format.</p>
+
+    <p>For example, the sequence <code>00 03 00</code> instructs the interpreter to perform a lookup in the symbol table
+        and retrieve the 4th symbol (index 3).</p>
+
+    <h5 id="pushint">01 - PUSHIN<a href="#top"></a></h5>
+    <p>The <code>01</code> (PUSHIN) opcode is used to push an integer value onto the stack. The <code>01</code> opcode
+        is
+        followed by:</p>
+    <ul>
+        <li>One byte representing the number of following bytes used to represent the integer (1 to 4).</li>
+        <li>Four bytes representing the signed integer value using two's complement, in little-endian format.</li>
+    </ul>
+
+    <p>For example, the sequence <code>01 04 fe ff ff ff</code> represents the integer <code>-2</code> ($0xfffffe$$),
+        and
+        the sequence <code>01 01 10</code> represents the integer 16 ($0x10$).</p>
+
+    <h5 id="pushstr">02 - PUSHST<a href="#top"></a></h5>
+    <p>The <code>02</code> (PUSHST) opcode is used to push a string value onto the stack. The <code>02</code> opcode is
+        followed by:</p>
+    <ul>
+        <li>A variable number of bytes representing the length of the string, encoded using the <a
+                href="https://en.wikipedia.org/wiki/LEB128">Little Endian Base 128 (LEB128)</a> algorithm.
+        </li>
+        <li>Variable-length sequence of bytes representing the ASCII characters of the string, <em>without</em> the null
+            terminator. Note that only ASCII
+            characters are supported by the HBX format right now; attempting to encode non-ASCII characters will result
+            in a compiler error.</li>
+    </ul>
+    <p>The following sequence:</p>
+    <p>
+
+        <code>02 16 54 68 69 73 20 69 73 20 61 20 74 65 73 74 20 73 74 72 69 6e 67 21</code>
+    </p>
+    <p>represents the string $"This is a test string!"$$</p>
+
+    <h5 id="pushqt">03 - PUSHQT<a href="#top"></a></h5>
+    <p>The <code>03</code> (PUSHQT) opcode is used to push a quotation value onto the stack. The <code>03</code> opcode
+        is followed by:</p>
+    <ul>
+        <li>A variable number of bytes representing the number of items in the quotation, encoded using the <a
+                href="https://en.wikipedia.org/wiki/LEB128">Little Endian Base 128 (LEB128)</a> algorithm.
+        </li>
+        <li>The opcode sequences for each item of the quotation.</li>
+    </ul>
+
+    <p>The following sequence:</p>
+    <p>
+        <code>03 05 02 04 74 65 73 74 01 01 01 36 3b 45</code>
+    </p>
+    <p>represents the quotation <code>($"test"$$ $0x1$$ $:dec$$ $:cat$$ $:puts$$)</code></p>
+
+    <h4 id="bytecode-example">Full Bytecode Example<a href="#top"></a></h4>
+    <p>Consider the following hex program:</p>
+    <pre><code>($0x1$$ $0x2$$ $0x3$$ $0x4$$)
+    (
+        $"_n"$$ $::$$
+        ($:_n$$ $0x2$$ $:%$$ $0x0$$ $:==$$)
+          ($:_n$$ $:dec$$ $" is divisible by two."$$ $:cat$$ $:puts$$)
+        $:when$$
+    )
+$:each$$</code></pre>
+    <p>This gets compiled to the following bytecode:</p>
+    <pre><code>01 68 65 78 01 01 00 02 
+02 5f 6e 03 04 01 01 01 
+01 01 02 01 01 03 01 01 
+04 03 05 02 02 5f 6e 10 
+03 05 00 00 00 01 01 02 
+23 01 01 00 2a 03 05 00 
+00 00 36 02 15 20 69 73 
+20 64 69 76 69 73 69 62 
+6c 65 20 62 79 20 74 77 
+6f 2e 3b 45 13 42</code></pre>
+    <p>And here is an annotated breakdown:</p>
+    <pre><code>$; Header with symbol table of size 1$$
+01 68 65 78 01 01 00 02
+$; Symbol table with one symbol: _n$$
+02 5f 6e
+$; Push quotation of four items$$
+03 04 
+   $; Push integer 1$$
+   01 01 01 
+   $; Push integer 2$$
+   01 01 02 
+   $; Push integer 3$$
+   01 01 03 
+   $; Push integer 4$$
+   01 01 04 
+$; Push quotation of five items$$
+03 05 
+   $; Push string "_n"$$
+   02 02 5f 6e 
+   10 $; Symbol :$$
+   $; Push quotation of five items$$
+   03 05
+   $; Lookup first symbol (_n)$$ 
+   00 00 00
+   $; Push integer 2$$ 
+   1 01 02 
+   23 $; Symbol %$$
+   $; Push integer 0$$
+   01 01 00 
+   2a $; Symbol ==$$
+      $; Push quotation of five items$$
+      03 05 
+         $; Lookup first symbol (_n)$$ 
+         00 00 00 
+         36 $; Symbol dec$$
+         $; Push string " is divisible by two."$$
+         02 15 20 69 73 20 64 69 76 69 73 
+         69 62 6c 65 20 62 79 20 74 77 6f 2e 
+         3b $; Symbol cat$$
+         45 $; Symbol puts$$
+   13 $; Symbol when$$
+42 $; Symbol each$$</code></pre>
+
+
+
     <h3 id="native-symbols">Native Symbol Reference<a href="#top"></a></h3>
     <p>hex provides a set of 64 ($0x40$$) native symbols that are built-in and pre-defined in the registry. The
-        following section provides details on each of these symbols, including a signature illustrating how each symbol
+        following section provides details on each of these symbols, including a signature illustrating how each
+        symbol
         manipulates the stack.</p>
     <p>The notation used to specify the signature of a symbol is as follows:</p>
     <pre><code>    <mark>in1 in2 ... inN &rarr; out1 out2 ... outM</mark></code></pre>
@@ -313,12 +499,15 @@
         stack.</p>
     <p> Note that the <code>&rarr;</code> character represents the symbol being described, and: </p>
     <ul>
-        <li><code>inN</code> is the first element on the stack <em>before</em> the symbol is pushed on the stack.
+        <li><code>inN</code> is the first element on the stack <em>before</em> the symbol is pushed on the
+            stack.
         </li>
-        <li><code>outM</code> is the first element on the stack <em>after</em> the symbol is pushed on the stack.
+        <li><code>outM</code> is the first element on the stack <em>after</em> the symbol is pushed on the
+            stack.
         </li>
     </ul>
-    <p>The following abbreviations are used to represent different types of literals (and each can have a numerical
+    <p>The following abbreviations are used to represent different types of literals (and each can have a
+        numerical
         suffix for differentiation within the signature):</p>
     <ul>
         <li><code>a</code> &mdash; Any literal value</li>
@@ -346,20 +535,25 @@
     <h5 id="if-symbol"><code>$:if$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 q3 &rarr; *</mark></p>
     <aside>OPCODE: <code>12</code></aside>
-    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>,
+    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes
+        <code>q2</code>,
         otherwise
-        dequotes <code>q3</code>.</p>
+        dequotes <code>q3</code>.
+    </p>
     <h5 id="when-symbol"><code>$:when$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
     <aside>OPCODE: <code>13</code></aside>
-    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>.
+    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes
+        <code>q2</code>.
     </p>
     <h5 id="while-symbol"><code>$:while$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
     <aside>OPCODE: <code>14</code></aside>
-    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes <code>q2</code>
+    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes
+        <code>q2</code>
         and
-        repeats the process.</p>
+        repeats the process.
+    </p>
     <h5 id="error-symbol"><code>$:error$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>&rarr; s</mark></p>
     <aside>OPCODE: <code>15</code></aside>
@@ -397,7 +591,8 @@
     <h5 id="eval-symbol"><code>$:!$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>(s|q) &rarr; *</mark></p>
     <aside>OPCODE: <code>1d</code></aside>
-    <p>Evaluates the string <code>s</code> as an hex program, or the array of integers to be interpreted as hex bytecode
+    <p>Evaluates the string <code>s</code> as an hex program, or the array of integers to be interpreted as hex
+        bytecode
         (HBX format).</p>
     <h5 id="quote-symbol"><code>$:&#39;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>a &rarr; q</mark></p>
@@ -453,8 +648,10 @@
     <h5 id="equal-symbol"><code>$:==$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a1 a2 &rarr; i</mark></p>
     <aside>OPCODE: <code>2a</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are equal, or <code>0x0</code>
-        otherwise.</p>
+    <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are equal, or
+        <code>0x0</code>
+        otherwise.
+    </p>
     <h5 id="notequal-symbol"><code>$:!=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2b</code></aside>
@@ -465,8 +662,10 @@
     <h5 id="greaterthan-symbol"><code>$:&gt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2c</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or <code>0x0</code>
-        otherwise.</p>
+    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or
+        <code>0x0</code>
+        otherwise.
+    </p>
     <h5 id="lessthan-symbol"><code>$:&lt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2d</code></aside>
@@ -512,7 +711,8 @@
     <h5 id="int-symbol"><code>$:int$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr; i</mark></p>
     <aside>OPCODE: <code>34</code></aside>
-    <p>Converts the string <code>s</code> representing a hexadecimal integer to an integer value and pushes it on
+    <p>Converts the string <code>s</code> representing a hexadecimal integer to an integer value and pushes it
+        on
         the
         stack.</p>
     <h5 id="str-symbol"><code>$:str$$</code> Symbol<a href="#top"></a></h5>
@@ -524,19 +724,22 @@
     <h5 id="dec-symbol"><code>$:dec$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
     <aside>OPCODE: <code>36</code></aside>
-    <p>Converts the integer <code>i</code> to a string representing a decimal integer and pushes it on the stack.
+    <p>Converts the integer <code>i</code> to a string representing a decimal integer and pushes it on the
+        stack.
     </p>
     <h5 id="hex-symbol"><code>$:hex$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
     <aside>OPCODE: <code>37</code></aside>
-    <p>Converts the string <code>s</code> representing a decimal integer to an integer value and pushes it on the
+    <p>Converts the string <code>s</code> representing a decimal integer to an integer value and pushes it on
+        the
         stack.
     </p>
     <h5 id="ord-symbol"><code>$:ord$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
     <aside>OPCODE: <code>38</code></aside>
     <p>Pushes the ASCII value of the string <code>s</code> on the stack.</p>
-    <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between $0x0$$
+    <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between
+        $0x0$$
         and
         $0x7f$$, <code>$0xffffffff$$</code> is pushed on the stack.</p>
     <h5 id="chr-symbol"><code>$:chr$$</code> Symbol<a href="#top"></a></h5>
@@ -598,12 +801,14 @@
     <h5 id="map-symbol"><code>$:map$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; q3</mark></p>
     <aside>OPCODE: <code>43</code></aside>
-    <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a new
+    <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a
+        new
         quotation <code>q3</code>.
     <h5 id="filter-symbol"><code>$:filter$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; q</mark></p>
     <aside>OPCODE: <code>44</code></aside>
-    <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a new
+    <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a
+        new
         quotation <code>q</code> containing only the items that returned a positive integer.</p>
     <h4 id="input-output-symbols">Input/Output Symbols<a href="#top"></a></h4>
     <h5 id="puts-symbol"><code>$:puts$$</code> Symbol<a href="#top"></a></h5>
@@ -626,7 +831,8 @@
     <h5 id="read-symbol"><code>$:read$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s1 &rarr; (s2|q)</mark></p>
     <aside>OPCODE: <code>49</code></aside>
-    <p>Reads the content of the file <code>s1</code> and pushes it on the stack as a string, if the file is in textual
+    <p>Reads the content of the file <code>s1</code> and pushes it on the stack as a string, if the file is in
+        textual
         format, or as a quotation of integers representing bytes, if the file is in binary format.</p>
     <h5 id="write-symbol"><code>$:write$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>(s1|q) s2 &rarr;</mark></p>
@@ -651,11 +857,13 @@
     <h5 id="exec-symbol"><code>$:exec$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
     <aside>OPCODE: <code>4e</code></aside>
-    <p>Executes the string <code>s</code> as a shell command, and pushes the command return code on the stack.</p>
+    <p>Executes the string <code>s</code> as a shell command, and pushes the command return code on the stack.
+    </p>
     <h5 id="run-symbol"><code>$:run$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; q</mark></p>
     <aside>OPCODE: <code>4f</code></aside>
-    <p>Executes the string <code>s</code> as a shell command, capturing its output and errors. It pushes a quotation
+    <p>Executes the string <code>s</code> as a shell command, capturing its output and errors. It pushes a
+        quotation
         on
         the stack containing the following items:
     </p>
