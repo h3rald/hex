@@ -5,11 +5,13 @@
     <li>Implemented a virtual machine with a bytecode compiler and interpreter.</li>
     <li>{{sym-read}}, {{sym-write}}, {{sym-append}} now support reading and writing from/to binary files as well.</li>
     <li>{{sym-!}} can now evaluate a quotation of integers as hex bytecode.</li>
+    <li>Increased maximum stack size to 256 items.</li>
 </ul>
 
 <h4>Fixes</h4>
 <ul>
     <li>Ensured that {{sym-dec}} is able to print negative integers in decimal format.</li>
+    <li>Ensured that symbol identifiers cannot be longer than 256 characters.</li>
 </ul>
 
 <h4>Chores</h4>

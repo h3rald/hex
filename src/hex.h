@@ -23,11 +23,11 @@ int isatty(int fd);
 #define HEX_VERSION "0.1.0"
 #define HEX_STDIN_BUFFER_SIZE 256
 #define HEX_REGISTRY_SIZE 1024
-#define HEX_STACK_SIZE 128
+#define HEX_STACK_SIZE 256
 #define HEX_STACK_TRACE_SIZE 16
 #define HEX_NATIVE_SYMBOLS 64
-#define HEX_MAX_SYMBOL_LENGTH 255
-#define HEX_MAX_USER_SYMBOLS 65535
+#define HEX_MAX_SYMBOL_LENGTH 256
+#define HEX_MAX_USER_SYMBOLS (HEX_REGISTRY_SIZE - HEX_NATIVE_SYMBOLS)
 
 // Type Definitions
 typedef enum hex_item_type_t

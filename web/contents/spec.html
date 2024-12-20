@@ -247,7 +247,7 @@
         stack-based language, meaning that all operations are performed on a stack of values. The order according to
         which items are added (pushed) to or removed (popped) from the stack is <abbr
             title="Last In, First Out">LIFO</abbr>.</p>
-    <p>In the canonical implementation, the hex stack can contain up to 128 items. If you try to push more items on the
+    <p>In the canonical implementation, the hex stack can contain up to 256 items. If you try to push more items on the
         stack, a stack overflow error will be raised and the program will terminate. While this may seem a relatively
         low number, it is important to note that typically there will not be more than 5-10 items on the stack at any
         time, because typically symbols are used to frequently pop them out of the stacks.</p>
@@ -300,7 +300,8 @@
     <p>It is important to note that the registry is a global store, meaning that symbols are not lexically scoped and
         can be accessed from anywhere in the program. This design choice was made to keep the language simple and
         straightforward.</p>
-    <p>In the canonical hex implementation, the registry can hold up to 1024 symbols.</p>
+    <p>In the canonical hex implementation, the registry can hold up to 1024 symbols (960 of which can be user-defined
+        symbols).</p>
     <h3 id="native-symbols">Native Symbol Reference<a href="#top"></a></h3>
     <p>hex provides a set of 64 ($0x40$$) native symbols that are built-in and pre-defined in the registry. The
         following section provides details on each of these symbols, including a signature illustrating how each symbol

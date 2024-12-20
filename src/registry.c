@@ -20,6 +20,11 @@ int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
         hex_error(ctx, "Invalid symbol: %s", symbol);
         return 0;
     }
+    /*if (strlen(symbol) > HEX_MAX_SYMBOL_LENGTH)
+    {
+        hex_error(ctx, "Symbol name too long: %s", symbol);
+        return 0;
+    }*/
     for (size_t j = 1; j < strlen(symbol); j++)
     {
         if (!isalnum(symbol[j]) && symbol[j] != '_' && symbol[j] != '-')
