@@ -26,14 +26,14 @@ int hex_symbol_store(hex_context_t *ctx)
     }
     if (name.type != HEX_TYPE_STRING)
     {
-        hex_error(ctx, "Symbol name must be a string");
+        hex_error(ctx, "[symbol :] Symbol name must be a string");
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
     }
     if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
     {
-        hex_error(ctx, "Failed to store symbol '%s'", name.data.str_value);
+        hex_error(ctx, "[symbol :] Failed to store symbol '%s'", name.data.str_value);
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
@@ -53,12 +53,12 @@ int hex_symbol_free(hex_context_t *ctx)
     if (item.type != HEX_TYPE_STRING)
     {
         HEX_FREE(ctx, item);
-        hex_error(ctx, "Symbol name must be a string");
+        hex_error(ctx, "[symbol #] Symbol name must be a string");
         return 1;
     }
     if (hex_valid_native_symbol(ctx, item.data.str_value))
     {
-        hex_error(ctx, "Cannot free native symbol '%s'", item.data.str_value);
+        hex_error(ctx, "[symbol #] Cannot free native symbol '%s'", item.data.str_value);
         HEX_FREE(ctx, item);
         return 1;
     }
@@ -106,7 +106,7 @@ int hex_symbol_i(hex_context_t *ctx)
     }
     if (item.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "Symbol '.' requires a quotation");
+        hex_error(ctx, "[symbol .] Quotation required");
         HEX_FREE(ctx, item);
         return 1;
     }
@@ -140,7 +140,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         {
             if (item.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
             {
-                hex_error(ctx, "Quotation must contain only integers");
+                hex_error(ctx, "[symbol !] Quotation must contain only integers");
                 HEX_FREE(ctx, item);
                 return 1;
             }
@@ -148,7 +148,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         uint8_t *bytecode = (uint8_t *)malloc(item.quotation_size * sizeof(uint8_t));
         if (!bytecode)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[symbol !] Memory allocation failed");
             HEX_FREE(ctx, item);
             return 1;
         }
@@ -156,7 +156,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         {
             if (item.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
             {
-                hex_error(ctx, "Quotation must contain only integers");
+                hex_error(ctx, "[symbol !] Quotation must contain only integers");
                 free(bytecode);
                 HEX_FREE(ctx, item);
                 return 1;
@@ -169,7 +169,7 @@ int hex_symbol_eval(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol '!' requires a string or a quotation of integers");
+        hex_error(ctx, "[symbol !] String or a quotation of integers required");
         HEX_FREE(ctx, item);
         return 1;
     }
@@ -240,7 +240,7 @@ int hex_symbol_gets(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Failed to read input");
+        hex_error(ctx, "[symbol gets] Failed to read input");
         return 1;
     }
 }
@@ -265,7 +265,7 @@ int hex_symbol_add(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value + b.data.int_value);
     }
-    hex_error(ctx, "Symbol '+' requires two integers");
+    hex_error(ctx, "[symbol +] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -291,7 +291,7 @@ int hex_symbol_subtract(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value - b.data.int_value);
     }
-    hex_error(ctx, "Symbol '-' requires two integers");
+    hex_error(ctx, "[symbol -] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -317,7 +317,7 @@ int hex_symbol_multiply(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value * b.data.int_value);
     }
-    hex_error(ctx, "'*' symbol requires two integers");
+    hex_error(ctx, "[symbol *] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -343,12 +343,12 @@ int hex_symbol_divide(hex_context_t *ctx)
     {
         if (b.data.int_value == 0)
         {
-            hex_error(ctx, "Division by zero");
+            hex_error(ctx, "[symbol /] Division by zero");
             return 1;
         }
         return hex_push_integer(ctx, a.data.int_value / b.data.int_value);
     }
-    hex_error(ctx, "Symbol '/' requires two integers");
+    hex_error(ctx, "[symbol /] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -374,12 +374,12 @@ int hex_symbol_modulo(hex_context_t *ctx)
     {
         if (b.data.int_value == 0)
         {
-            hex_error(ctx, "Division by zero");
+            hex_error(ctx, "[symbol %%] Division by zero");
             return 1;
         }
         return hex_push_integer(ctx, a.data.int_value % b.data.int_value);
     }
-    hex_error(ctx, "Symbol '%%' requires two integers");
+    hex_error(ctx, "[symbol %%] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -407,7 +407,7 @@ int hex_symbol_bitand(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value & right.data.int_value);
     }
-    hex_error(ctx, "Symbol '&' requires two integers");
+    hex_error(ctx, "[symbol &] Two integers required");
     HEX_FREE(ctx, left);
     HEX_FREE(ctx, right);
     return 1;
@@ -433,7 +433,7 @@ int hex_symbol_bitor(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value | right.data.int_value);
     }
-    hex_error(ctx, "Symbol '|' requires two integers");
+    hex_error(ctx, "[symbol |] Two integers required");
     HEX_FREE(ctx, left);
     HEX_FREE(ctx, right);
     return 1;
@@ -459,7 +459,7 @@ int hex_symbol_bitxor(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value ^ right.data.int_value);
     }
-    hex_error(ctx, "Symbol '^' requires two integers");
+    hex_error(ctx, "[symbol ^] Two integers required");
     HEX_FREE(ctx, left);
     HEX_FREE(ctx, right);
     return 1;
@@ -485,7 +485,7 @@ int hex_symbol_shiftleft(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value << right.data.int_value);
     }
-    hex_error(ctx, "Symbol '<<' requires two integers");
+    hex_error(ctx, "[symbol <<] Two integers required");
     HEX_FREE(ctx, left);
     HEX_FREE(ctx, right);
     return 1;
@@ -511,7 +511,7 @@ int hex_symbol_shiftright(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, left.data.int_value >> right.data.int_value);
     }
-    hex_error(ctx, "Symbol '>>' requires two integers");
+    hex_error(ctx, "[symbol >>] Two integers required");
     HEX_FREE(ctx, left);
     HEX_FREE(ctx, right);
     return 1;
@@ -530,7 +530,7 @@ int hex_symbol_bitnot(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, ~item.data.int_value);
     }
-    hex_error(ctx, "Symbol '~' requires an integer");
+    hex_error(ctx, "[symbol ~] Integer required");
     HEX_FREE(ctx, item);
     return 1;
 }
@@ -550,7 +550,7 @@ int hex_symbol_int(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, strtol(a.data.str_value, NULL, 16));
     }
-    hex_error(ctx, "Symbol 'int' requires a string");
+    hex_error(ctx, "[symbol int] String representing a hexadecimal integer required");
     HEX_FREE(ctx, a);
     return 1;
 }
@@ -568,7 +568,7 @@ int hex_symbol_str(hex_context_t *ctx)
     {
         return hex_push_string(ctx, hex_itoa_hex(a.data.int_value));
     }
-    hex_error(ctx, "Symbol 'str' requires an integer");
+    hex_error(ctx, "[symbol str] Integer required");
     HEX_FREE(ctx, a);
     return 1;
 }
@@ -587,7 +587,7 @@ int hex_symbol_dec(hex_context_t *ctx)
         snprintf(buffer, sizeof(buffer), "%d", a.data.int_value);
         return hex_push_string(ctx, buffer);
     }
-    hex_error(ctx, "Symbol 'dec' requires an integer");
+    hex_error(ctx, "[symbol dec] Integer required");
     HEX_FREE(ctx, a);
     return 1;
 }
@@ -605,7 +605,7 @@ int hex_symbol_hex(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, strtol(item.data.str_value, NULL, 10));
     }
-    hex_error(ctx, "Symbol 'hex' requires a string representing a decimal integer");
+    hex_error(ctx, "[symbol hex] String representing a decimal integer required");
     HEX_FREE(ctx, item);
     return 1;
 }
@@ -634,7 +634,7 @@ int hex_symbol_ord(hex_context_t *ctx)
             return hex_push_integer(ctx, -1);
         }
     }
-    hex_error(ctx, "Symbol 'ord' requires a string");
+    hex_error(ctx, "[symbol ord] String required");
     HEX_FREE(ctx, item);
     return 1;
 }
@@ -659,7 +659,7 @@ int hex_symbol_chr(hex_context_t *ctx)
             return hex_push_string(ctx, "");
         }
     }
-    hex_error(ctx, "Symbol 'chr' requires an integer");
+    hex_error(ctx, "[symbol chr] Integer required");
     HEX_FREE(ctx, item);
     return 1;
 }
@@ -788,7 +788,7 @@ static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *s
     }
     else
     {
-        hex_error(ctx, "'%s' symbol requires two integers, two strings, or two quotations", symbol);
+        hex_error(ctx, "[symbol %s] Two integers, two strings, or two quotations required", symbol);
         return -1;
     }
 }
@@ -951,7 +951,7 @@ int hex_symbol_and(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value && b.data.int_value);
     }
-    hex_error(ctx, "Symbol 'and' requires two integers");
+    hex_error(ctx, "[symbol and] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -977,7 +977,7 @@ int hex_symbol_or(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value || b.data.int_value);
     }
-    hex_error(ctx, "Symbol 'or' requires two integers");
+    hex_error(ctx, "[symbol or] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -996,7 +996,7 @@ int hex_symbol_not(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, !a.data.int_value);
     }
-    hex_error(ctx, "Symbol 'not' requires an integer");
+    hex_error(ctx, "[symbol not] Integer required");
     HEX_FREE(ctx, a);
     return 1;
 }
@@ -1021,7 +1021,7 @@ int hex_symbol_xor(hex_context_t *ctx)
     {
         return hex_push_integer(ctx, a.data.int_value ^ b.data.int_value);
     }
-    hex_error(ctx, "Symbol 'xor' requires two integers");
+    hex_error(ctx, "[symbol xor] Two integers required");
     HEX_FREE(ctx, a);
     HEX_FREE(ctx, b);
     return 1;
@@ -1057,7 +1057,7 @@ int hex_symbol_cat(hex_context_t *ctx)
             list.data.quotation_value, newSize * sizeof(hex_item_t *));
         if (!newQuotation)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[symbol cat] Memory allocation failed");
             result = 1;
         }
         else
@@ -1080,7 +1080,7 @@ int hex_symbol_cat(hex_context_t *ctx)
         char *newStr = (char *)malloc(newLength);
         if (!newStr)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[symbol cat] Memory allocation failed");
             result = 1;
         }
         else
@@ -1092,7 +1092,7 @@ int hex_symbol_cat(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'cat' requires two quotations or two strings");
+        hex_error(ctx, "[symbol cat] Two quotations or two strings required");
         result = 1;
     }
 
@@ -1126,7 +1126,7 @@ int hex_symbol_len(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'len' requires a quotation or a string");
+        hex_error(ctx, "[symbol len] Quotation or string required");
         result = 1;
     }
     if (result != 0)
@@ -1157,12 +1157,12 @@ int hex_symbol_get(hex_context_t *ctx)
     {
         if (index.type != HEX_TYPE_INTEGER)
         {
-            hex_error(ctx, "Index must be an integer");
+            hex_error(ctx, "[symbol get] Index must be an integer");
             result = 1;
         }
         else if (index.data.int_value < 0 || (size_t)index.data.int_value >= list.quotation_size)
         {
-            hex_error(ctx, "Index out of range");
+            hex_error(ctx, "[symbol get] Index out of range");
             result = 1;
         }
         else
@@ -1174,12 +1174,12 @@ int hex_symbol_get(hex_context_t *ctx)
     {
         if (index.type != HEX_TYPE_INTEGER)
         {
-            hex_error(ctx, "Index must be an integer");
+            hex_error(ctx, "[symbol get] Index must be an integer");
             result = 1;
         }
         else if (index.data.int_value < 0 || index.data.int_value >= (int)strlen(list.data.str_value))
         {
-            hex_error(ctx, "Index out of range");
+            hex_error(ctx, "[symbol get] Index out of range");
             result = 1;
         }
         else
@@ -1190,7 +1190,7 @@ int hex_symbol_get(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'get' requires a quotation or a string");
+        hex_error(ctx, "[symbol get] Quotation or string required");
         result = 1;
     }
     if (result != 0)
@@ -1240,7 +1240,7 @@ int hex_symbol_index(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'index' requires a quotation or a string");
+        hex_error(ctx, "[symbol index] Quotation or string required");
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, item);
         return 1;
@@ -1278,7 +1278,7 @@ int hex_symbol_join(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "Quotation must contain only strings");
+                hex_error(ctx, "[symbol join] Quotation must contain only strings");
                 HEX_FREE(ctx, list);
                 HEX_FREE(ctx, separator);
                 return 1;
@@ -1290,7 +1290,7 @@ int hex_symbol_join(hex_context_t *ctx)
             char *newStr = (char *)malloc(length + 1);
             if (!newStr)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[symbol join] Memory allocation failed");
                 HEX_FREE(ctx, list);
                 HEX_FREE(ctx, separator);
                 return 1;
@@ -1309,7 +1309,7 @@ int hex_symbol_join(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'join' requires a quotation and a string");
+        hex_error(ctx, "[symbol join] Quotation and string required");
         result = 1;
     }
     if (result != 0)
@@ -1345,7 +1345,7 @@ int hex_symbol_split(hex_context_t *ctx)
             hex_item_t **quotation = (hex_item_t **)malloc(size * sizeof(hex_item_t *));
             if (!quotation)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[symbol split] Memory allocation failed");
                 result = 1;
             }
             else
@@ -1355,7 +1355,7 @@ int hex_symbol_split(hex_context_t *ctx)
                     quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
                     if (!quotation[i])
                     {
-                        hex_error(ctx, "Memory allocation failed");
+                        hex_error(ctx, "[symbol split] Memory allocation failed");
                         result = 1;
                         break;
                     }
@@ -1363,7 +1363,7 @@ int hex_symbol_split(hex_context_t *ctx)
                     quotation[i]->data.str_value = (char *)malloc(2); // Allocate 2 bytes: 1 for the character and 1 for null terminator
                     if (!quotation[i]->data.str_value)
                     {
-                        hex_error(ctx, "Memory allocation failed");
+                        hex_error(ctx, "[symbol split] Memory allocation failed");
                         result = 1;
                         break;
                     }
@@ -1385,7 +1385,7 @@ int hex_symbol_split(hex_context_t *ctx)
             hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
             if (!quotation)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[symbol split] Memory allocation failed");
                 result = 1;
             }
             else
@@ -1398,7 +1398,7 @@ int hex_symbol_split(hex_context_t *ctx)
                         quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
                         if (!quotation)
                         {
-                            hex_error(ctx, "Memory allocation failed");
+                            hex_error(ctx, "[symbol split] Memory allocation failed");
                             result = 1;
                             break;
                         }
@@ -1418,7 +1418,7 @@ int hex_symbol_split(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'split' requires two strings");
+        hex_error(ctx, "[symbol split] Two strings required");
         result = 1;
     }
     if (result != 0)
@@ -1468,7 +1468,7 @@ int hex_symbol_replace(hex_context_t *ctx)
             char *newStr = (char *)malloc(newLen);
             if (!newStr)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[symbol replace] Memory allocation failed");
                 result = 1;
             }
             else
@@ -1486,7 +1486,7 @@ int hex_symbol_replace(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'replace' requires three strings");
+        hex_error(ctx, "[symbol replace] Three strings required");
         result = 1;
     }
     if (result != 0)
@@ -1514,7 +1514,7 @@ int hex_symbol_read(hex_context_t *ctx)
         FILE *file = fopen(filename.data.str_value, "rb");
         if (!file)
         {
-            hex_error(ctx, "Could not open file for reading: %s", filename.data.str_value);
+            hex_error(ctx, "[symbol read] Could not open file for reading: %s", filename.data.str_value);
             result = 1;
         }
         else
@@ -1526,7 +1526,7 @@ int hex_symbol_read(hex_context_t *ctx)
             uint8_t *buffer = (uint8_t *)malloc(length);
             if (!buffer)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[symbol read] Memory allocation failed");
                 result = 1;
             }
             else
@@ -1537,7 +1537,7 @@ int hex_symbol_read(hex_context_t *ctx)
                     hex_item_t **quotation = (hex_item_t **)malloc(bytesRead * sizeof(hex_item_t *));
                     if (!quotation)
                     {
-                        hex_error(ctx, "Memory allocation failed");
+                        hex_error(ctx, "[symbol read] Memory allocation failed");
                         result = 1;
                     }
                     else
@@ -1556,12 +1556,12 @@ int hex_symbol_read(hex_context_t *ctx)
                     char *str = hex_bytes_to_string(buffer, bytesRead);
                     if (!str)
                     {
-                        hex_error(ctx, "Memory allocation failed");
+                        hex_error(ctx, "[symbol read] Memory allocation failed");
                         result = 1;
                     }
                     else
                     {
-                    hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
+                        hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
                         result = HEX_PUSH(ctx, item);
                     }
                 }
@@ -1572,7 +1572,7 @@ int hex_symbol_read(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'read' requires a string");
+        hex_error(ctx, "[symbol read] String required");
         result = 1;
     }
     if (result != 0)
@@ -1612,7 +1612,7 @@ int hex_symbol_write(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "Could not open file for writing: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol write] Could not open file for writing: %s", filename.data.str_value);
                 result = 1;
             }
         }
@@ -1625,7 +1625,7 @@ int hex_symbol_write(hex_context_t *ctx)
                 {
                     if (data.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
                     {
-                        hex_error(ctx, "Quotation must contain only integers");
+                        hex_error(ctx, "[symbol write] Quotation must contain only integers");
                         result = 1;
                         break;
                     }
@@ -1637,19 +1637,19 @@ int hex_symbol_write(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "Could not open file for writing: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol write] Could not open file for writing: %s", filename.data.str_value);
                 result = 1;
             }
         }
         else
         {
-            hex_error(ctx, "Symbol 'write' requires a string or a quotation of integers");
+            hex_error(ctx, "[symbol write] String or quotation of integers required");
             result = 1;
         }
     }
     else
     {
-        hex_error(ctx, "Symbol 'write' requires a string");
+        hex_error(ctx, "[symbol write] String required");
         result = 1;
     }
     if (result != 0)
@@ -1690,7 +1690,7 @@ int hex_symbol_append(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "Could not open file for appending: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol append] Could not open file for appending: %s", filename.data.str_value);
                 result = 1;
             }
         }
@@ -1703,7 +1703,7 @@ int hex_symbol_append(hex_context_t *ctx)
                 {
                     if (data.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
                     {
-                        hex_error(ctx, "Quotation must contain only integers");
+                        hex_error(ctx, "[symbol append] Quotation must contain only integers");
                         result = 1;
                         break;
                     }
@@ -1715,19 +1715,19 @@ int hex_symbol_append(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "Could not open file for appending: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol append] Could not open file for appending: %s", filename.data.str_value);
                 result = 1;
             }
         }
         else
         {
-            hex_error(ctx, "Symbol 'append' requires a string or a quotation of integers");
+            hex_error(ctx, "[symbol append] String or quotation of integers required");
             result = 1;
         }
     }
     else
     {
-        hex_error(ctx, "Symbol 'append' requires a string");
+        hex_error(ctx, "[symbol append] String required");
         result = 1;
     }
     if (result != 0)
@@ -1746,7 +1746,7 @@ int hex_symbol_args(hex_context_t *ctx)
     hex_item_t **quotation = (hex_item_t **)malloc(ctx->argc * sizeof(hex_item_t *));
     if (!quotation)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[symbol args] Memory allocation failed");
         return 1;
     }
     else
@@ -1777,7 +1777,7 @@ int hex_symbol_exit(hex_context_t *ctx)
     }
     if (item.type != HEX_TYPE_INTEGER)
     {
-        hex_error(ctx, "Exit status must be an integer");
+        hex_error(ctx, "[symbol exit] Integer required");
         HEX_FREE(ctx, item);
         return 1;
     }
@@ -1803,7 +1803,7 @@ int hex_symbol_exec(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "Symbol 'exec' requires a string");
+        hex_error(ctx, "[symbol exec] String required");
         result = 1;
     }
     if (result != 0)
@@ -1824,7 +1824,7 @@ int hex_symbol_run(hex_context_t *ctx)
     }
     if (command.type != HEX_TYPE_STRING)
     {
-        hex_error(ctx, "Symbol 'run' requires a string");
+        hex_error(ctx, "[symbol run] String required");
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -1849,7 +1849,7 @@ int hex_symbol_run(hex_context_t *ctx)
     // Create pipes for capturing stdout and stderr
     if (!CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0) || !CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0))
     {
-        hex_error(ctx, "Failed to create pipes");
+        hex_error(ctx, "[symbol run] Failed to create pipes");
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -1864,7 +1864,7 @@ int hex_symbol_run(hex_context_t *ctx)
     // Create the child process
     if (!CreateProcess(NULL, command.data.str_value, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
     {
-        hex_error(ctx, "Failed to create process");
+        hex_error(ctx, "[symbol run] Failed to create process");
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -1905,7 +1905,7 @@ int hex_symbol_run(hex_context_t *ctx)
     int stderr_pipe[2];
     if (pipe(stdout_pipe) != 0 || pipe(stderr_pipe) != 0)
     {
-        hex_error(ctx, "Failed to create pipes");
+        hex_error(ctx, "[symbol run] Failed to create pipes");
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -1913,7 +1913,7 @@ int hex_symbol_run(hex_context_t *ctx)
     pid_t pid = fork();
     if (pid == -1)
     {
-        hex_error(ctx, "Failed to fork process");
+        hex_error(ctx, "[symbol run] Failed to fork process");
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -2002,7 +2002,7 @@ int hex_symbol_if(hex_context_t *ctx)
     }
     if (condition.type != HEX_TYPE_QUOTATION || thenBlock.type != HEX_TYPE_QUOTATION || elseBlock.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'if' symbol requires three quotations");
+        hex_error(ctx, "[symbol if] Three quotations required");
         return 1;
     }
     else
@@ -2067,7 +2067,7 @@ int hex_symbol_when(hex_context_t *ctx)
     int result = 0;
     if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'when' symbol requires two quotations");
+        hex_error(ctx, "[symbol when] Two quotations required");
         result = 1;
     }
     else
@@ -2119,7 +2119,7 @@ int hex_symbol_while(hex_context_t *ctx)
     }
     if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'while' symbol requires two quotations");
+        hex_error(ctx, "[symbol while] Two quotations required");
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, condition);
         return 1;
@@ -2174,7 +2174,7 @@ int hex_symbol_each(hex_context_t *ctx)
     }
     if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'each' symbol requires two quotations");
+        hex_error(ctx, "[symbol each] Two quotations required");
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, list);
         return 1;
@@ -2229,7 +2229,7 @@ int hex_symbol_try(hex_context_t *ctx)
     }
     if (try_block.type != HEX_TYPE_QUOTATION || catch_block.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'try' symbol requires two quotations");
+        hex_error(ctx, "[symbol try] Two quotations required");
         HEX_FREE(ctx, catch_block);
         HEX_FREE(ctx, try_block);
         return 1;
@@ -2283,7 +2283,7 @@ int hex_symbol_q(hex_context_t *ctx)
     hex_item_t *quotation = (hex_item_t *)malloc(sizeof(hex_item_t));
     if (!quotation)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[symbol '] Memory allocation failed");
         HEX_FREE(ctx, item);
         return 1;
     }
@@ -2297,7 +2297,7 @@ int hex_symbol_q(hex_context_t *ctx)
     {
         HEX_FREE(ctx, item);
         free(quotation);
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[symbol '] Memory allocation failed");
         return 1;
     }
 
@@ -2333,7 +2333,7 @@ int hex_symbol_map(hex_context_t *ctx)
     }
     if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'map' symbol requires two quotations");
+        hex_error(ctx, "[symbol map] Two quotations required");
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, list);
         return 1;
@@ -2343,7 +2343,7 @@ int hex_symbol_map(hex_context_t *ctx)
         hex_item_t **quotation = (hex_item_t **)malloc(list.quotation_size * sizeof(hex_item_t *));
         if (!quotation)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[symbol map] Memory allocation failed");
             HEX_FREE(ctx, action);
             HEX_FREE(ctx, list);
             return 1;
@@ -2399,7 +2399,7 @@ int hex_symbol_filter(hex_context_t *ctx)
     }
     if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "'filter' symbol requires two quotations");
+        hex_error(ctx, "[symbol filter] Two quotations required");
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, list);
         return 1;
@@ -2409,7 +2409,7 @@ int hex_symbol_filter(hex_context_t *ctx)
         hex_item_t **quotation = (hex_item_t **)malloc(list.quotation_size * sizeof(hex_item_t *));
         if (!quotation)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[symbol filter] Memory allocation failed");
             HEX_FREE(ctx, action);
             HEX_FREE(ctx, list);
             return 1;
@@ -2440,7 +2440,7 @@ int hex_symbol_filter(hex_context_t *ctx)
                 quotation[count] = (hex_item_t *)malloc(sizeof(hex_item_t));
                 if (!quotation[count])
                 {
-                    hex_error(ctx, "Memory allocation failed");
+                    hex_error(ctx, "[symbol filter] Memory allocation failed");
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, list);
                     hex_free_list(ctx, quotation, count);
@@ -2452,7 +2452,7 @@ int hex_symbol_filter(hex_context_t *ctx)
         }
         if (hex_push_quotation(ctx, quotation, count) != 0)
         {
-            hex_error(ctx, "An error occurred while filtering the list");
+            hex_error(ctx, "[symbol filter] An error occurred while pushing quotation");
             HEX_FREE(ctx, action);
             HEX_FREE(ctx, list);
             for (size_t i = 0; i < count; i++)
@@ -2521,7 +2521,7 @@ int hex_symbol_stack(hex_context_t *ctx)
     hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack.top + 1) * sizeof(hex_item_t *));
     if (!quotation)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[symbol stack] Memory allocation failed");
         return 1;
     }
     int count = 0;
@@ -2530,7 +2530,7 @@ int hex_symbol_stack(hex_context_t *ctx)
         quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (!quotation[i])
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[symbol stack] Memory allocation failed");
             hex_free_list(ctx, quotation, count);
             return 1;
         }
@@ -2540,7 +2540,7 @@ int hex_symbol_stack(hex_context_t *ctx)
 
     if (hex_push_quotation(ctx, quotation, ctx->stack.top + 1) != 0)
     {
-        hex_error(ctx, "An error occurred while fetching stack contents");
+        hex_error(ctx, "[symbol stack] An error occurred while pushing quotation");
         hex_free_list(ctx, quotation, count);
         return 1;
     }

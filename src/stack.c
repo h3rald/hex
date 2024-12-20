@@ -22,7 +22,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
 
     if (ctx->stack.top >= HEX_STACK_SIZE - 1)
     {
-        hex_error(ctx, "Stack overflow");
+        hex_error(ctx, "[push] Stack overflow");
         return 1;
     }
     hex_debug_item(ctx, "PUSH", item);
@@ -37,7 +37,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         }
         else
         {
-            hex_error(ctx, "Undefined user symbol: %s", item.token->value);
+            hex_error(ctx, "[push] Undefined user symbol: %s", item.token->value);
             HEX_FREE(ctx, value);
             result = 1;
         }
@@ -68,7 +68,7 @@ hex_item_t hex_string_item(hex_context_t *ctx, const char *value)
     char *str = hex_process_string(value);
     if (str == NULL)
     {
-        hex_error(ctx, "Failed to allocate memory for string");
+        hex_error(ctx, "[create string] Failed to allocate memory for string");
         return (hex_item_t){.type = HEX_TYPE_INVALID};
     }
     hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
@@ -114,7 +114,7 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
     }
     else
     {
-        hex_error(ctx, "Undefined symbol: %s", token->value);
+        hex_error(ctx, "[push] Undefined symbol: %s", token->value);
         return 1;
     }
 }
@@ -124,7 +124,7 @@ hex_item_t hex_pop(hex_context_t *ctx)
 {
     if (ctx->stack.top < 0)
     {
-        hex_error(ctx, "Insufficient items on the stack");
+        hex_error(ctx, "[pop] Insufficient items on the stack");
         return (hex_item_t){.type = HEX_TYPE_INVALID};
     }
     hex_debug_item(ctx, " POP", ctx->stack.entries[ctx->stack.top]);

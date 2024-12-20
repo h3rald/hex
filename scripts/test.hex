@@ -89,8 +89,8 @@
 
     ("hello" " world" cat "hello world" ==)
     ((0x1 "a") ("b") cat (0x1 "a" "b") ==)
-    ((() not) (error) try "Symbol 'not' requires an integer" ==)
-    ((() 0x1 xor) (error) try "Symbol 'xor' requires two integers" ==)
+    ((() not) (error) try "[symbol not] Integer required" ==)
+    ((() 0x1 xor) (error) try "[symbol xor] Two integers required" ==)
     ;36
 
     ("aaaaa" len 0x5 ==)
@@ -101,8 +101,8 @@
 
     ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" replace "t-path" :) while t-path "a\\b\\c" == "t-path" #)
     ("assets\"" "\"" "/" replace "assets/" ==)
-    (("" () cat) (error) try "Symbol 'cat' requires two quotations or two strings" ==)
-    ((0x4 len) (error) try "Symbol 'len' requires a quotation or a string" ==)
+    (("" () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
+    ((0x4 len) (error) try "[symbol len] Quotation or string required" ==)
     ;44
 
     ("this is a test" "is" index 0x2 ==)
@@ -129,7 +129,7 @@
     (0x0 "tmp-b" : (0x1 0x2 0x3) (tmp-b + "tmp-b" :) each tmp-b 0x6 ==)
     ;60
 
-    ((0x2 0x0 /) (error "Division by zero" ==) try)
+    ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
     (error "" ==)
     ("a" ' ' ' ((("a"))) ==)
     ((0x1 0x2 0x3) (dup dup * *) map (0x1 0x8 0x1b) ==)
@@ -141,16 +141,16 @@
     (0x1 0x2 swap pop stack (0x2) ==)
     ;68
 
-    (("aaa" "puts" :) (error) try "Failed to store symbol 'puts'" ==)
-    (("puts" #) (error) try "Cannot free native symbol 'puts'" ==)
-    (("aaa" 0x2 :) (error) try "Symbol name must be a string" ==)
-    ((0x2 #) (error) try "Symbol name must be a string" ==)
+    (("aaa" "puts" :) (error) try "[symbol :] Failed to store symbol 'puts'" ==)
+    (("puts" #) (error) try "[symbol #] Cannot free native symbol 'puts'" ==)
+    (("aaa" 0x2 :) (error) try "[symbol :] Symbol name must be a string" ==)
+    ((0x2 #) (error) try "[symbol #] Symbol name must be a string" ==)
     ;72
 
-    (("puts" .) (error) try "Symbol '.' requires a quotation" ==)
-    (((puts) !) (error) try "Quotation must contain only integers" ==)
-    (("3" 0x3 +) (error) try "Symbol '+' requires two integers" ==)
-    (("3" 0x3 -) (error) try "Symbol '-' requires two integers" ==)
+    (("puts" .) (error) try "[symbol .] Quotation required" ==)
+    (((puts) !) (error) try "[symbol !] Quotation must contain only integers" ==)
+    (("3" 0x3 +) (error) try "[symbol +] Two integers required" ==)
+    (("3" 0x3 -) (error) try "[symbol -] Two integers required" ==)
     ;76
 
     ((0x2 0x3 0x3) (0x2 0x3) > 0x1 ==)
@@ -160,27 +160,27 @@
     ;80
 
     ("hello" "" split ("h" "e" "l" "l" "o") ==)
-    (("3" 0x3 /) (error) try "Symbol '/' requires two integers" ==)
-    ((0x4 0x0 %) (error) try "Division by zero" ==)
-    ((() 0x3 %) (error) try "Symbol '%' requires two integers" ==)
+    (("3" 0x3 /) (error) try "[symbol /] Two integers required" ==)
+    ((0x4 0x0 %) (error) try "[symbol %] Division by zero" ==)
+    ((() 0x3 %) (error) try "[symbol %] Two integers required" ==)
     ;84
 
-    ((() 0x3 &) (error) try "Symbol '&' requires two integers" ==)
-    ((0x2 "" |) (error) try "Symbol '|' requires two integers" ==)
-    ((() "" ^) (error) try "Symbol '^' requires two integers" ==)
-    ((() 0x1 >>) (error) try "Symbol '>>' requires two integers" ==)
+    ((() 0x3 &) (error) try "[symbol &] Two integers required" ==)
+    ((0x2 "" |) (error) try "[symbol |] Two integers required" ==)
+    ((() "" ^) (error) try "[symbol ^] Two integers required" ==)
+    ((() 0x1 >>) (error) try "[symbol >>] Two integers required" ==)
     ;88
 
-    ((() 0x1 <<) (error) try "Symbol '<<' requires two integers" ==)
-    (("" ~) (error) try "Symbol '~' requires an integer" ==)
-    ((0x5 int) (error) try "Symbol 'int' requires a string" ==)
-    (((0x3) int) (error) try "Symbol 'int' requires a string" ==)
+    ((() 0x1 <<) (error) try "[symbol <<] Two integers required" ==)
+    (("" ~) (error) try "[symbol ~] Integer required" ==)
+    ((0x5 int) (error) try "[symbol int] String representing a hexadecimal integer required" ==)
+    (((0x3) int) (error) try "[symbol int] String representing a hexadecimal integer required" ==)
     ;92
 
-    (("5" str) (error) try "Symbol 'str' requires an integer" ==)
-    ((("aaa") str) (error) try "Symbol 'str' requires an integer" ==)
-    (("10" dec) (error) try "Symbol 'dec' requires an integer" ==)
-    ((0x5 hex) (error) try "Symbol 'hex' requires a string representing a decimal integer" ==)
+    (("5" str) (error) try "[symbol str] Integer required" ==)
+    ((("aaa") str) (error) try "[symbol str] Integer required" ==)
+    (("10" dec) (error) try "[symbol dec] Integer required" ==)
+    ((0x5 hex) (error) try "[symbol hex] String representing a decimal integer required" ==)
     ;96
 
     ("0x2" 0x2 == 0x0 ==)
@@ -191,18 +191,18 @@
 
     ((test "aaa") (test "aaa" 0x5) < 0x1 ==) 
     (("aaa" 0x5) ("" "aaa" 0x5) <= 0x0 ==)
-    (("a" "b" and) (error) try "Symbol 'and' requires two integers" ==)
-    ((0x1 "a" or) (error) try "Symbol 'or' requires two integers" ==)
+    (("a" "b" and) (error) try "[symbol and] Two integers required" ==)
+    ((0x1 "a" or) (error) try "[symbol or] Two integers required" ==)
     ;104
 
-    (("abc" 0x3 get) (error) try "Index out of range" ==)
-    (((0x2) 0x2 get) (error) try "Index out of range" ==)
-    ((() 0x0 get) (error) try "Index out of range" ==)
-    ((0x4 0x4 get) (error) try "Symbol 'get' requires a quotation or a string" ==)
+    (("abc" 0x3 get) (error) try "[symbol get] Index out of range" ==)
+    (((0x2) 0x2 get) (error) try "[symbol get] Index out of range" ==)
+    ((() 0x0 get) (error) try "[symbol get] Index out of range" ==)
+    ((0x4 0x4 get) (error) try "[symbol get] Quotation or string required" ==)
     ;108
 
-    (("abc" "b" get) (error) try "Index must be an integer" ==)
-    (((0x4 "aa" test) "b" get) (error) try "Index must be an integer" ==)
+    (("abc" "b" get) (error) try "[symbol get] Index must be an integer" ==)
+    (((0x4 "aa" test) "b" get) (error) try "[symbol get] Index must be an integer" ==)
     ("a" ord 0x61 ==)
     (0x61 chr "a" ==)
     ;112
@@ -214,9 +214,9 @@
     ;116
 
     ("abc" ord 0xffffffff ==)
-    ((0x56 ord) (error) try "Symbol 'ord' requires a string" ==)
-    (("t" chr) (error) try "Symbol 'chr' requires an integer" ==)
-    ((() chr) (error) try "Symbol 'chr' requires an integer" ==)
+    ((0x56 ord) (error) try "[symbol ord] String required" ==)
+    (("t" chr) (error) try "[symbol chr] Integer required" ==)
+    ((() chr) (error) try "[symbol chr] Integer required" ==)
     ;120
 
     (0xffffffff dec "-1" ==)

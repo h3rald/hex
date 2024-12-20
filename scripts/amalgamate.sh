@@ -7,7 +7,6 @@ source_files=(
     "src/registry.c" 
     "src/error.c" 
     "src/doc.c" 
-    "src/stacktrace.c" 
     "src/parser.c" 
     "src/symboltable.c"
     "src/opcodes.c"

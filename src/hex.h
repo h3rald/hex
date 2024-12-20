@@ -239,7 +239,7 @@ typedef enum hex_opcode_t
 } hex_opcode_t;
 
 // Help System
-void hex_doc(hex_doc_dictionary_t *docs, const char *name, const char *description, const char *input, const char *output);
+void hex_set_doc(hex_doc_dictionary_t *docs, const char *name, const char *description, const char *input, const char *output);
 int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *result);
 void hex_create_docs(hex_doc_dictionary_t *docs);
 void hex_print_help();

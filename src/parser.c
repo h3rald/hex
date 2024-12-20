@@ -254,7 +254,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
     quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
     if (!quotation)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[parse quotation] Memory allocation failed");
         return 1;
     }
 

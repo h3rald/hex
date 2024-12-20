@@ -50,7 +50,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int na
         {
             if (ctx->registry.entries[i].value.type == HEX_TYPE_NATIVE_SYMBOL)
             {
-                hex_error(ctx, "Cannot overwrite native symbol '%s'", key);
+                hex_error(ctx, "[set symbol] Cannot overwrite native symbol '%s'", key);
                 return 1;
             }
             free(ctx->registry.entries[i].key);

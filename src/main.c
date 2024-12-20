@@ -8,7 +8,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     FILE *file = fopen(filename, "r");
     if (file == NULL)
     {
-        hex_error(ctx, "Failed to open file: %s", filename);
+        hex_error(ctx, "[read input file] Failed to open file: %s", filename);
         return NULL;
     }
 
@@ -17,7 +17,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     char *content = (char *)malloc(bufferSize);
     if (content == NULL)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[read input file] Memory allocation failed");
         fclose(file);
         return NULL;
     }
@@ -52,7 +52,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
             char *temp = (char *)realloc(content, bufferSize);
             if (temp == NULL)
             {
-                hex_error(ctx, "Memory reallocation failed");
+                hex_error(ctx, "[read input bytecode file] Memory reallocation failed");
                 free(content);
                 fclose(file);
                 return NULL;
@@ -63,7 +63,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
 
     if (ferror(file))
     {
-        hex_error(ctx, "Error reading the file");
+        hex_error(ctx, "[read input file] Error reading the file");
         free(content);
         fclose(file);
         return NULL;
@@ -73,7 +73,7 @@ char *hex_read_file(hex_context_t *ctx, const char *filename)
     char *finalContent = (char *)realloc(content, bytesReadTotal + 1);
     if (finalContent == NULL)
     {
-        hex_error(ctx, "Final memory allocation failed");
+        hex_error(ctx, "[read file] Final memory allocation failed");
         free(content);
         fclose(file);
         return NULL;
@@ -199,7 +199,7 @@ void hex_process_stdin(hex_context_t *ctx)
     int bytesRead = fread(buffer, 1, sizeof(buffer) - 1, stdin);
     if (bytesRead == 0)
     {
-        hex_error(ctx, "Error: No input provided via stdin.");
+        hex_error(ctx, "[read stdin] No input provided via stdin.");
         return;
     }
 
@@ -279,7 +279,7 @@ int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecod
     FILE *file = fopen(filename, "wb");
     if (file == NULL)
     {
-        hex_error(ctx, "Failed to write file: %s", filename);
+        hex_error(ctx, "[write bytecode] Failed to write file: %s", filename);
         return 1;
     }
     hex_debug(ctx, "Writing bytecode to file: %s", filename);
@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
                 FILE *bytecode_file = fopen(file, "rb");
                 if (bytecode_file == NULL)
                 {
-                    hex_error(&ctx, "Failed to open bytecode file: %s", file);
+                    hex_error(&ctx, "[open hbx file] Failed to open bytecode file: %s", file);
                     return 1;
                 }
                 fseek(bytecode_file, 0, SEEK_END);
@@ -367,7 +367,7 @@ int main(int argc, char *argv[])
                 uint8_t *bytecode = (uint8_t *)malloc(bytecode_size);
                 if (bytecode == NULL)
                 {
-                    hex_error(&ctx, "Memory allocation failed");
+                    hex_error(&ctx, "[read hbx file] Memory allocation failed");
                     fclose(bytecode_file);
                     return 1;
                 }
@@ -399,7 +399,7 @@ int main(int argc, char *argv[])
                     }
                     if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
                     {
-                        hex_error(&ctx, "Failed to generate bytecode");
+                        hex_error(&ctx, "[generate bytecode] Failed to generate bytecode");
                         return 1;
                     }
                     if (hex_write_bytecode_file(&ctx, bytecode_file, bytecode, bytecode_size) != 0)

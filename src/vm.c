@@ -16,7 +16,7 @@ int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, s
         uint8_t *new_bytecode = (uint8_t *)realloc(*bytecode, *capacity);
         if (!new_bytecode)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[add bytecode integer] Memory allocation failed");
             return 1;
         }
         *bytecode = new_bytecode;
@@ -77,7 +77,7 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
     char *str = hex_process_string(value);
     if (!str)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[add bytecode string] Memory allocation failed");
         return 1;
     }
     hex_debug(ctx, "PUSHST: \"%s\"", str);
@@ -89,7 +89,7 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         uint8_t *new_bytecode = (uint8_t *)realloc(*bytecode, *capacity);
         if (!new_bytecode)
         {
-            hex_error(ctx, "Memory allocation failed");
+            hex_error(ctx, "[add bytecode string] Memory allocation failed");
             return 1;
         }
         *bytecode = new_bytecode;
@@ -114,7 +114,7 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
             uint8_t *new_bytecode = (uint8_t *)realloc(*bytecode, *capacity);
             if (!new_bytecode)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[add bytecode native symbol] Memory allocation failed");
                 return 1;
             }
             *bytecode = new_bytecode;
@@ -135,7 +135,7 @@ int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
             uint8_t *new_bytecode = (uint8_t *)realloc(*bytecode, *capacity);
             if (!new_bytecode)
             {
-                hex_error(ctx, "Memory allocation failed");
+                hex_error(ctx, "[add bytecode user symbol] Memory allocation failed");
                 return 1;
             }
             *bytecode = new_bytecode;
@@ -181,7 +181,7 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
     uint8_t *bytecode = (uint8_t *)malloc(capacity);
     if (!bytecode)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[generate bytecode] Memory allocation failed");
         return 1;
     }
     hex_debug(ctx, "Generating bytecode");
@@ -208,7 +208,7 @@ int hex_bytecode(hex_context_t *ctx, const char *input, uint8_t **output, size_t
             hex_debug(ctx, "PUSHQT: <start>");
             if (hex_generate_quotation_bytecode(ctx, &input, &quotation_bytecode, &quotation_size, &n_items, position) != 0)
             {
-                hex_error(ctx, "Failed to generate quotation bytecode (main)");
+                hex_error(ctx, "[generate quotation bytecode] Failed to generate quotation bytecode (main)");
                 return 1;
             }
             hex_bytecode_quotation(ctx, &bytecode, &size, &capacity, &quotation_bytecode, &quotation_size, &n_items);
@@ -238,7 +238,7 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
     uint8_t *bytecode = (uint8_t *)malloc(capacity);
     if (!bytecode)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[generate quotation bytecode] Memory allocation failed");
         return 1;
     }
     *n_items = 0;
@@ -266,7 +266,7 @@ int hex_generate_quotation_bytecode(hex_context_t *ctx, const char **input, uint
             hex_debug(ctx, "PUSHQT: <start>");
             if (hex_generate_quotation_bytecode(ctx, input, &quotation_bytecode, &quotation_size, &n_items, position) != 0)
             {
-                hex_error(ctx, "Failed to generate quotation bytecode");
+                hex_error(ctx, "[generate quotation bytecode] Failed to generate quotation bytecode");
                 return 1;
             }
             hex_bytecode_quotation(ctx, &bytecode, &size, &capacity, &quotation_bytecode, &quotation_size, &n_items);
@@ -305,7 +305,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     {
         if (*size == 0)
         {
-            hex_error(ctx, "Bytecode size too small to contain an integer length");
+            hex_error(ctx, "[interpret bytecode integer] Bytecode size too small to contain an integer length");
             return 1;
         }
         length |= ((**bytecode & 0x7F) << shift);
@@ -316,7 +316,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
 
     if (*size < length)
     {
-        hex_error(ctx, "Bytecode size too small to contain the integer value");
+        hex_error(ctx, "[interpret bytecode integer] Bytecode size too small to contain the integer value");
         return 1;
     }
 
@@ -356,7 +356,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     {
         if (*size == 0)
         {
-            hex_error(ctx, "Bytecode size too small to contain a string length");
+            hex_error(ctx, "[interpret bytecode string] Bytecode size too small to contain a string length");
             return 1;
         }
         length |= ((**bytecode & 0x7F) << shift);
@@ -367,14 +367,14 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
 
     if (*size < length)
     {
-        hex_error(ctx, "Bytecode size too small to contain the string");
+        hex_error(ctx, "[interpret bytecode string] Bytecode size too small to contain the string");
         return 1;
     }
 
     char *value = (char *)malloc(length + 1);
     if (!value)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[interpret bytecode string] Memory allocation failed");
         return 1;
     }
     memcpy(value, *bytecode, length);
@@ -387,7 +387,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     char *str = hex_process_string(value);
     if (!str)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[interpret bytecode string] Memory allocation failed");
         return 1;
     }
     hex_debug(ctx, ">> PUSHST: \"%s\"", str);
@@ -400,7 +400,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     const char *symbol = hex_opcode_to_symbol(opcode);
     if (!symbol)
     {
-        hex_error(ctx, "Invalid opcode for symbol");
+        hex_error(ctx, "[interpret bytecode nattive symbol] Invalid opcode for symbol");
         return 1;
     }
 
@@ -433,7 +433,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     // Get the index of the symbol (one byte)
     if (*size == 0)
     {
-        hex_error(ctx, "Bytecode size too small to contain a symbol length");
+        hex_error(ctx, "[interpret bytecode user symbol] Bytecode size too small to contain a symbol length");
         return 1;
     }
     size_t index = **bytecode;
@@ -442,7 +442,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
 
     if (index >= ctx->symbol_table.count)
     {
-        hex_error(ctx, "Symbol index out of bounds");
+        hex_error(ctx, "[interpret bytecode user symbol] Symbol index out of bounds");
         return 1;
     }
     char *value = hex_symboltable_get_value(ctx, index);
@@ -450,7 +450,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
 
     if (!value)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[interpret bytecode user symbol] Memory allocation failed");
         return 1;
     }
 
@@ -483,7 +483,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     {
         if (*size == 0)
         {
-            hex_error(ctx, "Bytecode size too small to contain a quotation length");
+            hex_error(ctx, "[interpret bytecode quotation] Bytecode size too small to contain a quotation length");
             return 1;
         }
         n_items |= ((**bytecode & 0x7F) << shift);
@@ -497,7 +497,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     hex_item_t **items = (hex_item_t **)malloc(n_items * sizeof(hex_item_t));
     if (!items)
     {
-        hex_error(ctx, "Memory allocation failed");
+        hex_error(ctx, "[interpret bytecode quotation] Memory allocation failed");
         return 1;
     }
 
@@ -564,7 +564,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     uint8_t header[8];
     if (size < 8)
     {
-        hex_error(ctx, "Bytecode size too small to contain a header");
+        hex_error(ctx, "[interpret bytecode header] Bytecode size too small to contain a header");
         return 1;
     }
     memcpy(header, bytecode, 8);
@@ -572,7 +572,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     hex_debug(ctx, "hex executable file - version: %d - symbols: %d", header[4], symbol_table_size);
     if (symbol_table_size < 0)
     {
-        hex_error(ctx, "Invalid bytecode header");
+        hex_error(ctx, "[interpret bytecode header] Invalid bytecode header");
         return 1;
     }
     bytecode += 8;
@@ -582,7 +582,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     {
         if (hex_decode_bytecode_symboltable(ctx, &bytecode, &size, symbol_table_size) != 0)
         {
-            hex_error(ctx, "Failed to decode the symbol table");
+            hex_error(ctx, "[interpret bytecode symbol table] Failed to decode the symbol table");
             return 1;
         }
     }
