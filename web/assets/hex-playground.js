@@ -15,6 +15,8 @@ btn.addEventListener("click", () => {
     Module.pending_lines.push(inputBox.value);
     outputBox.textContent += "> " + inputBox.value + "\n";
     inputBox.value = '';
+    let resolver = Module.pending_fgets.shift();
+    resolver(Module.pending_lines.shift());
 });
 
 inputBox.addEventListener("keydown", (e) => {
