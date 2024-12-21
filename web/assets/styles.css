@@ -113,7 +113,6 @@ li {
 article>section {
     display: flex;
     flex-direction: column;
-    border: 1px solid gold;
 }
 
 article>section>section {
@@ -137,7 +136,9 @@ aside span {
     align-items: center;
 }
 
-article input {
+article input, article textarea {
+    field-sizing: normal
+    border: 1px solid gold;
     font-family: monospace;
     font-size: 1rem;
     background-color: black;
@@ -147,8 +148,13 @@ article input {
     flex-grow: 1;
 }
 
-article input:focus {
+article input:focus, article textarea:focus {
     outline: none;
+}
+
+article button {
+  margin: 1rem auto;
+  text-align: center;
 }
 
 pre {
