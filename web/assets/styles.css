@@ -140,7 +140,9 @@ aside span {
 article input {
     font-family: monospace;
     font-size: 1rem;
-    background-color: black;
+    margin-right: 0.5rem;
+    background-color: #222;
+    padding: 4px;
     border: none;
     color: white;
     display: flex;
@@ -149,7 +151,7 @@ article input {
 
 article textarea {
     font-family: monospace;
-    padding: 5px;
+    padding: 4px;
     border: none;
     background-color: #222;
     field-sizing: content;
