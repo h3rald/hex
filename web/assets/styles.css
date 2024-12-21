@@ -147,8 +147,29 @@ article input {
     flex-grow: 1;
 }
 
-article input:focus {
+article textarea {
+    font-family: monospace;
+    padding: 5px;
+    border: none;
+    background-color: #222;
+    field-sizing: content;
+    color: white;
+    display: flex;
+    margin: 1rem; 
+}
+
+article input:focus, article textarea:focus {
     outline: none;
+}
+
+button {
+    font-family: monospace;
+    border: 1px solid #222;
+    color: black;
+    background-color: lime;
+    padding: 4px;
+    margin: 0.5rem auto;
+    text-align: center;
 }
 
 pre {
