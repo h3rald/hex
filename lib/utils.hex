@@ -275,3 +275,19 @@
 ;;; each
 ;; q1 q2 -> *
 ;; Applies %%q2%% to each element of %%q1%%.
+(
+  "_fn" :
+  "_list" :
+  (_fn isq _list isq and)
+    ("[symbol each] Two quotations required" fail)
+   when
+   _list len "_len" :
+   0x0 "_c" :
+   (_c len <)
+     (_list _c get _fn .)
+   while
+   "_fn" #
+   "_list" #
+   "_len" # 
+   "_c" #
+) "each" ::
