@@ -269,5 +269,7 @@
 ) "max" :
 
 ;;; intpl
+;; s1 q -> s2
+;; Substitutes %%%#%% placeholders in %%s1%% with items in %%q%%.
 
 
