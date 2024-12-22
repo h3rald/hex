@@ -217,10 +217,6 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_MAP;
     }
-    else if (strcmp(symbol, "filter") == 0)
-    {
-        return HEX_OP_FILTER;
-    }
     else if (strcmp(symbol, "puts") == 0)
     {
         return HEX_OP_PUTS;
@@ -378,8 +374,6 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "each";
     case HEX_OP_MAP:
         return "map";
-    case HEX_OP_FILTER:
-        return "filter";
     case HEX_OP_PUTS:
         return "puts";
     case HEX_OP_WARN:

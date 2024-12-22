@@ -105,7 +105,6 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     // Quotation
     hex_set_doc(docs, "each", "q1 q2", "*", "Executes 'q2' for each item of 'q1'.");
     hex_set_doc(docs, "map", "q1 q2", "q3", "Applies 'q2' to 'q1' items and returns results.");
-    hex_set_doc(docs, "filter", "q1 q2", "q3", "Filters 'q2' by applying 'q1'.");
 
     // I/O
     hex_set_doc(docs, "puts", "a", "", "Prints 'a' and a new line to standard output.");

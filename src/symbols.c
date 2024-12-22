@@ -2667,7 +2667,6 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "'", hex_symbol_q);
     hex_set_native_symbol(ctx, "each", hex_symbol_each);
     hex_set_native_symbol(ctx, "map", hex_symbol_map);
-    hex_set_native_symbol(ctx, "filter", hex_symbol_filter);
     hex_set_native_symbol(ctx, "swap", hex_symbol_swap);
     hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
     hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
