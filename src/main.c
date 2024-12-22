@@ -108,9 +108,9 @@ static void do_repl(void *v_ctx)
 {
     hex_context_t *ctx = (hex_context_t *)v_ctx;
     prompt();
-    char line[1024];
+    char line[HEX_STDIN_BUFFER_SIZE];
     char *p = line;
-    p = em_fgets(line, 1024);
+    p = em_fgets(line, HEX_STDIN_BUFFER_SIZE);
     if (!p)
     {
         printf("Error reading output");
