@@ -78,6 +78,7 @@ typedef struct hex_item_t
         int (*fn_value)(hex_context_t *);
         struct hex_item_t **quotation_value;
     } data;
+    int immediate;
     hex_token_t *token;    // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
     size_t quotation_size; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } hex_item_t;
@@ -159,6 +160,7 @@ typedef enum hex_opcode_t
 
     // Native Symbols
     HEX_OP_STORE = 0x10,
+    HEX_OP_DEFINE = 0x42,
     HEX_OP_FREE = 0x11,
 
     HEX_OP_IF = 0x12,
@@ -219,7 +221,7 @@ typedef enum hex_opcode_t
     HEX_OP_SPLIT = 0x40,
     HEX_OP_REPLACE = 0x41,
 
-    HEX_OP_EACH = 0x42,
+    //HEX_OP_EACH = 0x42,
     HEX_OP_MAP = 0x43,
     HEX_OP_FILTER = 0x44,
 

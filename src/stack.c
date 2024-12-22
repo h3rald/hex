@@ -33,7 +33,22 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         if (hex_get_symbol(ctx, item.token->value, &value))
         {
             add_to_stack_trace(ctx, item.token);
-            result = HEX_PUSH(ctx, value);
+            if (item.type == HEX_TYPE_QUOTATION && item.immediate)
+            {
+                for (size_t i=0; i<item.quotation_size; i++)
+                {
+                    if (hex_push(ctx, item.data.quotation_value[i]) != 0)
+                    {
+                        HEX_FREE(ctx, value);
+                        hex_debug_item(ctx, "FAIL", item);
+                        return 1;
+                    }
+                }
+            } else
+            {
+                result = HEX_PUSH(ctx, value);
+            }
+            
         }
         else
         {

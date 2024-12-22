@@ -30,7 +30,8 @@ int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *re
 void hex_create_docs(hex_doc_dictionary_t *docs)
 {
     // Memory
-    hex_set_doc(docs, ":", "a s", "", "Stores 'a' as symbol 's'.");
+    hex_set_doc(docs, ":", "a s", "", "Stores 'a' as the literal symbol 's'.");
+    hex_set_doc(docs, "::", "a s", "", "Defines 'a' as the operator symbol 's'.");
     hex_set_doc(docs, "#", "s", "", "Deletes user symbol 's'.");
 
     // Control flow
@@ -102,7 +103,6 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, "replace", "s1 s2 s3", "s", "Replaces 's2' with 's3' within 's1'.");
 
     // Quotation
-    hex_set_doc(docs, "each", "q1 q2", "*", "Executes 'q2' for each item of 'q1'.");
     hex_set_doc(docs, "map", "q1 q2", "q3", "Applies 'q2' to 'q1' items and returns results.");
     hex_set_doc(docs, "filter", "q1 q2", "q3", "Filters 'q2' by applying 'q1'.");
 

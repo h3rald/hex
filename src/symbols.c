@@ -41,6 +41,43 @@ int hex_symbol_store(hex_context_t *ctx)
     return 0;
 }
 
+int hex_symbol_define(hex_context_t *ctx)
+{
+
+    HEX_POP(ctx, name);
+    if (name.type == HEX_TYPE_INVALID)
+    {
+        HEX_FREE(ctx, name);
+        return 1;
+    }
+    HEX_POP(ctx, value);
+    if (value.type == HEX_TYPE_INVALID)
+    {
+        HEX_FREE(ctx, name);
+        HEX_FREE(ctx, value);
+        return 1;
+    }
+    if (name.type != HEX_TYPE_STRING)
+    {
+        hex_error(ctx, "[symbol ::] Symbol name must be a string");
+        HEX_FREE(ctx, name);
+        HEX_FREE(ctx, value);
+        return 1;
+    }
+    if (value.type == HEX_TYPE_QUOTATION)
+    {
+        value.immediate = 1;
+    }
+    if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
+    {
+        hex_error(ctx, "[symbol ::] Failed to store symbol '%s'", name.data.str_value);
+        HEX_FREE(ctx, name);
+        HEX_FREE(ctx, value);
+        return 1;
+    }
+    return 0;
+}
+
 int hex_symbol_free(hex_context_t *ctx)
 {
 
@@ -2156,7 +2193,7 @@ int hex_symbol_while(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_each(hex_context_t *ctx)
+/*int hex_symbol_each(hex_context_t *ctx)
 {
 
     HEX_POP(ctx, action);
@@ -2201,7 +2238,7 @@ int hex_symbol_each(hex_context_t *ctx)
         }
     }
     return 0;
-}
+}*/
 
 int hex_symbol_error(hex_context_t *ctx)
 {
@@ -2572,6 +2609,7 @@ int hex_symbol_pop(hex_context_t *ctx)
 void hex_register_symbols(hex_context_t *ctx)
 {
     hex_set_native_symbol(ctx, ":", hex_symbol_store);
+    hex_set_native_symbol(ctx, "::", hex_symbol_define);
     hex_set_native_symbol(ctx, "#", hex_symbol_free);
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
@@ -2624,7 +2662,6 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "if", hex_symbol_if);
     hex_set_native_symbol(ctx, "when", hex_symbol_when);
     hex_set_native_symbol(ctx, "while", hex_symbol_while);
-    hex_set_native_symbol(ctx, "each", hex_symbol_each);
     hex_set_native_symbol(ctx, "error", hex_symbol_error);
     hex_set_native_symbol(ctx, "try", hex_symbol_try);
     hex_set_native_symbol(ctx, "'", hex_symbol_q);
