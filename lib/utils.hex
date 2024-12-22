@@ -1,0 +1,272 @@
+;;; fail
+;; s -> 
+;; Throws an error and prints %%s%% to stderr.
+(
+  warn
+  0x1 exit
+) "fail" :
+
+;;; _
+;; a -> a
+;; Duplicates and prints (with newline) the top item on the stack.
+(dup puts) "_" :
+
+;; isi
+;; a -> i
+;; Pushes %%0x1%% on the stack if %%a%% is an integer, %%0x0%% otherwise.
+(
+  type "integer" ==
+) "isi" :
+
+;; iss
+;; a -> i
+;; Pushes %%0x1%% on the stack if %%a%% is a string, %%0x0%% otherwise.
+(
+  type "string" ==
+) "iss" :
+
+;; isq
+;; a -> i
+;; Pushes %%0x1%% on the stack if %%a%% is a quotation, %%0x0%% otherwise.
+(
+  type "quotation" ==
+) "isq" :
+
+;; insert
+;; (q1|s1) a i -> (q2|s2)
+;; Inserts item %%a%% at position %%i%% within a quotation or string.
+(
+  "_index" :
+  "_item" :
+  "_list" :
+  0x0 "_is-str" :
+  (_index isi . not)
+    ("[symbol insert] Integer index required" fail .)
+  when
+  (_list isi .)
+    ("[symbol insert] String or quotation required" fail .)
+  when
+  _list len "_len" :
+  (_index dup _len >= 0x0 < and)
+    ("[symbol insert] Index out of bounds" fail .)
+  when
+  (_list iss .)
+    ( 
+      0x1 "_is-str" :
+      (_item iss . not)
+        ("[symbol insert] A string item is required" fail .)
+      when
+      _list "" split "_list" :
+    )
+  when
+  0x0 "_c" :
+  () "_result" :
+  (_c _len <)
+    (
+      (_c _index ==)
+        (_result _item ' cat "_result" :)
+      when
+      _result _list _c get ' cat "_result" :
+      _c 0x1 + "_c" :
+    )
+  while
+  (_is-str)
+    (_result "" join "_result" :)
+  when
+  _result
+  "_len" #
+  "_is-str" #
+  "_c" #
+  "_result" #
+  "_index" #
+  "_item" #
+  "_list" #
+) "insert" :
+
+
+;;; push
+;; (q1|s1) a -> (q2|s2)
+;; Pushes %%a%% to the end of a quotation or string.
+(
+  "_item" :
+  "_list" :
+  0x0 "_is-str" :
+  (_list isi .)
+    ("[symbol push] String or quotation required" fail .)
+  when
+  (_list iss .)
+    (
+      (_item iss . not)
+        ("[symbol push] A string item is required" fail .)
+      when
+      0x1 "_is-str" :
+      _list "" split "_list" :
+    )
+  when
+  _list _item ' cat
+  (_is-str .)
+    ( "" join)
+  when
+  "_item" #
+  "_list" #
+  "_is-str" #
+) "push" :
+
+
+;;; reverse
+;; (q1|s1) -> (q2|s2)
+;; Reverses the order of the elements in a string or quotation.
+(
+  "_list" :
+  (_list isi .)
+    ("[symbol reverse] String or quotation required" fail .)
+  when
+  (_list iss .)
+    (_list "" split "_list" :)
+  when
+  _list len 0x1 - "_c" : 
+  () "_result" :
+  (_c 0x0 <=)
+    (
+       _result _list _c get ' cat "_result" :
+       _c 0x1 - "_c" :
+    )
+  while
+  _result
+  (_list iss .)
+    (_result "" join "_result" :)
+  when
+  "_list" #
+  "_c" #
+  "_result" #
+) "reverse" :
+
+
+
+;;; sort
+;; (q1|s1) q2 -> (q3|s2)
+;; Sorts the items of a quotation or string.
+(
+  "_check" :
+  "_list" :
+  (_list isi .)
+    ("[symbol sort] String or quotation required" fail .)
+  when
+  (_list iss .)
+    (_list "" split "_list" :)
+  when
+  _list len "_len" :
+  _list _len 0x1 - "_pivot" :
+  0x0 "_c" :
+  () "_left" :
+  () "_right" :
+  (0x1 len <=)
+    (_list)
+    (
+      (_c len <)
+        (
+          (_list _c get _pivot _check .)
+            (_left _item push . "_left" :)
+            (_right _item push . "_right" :)
+          if
+          _c 0x1 + "_c" :
+        )
+      while
+      _left sort . pivot ' _right sort . 
+      cat cat "_result" :
+    )
+  if
+  (_list iss)
+    (_result "" join "_result" :)
+  when
+  _result
+  "_c"      #
+  "_left"   #
+  "_righr"  #
+  "_pivot"  #
+  "_len"    #
+  "_check"  #
+  "_list"   #
+  "_result" #
+) "sort" :
+
+
+;;; replace-all
+;; s1 s2 s3 -> s4
+;; Replaces all occurrences of %%s2%% with %%s3%% in %%s1%%.
+(
+  "_rep"  :
+  "_src"  :
+  "_text" :
+  (_text iss . _src iss . _rep iss . and and not)
+    ("[symbol replace-all] Three strings required." fail)
+  when
+  (_text _src index 0x0 >=)
+    (_text _src _rep replace "_text" :)
+  while
+  _text
+  "_rep"  #
+  "_src"  #
+  "_text" #
+) "replace-all" :
+
+;;; min
+;; q -> a
+;; Pushes the minimum item in a quotation on the stack.
+(
+  "_list" :
+  () "_result" :
+  (_list isq .)
+    ("[symbol min] Quotation required" fail .)
+  when
+  (_list len 0x0 ==)
+    ("[symbol min] Not enough items" fail .)
+  when
+  0x0 get "_result" :
+  0x1 "_c" :
+  _list len "_len" :
+  (_c len <)
+    (
+      (_result _list _c get <)
+        (_list _c get "_result" :)
+      when
+    )
+  while
+  _result
+  "_list" #
+  "_result" #
+  "_len" #
+  "_c" #
+) "min" :
+
+;;; max
+;; q -> a
+;; Pushes the maximum item in a quotation on the stack.
+(
+  "_list" :
+  () "_result" :
+  (_list isq . not)
+    ("[symbol max] Quotation required" fail .)
+  when
+  (_list len 0x0 ==)
+    ("[symbol max] Not enough items" fail .)
+  when
+  0x0 get "_result" :
+  0x1 "_c" :
+  _list len "_len" :
+  (_c len <)
+    (
+      (_result _list _c get >)
+        (_list _c get "_result" :)
+      when
+    )
+  while
+  _result
+  "_list" #
+  "_result" #
+  "_len" #
+  "_c" #
+) "max" :
+
+
+
