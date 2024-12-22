@@ -9,6 +9,10 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_STORE;
     }
+    else if (strcmp(symbol, "::") == 0)
+    {
+        return HEX_OP_DEFINE;
+    }
     else if (strcmp(symbol, "#") == 0)
     {
         return HEX_OP_FREE;
@@ -270,6 +274,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
     {
     case HEX_OP_STORE:
         return ":";
+    case HEX_OP_DEFINE:
+        return "::";
     case HEX_OP_FREE:
         return "#";
     case HEX_OP_IF:

@@ -2193,7 +2193,7 @@ int hex_symbol_while(hex_context_t *ctx)
     return 0;
 }
 
-/*int hex_symbol_each(hex_context_t *ctx)
+int hex_symbol_each(hex_context_t *ctx)
 {
 
     HEX_POP(ctx, action);
@@ -2238,7 +2238,7 @@ int hex_symbol_while(hex_context_t *ctx)
         }
     }
     return 0;
-}*/
+}
 
 int hex_symbol_error(hex_context_t *ctx)
 {
@@ -2665,6 +2665,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "error", hex_symbol_error);
     hex_set_native_symbol(ctx, "try", hex_symbol_try);
     hex_set_native_symbol(ctx, "'", hex_symbol_q);
+    hex_set_native_symbol(ctx, "each", hex_symbol_each);
     hex_set_native_symbol(ctx, "map", hex_symbol_map);
     hex_set_native_symbol(ctx, "filter", hex_symbol_filter);
     hex_set_native_symbol(ctx, "swap", hex_symbol_swap);

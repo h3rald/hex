@@ -174,7 +174,7 @@ d-contents "/" "changelog.html" cat cat read
 "changelog-toc" changelog-toc process-tag .
 "releases" releases-content process-tag .
 "changelog-content" :
-symbol-links (changelog-content swap process-symbol . "changelog-content" :) each
+symbol-links (changelog-content swap process-symbol . "changelog-content" :) () map
 
 ; Write CHANGELOG.md
 changelog-content

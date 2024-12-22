@@ -219,6 +219,8 @@
     ((() chr) (error) try "[symbol chr] Integer required" ==)
     ;120
 
+    ((dup *) "square" :: 0x2 square 0x4 == "square" #)
+
 
     
 ) "tests" :

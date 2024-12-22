@@ -33,22 +33,22 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         if (hex_get_symbol(ctx, item.token->value, &value))
         {
             add_to_stack_trace(ctx, item.token);
-            if (item.type == HEX_TYPE_QUOTATION && item.immediate)
+            if (value.type == HEX_TYPE_QUOTATION && value.immediate)
             {
-                for (size_t i=0; i<item.quotation_size; i++)
+                for (size_t i = 0; i < value.quotation_size; i++)
                 {
-                    if (hex_push(ctx, item.data.quotation_value[i]) != 0)
+                    if (hex_push(ctx, *value.data.quotation_value[i]) != 0)
                     {
                         HEX_FREE(ctx, value);
                         hex_debug_item(ctx, "FAIL", item);
                         return 1;
                     }
                 }
-            } else
+            }
+            else
             {
                 result = HEX_PUSH(ctx, value);
             }
-            
         }
         else
         {
@@ -59,9 +59,19 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
     }
     else if (item.type == HEX_TYPE_NATIVE_SYMBOL)
     {
-        add_to_stack_trace(ctx, item.token);
-        hex_debug_item(ctx, "CALL", item);
-        result = item.data.fn_value(ctx);
+        hex_item_t value;
+        if (hex_get_symbol(ctx, item.token->value, &value))
+        {
+            add_to_stack_trace(ctx, item.token);
+            hex_debug_item(ctx, "CALL", item);
+            result = value.data.fn_value(ctx);
+        }
+        else
+        {
+            hex_error(ctx, "[push] Undefined native symbol: %s", item.token->value);
+            HEX_FREE(ctx, value);
+            result = 1;
+        }
     }
     else
     {
@@ -104,6 +114,12 @@ hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, size_t
     return item;
 }
 
+hex_item_t hex_symbol_item(hex_context_t *ctx, hex_token_t *token)
+{
+    hex_item_t item = {.type = hex_valid_native_symbol(ctx, token->value) ? HEX_TYPE_NATIVE_SYMBOL : HEX_TYPE_USER_SYMBOL, .token = token};
+    return item;
+}
+
 int hex_push_string(hex_context_t *ctx, const char *value)
 {
     return HEX_PUSH(ctx, hex_string_item(ctx, value));
@@ -121,17 +137,7 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 {
-    hex_item_t value;
-    if (hex_get_symbol(ctx, token->value, &value))
-    {
-        value.token = token;
-        return HEX_PUSH(ctx, value);
-    }
-    else
-    {
-        hex_error(ctx, "[push] Undefined symbol: %s", token->value);
-        return 1;
-    }
+    return HEX_PUSH(ctx, hex_symbol_item(ctx, token));
 }
 
 // Pop function

@@ -25,7 +25,7 @@ int isatty(int fd);
 #define HEX_REGISTRY_SIZE 1024
 #define HEX_STACK_SIZE 256
 #define HEX_STACK_TRACE_SIZE 16
-#define HEX_NATIVE_SYMBOLS 64
+#define HEX_NATIVE_SYMBOLS 65
 #define HEX_MAX_SYMBOL_LENGTH 256
 #define HEX_MAX_USER_SYMBOLS (HEX_REGISTRY_SIZE - HEX_NATIVE_SYMBOLS)
 
@@ -118,7 +118,7 @@ typedef struct hex_doc_entry_t
 
 typedef struct hex_doc_dictionary_t
 {
-    hex_doc_entry_t entries[64];
+    hex_doc_entry_t entries[HEX_NATIVE_SYMBOLS];
     size_t size;
 } hex_doc_dictionary_t;
 
@@ -160,7 +160,7 @@ typedef enum hex_opcode_t
 
     // Native Symbols
     HEX_OP_STORE = 0x10,
-    HEX_OP_DEFINE = 0x42,
+    HEX_OP_DEFINE = 0x50,
     HEX_OP_FREE = 0x11,
 
     HEX_OP_IF = 0x12,
@@ -221,7 +221,7 @@ typedef enum hex_opcode_t
     HEX_OP_SPLIT = 0x40,
     HEX_OP_REPLACE = 0x41,
 
-    //HEX_OP_EACH = 0x42,
+    HEX_OP_EACH = 0x42,
     HEX_OP_MAP = 0x43,
     HEX_OP_FILTER = 0x44,
 

@@ -396,7 +396,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     const char *symbol = hex_opcode_to_symbol(opcode);
     if (!symbol)
     {
-        hex_error(ctx, "[interpret bytecode nattive symbol] Invalid opcode for symbol");
+        hex_error(ctx, "[interpret bytecode native symbol] Invalid opcode for symbol");
         return 1;
     }
 
