@@ -4,33 +4,33 @@
 (
   warn
   0x1 exit
-) "fail" :
+) "fail" ::
 
 ;;; _
 ;; a -> a
 ;; Duplicates and prints (with newline) the top item on the stack.
-(dup puts) "_" :
+(dup puts) "_" ::
 
 ;; isi
 ;; a -> i
 ;; Pushes %%0x1%% on the stack if %%a%% is an integer, %%0x0%% otherwise.
 (
   type "integer" ==
-) "isi" :
+) "isi" ::
 
 ;; iss
 ;; a -> i
 ;; Pushes %%0x1%% on the stack if %%a%% is a string, %%0x0%% otherwise.
 (
   type "string" ==
-) "iss" :
+) "iss" ::
 
 ;; isq
 ;; a -> i
 ;; Pushes %%0x1%% on the stack if %%a%% is a quotation, %%0x0%% otherwise.
 (
   type "quotation" ==
-) "isq" :
+) "isq" ::
 
 ;; insert
 ;; (q1|s1) a i -> (q2|s2)
@@ -40,21 +40,21 @@
   "_item" :
   "_list" :
   0x0 "_is-str" :
-  (_index isi . not)
+  (_index isi not)
     ("[symbol insert] Integer index required" fail .)
   when
-  (_list isi .)
-    ("[symbol insert] String or quotation required" fail .)
+  (_list isi)
+    ("[symbol insert] String or quotation required" fail)
   when
   _list len "_len" :
   (_index dup _len >= 0x0 < and)
-    ("[symbol insert] Index out of bounds" fail .)
+    ("[symbol insert] Index out of bounds" fail)
   when
-  (_list iss .)
+  (_list iss)
     ( 
       0x1 "_is-str" :
-      (_item iss . not)
-        ("[symbol insert] A string item is required" fail .)
+      (_item iss not)
+        ("[symbol insert] A string item is required" fail)
       when
       _list "" split "_list" :
     )
@@ -81,7 +81,7 @@
   "_index" #
   "_item" #
   "_list" #
-) "insert" :
+) "insert" ::
 
 
 ;;; push
@@ -91,26 +91,26 @@
   "_item" :
   "_list" :
   0x0 "_is-str" :
-  (_list isi .)
-    ("[symbol push] String or quotation required" fail .)
+  (_list isi)
+    ("[symbol push] String or quotation required" fail)
   when
-  (_list iss .)
+  (_list iss)
     (
-      (_item iss . not)
-        ("[symbol push] A string item is required" fail .)
+      (_item iss not)
+        ("[symbol push] A string item is required" fail)
       when
       0x1 "_is-str" :
       _list "" split "_list" :
     )
   when
   _list _item ' cat
-  (_is-str .)
+  (_is-str)
     ( "" join)
   when
   "_item" #
   "_list" #
   "_is-str" #
-) "push" :
+) "push" ::
 
 
 ;;; reverse
@@ -118,10 +118,10 @@
 ;; Reverses the order of the elements in a string or quotation.
 (
   "_list" :
-  (_list isi .)
-    ("[symbol reverse] String or quotation required" fail .)
+  (_list isi)
+    ("[symbol reverse] String or quotation required" fail)
   when
-  (_list iss .)
+  (_list iss)
     (_list "" split "_list" :)
   when
   _list len 0x1 - "_c" : 
@@ -133,13 +133,13 @@
     )
   while
   _result
-  (_list iss .)
+  (_list iss)
     (_result "" join "_result" :)
   when
   "_list" #
   "_c" #
   "_result" #
-) "reverse" :
+) "reverse" ::
 
 
 
@@ -149,10 +149,10 @@
 (
   "_check" :
   "_list" :
-  (_list isi .)
-    ("[symbol sort] String or quotation required" fail .)
+  (_list isi)
+    ("[symbol sort] String or quotation required" fail)
   when
-  (_list iss .)
+  (_list iss)
     (_list "" split "_list" :)
   when
   _list len "_len" :
@@ -166,13 +166,13 @@
       (_c len <)
         (
           (_list _c get _pivot _check .)
-            (_left _item push . "_left" :)
-            (_right _item push . "_right" :)
+            (_left _item push "_left" :)
+            (_right _item push "_right" :)
           if
           _c 0x1 + "_c" :
         )
       while
-      _left sort . pivot ' _right sort . 
+      _left sort pivot ' _right sort 
       cat cat "_result" :
     )
   if
@@ -188,7 +188,7 @@
   "_check"  #
   "_list"   #
   "_result" #
-) "sort" :
+) "sort" ::
 
 
 ;;; replace-all
@@ -198,7 +198,7 @@
   "_rep"  :
   "_src"  :
   "_text" :
-  (_text iss . _src iss . _rep iss . and and not)
+  (_text iss _src iss _rep iss and and not)
     ("[symbol replace-all] Three strings required." fail)
   when
   (_text _src index 0x0 >=)
@@ -216,11 +216,11 @@
 (
   "_list" :
   () "_result" :
-  (_list isq .)
-    ("[symbol min] Quotation required" fail .)
+  (_list isq)
+    ("[symbol min] Quotation required" fail)
   when
   (_list len 0x0 ==)
-    ("[symbol min] Not enough items" fail .)
+    ("[symbol min] Not enough items" fail)
   when
   0x0 get "_result" :
   0x1 "_c" :
@@ -237,7 +237,7 @@
   "_result" #
   "_len" #
   "_c" #
-) "min" :
+) "min" ::
 
 ;;; max
 ;; q -> a
@@ -245,11 +245,11 @@
 (
   "_list" :
   () "_result" :
-  (_list isq . not)
-    ("[symbol max] Quotation required" fail .)
+  (_list isq not)
+    ("[symbol max] Quotation required" fail)
   when
   (_list len 0x0 ==)
-    ("[symbol max] Not enough items" fail .)
+    ("[symbol max] Not enough items" fail)
   when
   0x0 get "_result" :
   0x1 "_c" :
@@ -266,10 +266,12 @@
   "_result" #
   "_len" #
   "_c" #
-) "max" :
+) "max" ::
 
 ;;; intpl
 ;; s1 q -> s2
 ;; Substitutes %%%#%% placeholders in %%s1%% with items in %%q%%.
 
-
+;;; each
+;; q1 q2 -> *
+;; Applies %%q2%% to each element of %%q1%%.
