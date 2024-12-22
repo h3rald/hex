@@ -19,7 +19,7 @@ Module.printErr = (text) => {
 };
 
 eval.addEventListener("click", (e) => {
-  const data = textarea.value.replace(/^#!.*?\n/, '').replace(/;.*?\n/g, ' ').replace(/#|.*?|#/mg, '').replace(/\n/mg, ' ');
+  const data = textarea.value.replace(/^#!.*?\n/, '').replace(/;.*?\n/g, ' ').replace(/#\|.*?\|#/mg, '').replace(/\n/mg, ' ');
   Module.pending_lines.push(data);
     let resolver = Module.pending_fgets.shift();
     resolver(Module.pending_lines.shift());
