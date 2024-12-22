@@ -9,7 +9,7 @@ if exists("b:current_syntax")
 endif
 
 syntax keyword          hexNativeSymbol         if when while error try dup pop swap stack clear and or not xor int str hex dec type 
-syntax keyword          hexNativeSymbol         cat slice len get insert index join split replace each map filter puts warn print gets 
+syntax keyword          hexNativeSymbol         cat chr len get ord index join split replace each map puts warn print gets 
 syntax keyword          hexNativeSymbol         read write append args exit exec run
 syntax match            hexNativeSymbol         /\v\!/
 syntax match            hexNativeSymbol         /\v\!\=/ 
@@ -21,6 +21,7 @@ syntax match            hexNativeSymbol         /\v\+/
 syntax match            hexNativeSymbol         /\v\-/
 syntax match            hexNativeSymbol         /\v\*/
 syntax match            hexNativeSymbol         /\v\//
+syntax match            hexNativeSymbol         /\v\::/
 syntax match            hexNativeSymbol         /\v\:/
 syntax match            hexNativeSymbol         /\v\</
 syntax match            hexNativeSymbol         /\v\>/
@@ -36,7 +37,7 @@ syntax match            hexNativeSymbol         /\v\|/
 syntax match            hexNativeSymbol         /\v\#/
 syntax match            hexNativeSymbol         /\v\&/
 
-syntax match            hexUserSymbol         ;[a-zA-Z_][a-zA-Z0-9_-]*; 
+syntax match            hexUserSymbol         ;[_a-zA-Z_][a-zA-Z0-9_-]*; 
 
 syntax keyword          hexCommentTodo        TODO FIXME XXX TBD contained
 syntax match            hexComment            /;.*$/ contains=hexCommentTodo
