@@ -925,7 +925,7 @@ int hex_symbol_lessequal(hex_context_t *ctx)
     }
     hex_item_t *pa = &a;
     hex_item_t *pb = &b;
-    hex_push_integer(ctx, !hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
+    hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
     return 0;
 }
 

@@ -190,7 +190,7 @@
     ;100
 
     ((test "aaa") (test "aaa" 0x5) < 0x1 ==) 
-    (("aaa" 0x5) ("" "aaa" 0x5) <= 0x0 ==)
+    (("aaa" 0x5) ("" "aaa" 0x5) <= 0x1 ==)
     (("a" "b" and) (error) try "[symbol and] Two integers required" ==)
     ((0x1 "a" or) (error) try "[symbol or] Two integers required" ==)
     ;104
