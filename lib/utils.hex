@@ -270,7 +270,26 @@
 
 ;;; intpl
 ;; s1 q -> s2
-;; Substitutes %%%#%% placeholders in %%s1%% with items in %%q%%.
+;; Substitutes %%$0%% to %%$9%% placeholders in %%s1%% with items in %%q%%.
+(
+  "_s" :
+  "_q" :
+  (_s iss _q isq and not)
+    ("[symbol intpl] String and quotation required" fail)
+  when 
+  _q len "_len" :
+  0x0 "_c" :
+  (_c len <)
+     (
+       _s "$" _c str cat _list _c get cat replace-all "_s" :
+       _c 0x1 + "_c" :
+     )
+   while
+   "_s" #
+   "_q" #
+   "_c" #
+   "_len" #
+) "intpl" ::
 
 ;;; each
 ;; q1 q2 -> *
@@ -278,13 +297,16 @@
 (
   "_fn" :
   "_list" :
-  (_fn isq _list isq and)
+  (_fn isq _list isq and not)
     ("[symbol each] Two quotations required" fail)
    when
    _list len "_len" :
    0x0 "_c" :
    (_c len <)
-     (_list _c get _fn .)
+     (
+       _list _c get _fn .
+       _c 0x1 + "_c" :
+     )
    while
    "_fn" #
    "_list" #
