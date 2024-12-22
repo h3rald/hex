@@ -33,7 +33,7 @@ int hex_push(hex_context_t *ctx, hex_item_t item)
         if (hex_get_symbol(ctx, item.token->value, &value))
         {
             add_to_stack_trace(ctx, item.token);
-            if (value.type == HEX_TYPE_QUOTATION && value.immediate)
+            if (value.type == HEX_TYPE_QUOTATION && value.operator)
             {
                 for (size_t i = 0; i < value.quotation_size; i++)
                 {

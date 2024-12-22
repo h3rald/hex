@@ -78,7 +78,7 @@ typedef struct hex_item_t
         int (*fn_value)(hex_context_t *);
         struct hex_item_t **quotation_value;
     } data;
-    int immediate;
+    int operator;
     hex_token_t *token;    // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
     size_t quotation_size; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } hex_item_t;

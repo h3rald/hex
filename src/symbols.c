@@ -66,7 +66,7 @@ int hex_symbol_define(hex_context_t *ctx)
     }
     if (value.type == HEX_TYPE_QUOTATION)
     {
-        value.immediate = 1;
+        value.operator = 1;
     }
     if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
     {
