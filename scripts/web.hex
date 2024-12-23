@@ -17,7 +17,7 @@ d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
 ("split" "run" "get" "puts" ":" "::" "." "#" "==" "'" "swap" "dup"
-"+" "*" "-" "each" "cat" "print" "read" "dec" "write" "append" "!" "<=" "if") "symbol-links" :
+"+" "*" "-" "each" "cat" "throw" "symbols" "print" "read" "dec" "write" "append" "!" "<=" "if") "symbol-links" :
 
 ;; Syntax highlighting
 

@@ -2,13 +2,15 @@
 
 <h4>Breaking Changes</h4>
 <ul>
-    <li>Removed the native symbol %:filter%%.</li>
+    <li>Removed the native symbols %:filter%%, %:clear%%, and %:each%%.</li>
     <li>Bytecode: some opcodes changes values; programs compiled with tbe previous version must be recompiled.</li>
 </ul>
 
 <h4>New Features</h4>
 <ul>
-    <li>Added a symbol {{sym-::}} to define operators (immediately-dequoted quotations).</li>
+    <li>Added symbol {{sym-::}} to define operators (immediately-dequoted quotations).</li>
+    <li>Added symbol {{sym-symbols}} to get a list of all stored symbols</li>
+    <li>Added symbol {{sym-throw}} to throw an error.</li>
     <li>Increased the size of the STDIN buffer to 16Kb.</li>
 </ul>
 
