@@ -1,15 +1,29 @@
-;;; fail
-;; s -> 
-;; Throws an error and prints %:s%% to stderr.
-(
-  warn
-  0x1 exit
-) "fail" ::
-
 ;;; _
 ;; a -> a
 ;; Duplicates and prints (with newline) the top item on the stack.
 (dup puts) "_" ::
+
+;;; cleanup
+;; ->
+;; Frees all symbols starting with an underscore (except for _).
+(
+ 0x0 "_c" :
+ (_c symbols len <)
+   (
+     symbols _c get "_item" :
+     (_item "_" != 
+      _item "_c" != 
+      _item "_item" != 
+      _item 0x0 get "_" ==
+      and and and)
+        (_item #)
+      when 
+      _c 0x1 + "_c" :
+   )
+ while
+ "_item" #
+ "_c" #
+) "cleanup" ::
 
 ;; isi
 ;; a -> i
@@ -32,20 +46,66 @@
   type "quotation" ==
 ) "isq" ::
 
+;;; ipop
+;; s -> i
+;; Stores symbol %%s%% by popping an integer from the stack, throws an error otherwise.
+(
+  "_id" :
+  "_a" :
+  (_a isi not)
+    ("Integer required" throw)
+  when 
+  _a _id :
+  cleanup
+) "ipop" ::
+
+;;; spop
+;; s -> s
+;; Stores symbol %%s%% by popping a string from the stack, throws an error otherwise.
+(
+  "_id" :
+  "_a" :
+  (_a iss not)
+    ("String required" throw)
+  when 
+  _a _id :
+  cleanup
+) "spop" ::
+
+;;; qpop
+;; s -> q
+;; Stores symbol %%s%% by popping a quotation from the stack, throws an error otherwise.
+(
+  "_id" :
+  "_a" :
+  (_a isq not)
+    ("Quotation required" throw)
+  when 
+  _a _id :
+  cleanup
+) "qpop" ::
+
+;;; lpop
+;; s -> (q|s)
+;; Stores symbol %%s%% by popping a quotation or a string from the stack, throws an error otherwise.
+(
+  "_id" :
+  "_a" :
+  (_a isi)
+    ("String or quotation required" throw)
+  when 
+  _a _id :
+  cleanup
+) "lpop" ::
+
 ;; insert
 ;; (q1|s1) a i -> (q2|s2)
 ;; Inserts item %:a%% at position %:i%% within a quotation or string.
 (
-  "_index" :
+  "_index" ipop
   "_item" :
-  "_list" :
+  "_list" lpop
   0x0 "_is-str" :
-  (_index isi not)
-    ("[symbol insert] Integer index required" fail .)
-  when
-  (_list isi)
-    ("[symbol insert] String or quotation required" fail)
-  when
   _list len "_len" :
   (_index dup _len >= 0x0 < and)
     ("[symbol insert] Index out of bounds" fail)
@@ -74,13 +134,7 @@
     (_result "" join "_result" :)
   when
   _result
-  "_len" #
-  "_is-str" #
-  "_c" #
-  "_result" #
-  "_index" #
-  "_item" #
-  "_list" #
+  cleanup
 ) "insert" ::
 
 
@@ -89,11 +143,8 @@
 ;; Pushes %:a%% to the end of a quotation or string.
 (
   "_item" :
-  "_list" :
+  "_list" lpop
   0x0 "_is-str" :
-  (_list isi)
-    ("[symbol push] String or quotation required" fail)
-  when
   (_list iss)
     (
       (_item iss not)
@@ -107,9 +158,7 @@
   (_is-str)
     ( "" join)
   when
-  "_item" #
-  "_list" #
-  "_is-str" #
+  cleanup
 ) "push" ::
 
 
@@ -117,10 +166,7 @@
 ;; (q1|s1) -> (q2|s2)
 ;; Reverses the order of the elements in a string or quotation.
 (
-  "_list" :
-  (_list isi)
-    ("[symbol reverse] String or quotation required" fail)
-  when
+  "_list" lpop
   (_list iss)
     (_list "" split "_list" :)
   when
@@ -136,9 +182,7 @@
   (_list iss)
     (_result "" join "_result" :)
   when
-  "_list" #
-  "_c" #
-  "_result" #
+  cleanup
 ) "reverse" ::
 
 
@@ -148,9 +192,7 @@
 ;; Sorts the items of a quotation or string.
 (
   "_check" :
-  "_list" :
-  (_list isi)
-    ("[symbol sort] String or quotation required" fail)
+  "_list" lpop
   when
   (_list iss)
     (_list "" split "_list" :)
@@ -180,14 +222,7 @@
     (_result "" join "_result" :)
   when
   _result
-  "_c"      #
-  "_left"   #
-  "_righr"  #
-  "_pivot"  #
-  "_len"    #
-  "_check"  #
-  "_list"   #
-  "_result" #
+  cleanup
 ) "sort" ::
 
 
@@ -205,20 +240,15 @@
     (_text _src _rep replace "_text" :)
   while
   _text
-  "_rep"  #
-  "_src"  #
-  "_text" #
+  cleanup
 ) "replace-all" :
 
 ;;; min
 ;; q -> a
 ;; Pushes the minimum item in a quotation on the stack.
 (
-  "_list" :
+  "_list" qpop
   () "_result" :
-  (_list isq)
-    ("[symbol min] Quotation required" fail)
-  when
   (_list len 0x0 ==)
     ("[symbol min] Not enough items" fail)
   when
@@ -233,21 +263,15 @@
     )
   while
   _result
-  "_list" #
-  "_result" #
-  "_len" #
-  "_c" #
+  cleanup
 ) "min" ::
 
 ;;; max
 ;; q -> a
 ;; Pushes the maximum item in a quotation on the stack.
 (
-  "_list" :
+  "_list" qpop
   () "_result" :
-  (_list isq not)
-    ("[symbol max] Quotation required" fail)
-  when
   (_list len 0x0 ==)
     ("[symbol max] Not enough items" fail)
   when
@@ -262,21 +286,15 @@
     )
   while
   _result
-  "_list" #
-  "_result" #
-  "_len" #
-  "_c" #
+  cleanup
 ) "max" ::
 
 ;;; intpl
 ;; s1 q -> s2
 ;; Substitutes %:$0%% to %%$9%% placeholders in %:s1%% with items in %:q%%.
 (
-  "_s" :
-  "_q" :
-  (_s iss _q isq and not)
-    ("[symbol intpl] String and quotation required" fail)
-  when 
+  "_s" spop
+  "_q" qpop
   _q len "_len" :
   0x0 "_c" :
   (_c len <)
@@ -285,21 +303,15 @@
        _c 0x1 + "_c" :
      )
    while
-   "_s" #
-   "_q" #
-   "_c" #
-   "_len" #
+   cleanup
 ) "intpl" ::
 
 ;;; each
 ;; q1 q2 -> *
 ;; Applies %:q2%% to each element of %:q1%%.
 (
-  "_fn" :
-  "_list" :
-  (_fn isq _list isq and not)
-    ("[symbol each] Two quotations required" fail)
-   when
+  "_fn" qpop
+  "_list" qpop
    _list len "_len" :
    0x0 "_c" :
    (_c len <)
@@ -308,8 +320,22 @@
        _c 0x1 + "_c" :
      )
    while
-   "_fn" #
-   "_list" #
-   "_len" # 
-   "_c" #
+   cleanup
 ) "each" ::
+
+;;; filter
+;; q1 q2-> q3
+;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
+
+;;; begins
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
+
+;;; ends
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
+
+;;; slice
+;; s1 i1 i2 -> s2
+;; Extracts the portion of the string between indices %:i1%% and %:i2%%.
+
