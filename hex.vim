@@ -2,14 +2,14 @@
 " Language: hex
 " Maintainer: Fabio Cevasco
 " Last Change: 2024-12-10
-" Version: 0.1.0
+" Version: 0.3.0
 
 if exists("b:current_syntax")
   finish
 endif
 
-syntax keyword          hexNativeSymbol         if when while error try dup pop swap stack clear and or not xor int str hex dec type 
-syntax keyword          hexNativeSymbol         cat chr len get ord index join split replace each map puts warn print gets 
+syntax keyword          hexNativeSymbol         if when while error symbols throw try dup pop swap stack and or not xor int str hex dec type 
+syntax keyword          hexNativeSymbol         cat chr len get ord index join split replace map puts warn print gets 
 syntax keyword          hexNativeSymbol         read write append args exit exec run
 syntax match            hexNativeSymbol         /\v\!/
 syntax match            hexNativeSymbol         /\v\!\=/ 
