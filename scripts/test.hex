@@ -33,7 +33,7 @@
             fails test-count dec ' cat "fails" :
         )
     try
-) "test" :
+) "test" ::
 
 
 ; --- Define tests
@@ -126,7 +126,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((args len 0x3 !=) ("yes") when "yes" ==)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    ;(0x0 "tmp-b" : (0x1 0x2 0x3) (tmp-b + "tmp-b" :) each tmp-b 0x6 ==)
+    (symbols len 0x4c ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
@@ -136,7 +136,8 @@
     ;64
 
     (0x2 dup stack (0x2 0x2) ==)
-    ;(clear stack () ==)
+    ((dup *) "square" :: 0x3 square 0x9 == "square" #)
+    (("test" throw) (error "test" ==) try)
     (0x1 0x2 swap pop pop pop stack (0x2) ==)
     ;68
 
@@ -230,7 +231,7 @@
 (_c tests len <)
   (
     tests _c get
-    test .
+    test
     _c 0x1 + "_c" :
   )
 while
