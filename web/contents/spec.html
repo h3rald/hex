@@ -248,8 +248,8 @@
     <p>All symbols are stored in a single <a href="#registry">registry</a>, implemented as a simple dictionary.
         Therefore, all symbols in hex are global, and not lexically scoped. The main driver for this is to keep the
         language as simple as possible.</p>
-    <p>You can define your own symbols and delete them using the <a href="#memory-management-symbols">memory management
-            symbols</a> provided natively. However, native symbols <em>cannot</em> be deleted.</p>
+    <p>You can store your own symbols and free them using the <a href="#memory-management-symbols">memory management
+            symbols</a> provided natively. However, native symbols <em>cannot</em> be freed.</p>
     <h3 id="stack">Stack<a href="#top"></a></h3>
     <p>The stack is a fundamental data structure in hex that holds values and controls the flow of execution. hex is a
         stack-based language, meaning that all operations are performed on a stack of values. The order according to
@@ -277,7 +277,8 @@
     </p>
     <p>Native symbols can perform manipulations on the stack; they can pop values from the stack and push values back
         in.</p>
-    <p>By contrast, you can only define literals as user-defined symbols, but you can define a quotation which can then
+    <p>In the canonical implementation, native symbols are implemented as native C functions that are executed whenever the corresponding native symbol is pushed on the stack.</p>
+    <p>By contrast, you can only store hex literals as user-defined symbols. When storing a quotation as a symbol, it can be used as data (a list of values) or  a portion of an hex program which that can then
         be <em>dequoted</em> through symbols like {{sym-.}}, which pushes all the items in a quotations
         on the stack, one by one.</p>
     <p>Consider the following example hex program:</p>
@@ -290,6 +291,11 @@
         symbol, which pushes all the items in the quotation on the stack, which is equivalent
         to the following program:</p>
     <pre><code>    $0x3$$ $:dup$$ $:*$$ $:*$$ $:puts$$ $; prints 9$$</code></pre>
+    <p>While the {{sym-:}} symbol can be used to store quotations that can then be dequoted later using {{sym-.}}, typically you want to define operators which are <em>immediately dequoted</em> when pushed on the stack, thus behaving in a similar way as their native counterparts.</p>
+    <p>You can achieve this using the {{sym-::}} symbol, and the previous example can be rewritten as follows:</p>
+    <pre><code>    ($:dup$$ $:*$$ $:*$$) $"square"$$ $:::$$
+    $0x3$$ $:square$$ $:puts$$ $; prints 9$$</code></pre>
+    <p>In this case, you no longer need to explicitly dequote $:square$$ using $:.$$, because it has been stored as an <em>operator</em> and hex knows it has to be immediately dequoted when pushed on the stack.</p>
     <h3 id="registry">Registry<a href="#top"></a></h3>
     <p>The registry in hex is a simple dictionary that stores symbols and their associated values or functions. The
         registry is used to look up symbols when they are encountered in a hex program and to store user-defined symbols
@@ -527,6 +533,10 @@ $; Push quotation of five items$$
     <p><mark>a s &rarr;</mark></p>
     <aside>OPCODE: <code>10</code></aside>
     <p>Stores the literal <code>a</code> in the registry as the symbol <code>s</code>.</p>
+    <h5 id="operator-symbol"><code>$:::$$</code> Symbol<a href="#top"></a></h5>
+    <p><mark>a s &rarr;</mark></p>
+    <aside>OPCODE: <code>11<code></aside>
+    <p>Stores the literal <code>a</code> in the registry as the symbol <code>s</code>. If %:a%% is a quotation, it will be immediately dequoted when pushed on the stack.</p>
     <h5 id="free-symbol"><code>$:#$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr;</mark></p>
     <aside>OPCODE: <code>11</code></aside>

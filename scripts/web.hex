@@ -16,7 +16,7 @@ d-releases ls . "releases" :
 d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
-("split" "run" "get" "puts" ":" "." "#" "==" "'" "swap" "dup"
+("split" "run" "get" "puts" ":" "::" "." "#" "==" "'" "swap" "dup"
 "+" "*" "-" "each" "cat" "print" "read" "dec" "write" "append" "!") "symbol-links" :
 
 ;; Syntax highlighting
@@ -30,6 +30,8 @@ d-templates "/page.html" cat "t-page" :
     "$0x" 
     "$:" 
     "$$"
+    "%:"
+    "%%"
 ) "highlight-delimiters" :
 
 (
@@ -40,6 +42,8 @@ d-templates "/page.html" cat "t-page" :
     "<span class=\"hex-integer\">0x"
     "<span class=\"hex-symbol\">"
     "</span>"
+    "<code>"
+    "</code"
 ) "highlight-replacements" :
 
 ; Highlight syntax in text
@@ -104,6 +108,7 @@ d-templates "/page.html" cat "t-page" :
     (t-symbol "!" ==)("eval" "t-href" :) when
     (t-symbol "'" ==)("quote" "t-href" :) when
     (t-symbol "+" ==)("add" "t-href" :) when
+    (t-symbol "::" ==)("operator" "t-href" :) when
     (t-symbol "*" ==)("multiply" "t-href" :) when
     (t-symbol "-" ==)("subtract" "t-href" :) when
     ("<a href=\"https://hex.2c.fyi/spec#" t-href "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :

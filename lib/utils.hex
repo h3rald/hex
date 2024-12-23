@@ -1,6 +1,6 @@
 ;;; fail
 ;; s -> 
-;; Throws an error and prints %%s%% to stderr.
+;; Throws an error and prints %:s%% to stderr.
 (
   warn
   0x1 exit
@@ -13,28 +13,28 @@
 
 ;; isi
 ;; a -> i
-;; Pushes %%0x1%% on the stack if %%a%% is an integer, %%0x0%% otherwise.
+;; Pushes %%0x1%% on the stack if %:a%% is an integer, %%0x0%% otherwise.
 (
   type "integer" ==
 ) "isi" ::
 
 ;; iss
 ;; a -> i
-;; Pushes %%0x1%% on the stack if %%a%% is a string, %%0x0%% otherwise.
+;; Pushes $0x1$$ on the stack if %:a%% is a string, $0x0$$ otherwise.
 (
   type "string" ==
 ) "iss" ::
 
 ;; isq
 ;; a -> i
-;; Pushes %%0x1%% on the stack if %%a%% is a quotation, %%0x0%% otherwise.
+;; Pushes $0x1$$ on the stack if %%a%% is a quotation, $0x0$$ otherwise.
 (
   type "quotation" ==
 ) "isq" ::
 
 ;; insert
 ;; (q1|s1) a i -> (q2|s2)
-;; Inserts item %%a%% at position %%i%% within a quotation or string.
+;; Inserts item %:a%% at position %:i%% within a quotation or string.
 (
   "_index" :
   "_item" :
@@ -86,7 +86,7 @@
 
 ;;; push
 ;; (q1|s1) a -> (q2|s2)
-;; Pushes %%a%% to the end of a quotation or string.
+;; Pushes %:a%% to the end of a quotation or string.
 (
   "_item" :
   "_list" :
@@ -193,7 +193,7 @@
 
 ;;; replace-all
 ;; s1 s2 s3 -> s4
-;; Replaces all occurrences of %%s2%% with %%s3%% in %%s1%%.
+;; Replaces all occurrences of %:s2%% with %%s3%% in %:s1%%.
 (
   "_rep"  :
   "_src"  :
@@ -270,7 +270,7 @@
 
 ;;; intpl
 ;; s1 q -> s2
-;; Substitutes %%$0%% to %%$9%% placeholders in %%s1%% with items in %%q%%.
+;; Substitutes %:$0%% to %%$9%% placeholders in %:s1%% with items in %:q%%.
 (
   "_s" :
   "_q" :
@@ -293,7 +293,7 @@
 
 ;;; each
 ;; q1 q2 -> *
-;; Applies %%q2%% to each element of %%q1%%.
+;; Applies %:q2%% to each element of %:q1%%.
 (
   "_fn" :
   "_list" :
