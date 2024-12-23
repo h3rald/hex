@@ -118,6 +118,24 @@ int hex_symbol_free(hex_context_t *ctx)
     return 0;
 }
 
+int hex_symbol_symbols(hex_context_t *ctx)
+{ 
+    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry.size * sizeof(hex_item_t *));
+    for (size_t i=0; i<ctx->registry.size; i++)
+    {
+        char *id = malloc(strlen(ctx->registry.entries[i].key) * sizeof(char *));
+        strcpy(id, ctx->registry.entries[i].key);
+        quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
+        quotation[i] = hex_string_item(ctx, id);
+    }
+    if (hex_push_quotation(ctx, quotation, ctx->registry.size) != 0)
+        {
+            hex_free_list(ctx, quotation, list.quotation_size);
+            return 1;
+        }
+    return 0;
+}
+
 int hex_symbol_type(hex_context_t *ctx)
 {
 
