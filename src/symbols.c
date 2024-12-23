@@ -2323,6 +2323,24 @@ int hex_symbol_try(hex_context_t *ctx)
     return 0;
 }
 
+int hex_symbol_throw(hex_context_t *ctx)
+{
+    HEX_POP(ctx, message);
+    if (message.type == HEX_TYPE_INVALID)
+    {
+        HEX_FREE(ctx, message);
+        return 1;
+    }
+    if (message.type != HEX_TYPE_STRING)
+    {
+        hex_error(ctx, "[symbol throw] String required");
+        HEX_FREE(ctx, message);
+        return 1;
+    }
+    hex_error(ctx, message.data.str_value);
+    return 1;
+}
+
 // Quotation symbols
 
 int hex_symbol_q(hex_context_t *ctx)
