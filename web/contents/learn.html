@@ -152,63 +152,28 @@
     <p>...you'll get:</p>
     <pre><code>[error] Cannot free native symbol '+'</code></pre>
     <h3 id="hexxing-all-the-way">Hexxing all the way!<a href="#top"></a></h3>
-    <p>An there you have it! Now <em>technically</em> you know everything you need about <em>hex</em>, and you can go
-        off hexxing away on your own! Off you go then!</p>
-    <p>...What? You don't even know how to implement a loop or a condition? But it's all the same! It's
-        always values pushed and popped from the stack using symbols!</p>
-    <p>Say you want to print the size of each file in the current directory, for example.</p>
-
-    <p>Let's start with creating our own symbol to read the contents of the current directory and put them in a
-        quotation:</p>
-    <pre><code>($"ls"$$ $:run$$ $0x1$$ $:get$$ $"&bsol;n"$$ $:split$$) $"ls"$$ $::$$</code></pre>
-    <p>Basically, when dequoted, this quotation will:</p>
-    <ol>
-        <li>Run the <code>ls</code> command (it will work on *nix at least) using the {{sym-run}} symbol.</li>
-        <li>Get the content of the standard output of the command result via {{sym-get}}.</li>
-        <li>Now you have a single string with all the directory contents, so you want to just split it by
-            $"&bsol;n"$$ to get the file names in a quotation.</li>
-    </ol>
-    <p>Let's try it in the REPL:</p>
-    <pre><code>$:ls$$ $:.$$</code></pre>
-    <p>Remember the dot? {{sym-.}} is that naughty boy that likes stripping quotations! It removes their parenthesis and
-        push all the items on The Stack, essentially <em>executing</em> your logic.</p>
-    <p>That should show you something like this:</p>
-    <pre><code>("CHANGELOG.md" "LICENSE" "Makefile" "README.md" "example.hex" "hex" "hex.js" "hex.vim" "hex.wasm" "releases" "scripts" "src" "web")</code></pre>
-    <p>...at least that's what it shows on my machine in the hex directory.</p>
-    <p>How do we print each of those along with their file size? The keyword here is {{sym-each}}, and here's the full
-        program:</p>
-    <pre><code>    $:ls$$ $:.$$
-        ($:dup$$ $": "$$ $:cat$$ $:print$$ 
-        $:read$$ $:len$$ $:dec$$ $:puts$$) 
-    each</code></pre>
-    <p>Woah, that's a lot. Let's break it down:</p>
-    <ol>
-        <li>First we execute our quotation to get the. list of all the file names.</li>
-        <li>Then we push a quotation on The Stack. This code will be executed by $:each$$ for <em>each item</em> in the
-            previous quotation (the list of files).</li>
-        <li>Inside that, first we use {{sym-dup}} to duplicate the current item. We'll need one to print, adding a
-            ": " after it via {{sym-cat}}.</li>
-        <li>Then we can use {{sym-print}} to print file name and colon without a new line.</li>
-        <li>Then there's still going to be a duplicate of the file name on the stack, which we are going to use to
-            calculate its size by reading its contents via {{sym-read}}.</li>
-        <li>Now.. you'll get a nice hexadecimal number corresponding to the size in bytes (and zero for
-            directories). You can use {{sym-dec}} to convert it to a string in decimal representation...</li>
-        <li>...and finally print it with a new line at the end, using {{sym-puts}}.</li>
-    </ol>
-    <p><em>If everything went well</em>, you should get something like this printed on the screen:</p>
-    <pre><code>    CHANGELOG.md: 124
-    LICENSE: 1070
-    Makefile: 711
-    README.md: 211
-    hex.js: 79923
-    hex.vim: 2881
-    releases: 0
-    scripts: 0
-    src: 0
-    web: 0</code></pre>
-    <p>Phew... that was fun, wasn't it?!</p>
-    <p>Hopefully you should have the basics down by now. If you are not yet bored after all this, then I recommend going
-        over the <a href="/spec">Specification</a> which is known to cure insomnia and get you to sleep by the time you
-        get to the middle of the <a href="/spec#native-symbols">Native Symbol Reference</a>. </p>
-    <p>Sweet dreams, and <em>happy hexxing!</em></p>
+<p>An there you have it! Now technically you know everything you need about hex, and you can go off hexxing away on your own! Off you go then!</p>
+<p>...What? You don't even know how to implement a loop or a condition? But it's all the same! It's always values pushed and popped from the stack using symbols!</p>
+<p>Alright, let's do something actually useful. I know: let's implement a new operator to implement the <em>factorial</em> of an integer! You never know when you'll need a factorial these days.</p>
+<p>Here goes:</p>
+<pre><code>(
+  $&quot;_n&quot;$$ $:$$
+  ($:_n$$ $0x0$$ $:&lt;=$$)
+    ($0x1$$)
+    ($:_n$$ $:_n$$ $0x1$$ $:-$$ $:factorial$$ $:*$$)
+  $:if$$
+  $&quot;_n&quot;$$ $:#$$
+) $&quot;factorial&quot;$$ $:::$$
+</code></pre>
+<p>Woah! That was a mouthful, wasn't it? Before breaking it down, look at the very end of the program: see that {{sum-::}}? That's the symbol to store <em>operator</em> symbols in The Registry. Operator symbols are defined using a quotation, but unlike ordinary quotations (stored using {{sum-:}}), they will be <em>immediately dequoted</em> when pushed on the stack. In other words, our $:factorial$$ operator symbols will behave exactly like one of the built-in native symbol.</p>
+<p>Let's see what is happening inside the quotation:</p>
+<ul>
+<li>First, we are storing a symbol &quot;_n&quot; in the registry. Wait, but there's no value? Correct, the value will be provided when the symbol is used, so like $0x5$$ $:factorial$$. It's like saying that we are <em>expecting</em> a value on the stack (and here we are assuming it's an integer, but that's ok for this example).</li>
+<li>Then three (!) quotations and the symbol {{sym-if}} will be pushed on the stack. Yep, you got that right: that's a good old if clause. The first quotation is the condition to be checked, then the <em>then</em> quotation, and finally the <em>else</em> quotation. Note how we can recursively call the $:factorial$$ operator that we are just defining... mind-blowing, I am sure.</li>
+<li>Finally, we need to free the temporary symbol $:_n$$ using {{sym-#}}. It is always good practice to do so, otherwise The Registry will be littered with stale symbols nobody uses anymore... quite a sore sight, believe me! Plus they take up precious memory.</li>
+</ul>
+<p>OK! Now you gotta have enough.</p>
+<p>What?! Still no loops huh? Go read about it in the specification {{sym-while}} symbol... takes two quotations... one for the condition and the other for the body of the loop. Really not rocket science once you get used to The Stack and The Registry.</p>
+<p>And this concludes our brief but dense tour of <em>hex</em>, the slightly-esoteric concatenative programming language. I hope you enjoyed our time together. If not, tough luck, no refunds, go learn a lisp next time instead! ;)</p>
+<p><em>Happy hexxing!</em></p>
 </article>

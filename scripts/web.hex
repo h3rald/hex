@@ -17,7 +17,7 @@ d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
 ("split" "run" "get" "puts" ":" "::" "." "#" "==" "'" "swap" "dup"
-"+" "*" "-" "each" "cat" "print" "read" "dec" "write" "append" "!") "symbol-links" :
+"+" "*" "-" "each" "cat" "print" "read" "dec" "write" "append" "!" "<=" "if") "symbol-links" :
 
 ;; Syntax highlighting
 
@@ -102,7 +102,8 @@ d-templates "/page.html" cat "t-page" :
     t-symbol "t-href" :
     ; Handle "special" symbols
     (t-symbol ":" ==)("store" "t-href" :) when
-    (t-symbol "==" ==)("equal" "t-href" :) when
+    (t-symbol "<=" ==)("lessthanequal" "t-href" :) when
+    t-symbol "." ==)("i" "t-href" :) when
     (t-symbol "." ==)("i" "t-href" :) when
     (t-symbol "#" ==)("free" "t-href" :) when
     (t-symbol "!" ==)("eval" "t-href" :) when
