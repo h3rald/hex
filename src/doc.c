@@ -33,6 +33,7 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, ":", "a s", "", "Stores 'a' as the literal symbol 's'.");
     hex_set_doc(docs, "::", "a s", "", "Defines 'a' as the operator symbol 's'.");
     hex_set_doc(docs, "#", "s", "", "Deletes user symbol 's'.");
+    hex_set_doc(docs, "symbols", "", "q", "Pushes a quotation containing all registered symbols on the stack.");
 
     // Control flow
     hex_set_doc(docs, "if", "q q q", "*", "If 'q1' is not 0x0, executes 'q2', else 'q3'.");
@@ -40,13 +41,13 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, "while", "q1 q2", "*", "While 'q1' is not 0x0, executes 'q2'.");
     hex_set_doc(docs, "error", "", "s", "Returns the last error message.");
     hex_set_doc(docs, "try", "q1 q2", "*", "If 'q1' fails, executes 'q2'.");
+    hex_set_doc(docs, "throw", "s", "", "Throws error 's'.");
 
     // Stack
     hex_set_doc(docs, "dup", "a", "a a", "Duplicates 'a'.");
     hex_set_doc(docs, "pop", "a", "", "Removes the top item from the stack.");
     hex_set_doc(docs, "swap", "a1 a2", "a2 a1", "Swaps 'a2' with 'a1'.");
     hex_set_doc(docs, "stack", "", "q", "Returns the contents of the stack.");
-    hex_set_doc(docs, "clear", "", "", "Clears the stack.");
 
     // Evaluation
     hex_set_doc(docs, ".", "q", "*", "Pushes each item of 'q' on the stack.");
@@ -97,13 +98,8 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, "get", "(s|q)", "a", "Gets the item at position 'i' in 's' or 'q'.");
     hex_set_doc(docs, "index", "(s a|q a)", "i", "Returns the index of 'a' within 's' or 'q'.");
     hex_set_doc(docs, "join", "q s", "s", "Joins the strings in 'q' using separator 's'.");
-
-    // String
     hex_set_doc(docs, "split", "s1 s2", "q", "Splits 's1' using separator 's2'.");
     hex_set_doc(docs, "replace", "s1 s2 s3", "s", "Replaces 's2' with 's3' within 's1'.");
-
-    // Quotation
-    hex_set_doc(docs, "each", "q1 q2", "*", "Executes 'q2' for each item of 'q1'.");
     hex_set_doc(docs, "map", "q1 q2", "q3", "Applies 'q2' to 'q1' items and returns results.");
 
     // I/O

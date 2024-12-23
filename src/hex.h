@@ -301,6 +301,7 @@ size_t hex_min_bytes_to_encode_integer(int32_t value);
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);
 int hex_symbol_free(hex_context_t *ctx);
+int hex_symbol_symbols(hex_context_t *ctx);
 int hex_symbol_type(hex_context_t *ctx);
 int hex_symbol_i(hex_context_t *ctx);
 int hex_symbol_eval(hex_context_t *ctx);
@@ -352,16 +353,14 @@ int hex_symbol_run(hex_context_t *ctx);
 int hex_symbol_if(hex_context_t *ctx);
 int hex_symbol_when(hex_context_t *ctx);
 int hex_symbol_while(hex_context_t *ctx);
-int hex_symbol_each(hex_context_t *ctx);
 int hex_symbol_error(hex_context_t *ctx);
 int hex_symbol_try(hex_context_t *ctx);
+int hex_symbol_throw(hex_context_t *ctx);
 int hex_symbol_q(hex_context_t *ctx);
 int hex_symbol_map(hex_context_t *ctx);
-int hex_symbol_filter(hex_context_t *ctx);
 int hex_symbol_swap(hex_context_t *ctx);
 int hex_symbol_dup(hex_context_t *ctx);
 int hex_symbol_stack(hex_context_t *ctx);
-int hex_symbol_clear(hex_context_t *ctx);
 int hex_symbol_pop(hex_context_t *ctx);
 
 // Opcodes

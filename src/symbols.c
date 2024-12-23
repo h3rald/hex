@@ -66,7 +66,7 @@ int hex_symbol_define(hex_context_t *ctx)
     }
     if (value.type == HEX_TYPE_QUOTATION)
     {
-        value.operator = 1;
+        value.operator= 1;
     }
     if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
     {
@@ -119,20 +119,20 @@ int hex_symbol_free(hex_context_t *ctx)
 }
 
 int hex_symbol_symbols(hex_context_t *ctx)
-{ 
+{
     hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry.size * sizeof(hex_item_t *));
-    for (size_t i=0; i<ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry.size; i++)
     {
         char *id = malloc(strlen(ctx->registry.entries[i].key) * sizeof(char *));
         strcpy(id, ctx->registry.entries[i].key);
         quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-        quotation[i] = hex_string_item(ctx, id);
+        *quotation[i] = hex_string_item(ctx, id);
     }
     if (hex_push_quotation(ctx, quotation, ctx->registry.size) != 0)
-        {
-            hex_free_list(ctx, quotation, list.quotation_size);
-            return 1;
-        }
+    {
+        hex_free_list(ctx, quotation, ctx->registry.size);
+        return 1;
+    }
     return 0;
 }
 
@@ -2211,53 +2211,6 @@ int hex_symbol_while(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_each(hex_context_t *ctx)
-{
-
-    HEX_POP(ctx, action);
-    if (action.type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        return 1;
-    }
-    HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, list);
-        return 1;
-    }
-    if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
-    {
-        hex_error(ctx, "[symbol each] Two quotations required");
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, list);
-        return 1;
-    }
-    else
-    {
-        for (size_t i = 0; i < list.quotation_size; i++)
-        {
-            if (hex_push(ctx, *list.data.quotation_value[i]) != 0)
-            {
-                HEX_FREE(ctx, action);
-                HEX_FREE(ctx, list);
-                return 1;
-            }
-            for (size_t j = 0; j < action.quotation_size; j++)
-            {
-                if (hex_push(ctx, *action.data.quotation_value[j]) != 0)
-                {
-                    HEX_FREE(ctx, action);
-                    HEX_FREE(ctx, list);
-                    return 1;
-                }
-            }
-        }
-    }
-    return 0;
-}
-
 int hex_symbol_error(hex_context_t *ctx)
 {
 
@@ -2454,92 +2407,7 @@ int hex_symbol_map(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_filter(hex_context_t *ctx)
-{
-
-    HEX_POP(ctx, action);
-    if (action.type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        return 1;
-    }
-    HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, list);
-        return 1;
-    }
-    if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
-    {
-        hex_error(ctx, "[symbol filter] Two quotations required");
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, list);
-        return 1;
-    }
-    else
-    {
-        hex_item_t **quotation = (hex_item_t **)malloc(list.quotation_size * sizeof(hex_item_t *));
-        if (!quotation)
-        {
-            hex_error(ctx, "[symbol filter] Memory allocation failed");
-            HEX_FREE(ctx, action);
-            HEX_FREE(ctx, list);
-            return 1;
-        }
-        size_t count = 0;
-        for (size_t i = 0; i < list.quotation_size; i++)
-        {
-            if (hex_push(ctx, *list.data.quotation_value[i]) != 0)
-            {
-                HEX_FREE(ctx, action);
-                HEX_FREE(ctx, list);
-                hex_free_list(ctx, quotation, count);
-                return 1;
-            }
-            for (size_t j = 0; j < action.quotation_size; j++)
-            {
-                if (hex_push(ctx, *action.data.quotation_value[j]) != 0)
-                {
-                    HEX_FREE(ctx, action);
-                    HEX_FREE(ctx, list);
-                    hex_free_list(ctx, quotation, count);
-                    return 1;
-                }
-            }
-            HEX_POP(ctx, evalResult);
-            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value > 0)
-            {
-                quotation[count] = (hex_item_t *)malloc(sizeof(hex_item_t));
-                if (!quotation[count])
-                {
-                    hex_error(ctx, "[symbol filter] Memory allocation failed");
-                    HEX_FREE(ctx, action);
-                    HEX_FREE(ctx, list);
-                    hex_free_list(ctx, quotation, count);
-                    return 1;
-                }
-                *quotation[count] = *list.data.quotation_value[i];
-                count++;
-            }
-        }
-        if (hex_push_quotation(ctx, quotation, count) != 0)
-        {
-            hex_error(ctx, "[symbol filter] An error occurred while pushing quotation");
-            HEX_FREE(ctx, action);
-            HEX_FREE(ctx, list);
-            for (size_t i = 0; i < count; i++)
-            {
-                HEX_FREE(ctx, *quotation[i]);
-            }
-            return 1;
-        }
-    }
-    return 0;
-}
-
 // Stack manipulation symbols
-
 int hex_symbol_swap(hex_context_t *ctx)
 {
 
@@ -2620,16 +2488,6 @@ int hex_symbol_stack(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_clear(hex_context_t *ctx)
-{
-    for (size_t i = 0; i <= (size_t)ctx->stack.top; i++)
-    {
-        HEX_FREE(ctx, ctx->stack.entries[i]);
-    }
-    ctx->stack.top = -1;
-    return 0;
-}
-
 int hex_symbol_pop(hex_context_t *ctx)
 {
 
@@ -2647,6 +2505,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, ":", hex_symbol_store);
     hex_set_native_symbol(ctx, "::", hex_symbol_define);
     hex_set_native_symbol(ctx, "#", hex_symbol_free);
+    hex_set_native_symbol(ctx, "symbols", hex_symbol_symbols);
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
     hex_set_native_symbol(ctx, "!", hex_symbol_eval);
@@ -2700,12 +2559,11 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "while", hex_symbol_while);
     hex_set_native_symbol(ctx, "error", hex_symbol_error);
     hex_set_native_symbol(ctx, "try", hex_symbol_try);
+    hex_set_native_symbol(ctx, "throw", hex_symbol_throw);
     hex_set_native_symbol(ctx, "'", hex_symbol_q);
-    hex_set_native_symbol(ctx, "each", hex_symbol_each);
     hex_set_native_symbol(ctx, "map", hex_symbol_map);
     hex_set_native_symbol(ctx, "swap", hex_symbol_swap);
     hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
     hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
-    hex_set_native_symbol(ctx, "clear", hex_symbol_clear);
     hex_set_native_symbol(ctx, "pop", hex_symbol_pop);
 }
