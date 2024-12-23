@@ -17,6 +17,10 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_FREE;
     }
+    else if (strcmp(symbol, "symbols") == 0)
+    {
+        return HEX_OP_SYMBOLS;
+    }
     else if (strcmp(symbol, "if") == 0)
     {
         return HEX_OP_IF;
@@ -37,6 +41,10 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_TRY;
     }
+    else if (strcmp(symbol, "throw") == 0)
+    {
+        return HEX_OP_THROW;
+    }
     else if (strcmp(symbol, "dup") == 0)
     {
         return HEX_OP_DUP;
@@ -44,10 +52,6 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     else if (strcmp(symbol, "stack") == 0)
     {
         return HEX_OP_STACK;
-    }
-    else if (strcmp(symbol, "clear") == 0)
-    {
-        return HEX_OP_CLEAR;
     }
     else if (strcmp(symbol, "pop") == 0)
     {
@@ -209,10 +213,6 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_REPLACE;
     }
-    else if (strcmp(symbol, "each") == 0)
-    {
-        return HEX_OP_EACH;
-    }
     else if (strcmp(symbol, "map") == 0)
     {
         return HEX_OP_MAP;
@@ -274,6 +274,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "::";
     case HEX_OP_FREE:
         return "#";
+    case HEX_OP_SYMBOLS:
+        return "symbols";
     case HEX_OP_IF:
         return "if";
     case HEX_OP_WHEN:
@@ -284,12 +286,12 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "error";
     case HEX_OP_TRY:
         return "try";
+    case HEX_OP_THROW:
+        return "throw";
     case HEX_OP_DUP:
         return "dup";
     case HEX_OP_STACK:
         return "stack";
-    case HEX_OP_CLEAR:
-        return "clear";
     case HEX_OP_POP:
         return "pop";
     case HEX_OP_SWAP:
@@ -370,8 +372,6 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "split";
     case HEX_OP_REPLACE:
         return "replace";
-    case HEX_OP_EACH:
-        return "each";
     case HEX_OP_MAP:
         return "map";
     case HEX_OP_PUTS:
