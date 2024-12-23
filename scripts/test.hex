@@ -137,7 +137,7 @@
 
     (0x2 dup stack (0x2 0x2) ==)
     ;(clear stack () ==)
-    (0x1 0x2 swap pop stack (0x2) ==)
+    (0x1 0x2 swap pop pop pop stack (0x2) ==)
     ;68
 
     (("aaa" "puts" :) (error) try "[symbol :] Failed to store symbol 'puts'" ==)
@@ -229,6 +229,7 @@
 0x0 "_c" :
 (_c tests len <)
   (
+    tests _c get
     test .
     _c 0x1 + "_c" :
   )
@@ -245,6 +246,7 @@ while
         0x0 "_c" :
         (_c errors len <)
           (
+            errors _c get
             warn
             _c 0x1 + "_c" :
           )
