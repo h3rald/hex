@@ -157,13 +157,13 @@
 <p>Alright, let's do something actually useful. I know: let's implement a new operator to implement the <em>factorial</em> of an integer! You never know when you'll need a factorial these days.</p>
 <p>Here goes:</p>
 <pre><code>(
-  $&quot;_n&quot;$$ $:$$
+  $"_n"$$ $:$$
   ($:_n$$ $0x0$$ $:&lt;=$$)
     ($0x1$$)
     ($:_n$$ $:_n$$ $0x1$$ $:-$$ $:factorial$$ $:*$$)
   $:if$$
-  $&quot;_n&quot;$$ $:#$$
-) $&quot;factorial&quot;$$ $:::$$
+  $"_n"$$ $:#$$
+) $"_factorial"$$ $:::$$
 </code></pre>
 <p>Woah! That was a mouthful, wasn't it? Before breaking it down, look at the very end of the program: see that {{sum-::}}? That's the symbol to store <em>operator</em> symbols in The Registry. Operator symbols are defined using a quotation, but unlike ordinary quotations (stored using {{sum-:}}), they will be <em>immediately dequoted</em> when pushed on the stack. In other words, our $:factorial$$ operator symbols will behave exactly like one of the built-in native symbol.</p>
 <p>Let's see what is happening inside the quotation:</p>
