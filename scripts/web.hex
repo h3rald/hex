@@ -6,13 +6,30 @@
 "web/out" "d-out" :
 "releases" "d-releases" :
 
+; each implementation
+(
+  "_fn" :
+  "_list" :
+   _list len "_len" :
+   0x0 "_c" :
+   (_c len <)
+     (
+       _list _c get _fn .
+       _c 0x1 + "_c" :
+     )
+   while
+   "_fn" #
+   "_list" #
+   "_len" # 
+) "each" ::
+
 ; Get all files from a directory
-("ls " swap cat run 0x1 get "\n" split) "ls" :
+("ls " swap cat run 0x1 get "\n" split) "ls" ::
 
 ; Get relevant files
-d-contents ls . "contents" :
-d-assets ls . "assets" :
-d-releases ls . "releases" :
+d-contents ls "contents" :
+d-assets ls "assets" :
+d-releases ls "releases" :
 d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
@@ -70,15 +87,15 @@ d-templates "/page.html" cat "t-page" :
     "t-count" #
     "t-delimiter" #
     "t-replacement" #
-) "highlight" :
+) "highlight" ::
 
 ; Convenience symbol for debugging
-(dup puts) "_" :
+(dup puts) "_" ::
 
 ; Generate tag placeholder
 (
     "{{" swap "}}" cat cat
-) "tag" :
+) "tag" ::
 
 ; Replace tag
 (
@@ -92,7 +109,7 @@ d-templates "/page.html" cat "t-page" :
     "pt-repl"    #
     "pt-tag"     #
     "pt-content" #
-) "process-tag" :
+) "process-tag" ::
 
 
 ; Replace symbol placeholder with link to spec
@@ -117,13 +134,13 @@ d-templates "/page.html" cat "t-page" :
     t-content 
     "sym-" t-symbol cat 
     t-repl 
-    process-tag .
+    process-tag
     ; Free temporary symbols
     "t-repl" #
     "t-symtag" #
     "t-href" #
     "t-symbol" #
-) "process-symbol" : 
+) "process-symbol" ::
 
 ; Load releases content for changelog
 "" "releases-content" :
@@ -140,7 +157,7 @@ d-templates "/page.html" cat "t-page" :
     while
     "_count"        #
     "id-release"    #
-) "process-releases" :
+) "process-releases" ::
 
 ; Create changelog toc
 (
@@ -165,22 +182,22 @@ d-templates "/page.html" cat "t-page" :
     "_count"        #
     "id-release"    #
 
-) "generate-changelog-toc" :
+) "generate-changelog-toc" ::
 
-generate-changelog-toc .
+generate-changelog-toc
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;;;;; Generate CHANGELOG
 "*** Updating CHANGELOG.md..." puts
-process-releases .
+process-releases
 
 ; Read changelog template and add generated release content
 d-contents "/" "changelog.html" cat cat read
-"changelog-toc" changelog-toc process-tag .
-"releases" releases-content process-tag .
+"changelog-toc" changelog-toc process-tag
+"releases" releases-content process-tag
 "changelog-content" :
-symbol-links (changelog-content swap process-symbol . "changelog-content" :) () map
+symbol-links (changelog-content swap process-symbol "changelog-content" :) () map
 
 ; Write CHANGELOG.md
 changelog-content
@@ -196,17 +213,17 @@ contents
     d-contents "/" fn-content cat cat read "content" :
     t-page read
     ; Replace tags
-    "content" content process-tag .
-    "title" id-content process-tag .
-    "release" meta-release process-tag .
-    "year" meta-year process-tag .
-    "changelog-toc" changelog-toc process-tag .
-    "releases" releases-content process-tag .
+    "content" content process-tag
+    "title" id-content process-tag
+    "release" meta-release process-tag
+    "year" meta-year process-tag
+    "changelog-toc" changelog-toc process-tag
+    "releases" releases-content process-tag
     "new-content" :
     ; Replace symbols with links
-    symbol-links (new-content swap process-symbol . "new-content" :) each
+    symbol-links (new-content swap process-symbol "new-content" :) each
     ; Highlight syntax
-    new-content highlight . "new-content" :
+    new-content highlight "new-content" :
     (fn-content "home.html" ==)
         (
             ; Process home page
