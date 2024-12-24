@@ -8,19 +8,20 @@
 
 ; each implementation
 (
-  "_fn" :
-  "_list" :
-   _list len "_len" :
-   0x0 "_c" :
-   (_c len <)
+  "_each_fn" :
+  "_each_list" :
+   _each_list len "_each_len" :
+   0x0 "_each_c" :
+   (_each_c _each_len <)
      (
-       _list _c get _fn .
-       _c 0x1 + "_c" :
+       _each_list _each_c get _each_fn .
+       _each_c 0x1 + "_each_c" :
      )
    while
-   "_fn" #
-   "_list" #
-   "_len" # 
+   ;"_each_fn" #
+   ;"_each_list" #
+   ;"_each_len" # 
+   ;"_each_c" #
 ) "each" ::
 
 ; Get all files from a directory
@@ -120,7 +121,7 @@ d-templates "/page.html" cat "t-page" :
     ; Handle "special" symbols
     (t-symbol ":" ==)("store" "t-href" :) when
     (t-symbol "<=" ==)("lessthanequal" "t-href" :) when
-    t-symbol "." ==)("i" "t-href" :) when
+    (t-symbol "." ==)("i" "t-href" :) when
     (t-symbol "." ==)("i" "t-href" :) when
     (t-symbol "#" ==)("free" "t-href" :) when
     (t-symbol "!" ==)("eval" "t-href" :) when
@@ -142,7 +143,6 @@ d-templates "/page.html" cat "t-page" :
     "t-symbol" #
 ) "process-symbol" ::
 
-#|
 ; Load releases content for changelog
 "" "releases-content" :
 (
@@ -198,7 +198,7 @@ d-contents "/" "changelog.html" cat cat read
 "changelog-toc" changelog-toc process-tag
 "releases" releases-content process-tag
 "changelog-content" :
-symbol-links (changelog-content swap process-symbol "changelog-content" :) () map
+symbol-links (changelog-content swap process-symbol "changelog-content" :) each
 
 ; Write CHANGELOG.md
 changelog-content
@@ -255,4 +255,3 @@ assets
 
 "*** Done!" puts
 
-|#
