@@ -11,7 +11,7 @@
 <h4>Breaking Changes</h4>
 <ul>
     <li>Removed the native symbols %:filter%%, %:clear%%, and %:each%%.</li>
-    <li>Bytecode: some opcodes changes values; programs compiled with tbe previous version must be recompiled.</li>
+    <li>Bytecode: some opcodes changed values; programs compiled with tbe previous version must be recompiled.</li>
 </ul>
 
 <h4>New Features</h4>
@@ -55,7 +55,7 @@
             href="https://github.com/h3rald/hex/blob/master/scripts/amalgamate.sh">amalgamate.sh</a> script to
         concatenate them together before compiling</li>
 </ul>
-<h3 id="#v0.1.0">v0.1.0 &mdash; 2024-12-14</h3>
+<h3 id="v0.1.0">v0.1.0 &mdash; 2024-12-14</h3>
 
 <p>Initial release, featuring:</p>
 <ul>
