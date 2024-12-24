@@ -146,33 +146,33 @@ d-templates "/page.html" cat "t-page" :
 ; Load releases content for changelog
 "" "releases-content" :
 (
-    releases len 0x1 - "_count" :
+    releases len "_releases_count" :
     ; Reverse releases order
-    (_count 0x0 <=)
+    (_releases_count 0x0 <)
         (
-            releases _count get "id-release" :
+            releases _releases_count get "id-release" :
             ; Update releases-content
             d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
-            _count 0x1 - "_count" :
+            _count 0x1 - "_releases_count" :
         )
     while
-    "_count"        #
+    "_releases_count"        #
     "id-release"    #
 ) "process-releases" ::
 
 ; Create changelog toc
 (
     "" "changelog-toc" : ;external
-    releases len 0x1 - "_count" :
+    releases len "_gct_count" :
     ; Reverse releases order
-    (_count 0x0 <=)
+    (_gct_count 0x0 <)
         (
-            releases _count get ".html" "" replace "id-release" :
+            releases _gct_count get ".html" "" replace "id-release" :
             changelog-toc
             ("<li><a href=\"#v" id-release "\">v" id-release "</a></li>\n") () map "" join 
             cat
             "changelog-toc" :
-            _count 0x1 - "_count" :
+            _gct_count 0x1 - "_gct_count" :
         )
     while
     "<ul>\n"
@@ -180,7 +180,7 @@ d-templates "/page.html" cat "t-page" :
     "</ul>\n" 
     cat cat
     "changelog-toc" : 
-    "_count"        #
+    "_gct_count"        #
     "id-release"    #
 
 ) "generate-changelog-toc" ::
