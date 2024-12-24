@@ -116,52 +116,52 @@
 ;; s -> i
 ;; Stores symbol %%s%% by popping an integer from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a isi not)
+  "_ipop_id" :
+  "_ipop_a" :
+  (_ipop_a isi not)
     ("Integer required" throw)
   when 
-  _a _id :
-  cleanup
+  _ipop_a _ipop_id :
+  "_ipop_" cleanup
 ) "ipop" ::
 
 ;;; spop
 ;; s -> s
 ;; Stores symbol %%s%% by popping a string from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a iss not)
+  "_spop_id" :
+  "_spop_a" :
+  (_spop_a iss not)
     ("String required" throw)
   when 
-  _a _id :
-  cleanup
+  _spop_a _spop_id :
+  "_spop_" cleanup
 ) "spop" ::
 
 ;;; qpop
 ;; s -> q
 ;; Stores symbol %%s%% by popping a quotation from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a isq not)
+  "_qpop_id" :
+  "_qpop_a" :
+  (_qpop_a isq not)
     ("Quotation required" throw)
   when 
-  _a _id :
-  cleanup
+  _qpop_a _qpop_id :
+  "_qpop_" cleanup
 ) "qpop" ::
 
 ;;; lpop
 ;; s -> (q|s)
 ;; Stores symbol %%s%% by popping a quotation or a string from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a isi)
+  "_lpop_id" :
+  "_lpop_a" :
+  (_lpop_a isi)
     ("String or quotation required" throw)
   when 
-  _a _id :
-  cleanup
+  _lpop_a _lpop_id :
+  "_lpop_" cleanup
 ) "lpop" ::
 
 ;; insert
@@ -251,8 +251,6 @@
   cleanup
 ) "reverse" ::
 
-
-
 ;;; sort
 ;; (q1|s1) q2 -> (q3|s2)
 ;; Sorts the items of a quotation or string.
@@ -290,7 +288,6 @@
   _result
   cleanup
 ) "sort" ::
-
 
 ;;; replace-all
 ;; s1 s2 s3 -> s4
