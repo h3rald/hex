@@ -3,26 +3,92 @@
 ;; Duplicates and prints (with newline) the top item on the stack.
 (dup puts) "_" ::
 
-;;; cleanup
-;; ->
-;; Frees all symbols starting with an underscore (except for _).
+;;; begins
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
 (
- 0x0 "_c" :
- (_c symbols len <)
-   (
-     symbols _c get "_item" :
-     (_item "_" != 
-      _item "_c" != 
-      _item "_item" != 
-      _item 0x0 get "_" ==
-      and and and)
-        (_item #)
+  "_begins_prefix" :
+  "_begins_s"      :
+  (_begins_s len _begins_prefix len <)
+    (0x0)
+    (
+      0x0 "_begins_c" :
+      0x1 "_begins_result" :
+      (
+        _begins_c _begins_prefix len <
+        _begins_result and
+      )
+        (
+          (
+            _begins_prefix _begins_c get
+            _begins_s _begins_c get ==
+          )
+            (_begins_c 0x1 + "_begins_c" :)
+            (0x0 "_begins_result" :)
+          if  
+        )
+      while
+    )
+  if
+  _begins_result
+  "_begins_prefix" #
+  "_begins_s"      #
+  "_begins_c"      # 
+) "begins" ::
+
+;;; ends
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
+(
+  "_ends_suffix" :
+  "_ends_s"      :
+  (_ends_s len _ends_suffix len <)
+    (0x0)
+    (
+      _ends_suffix len 0x1 - "_ends_c" :
+      _ends_s len _ends_suffix len - "_ends_offset" :
+      0x1 "_ends_result" :
+      (
+        _ends_c 0x0 >=
+        _ends_result and
+      )
+        (
+          (
+            _ends_suffix _ends_c get
+            _ends_s _ends_offset _ends_c + get ==
+          )
+            (_ends_c 0x1 - "_ends_c" :)
+            (0x0 "_ends_result" :)
+          if  
+        )
+      while
+    )
+  if
+  _ends_result
+  "_ends_suffix" #
+  "_ends_s"      #
+  "_ends_c"      # 
+  "_ends_offset" #
+) "ends" ::
+
+;;; cleanup
+;; s ->
+;; Frees all symbols starting %:s%%.
+(
+  "_cleanup_prefix" :
+  0x0 "_c" :
+  (_cleanup_c symbols len <)
+    (
+      symbols _cleanup_c get "_cleanup_item" :
+      (_cleanup_item _cleanup_prefix begins)
+        (_cleanup_item #)
       when 
-      _c 0x1 + "_c" :
-   )
- while
- "_item" #
- "_c" #
+      _cleanup_c 0x1 + "_cleanup_c" :
+    )
+  while
+  "_cleanup_prefix" #
+  "_cleanup_item"   #
+  "_cleanup_c"      #
 ) "cleanup" ::
 
 ;; isi
@@ -50,52 +116,52 @@
 ;; s -> i
 ;; Stores symbol %%s%% by popping an integer from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a isi not)
+  "_ipop_id" :
+  "_ipop_a" :
+  (_ipop_a isi not)
     ("Integer required" throw)
   when 
-  _a _id :
-  cleanup
+  _ipop_a _ipop_id :
+  "_ipop_" cleanup
 ) "ipop" ::
 
 ;;; spop
 ;; s -> s
 ;; Stores symbol %%s%% by popping a string from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a iss not)
+  "_spop_id" :
+  "_spop_a" :
+  (_spop_a iss not)
     ("String required" throw)
   when 
-  _a _id :
-  cleanup
+  _spop_a _spop_id :
+  "_spop_" cleanup
 ) "spop" ::
 
 ;;; qpop
 ;; s -> q
 ;; Stores symbol %%s%% by popping a quotation from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a isq not)
+  "_qpop_id" :
+  "_qpop_a" :
+  (_qpop_a isq not)
     ("Quotation required" throw)
   when 
-  _a _id :
-  cleanup
+  _qpop_a _qpop_id :
+  "_qpop_" cleanup
 ) "qpop" ::
 
 ;;; lpop
 ;; s -> (q|s)
 ;; Stores symbol %%s%% by popping a quotation or a string from the stack, throws an error otherwise.
 (
-  "_id" :
-  "_a" :
-  (_a isi)
+  "_lpop_id" :
+  "_lpop_a" :
+  (_lpop_a isi)
     ("String or quotation required" throw)
   when 
-  _a _id :
-  cleanup
+  _lpop_a _lpop_id :
+  "_lpop_" cleanup
 ) "lpop" ::
 
 ;; insert
@@ -185,8 +251,6 @@
   cleanup
 ) "reverse" ::
 
-
-
 ;;; sort
 ;; (q1|s1) q2 -> (q3|s2)
 ;; Sorts the items of a quotation or string.
@@ -224,7 +288,6 @@
   _result
   cleanup
 ) "sort" ::
-
 
 ;;; replace-all
 ;; s1 s2 s3 -> s4
@@ -327,13 +390,6 @@
 ;; q1 q2-> q3
 ;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
 
-;;; begins
-;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
-
-;;; ends
-;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
 
 ;;; slice
 ;; s1 i1 i2 -> s2
