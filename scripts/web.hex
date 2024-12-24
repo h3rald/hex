@@ -45,7 +45,7 @@ d-templates "/page.html" cat "t-page" :
     "<span class=\"hex-symbol\">"
     "</span>"
     "<code>"
-    "</code"
+    "</code>"
 ) "highlight-replacements" :
 
 ; Highlight syntax in text
@@ -132,12 +132,12 @@ d-templates "/page.html" cat "t-page" :
 (
     releases len "_releases_count" :
     ; Reverse releases order
-    (_releases_count 0x0 <)
+    (_releases_count 0x0 >)
         (
             releases _releases_count 0x1 - get "id-release" :
             ; Update releases-content
             d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
-            _count 0x1 - "_releases_count" :
+            _releases_count 0x1 - "_releases_count" :
         )
     while
     "_releases_count"        #
@@ -146,12 +146,12 @@ d-templates "/page.html" cat "t-page" :
 
 ; Create changelog toc
 (
-    "" "changelog-toc" : ;external
+    "" "changelog-toc" : ; external
     releases len "_gct_count" :
     ; Reverse releases order
-    (_gct_count 0x0 <)
+    (_gct_count 0x0 >)
         (
-            releases _gct_count get ".html" "" replace "id-release" :
+            releases _gct_count 0x1 - get ".html" "" replace "id-release" :
             changelog-toc
             ("<li><a href=\"#v" id-release "\">v" id-release "</a></li>\n") () map "" join 
             cat
