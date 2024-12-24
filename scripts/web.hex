@@ -134,7 +134,7 @@ d-templates "/page.html" cat "t-page" :
     ; Reverse releases order
     (_releases_count 0x0 <)
         (
-            releases _releases_count get "id-release" :
+            releases _releases_count 0x1 - get "id-release" :
             ; Update releases-content
             d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
             _count 0x1 - "_releases_count" :
