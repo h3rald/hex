@@ -20,7 +20,7 @@ int isatty(int fd);
 #endif
 
 // Constants
-#define HEX_VERSION "0.2.0"
+#define HEX_VERSION "0.3.0"
 #define HEX_STDIN_BUFFER_SIZE 16384
 #define HEX_REGISTRY_SIZE 1024
 #define HEX_STACK_SIZE 256

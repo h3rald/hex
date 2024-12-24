@@ -6,7 +6,7 @@
 <li><a href="#v0.1.0">v0.1.0</a></li>
 </ul>
 
-    <h3 id="v0.3.0">v0.3.0 &mdash; <em>Under Development</em></h3>
+    <h3 id="v0.3.0">v0.3.0 &mdash; 2024-12-25</h3>
 
 <h4>Breaking Changes</h4>
 <ul>
