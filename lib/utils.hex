@@ -3,26 +3,92 @@
 ;; Duplicates and prints (with newline) the top item on the stack.
 (dup puts) "_" ::
 
-;;; cleanup
-;; ->
-;; Frees all symbols starting with an underscore (except for _).
+;;; begins
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
 (
- 0x0 "_c" :
- (_c symbols len <)
-   (
-     symbols _c get "_item" :
-     (_item "_" != 
-      _item "_c" != 
-      _item "_item" != 
-      _item 0x0 get "_" ==
-      and and and)
-        (_item #)
+  "_begins_prefix" :
+  "_begins_s"      :
+  (_begins_s len _begins_prefix len <)
+    (0x0)
+    (
+      0x0 "_begins_c" :
+      0x1 "_begins_result" :
+      (
+        _begins_c _begins_prefix len <
+        _begins_result and
+      )
+        (
+          (
+            _begins_prefix _begins_c get
+            _begins_s _begins_c get ==
+          )
+            (_begins_c 0x1 + "_begins_c" :)
+            (0x0 "_begins_result" :)
+          if  
+        )
+      while
+    )
+  if
+  _begins_result
+  "_begins_prefix" #
+  "_begins_s"      #
+  "_begins_c"      # 
+) "begins" ::
+
+;;; ends
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
+(
+  "_ends_suffix" :
+  "_ends_s"      :
+  (_ends_s len _ends_prefix len <)
+    (0x0)
+    (
+      _ends_suffix len 0x1 - "_ends_c" :
+      _ends_s len _ends_suffix len - "_ends_offset" :
+      0x1 "_ends_result" :
+      (
+        _ends_c 0x0 >=
+        _ends_result and
+      )
+        (
+          (
+            _ends_suffix _ends_c get
+            _ends_s _ends_offset _ends_c + get ==
+          )
+            (_ends_c 0x1 - "_ends_c" :)
+            (0x0 "_ends_result" :)
+          if  
+        )
+      while
+    )
+  if
+  _ends_result
+  "_ends_suffix" #
+  "_ends_s"      #
+  "_ends_c"      # 
+  "_ends_offset" #
+) "ends" ::
+
+;;; cleanup
+;; s ->
+;; Frees all symbols starting %:s%%.
+(
+  "_cleanup_prefix" :
+  0x0 "_c" :
+  (_cleanup_c symbols len <)
+    (
+      symbols _cleanup_c get "_cleanup_item" :
+      (_cleanup_item _cleanup_prefix begins)
+        (_cleanup_item #)
       when 
-      _c 0x1 + "_c" :
-   )
- while
- "_item" #
- "_c" #
+      _cleanup_c 0x1 + "_cleanup_c" :
+    )
+  while
+  "_cleanup_prefix" #
+  "_cleanup_item"   #
+  "_cleanup_c"      #
 ) "cleanup" ::
 
 ;; isi
@@ -327,13 +393,6 @@
 ;; q1 q2-> q3
 ;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
 
-;;; begins
-;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
-
-;;; ends
-;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
 
 ;;; slice
 ;; s1 i1 i2 -> s2
