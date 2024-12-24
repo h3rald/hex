@@ -42,7 +42,7 @@
 (
   "_ends_suffix" :
   "_ends_s"      :
-  (_ends_s len _ends_prefix len <)
+  (_ends_s len _ends_suffix len <)
     (0x0)
     (
       _ends_suffix len 0x1 - "_ends_c" :
