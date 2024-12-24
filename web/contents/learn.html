@@ -164,8 +164,10 @@
   $:if$$
   $"_n"$$ $:#$$
 ) $"_factorial"$$ $:::$$
+
+$0x5$$ $:factorial$$ $:dec$$ $:puts$$ $; Prints 120 $$
 </code></pre>
-<p>Woah! That was a mouthful, wasn't it? Before breaking it down, look at the very end of the program: see that {{sum-::}}? That's the symbol to store <em>operator</em> symbols in The Registry. Operator symbols are defined using a quotation, but unlike ordinary quotations (stored using {{sum-:}}), they will be <em>immediately dequoted</em> when pushed on the stack. In other words, our $:factorial$$ operator symbols will behave exactly like one of the built-in native symbol.</p>
+<p>Woah! That was a mouthful, wasn't it? Before breaking it down, look at the very end of the program: see that {{sym-::}}? That's the symbol to store <em>operator</em> symbols in The Registry. Operator symbols are defined using a quotation, but unlike ordinary quotations (stored using {{sym-:}}), they will be <em>immediately dequoted</em> when pushed on the stack. In other words, our $:factorial$$ operator symbols will behave exactly like one of the built-in native symbol.</p>
 <p>Let's see what is happening inside the quotation:</p>
 <ul>
 <li>First, we are storing a symbol &quot;_n&quot; in the registry. Wait, but there's no value? Correct, the value will be provided when the symbol is used, so like $0x5$$ $:factorial$$. It's like saying that we are <em>expecting</em> a value on the stack (and here we are assuming it's an integer, but that's ok for this example).</li>
