@@ -6,24 +6,6 @@
 "web/out" "d-out" :
 "releases" "d-releases" :
 
-; each implementation
-(
-  "_each_fn" :
-  "_each_list" :
-   _each_list len "_each_len" :
-   0x0 "_each_c" :
-   (_each_c _each_len <)
-     (
-       _each_list _each_c get _each_fn .
-       _each_c 0x1 + "_each_c" :
-     )
-   while
-   ;"_each_fn" #
-   ;"_each_list" #
-   ;"_each_len" # 
-   ;"_each_c" #
-) "each" ::
-
 ; Get all files from a directory
 ("ls " swap cat run 0x1 get "\n" split) "ls" ::
 
@@ -198,7 +180,15 @@ d-contents "/" "changelog.html" cat cat read
 "changelog-toc" changelog-toc process-tag
 "releases" releases-content process-tag
 "changelog-content" :
-symbol-links (changelog-content swap process-symbol "changelog-content" :) each
+
+0x0 "_c" :
+(_c symbol-links len <)
+    (
+        changelog-content symbol-links _c get process-symbol "changelog-content" :
+        _c 0x1 + "_c" :
+    )
+while
+"_c" #
 
 ; Write CHANGELOG.md
 changelog-content
@@ -207,51 +197,66 @@ changelog-content
 
 ;;;;; Write web site contents
 "*** Generating hex web site..." puts
-contents
-(
-    "fn-content" :
-    fn-content ".html" "" replace "id-content" :
-    d-contents "/" fn-content cat cat read "content" :
-    t-page read
-    ; Replace tags
-    "content" content process-tag
-    "title" id-content process-tag
-    "release" meta-release process-tag
-    "year" meta-year process-tag
-    "changelog-toc" changelog-toc process-tag
-    "releases" releases-content process-tag
-    "new-content" :
-    ; Replace symbols with links
-    symbol-links (new-content swap process-symbol "new-content" :) each
-    ; Highlight syntax
-    new-content highlight "new-content" :
-    (fn-content "home.html" ==)
-        (
-            ; Process home page
-            d-out "/index.html" cat "dst-file" :
-        ) 
-        (
-            (d-out id-content "index.html") () map "/" join "dst-file" :
-        )
-    if
-    "  - Writing: " dst-file cat puts
-    new-content dst-file write
-) each
+0x0 "_c" :
+(_c contents len <)
+    (
+        contents _c get "fn-content" :
+        fn-content ".html" "" replace "id-content" :
+        d-contents "/" fn-content cat cat read "content" :
+        t-page read
+        ; Replace tags
+        "content" content process-tag
+        "title" id-content process-tag
+        "release" meta-release process-tag
+        "year" meta-year process-tag
+        "changelog-toc" changelog-toc process-tag
+        "releases" releases-content process-tag
+        "new-content" :
+        ; Replace symbols with links
+        0x0 "_i" :
+        (_i symbol-links len <)
+            (
+                new-content symbol-links _i get process-symbol "new-content" :
+                _i 0x1 + "_i" :
+            )
+        while
+        "_i" #
+        ; Highlight syntax
+        new-content highlight "new-content" :
+        (fn-content "home.html" ==)
+            (
+                ; Process home page
+                d-out "/index.html" cat "dst-file" :
+            ) 
+            (
+                (d-out id-content "index.html") () map "/" join "dst-file" :
+            )
+        if
+        "  - Writing: " dst-file cat puts
+        new-content dst-file write
+        _c 0x1 + "_c" :
+    )
+while
+"_c" #
 
 
 ; Write assets
 ("sh -c \"mkdir -p " d-out "/assets\"") () map ""  join exec
-assets
-(
-    "fn-asset" :
-    (d-out "assets" fn-asset) () map "/" join "dst-file" :
-    (fn-asset "robots.txt" ==)
-        ((d-out fn-asset) () map "/" join "dst-file" :)
-    when
-    (d-assets fn-asset) () map "/" join "src-file" :
-    "  - Writing: " dst-file cat puts
-    ("cp" src-file dst-file) () map " " join exec  
-) each
+0x0 "_c" :
+(_c assets len <)
+    (
+        assets _c get "fn-asset" :
+        (d-out "assets" fn-asset) () map "/" join "dst-file" :
+        (fn-asset "robots.txt" ==)
+            ((d-out fn-asset) () map "/" join "dst-file" :)
+        when
+        (d-assets fn-asset) () map "/" join "src-file" :
+        "  - Writing: " dst-file cat puts
+        ("cp" src-file dst-file) () map " " join exec  
+        _c 0x1 + "_c" :
+    )
+while
+"_c" #
 
 "*** Done!" puts
 
