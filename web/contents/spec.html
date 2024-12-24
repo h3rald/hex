@@ -46,8 +46,6 @@
                     <li><a href="#boolean-logic-symbols">Boolean Logic Symbols</a></li>
                     <li><a href="#type-checking-and-conversion-symbols">Type Checking and Conversion Symbols</a></li>
                     <li><a href="#list-symbols">List (Strings and Quotations) Symbols</a></li>
-                    <li><a href="#string-symbols">String Symbols</a></li>
-                    <li><a href="#quotation-symbols">Quotation Symbols</a></li>
                     <li><a href="#input-output-symbols">Input/Output Symbols</a></li>
                     <li><a href="#file-symbols">File Symbols</a></li>
                     <li><a href="#shell-symbols">Shell Symbols</a></li>
@@ -537,10 +535,14 @@ $; Push quotation of five items$$
     <p><mark>a s &rarr;</mark></p>
     <aside>OPCODE: <code>11<code></aside>
     <p>Stores the literal <code>a</code> in the registry as the symbol <code>s</code>. If %:a%% is a quotation, it will be immediately dequoted when pushed on the stack.</p>
-    <h5 id="free-symbol"><code>$:#$$</code> Symbol<a href="#top"></a></h5>
+     <h5 id="free-symbol"><code>$:#$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr;</mark></p>
     <aside>OPCODE: <code>11</code></aside>
     <p>Frees the symbol <code>s</code> from the registry.</p>
+    <h5 id="symbols-symbol"><code>$:symbols$$</code> Symbol<a href="#top"></a></h5>
+    <p><mark>&rarr; q</mark></p>
+    <aside>OPCODE: <code>11</code></aside>
+    <p>Pushes a quotation on the stack containing the identifiers of a the symbols currently stored in the registry.</p>
     <h4 id="control-flow-symbols">Control Flow Symbols<a href="#top"></a></h4>
     <h5 id="if-symbol"><code>$:if$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 q3 &rarr; *</mark></p>
@@ -572,6 +574,10 @@ $; Push quotation of five items$$
     <p><mark>q1 q2 &rarr; *</mark></p>
     <aside>OPCODE: <code>16</code></aside>
     <p>Dequotes quotation <code>q1</code>, if it throws an error it dequotes <code>q2</code>.</p>
+     <h5 id="throw-symbol"><code>$:throw$$</code> Symbol<a href="#top"></a></h5>
+    <p><mark>s &rarr;</mark></p>
+    <aside>OPCODE: <code>11</code></aside>
+    <p>Throws an error printing error message %:s%%.</p>
     <h4 id="stack-management-symbols">Stack Management Symbol<a href="#top"></a></h4>
     <h5 id="dup-symbol"><code>$:dup$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr; a a</mark></p>
@@ -581,10 +587,6 @@ $; Push quotation of five items$$
     <p><mark> &rarr; q</mark></p>
     <aside>OPCODE: <code>18</code></aside>
     <p>Pushes the items currently on the stack as a quotation on the stack.</p>
-    <h5 id="clear-symbol"><code>$:clear$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark> &rarr;</mark></p>
-    <aside>OPCODE: <code>19</code></aside>
-    <p>Clears the stack.</p>
     <h5 id="pop-symbol"><code>$:pop$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
     <aside>OPCODE: <code>1a</code></aside>
@@ -789,7 +791,6 @@ $; Push quotation of five items$$
     <p>Assuming that <code>q</code> is a quotation containing only strings, pushes the string <code>s2</code>
         obtained
         by joining each element of <code>q</code> together using <code>s1</code> as a delimiter. </p>
-    <h4 id="string-symbols">String Symbols<a href="#top"></a></h4>
     <h5 id="split-symbol"><code>$:split$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s1 s2 &rarr; q</mark></p>
     <aside>OPCODE: <code>40</code></aside>
@@ -802,12 +803,7 @@ $; Push quotation of five items$$
     <p>Pushes the string <code>s4</code> obtained by replacing the first occurrence of <code>s2</code> in
         <code>s1</code> by
         <code>s3</code>.
-    </p>
-    <h4 id="quotation-symbols">Quotation Symbols<a href="#top"></a></h4>
-    <h5 id="each-symbol"><code>$:each$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark> q1 q2 &rarr; *</mark></p>
-    <aside>OPCODE: <code>42</code></aside>
-    <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code>.</p>
+    </p> 
     <h5 id="map-symbol"><code>$:map$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; q3</mark></p>
     <aside>OPCODE: <code>43</code></aside>
