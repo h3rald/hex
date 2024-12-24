@@ -102,8 +102,8 @@ d-templates "/page.html" cat "t-page" :
     "pt-repl" :
     "pt-tag" :
     "pt-content" :
-    (pt-content pt-tag tag . index 0x0 >)
-        (pt-content pt-tag tag . pt-repl replace "pt-content" :)
+    (pt-content pt-tag tag index 0x0 >)
+        (pt-content pt-tag tag pt-repl replace "pt-content" :)
     while 
     pt-content
     "pt-repl"    #
@@ -142,6 +142,7 @@ d-templates "/page.html" cat "t-page" :
     "t-symbol" #
 ) "process-symbol" ::
 
+#|
 ; Load releases content for changelog
 "" "releases-content" :
 (
@@ -254,3 +255,4 @@ assets
 
 "*** Done!" puts
 
+|#
