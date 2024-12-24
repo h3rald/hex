@@ -421,75 +421,78 @@
 
     <p>The following sequence:</p>
     <p>
-        <code>03 05 02 04 74 65 73 74 01 01 01 36 3b 45</code>
+        <code>03 05 02 04 74 65 73 74 01 01 01 38 3d 45</code>
     </p>
     <p>represents the quotation <code>($"test"$$ $0x1$$ $:dec$$ $:cat$$ $:puts$$)</code></p>
 
     <h4 id="bytecode-example">Full Bytecode Example<a href="#top"></a></h4>
     <p>Consider the following hex program:</p>
-    <pre><code>($0x1$$ $0x2$$ $0x3$$ $0x4$$)
-    (
-        $"_n"$$ $::$$
-        ($:_n$$ $0x2$$ $:%$$ $0x0$$ $:==$$)
-          ($:_n$$ $:dec$$ $" is divisible by two."$$ $:cat$$ $:puts$$)
-        $:when$$
-    )
-$:each$$</code></pre>
+    <pre><code>(
+  $&quot;_n&quot;$$ $:$$
+  ($:_n$$ $0x0$$ $:&lt;=$$)
+    ($0x1$$)
+    ($:_n$$ $:dup$$ $0x1$$ $:-$$ $:factorial$$ $:*$$)
+  $:if$$
+  $&quot;_n&quot;$$ $:#$$
+) $&quot;factorial&quot;$$ $:::$$</code></pre>
+
     <p>This gets compiled to the following bytecode:</p>
-    <pre><code>01 68 65 78 01 01 00 02 
-02 5f 6e 03 04 01 01 01 
-01 01 02 01 01 03 01 01 
-04 03 05 02 02 5f 6e 10 
-03 05 00 00 00 01 01 02 
-23 01 01 00 2a 03 05 00 
-00 00 36 02 15 20 69 73 
-20 64 69 76 69 73 69 62 
-6c 65 20 62 79 20 74 77 
-6f 2e 3b 45 13 42</code></pre>
+    <pre><code>01 68 65 78 01 02 00 02 
+02 5f 6e 09 66 61 63 74 
+6f 72 69 61 6c 03 08 02 
+02 5f 6e 10 03 03 00 00 
+00 01 01 00 31 03 01 01
+01 01 03 06 00 00 00 1a 
+01 01 01 22 00 01 00 23 
+14 02 02 5f 6e 12 02 09 
+66 61 63 74 6f 72 69 61 
+6c 11 01 01 05 00 01 00 
+38 45</code></pre>
     <p>And here is an annotated breakdown:</p>
-    <pre><code>$; Header with symbol table of size 1$$
-01 68 65 78 01 01 00 02
-$; Symbol table with one symbol: _n$$
-02 5f 6e
-$; Push quotation of four items$$
-03 04 
-   $; Push integer 1$$
-   01 01 01 
-   $; Push integer 2$$
-   01 01 02 
-   $; Push integer 3$$
-   01 01 03 
-   $; Push integer 4$$
-   01 01 04 
-$; Push quotation of five items$$
-03 05 
+    <pre><code>$; Header with symbol table of size 2$$
+01 68 65 78 01 02 00 02 
+$; Symbol Table: _n, factorial$$
+02 5f 6e 
+09 66 61 63 74 6f 72 69 61 6c 
+$; Push quotation of eight items$$
+03 08 
    $; Push string "_n"$$
    02 02 5f 6e 
    10 $; Symbol :$$
-   $; Push quotation of five items$$
-   03 05
-   $; Lookup first symbol (_n)$$ 
-   00 00 00
-   $; Push integer 2$$ 
-   1 01 02 
-   23 $; Symbol %$$
-   $; Push integer 0$$
-   01 01 00 
-   2a $; Symbol ==$$
-      $; Push quotation of five items$$
-      03 05 
-         $; Lookup first symbol (_n)$$ 
-         00 00 00 
-         36 $; Symbol dec$$
-         $; Push string " is divisible by two."$$
-         02 15 20 69 73 20 64 69 76 69 73 
-         69 62 6c 65 20 62 79 20 74 77 6f 2e 
-         3b $; Symbol cat$$
-         45 $; Symbol puts$$
-   13 $; Symbol when$$
-42 $; Symbol each$$</code></pre>
-
-
+   $; Push quotation of three items$$
+   03 03 
+      $; Lookup first symbol (_n)$$
+      00 00 00 
+      $; Push integer 0x0$$
+      01 01 00 
+      31 $; Symbol <=$$
+   $; Push quotation of one item$$
+   03 01 
+      $; Push integer 0x1$$
+      01 01 01 
+   $; Push quotation of six items$$
+   03 06 
+      $; Lookup first symbol (_n)$$
+      00 00 00 
+      1a $; Symbol dup$$
+      $; Push integer 0x1$$
+      01 01 01 
+      22 $; symbol -$$
+      $; Lookup second symbol (factorial)$$
+      00 01 00 
+      23 $; Symbol *
+   14 $; Symbol if$$
+   02 02 5f 6e 
+   12 $; Symbol ::$$
+$; Push string "factorial"$$
+02 09 66 61 63 74 6f 72 69 61 6c 
+11 $; Symbol #$$
+$; Push integer 5$$
+01 01 05 
+$; Lookup second symbol (factorial)$$
+00 01 00 
+38 $; Symbol dec$$
+45 $; Symbol puts$$</code></pre>
 
     <h3 id="native-symbols">Native Symbol Reference<a href="#top"></a></h3>
     <p>hex provides a set of 64 ($0x40$$) native symbols that are built-in and pre-defined in the registry. The
