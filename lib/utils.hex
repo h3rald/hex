@@ -9,11 +9,11 @@
 (
   "_begins_prefix" :
   "_begins_s"      :
+  0x1 "_begins_result" :
   (_begins_s len _begins_prefix len <)
-    (0x0)
+    (0x0 "_begins_result" :)
     (
       0x0 "_begins_c" :
-      0x1 "_begins_result" :
       (
         _begins_c _begins_prefix len <
         _begins_result and
@@ -31,6 +31,7 @@
     )
   if
   _begins_result
+  "_begins_result" #
   "_begins_prefix" #
   "_begins_s"      #
   "_begins_c"      # 
@@ -42,12 +43,12 @@
 (
   "_ends_suffix" :
   "_ends_s"      :
+  0x1 "_ends_result" :
   (_ends_s len _ends_suffix len <)
-    (0x0)
+    (0x0 "_ends_result" :)
     (
       _ends_suffix len 0x1 - "_ends_c" :
       _ends_s len _ends_suffix len - "_ends_offset" :
-      0x1 "_ends_result" :
       (
         _ends_c 0x0 >=
         _ends_result and
@@ -76,7 +77,7 @@
 ;; Frees all symbols starting %:s%%.
 (
   "_cleanup_prefix" :
-  0x0 "_c" :
+  0x0 "_cleanup_c" :
   (_cleanup_c symbols len <)
     (
       symbols _cleanup_c get "_cleanup_item" :
@@ -168,39 +169,39 @@
 ;; (q1|s1) a i -> (q2|s2)
 ;; Inserts item %:a%% at position %:i%% within a quotation or string.
 (
-  "_index" ipop
-  "_item" :
-  "_list" lpop
-  0x0 "_is-str" :
-  _list len "_len" :
-  (_index dup _len >= 0x0 < and)
-    ("[symbol insert] Index out of bounds" fail)
+  "_insert_index" ipop
+  "_insert_item" :
+  "_insert_list" lpop
+  0x0 "_insert_is-str" :
+  _insert_list len "_insert_len" :
+  (_insert_index dup _insert_len >= 0x0 < and)
+    ("[symbol insert] Index out of bounds" throw)
   when
-  (_list iss)
+  (_insert_list iss)
     ( 
-      0x1 "_is-str" :
-      (_item iss not)
-        ("[symbol insert] A string item is required" fail)
+      0x1 "_insert_is-str" :
+      (_insert_item iss not)
+        ("[symbol insert] A string item is required" throw)
       when
-      _list "" split "_list" :
+      _insert_list "" split "_insert_list" :
     )
   when
-  0x0 "_c" :
-  () "_result" :
-  (_c _len <)
+  0x0 "_insert_c" :
+  () "_insert_result" :
+  (_insert_c _insert_len <)
     (
-      (_c _index ==)
-        (_result _item ' cat "_result" :)
+      (_insert_c _insert_index ==)
+        (_insert_result _insert_item ' cat "_insert_result" :)
       when
-      _result _list _c get ' cat "_result" :
-      _c 0x1 + "_c" :
+      _insert_result _insert_list _insert_c get ' cat "_insert_result" :
+      _insert_c 0x1 + "_insert_c" :
     )
   while
-  (_is-str)
-    (_result "" join "_result" :)
+  (_insert_is-str)
+    (_insert_result "" join "_insert_result" :)
   when
-  _result
-  cleanup
+  _insert_result
+  "_insert_" cleanup
 ) "insert" ::
 
 
