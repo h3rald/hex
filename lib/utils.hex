@@ -174,7 +174,7 @@
   "_insert_list" lpop
   0x0 "_insert_is-str" :
   _insert_list len "_insert_len" :
-  (_insert_index dup _insert_len >= 0x0 < and)
+  (_insert_index _insert_len >= _insert_index 0x0 < or)
     ("[symbol insert] Index out of bounds" throw)
   when
   (_insert_list iss)
@@ -193,7 +193,7 @@
       (_insert_c _insert_index ==)
         (_insert_result _insert_item ' cat "_insert_result" :)
       when
-      _insert_result _insert_list _insert_c get ' cat "_insert_result" :
+      _insert_result _insert_list  _insert_c get ' cat "_insert_result" :
       _insert_c 0x1 + "_insert_c" :
     )
   while
