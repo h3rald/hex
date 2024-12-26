@@ -9,15 +9,11 @@
 // Free a token
 void hex_free_token(hex_token_t *token)
 {
-    if (token == NULL) return;
-
-    if (token->value != NULL)
+    if (token)
     {
         free(token->value);
-        token->value = NULL;
+        free(token);
     }
-
-    free(token); // Free the token itself
 }
 
 // Push functions
@@ -144,61 +140,7 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
     return HEX_PUSH(ctx, hex_symbol_item(ctx, token));
 }
 
- copy a hex_item_t
-hex_item_t hex_item_deep_copy(const hex_item_t *original)
-{
-    hex_item_t copy = *original; // Start with a shallow copy
-
-    switch (original->type)
-    {
-        case HEX_TYPE_STRING:
-            if (original->data.str_value)
-            {
-                copy.data.str_value = strdup(original->data.str_value); // Deep copy string
-            }
-            break;
-
-        case HEX_TYPE_QUOTATION:
-            if (original->data.quotation_value && original->quotation_size > 0)
-            {
-                // Allocate memory for the quotation array
-                copy.data.quotation_value = malloc(original->quotation_size * sizeof(hex_item_t *));
-                for (size_t i = 0; i < original->quotation_size; i++)
-                {
-                    if (original->data.quotation_value[i])
-                    {
-                        // Deep copy each item in the quotation
-                        copy.data.quotation_value[i] = malloc(sizeof(hex_item_t));
-                        *copy.data.quotation_value[i] = hex_item_deep_copy(original->data.quotation_value[i]);
-                    }
-                }
-                copy.quotation_size = original->quotation_size;
-            }
-            break;
-
-        case HEX_TYPE_NATIVE_SYMBOL:
-        case HEX_TYPE_USER_SYMBOL:
-            if (original->token)
-            {
-                // Deep copy the token
-                copy.token = malloc(sizeof(hex_token_t));
-                *copy.token = *original->token;
-
-                if (original->token->value)
-                {
-                    copy.token->value = strdup(original->token->value); // Deep copy token value
-                }
-            }
-            break;
-
-        default:
-            // For types that don't require deep copying, leave as-is
-            break;
-    }
-
-    return copy;
-}
-
+// Pop function
 hex_item_t hex_pop(hex_context_t *ctx)
 {
     if (ctx->stack.top < 0)
@@ -206,35 +148,34 @@ hex_item_t hex_pop(hex_context_t *ctx)
         hex_error(ctx, "[pop] Insufficient items on the stack");
         return (hex_item_t){.type = HEX_TYPE_INVALID};
     }
-
-    hex_item_t item = hex_item_deep_copy(&ctx->stack.entries[ctx->stack.top]); // Deep copy the item
-    hex_item_free(&ctx->stack.entries[ctx->stack.top]);                       // Free the original item
-    ctx->stack.top--;                                                         // Decrement the stack pointer
-    hex_debug_item(ctx, " POP", item);
-
-    return item; // Return the copied item
+    hex_debug_item(ctx, " POP", ctx->stack.entries[ctx->stack.top]);
+    return ctx->stack.entries[ctx->stack.top--];
 }
 
 // Free a stack item
 void hex_free_item(hex_context_t *ctx, hex_item_t item)
 {
     hex_debug_item(ctx, "FREE", item);
-
     if (item.type == HEX_TYPE_STRING && item.data.str_value != NULL)
     {
-        free(item.data.str_value); // Free the string first
-        item.data.str_value = NULL; // Then set to NULL
+        item.data.str_value = NULL;
+        free(item.data.str_value);
     }
+
     else if (item.type == HEX_TYPE_QUOTATION && item.data.quotation_value != NULL)
     {
-        hex_free_list(ctx, item.data.quotation_value, item.quotation_size); // Free quotation items
-        free(item.data.quotation_value); // Free the quotation array itself
+        hex_free_list(ctx, item.data.quotation_value, item.quotation_size);
         item.data.quotation_value = NULL;
     }
-    else if ((item.type == HEX_TYPE_NATIVE_SYMBOL || item.type == HEX_TYPE_USER_SYMBOL) && item.token != NULL)
+    else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->value != NULL)
     {
-        hex_free_token(item.token); // Free the token
         item.token = NULL;
+        hex_free_token(item.token);
+    }
+    else if (item.type == HEX_TYPE_USER_SYMBOL && item.token->value != NULL)
+    {
+        item.token = NULL;
+        hex_free_token(item.token);
     }
     else
     {
@@ -246,10 +187,6 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
     for (size_t i = 0; i < size; i++)
     {
-        if (quotation[i] != NULL) // Ensure the item is not NULL
-        {
-            HEX_FREE(ctx, *quotation[i]); // Free the individual item
-            free(quotation[i]); // Free the pointer itself
-        }
+        HEX_FREE(ctx, *quotation[i]);
     }
 }
