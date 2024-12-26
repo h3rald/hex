@@ -224,10 +224,10 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
 
 int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol)
 {
-    hex_doc_entry_t doc;
+    hex_doc_entry_t *doc = malloc(sizeof(hex_doc_entry_t *));
     for (size_t i = 0; i < HEX_NATIVE_SYMBOLS; i++)
     {
-        if (hex_get_doc(&ctx->docs, symbol, &doc))
+        if (hex_get_doc(ctx->docs, symbol, doc))
         {
             return 1;
         }

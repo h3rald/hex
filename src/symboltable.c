@@ -4,7 +4,7 @@
 
 int hex_symboltable_set(hex_context_t *ctx, const char *symbol)
 {
-    hex_symbol_table_t *table = &ctx->symbol_table;
+    hex_symbol_table_t *table = ctx->symbol_table;
     size_t len = strlen(symbol);
 
     if (len > HEX_MAX_SYMBOL_LENGTH)
@@ -32,7 +32,7 @@ int hex_symboltable_set(hex_context_t *ctx, const char *symbol)
 
 int hex_symboltable_get_index(hex_context_t *ctx, const char *symbol)
 {
-    hex_symbol_table_t *table = &ctx->symbol_table;
+    hex_symbol_table_t *table = ctx->symbol_table;
     for (uint16_t i = 0; i < table->count; ++i)
     {
         if (strcmp(table->symbols[i], symbol) == 0)
@@ -45,16 +45,16 @@ int hex_symboltable_get_index(hex_context_t *ctx, const char *symbol)
 
 char *hex_symboltable_get_value(hex_context_t *ctx, uint16_t index)
 {
-    if (index >= ctx->symbol_table.count)
+    if (index >= ctx->symbol_table->count)
     {
         return NULL;
     }
-    return ctx->symbol_table.symbols[index];
+    return ctx->symbol_table->symbols[index];
 }
 
 int hex_decode_bytecode_symboltable(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t total)
 {
-    hex_symbol_table_t *table = &ctx->symbol_table;
+    hex_symbol_table_t *table = ctx->symbol_table;
     table->count = 0;
 
     for (size_t i = 0; i < total; i++)
@@ -82,7 +82,7 @@ int hex_decode_bytecode_symboltable(hex_context_t *ctx, uint8_t **bytecode, size
 
 uint8_t *hex_encode_bytecode_symboltable(hex_context_t *ctx, size_t *out_size)
 {
-    hex_symbol_table_t *table = &ctx->symbol_table;
+    hex_symbol_table_t *table = ctx->symbol_table;
     size_t total_size = 0;
 
     for (uint16_t i = 0; i < table->count; ++i)

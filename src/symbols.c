@@ -141,17 +141,17 @@ int hex_symbol_free(hex_context_t *ctx)
         HEX_FREE(ctx, item);
         return 1;
     }
-    for (size_t i = 0; i < ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry->size; i++)
     {
-        if (strcmp(ctx->registry.entries[i]->key, item->data.str_value) == 0)
+        if (strcmp(ctx->registry->entries[i]->key, item->data.str_value) == 0)
         {
-            free(ctx->registry.entries[i]->key);
-            HEX_FREE(ctx, ctx->registry.entries[i]->value);
-            for (size_t j = i; j < ctx->registry.size - 1; j++)
+            free(ctx->registry->entries[i]->key);
+            HEX_FREE(ctx, ctx->registry->entries[i]->value);
+            for (size_t j = i; j < ctx->registry->size - 1; j++)
             {
-                ctx->registry.entries[j] = ctx->registry.entries[j + 1];
+                ctx->registry->entries[j] = ctx->registry->entries[j + 1];
             }
-            ctx->registry.size--;
+            ctx->registry->size--;
             HEX_FREE(ctx, item);
             return 0;
         }
@@ -162,22 +162,22 @@ int hex_symbol_free(hex_context_t *ctx)
 
 int hex_symbol_symbols(hex_context_t *ctx)
 {
-    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry.size * sizeof(hex_item_t *));
+    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry->size * sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error(ctx, "[symbol symbols] Memory allocation failed");
         return 1;
     }
-    for (size_t i = 0; i < ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry->size; i++)
     {
-        char *id = malloc(strlen(ctx->registry.entries[i]->key) + 1);
+        char *id = malloc(strlen(ctx->registry->entries[i]->key) + 1);
         if (!id)
         {
             hex_error(ctx, "[symbol symbols] Memory allocation failed");
             hex_free_list(ctx, quotation, i);
             return 1;
         }
-        strcpy(id, ctx->registry.entries[i]->key);
+        strcpy(id, ctx->registry->entries[i]->key);
         quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (!quotation[i])
         {
@@ -187,9 +187,9 @@ int hex_symbol_symbols(hex_context_t *ctx)
         }
         *quotation[i] = *hex_string_item(ctx, id);
     }
-    if (hex_push_quotation(ctx, quotation, ctx->registry.size) != 0)
+    if (hex_push_quotation(ctx, quotation, ctx->registry->size) != 0)
     {
-        hex_free_list(ctx, quotation, ctx->registry.size);
+        hex_free_list(ctx, quotation, ctx->registry->size);
         return 1;
     }
     return 0;
@@ -2838,7 +2838,6 @@ int hex_symbol_try(hex_context_t *ctx)
     if (catch_block->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, catch_block);
-        free(catch_block);
         return 1;
     }
 
@@ -2847,7 +2846,6 @@ int hex_symbol_try(hex_context_t *ctx)
     {
         hex_error(ctx, "[symbol try] Memory allocation failed");
         HEX_FREE(ctx, catch_block);
-        free(catch_block);
         return 1;
     }
     HEX_POP(ctx, try_block);
@@ -2856,8 +2854,6 @@ int hex_symbol_try(hex_context_t *ctx)
     {
         HEX_FREE(ctx, catch_block);
         HEX_FREE(ctx, try_block);
-        free(catch_block);
-        free(try_block);
         return 1;
     }
 
@@ -2866,8 +2862,6 @@ int hex_symbol_try(hex_context_t *ctx)
         hex_error(ctx, "[symbol try] Two quotations required");
         HEX_FREE(ctx, catch_block);
         HEX_FREE(ctx, try_block);
-        free(catch_block);
-        free(try_block);
         return 1;
     }
     else
@@ -2876,15 +2870,15 @@ int hex_symbol_try(hex_context_t *ctx)
         strncpy(prevError, ctx->error, sizeof(ctx->error));
         ctx->error[0] = '\0';
 
-        ctx->settings.errors_enabled = 0;
+        ctx->settings->errors_enabled = 0;
         for (size_t i = 0; i < try_block->quotation_size; i++)
         {
             if (hex_push(ctx, try_block->data.quotation_value[i]) != 0)
             {
-                ctx->settings.errors_enabled = 1;
+                ctx->settings->errors_enabled = 1;
             }
         }
-        ctx->settings.errors_enabled = 1;
+        ctx->settings->errors_enabled = 1;
 
         if (strcmp(ctx->error, "") != 0)
         {
@@ -2894,8 +2888,6 @@ int hex_symbol_try(hex_context_t *ctx)
                 {
                     HEX_FREE(ctx, catch_block);
                     HEX_FREE(ctx, try_block);
-                    free(catch_block);
-                    free(try_block);
                     return 1;
                 }
             }
@@ -2906,8 +2898,6 @@ int hex_symbol_try(hex_context_t *ctx)
 
     HEX_FREE(ctx, catch_block);
     HEX_FREE(ctx, try_block);
-    free(catch_block);
-    free(try_block);
     return 0;
 }
 
@@ -2988,7 +2978,6 @@ int hex_symbol_q(hex_context_t *ctx)
     if (HEX_PUSH(ctx, result) != 0)
     {
         HEX_FREE(ctx, item);
-        free(result->data.quotation_value);
         return 1;
     }
 
@@ -3168,16 +3157,16 @@ int hex_symbol_dup(hex_context_t *ctx)
 
 int hex_symbol_stack(hex_context_t *ctx)
 {
-    hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack.top + 1) * sizeof(hex_item_t *));
+    hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack->top + 1) * sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error(ctx, "[symbol stack] Memory allocation failed");
         return 1;
     }
     int count = 0;
-    for (size_t i = 0; i <= (size_t)ctx->stack.top; i++)
+    for (size_t i = 0; i <= (size_t)ctx->stack->top; i++)
     {
-        quotation[i] = hex_copy_item(ctx->stack.entries[i]);
+        quotation[i] = hex_copy_item(ctx->stack->entries[i]);
         if (!quotation[i])
         {
             hex_error(ctx, "[symbol stack] Memory allocation failed");
@@ -3187,7 +3176,7 @@ int hex_symbol_stack(hex_context_t *ctx)
         count++;
     }
 
-    if (hex_push_quotation(ctx, quotation, ctx->stack.top + 1) != 0)
+    if (hex_push_quotation(ctx, quotation, ctx->stack->top + 1) != 0)
     {
         hex_error(ctx, "[symbol stack] An error occurred while pushing quotation");
         hex_free_list(ctx, quotation, count);

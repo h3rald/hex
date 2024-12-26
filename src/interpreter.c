@@ -6,21 +6,25 @@
 // Hex Interpreter Implementation     //
 ////////////////////////////////////////
 
-hex_context_t hex_init()
+hex_context_t *hex_init()
 {
-    hex_context_t context;
-    context.argc = 0;
-    context.argv = NULL;
-    context.registry.size = 0;
-    context.docs.size = 0;
-    context.stack.top = -1;
-    context.stack_trace.start = 0;
-    context.stack_trace.size = 0;
-    context.settings.debugging_enabled = 0;
-    context.settings.errors_enabled = 1;
-    context.settings.stack_trace_enabled = 1;
-    context.symbol_table.count = 0;
-    context.symbol_table.symbols = malloc(HEX_MAX_USER_SYMBOLS * sizeof(char *));
+    hex_context_t *context = malloc(sizeof(hex_context_t *));
+    context->argc = 0;
+    context->argv = NULL;
+    context->registry = malloc(sizeof(hex_registry_t *));
+    context->registry->size = 0;
+    context->docs = malloc(sizeof(hex_doc_dictionary_t *));
+    context->docs->size = 0;
+    context->stack = malloc(sizeof(hex_stack_t *));
+    context->stack->top = -1;
+    context->stack_trace->start = 0;
+    context->stack_trace->size = 0;
+    context->settings = malloc(sizeof(hex_settings_t *));
+    context->settings->debugging_enabled = 0;
+    context->settings->errors_enabled = 1;
+    context->settings->stack_trace_enabled = 1;
+    context->symbol_table->count = 0;
+    context->symbol_table->symbols = malloc(HEX_MAX_USER_SYMBOLS * sizeof(char *));
     return context;
 }
 

@@ -44,32 +44,32 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
     {
         return 1;
     }
-    for (size_t i = 0; i < ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry->size; i++)
     {
-        if (strcmp(ctx->registry.entries[i]->key, key) == 0)
+        if (strcmp(ctx->registry->entries[i]->key, key) == 0)
         {
-            if (ctx->registry.entries[i]->value->type == HEX_TYPE_NATIVE_SYMBOL)
+            if (ctx->registry->entries[i]->value->type == HEX_TYPE_NATIVE_SYMBOL)
             {
                 hex_error(ctx, "[set symbol] Cannot overwrite native symbol '%s'", key);
                 return 1;
             }
-            free(ctx->registry.entries[i]->key);
-            ctx->registry.entries[i]->key = strdup(key);
-            ctx->registry.entries[i]->value = value;
+            free(ctx->registry->entries[i]->key);
+            ctx->registry->entries[i]->key = strdup(key);
+            ctx->registry->entries[i]->value = value;
             return 0;
         }
     }
 
-    if (ctx->registry.size >= HEX_REGISTRY_SIZE)
+    if (ctx->registry->size >= HEX_REGISTRY_SIZE)
     {
         hex_error(ctx, "Registry overflow");
         hex_free_token(value->token);
         return 1;
     }
 
-    ctx->registry.entries[ctx->registry.size]->key = strdup(key);
-    ctx->registry.entries[ctx->registry.size]->value = value;
-    ctx->registry.size++;
+    ctx->registry->entries[ctx->registry->size]->key = strdup(key);
+    ctx->registry->entries[ctx->registry->size]->value = value;
+    ctx->registry->size++;
     return 0;
 }
 
@@ -95,11 +95,11 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 // Get a symbol value from the registry
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
-    for (size_t i = 0; i < ctx->registry.size; i++)
+    for (size_t i = 0; i < ctx->registry->size; i++)
     {
-        if (strcmp(ctx->registry.entries[i]->key, key) == 0)
+        if (strcmp(ctx->registry->entries[i]->key, key) == 0)
         {
-            *result = *ctx->registry.entries[i]->value;
+            *result = *ctx->registry->entries[i]->value;
             return 1;
         }
     }

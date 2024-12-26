@@ -138,12 +138,12 @@ typedef struct hex_symbol_table_t
 
 typedef struct hex_context_t
 {
-    hex_stack_t stack;
-    hex_registry_t registry;
-    hex_stack_trace_t stack_trace;
-    hex_settings_t settings;
-    hex_doc_dictionary_t docs;
-    hex_symbol_table_t symbol_table;
+    hex_stack_t *stack;
+    hex_registry_t *registry;
+    hex_stack_trace_t *stack_trace;
+    hex_settings_t *settings;
+    hex_doc_dictionary_t *docs;
+    hex_symbol_table_t *symbol_table;
     int hashbang;
     char error[256];
     int argc;
@@ -394,7 +394,7 @@ uint8_t *hex_encode_bytecode_symboltable(hex_context_t *ctx, size_t *out_size);
 
 // REPL and initialization
 void hex_register_symbols(hex_context_t *ctx);
-hex_context_t hex_init();
+hex_context_t *hex_init();
 void hex_repl(hex_context_t *ctx);
 void hex_process_stdin(hex_context_t *ctx);
 void hex_handle_sigint(int sig);

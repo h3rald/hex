@@ -438,7 +438,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     (*bytecode)++;
     (*size)--;
 
-    if (index >= ctx->symbol_table.count)
+    if (index >= ctx->symbol_table->count)
     {
         hex_error(ctx, "[interpret bytecode user symbol] Symbol index out of bounds");
         return 1;
@@ -586,9 +586,9 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
     }
     // Debug: Print all symbols in the symbol table
     hex_debug(ctx, "--- Symbol Table Start ---");
-    for (size_t i = 0; i < ctx->symbol_table.count; i++)
+    for (size_t i = 0; i < ctx->symbol_table->count; i++)
     {
-        hex_debug(ctx, "%03d: %s", i, ctx->symbol_table.symbols[i]);
+        hex_debug(ctx, "%03d: %s", i, ctx->symbol_table->symbols[i]);
     }
     hex_debug(ctx, "---  Symbol Table End  ---");
     while (size > 0)
@@ -655,7 +655,7 @@ void hex_header(hex_context_t *ctx, uint8_t header[8])
     header[2] = 'e';
     header[3] = 'x';
     header[4] = 0x01; // version
-    uint16_t symbol_table_size = (uint16_t)ctx->symbol_table.count;
+    uint16_t symbol_table_size = (uint16_t)ctx->symbol_table->count;
     header[5] = symbol_table_size & 0xFF;
     header[6] = (symbol_table_size >> 8) & 0xFF;
     header[7] = 0x02;

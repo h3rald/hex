@@ -149,7 +149,7 @@ static int do_repl(void *v_ctx)
     // Tokenize and process the input
     hex_interpret(ctx, line, "<repl>", 1, 1);
     // Print the top item of the stack
-    hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+    hex_print_item(stdout, ctx->stack->entries[ctx->stack->top]);
     printf("\n");
     return 0;
 }
@@ -307,12 +307,12 @@ int main(int argc, char *argv[])
     signal(SIGINT, hex_handle_sigint);
 
     // Initialize the context
-    hex_context_t ctx = hex_init();
-    ctx.argc = argc;
-    ctx.argv = argv;
+    hex_context_t *ctx = hex_init();
+    ctx->argc = argc;
+    ctx->argv = argv;
 
-    hex_register_symbols(&ctx);
-    hex_create_docs(&ctx.docs);
+    hex_register_symbols(ctx);
+    hex_create_docs(ctx->docs);
 
     char *file;
     int generate_bytecode = 0;
@@ -334,12 +334,12 @@ int main(int argc, char *argv[])
             }
             else if ((strcmp(arg, "-m") == 0 || strcmp(arg, "--manual") == 0))
             {
-                hex_print_docs(&ctx.docs);
+                hex_print_docs(ctx->docs);
                 return 0;
             }
             else if ((strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0))
             {
-                ctx.settings.debugging_enabled = 1;
+                ctx->settings->debugging_enabled = 1;
                 printf("*** Debug mode enabled ***\n");
             }
             else if ((strcmp(arg, "-b") == 0 || strcmp(arg, "--bytecode") == 0))
@@ -358,7 +358,7 @@ int main(int argc, char *argv[])
                 FILE *bytecode_file = fopen(file, "rb");
                 if (bytecode_file == NULL)
                 {
-                    hex_error(&ctx, "[open hbx file] Failed to open bytecode file: %s", file);
+                    hex_error(ctx, "[open hbx file] Failed to open bytecode file: %s", file);
                     return 1;
                 }
                 fseek(bytecode_file, 0, SEEK_END);
@@ -367,25 +367,25 @@ int main(int argc, char *argv[])
                 uint8_t *bytecode = (uint8_t *)malloc(bytecode_size);
                 if (bytecode == NULL)
                 {
-                    hex_error(&ctx, "[read hbx file] Memory allocation failed");
+                    hex_error(ctx, "[read hbx file] Memory allocation failed");
                     fclose(bytecode_file);
                     return 1;
                 }
                 fread(bytecode, 1, bytecode_size, bytecode_file);
                 fclose(bytecode_file);
-                hex_interpret_bytecode(&ctx, bytecode, bytecode_size);
+                hex_interpret_bytecode(ctx, bytecode, bytecode_size);
                 free(bytecode);
             }
             else
             {
-                char *fileContent = hex_read_file(&ctx, file);
+                char *fileContent = hex_read_file(ctx, file);
                 if (generate_bytecode)
                 {
                     uint8_t *bytecode;
                     size_t bytecode_size = 0;
                     hex_file_position_t position;
                     position.column = 1;
-                    position.line = 1 + ctx.hashbang;
+                    position.line = 1 + ctx->hashbang;
                     position.filename = file;
                     char *bytecode_file = strdup(file);
                     char *ext = strrchr(bytecode_file, '.');
@@ -397,19 +397,19 @@ int main(int argc, char *argv[])
                     {
                         strcat(bytecode_file, ".hbx");
                     }
-                    if (hex_bytecode(&ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
+                    if (hex_bytecode(ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
                     {
-                        hex_error(&ctx, "[generate bytecode] Failed to generate bytecode");
+                        hex_error(ctx, "[generate bytecode] Failed to generate bytecode");
                         return 1;
                     }
-                    if (hex_write_bytecode_file(&ctx, bytecode_file, bytecode, bytecode_size) != 0)
+                    if (hex_write_bytecode_file(ctx, bytecode_file, bytecode, bytecode_size) != 0)
                     {
                         return 1;
                     }
                 }
                 else
                 {
-                    hex_interpret(&ctx, fileContent, file, 1 + ctx.hashbang, 1);
+                    hex_interpret(ctx, fileContent, file, 1 + ctx->hashbang, 1);
                 }
             }
             return 0;
@@ -418,16 +418,16 @@ int main(int argc, char *argv[])
 #if !(__EMSCRIPTEN__)
     if (!isatty(fileno(stdin)))
     {
-        ctx.settings.stack_trace_enabled = 0;
+        ctx->settings->stack_trace_enabled = 0;
         // Process piped input from stdin
-        hex_process_stdin(&ctx);
+        hex_process_stdin(ctx);
     }
 #endif
     else
     {
-        ctx.settings.stack_trace_enabled = 0;
+        ctx->settings->stack_trace_enabled = 0;
         // Start REPL
-        hex_repl(&ctx);
+        hex_repl(ctx);
     }
 
     return 0;

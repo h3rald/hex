@@ -19,7 +19,7 @@ void hex_free_token(hex_token_t *token)
 // Push functions
 int hex_push(hex_context_t *ctx, hex_item_t *item)
 {
-    if (ctx->stack.top >= HEX_STACK_SIZE - 1)
+    if (ctx->stack->top >= HEX_STACK_SIZE - 1)
     {
         hex_error(ctx, "[push] Stack overflow");
         return 1;
@@ -87,7 +87,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     }
     else
     {
-        ctx->stack.entries[++ctx->stack.top] = item;
+        ctx->stack->entries[++ctx->stack->top] = item;
     }
     if (result == 0)
     {
@@ -213,19 +213,19 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 // Pop function
 hex_item_t *hex_pop(hex_context_t *ctx)
 {
-    if (ctx->stack.top < 0)
+    if (ctx->stack->top < 0)
     {
         hex_error(ctx, "[pop] Insufficient items on the stack");
         return NULL;
     }
-    hex_debug_item(ctx, " POP", ctx->stack.entries[ctx->stack.top]);
+    hex_debug_item(ctx, " POP", ctx->stack->entries[ctx->stack->top]);
     hex_item_t *item = malloc(sizeof(hex_item_t));
     if (item == NULL)
     {
         hex_error(ctx, "[pop] Failed to allocate memory for item");
         return NULL;
     }
-    *item = *ctx->stack.entries[ctx->stack.top--];
+    *item = *ctx->stack->entries[ctx->stack->top--];
     return item;
 }
 
