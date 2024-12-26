@@ -124,7 +124,7 @@ static void do_repl(void *v_ctx)
     // Print the top item of the stack
     if (ctx->stack.top >= 0)
     {
-        hex_print_item(stdout, ctx->stack.entries[ctx->stack.top]);
+        hex_print_item(stdout, *ctx->stack.entries[ctx->stack.top]);
         // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
         printf("\n");
     }
@@ -262,13 +262,13 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
     for (size_t i = 0; i < docs->size; i++)
     {
         printf("  | ");
-        hex_rpad(docs->entries[i].name, 7);
+        hex_rpad(docs->entries[i]->name, 7);
         printf(" | ");
-        hex_lpad(docs->entries[i].input, 15);
+        hex_lpad(docs->entries[i]->input, 15);
         printf(" -> ");
-        hex_rpad(docs->entries[i].output, 7);
+        hex_rpad(docs->entries[i]->output, 7);
         printf(" | ");
-        hex_rpad(docs->entries[i].description, 47);
+        hex_rpad(docs->entries[i]->description, 47);
         printf(" |\n");
     }
     printf("  +---------+----------------------------+-------------------------------------------------+\n");

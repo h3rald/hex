@@ -337,8 +337,9 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *size -= length;
 
     hex_debug(ctx, ">> PUSHIN[01]: 0x%x", value);
-    hex_item_t item = hex_integer_item(ctx, value);
-    *result = item;
+    HEX_ALLOC(item)
+    item = hex_integer_item(ctx, value);
+    *result = *item;
     return 0;
 }
 
@@ -378,8 +379,9 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     *bytecode += length;
     *size -= length;
 
-    hex_item_t item = hex_string_item(ctx, value);
-    *result = item;
+    HEX_ALLOC(item);
+    item = hex_string_item(ctx, value);
+    *result = *item;
     char *str = hex_process_string(value);
     if (!str)
     {
@@ -400,27 +402,27 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         return 1;
     }
 
-    hex_item_t item;
-    item.type = HEX_TYPE_NATIVE_SYMBOL;
-    hex_item_t value;
+    HEX_ALLOC(item);
+    item->type = HEX_TYPE_NATIVE_SYMBOL;
+    HEX_ALLOC(value);
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = (char *)symbol;
-    token->position.line = 0;
-    token->position.column = position;
-    if (hex_get_symbol(ctx, token->value, &value))
+    token->position->line = 0;
+    token->position->column = position;
+    if (hex_get_symbol(ctx, token->value, value))
     {
-        item.token = token;
-        item.type = HEX_TYPE_NATIVE_SYMBOL;
-        item.data.fn_value = value.data.fn_value;
+        item->token = token;
+        item->type = HEX_TYPE_NATIVE_SYMBOL;
+        item->data.fn_value = value->data.fn_value;
     }
     else
     {
-        hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s (bytecode)", token->position.line, token->position.column, token->value);
+        hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s (bytecode)", token->position->line, token->position->column, token->value);
         hex_free_token(token);
         return 1;
     }
     hex_debug(ctx, ">> NATSYM[X]: %s", opcode, symbol);
-    *result = item;
+    *result = *item;
     return 0;
 }
 
@@ -457,8 +459,8 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
 
     token->value = (char *)malloc(length + 1);
     strncpy(token->value, value, length + 1);
-    token->position.line = 0;
-    token->position.column = position;
+    token->position->line = 0;
+    token->position->column = position;
 
     hex_item_t item;
     item.type = HEX_TYPE_USER_SYMBOL;
@@ -603,21 +605,21 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
         case HEX_OP_PUSHIN:
             if (hex_interpret_bytecode_integer(ctx, &bytecode, &size, item) != 0)
             {
-                HEX_FREE(ctx, *item);
+                HEX_FREE(ctx, item);
                 return 1;
             }
             break;
         case HEX_OP_PUSHST:
             if (hex_interpret_bytecode_string(ctx, &bytecode, &size, item) != 0)
             {
-                HEX_FREE(ctx, *item);
+                HEX_FREE(ctx, item);
                 return 1;
             }
             break;
         case HEX_OP_LOOKUP:
             if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size, position, item) != 0)
             {
-                HEX_FREE(ctx, *item);
+                HEX_FREE(ctx, item);
                 return 1;
             }
             break;
@@ -625,21 +627,21 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
 
             if (hex_interpret_bytecode_quotation(ctx, &bytecode, &size, position, item) != 0)
             {
-                HEX_FREE(ctx, *item);
+                HEX_FREE(ctx, item);
                 return 1;
             }
             break;
         default:
             if (hex_interpret_bytecode_native_symbol(ctx, opcode, position, item) != 0)
             {
-                HEX_FREE(ctx, *item);
+                HEX_FREE(ctx, item);
                 return 1;
             }
             break;
         }
-        if (hex_push(ctx, *item) != 0)
+        if (hex_push(ctx, item) != 0)
         {
-            HEX_FREE(ctx, *item);
+            HEX_FREE(ctx, item);
             return 1;
         }
     }

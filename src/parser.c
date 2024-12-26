@@ -33,8 +33,8 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = NULL;
-    token->position.line = position->line;
-    token->position.column = position->column;
+    token->position->line = position->line;
+    token->position->column = position->column;
 
     if (*ptr == ';')
     {
@@ -73,8 +73,8 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         if (*ptr == '\0')
         {
             token->type = HEX_TOKEN_INVALID;
-            token->position.line = position->line;
-            token->position.column = position->column;
+            token->position->line = position->line;
+            token->position->column = position->column;
             hex_error(ctx, "(%d,%d) Unterminated block comment", position->line, position->column);
             return token;
         }
@@ -114,8 +114,8 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
             else if (*ptr == '\n')
             {
                 token->type = HEX_TOKEN_INVALID;
-                token->position.line = position->line;
-                token->position.column = position->column;
+                token->position->line = position->line;
+                token->position->column = position->column;
                 hex_error(ctx, "(%d,%d) Unescaped new line in string", position->line, position->column);
                 return token;
             }
@@ -130,8 +130,8 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         if (*ptr != '"')
         {
             token->type = HEX_TOKEN_INVALID;
-            token->position.line = position->line;
-            token->position.column = position->column;
+            token->position->line = position->line;
+            token->position->column = position->column;
             hex_error(ctx, "(%d,%d) Unterminated string", position->line, position->column);
             return token;
         }
@@ -213,8 +213,8 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         else
         {
             token->type = HEX_TOKEN_INVALID;
-            token->position.line = position->line;
-            token->position.column = position->column;
+            token->position->line = position->line;
+            token->position->column = position->column;
         }
     }
 
@@ -278,17 +278,17 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             }
         }
 
-        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+        HEX_ALLOC(item);
         if (token->type == HEX_TOKEN_INTEGER)
         {
 
-            *item = hex_integer_item(ctx, hex_parse_integer(token->value));
+            *item = *hex_integer_item(ctx, hex_parse_integer(token->value));
             quotation[size] = item;
             size++;
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
-            *item = hex_string_item(ctx, token->value);
+            *item = *hex_string_item(ctx, token->value);
             quotation[size] = item;
             size++;
         }
@@ -297,12 +297,12 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             if (hex_valid_native_symbol(ctx, token->value))
             {
                 item->type = HEX_TYPE_NATIVE_SYMBOL;
-                hex_item_t value;
-                if (hex_get_symbol(ctx, token->value, &value))
+                HEX_ALLOC(value);
+                if (hex_get_symbol(ctx, token->value, value))
                 {
                     item->token = token;
                     item->type = HEX_TYPE_NATIVE_SYMBOL;
-                    item->data.fn_value = value.data.fn_value;
+                    item->data.fn_value = value->data.fn_value;
                 }
                 else
                 {
@@ -316,7 +316,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             {
                 item->type = HEX_TYPE_USER_SYMBOL;
             }
-            token->position.filename = strdup(position->filename);
+            token->position->filename = strdup(position->filename);
             item->token = token;
             quotation[size] = item;
             size++;

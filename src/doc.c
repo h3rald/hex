@@ -10,7 +10,7 @@ void hex_set_doc(hex_doc_dictionary_t *dict, const char *name, const char *input
 {
     hex_doc_entry_t doc = {.name = name, .description = description, .input = input, .output = output};
     // No overflow check as the dictionary is fixed size
-    dict->entries[dict->size] = doc;
+    *(dict->entries[dict->size]) = doc;
     dict->size++;
 }
 
@@ -18,9 +18,9 @@ int hex_get_doc(hex_doc_dictionary_t *docs, const char *key, hex_doc_entry_t *re
 {
     for (size_t i = 0; i < docs->size; i++)
     {
-        if (strcmp(docs->entries[i].name, key) == 0)
+        if (strcmp(docs->entries[i]->name, key) == 0)
         {
-            *result = docs->entries[i];
+            *result = *(docs->entries[i]);
             return 1;
         }
     }

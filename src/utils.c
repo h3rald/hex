@@ -124,7 +124,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
             {
                 fprintf(stream, " ");
             }
-            hex_print_item(stream, *item.data.quotation_value[i]);
+            hex_print_item(stream, item.data.quotation_value[i]);
         }
         fprintf(stream, ")");
         break;
@@ -210,32 +210,32 @@ void hex_print_string(FILE *stream, char *value)
     fprintf(stream, "\"");
 }
 
-void hex_print_item(FILE *stream, hex_item_t item)
+void hex_print_item(FILE *stream, hex_item_t *item)
 {
-    switch (item.type)
+    switch (item->type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item.data.int_value);
+        fprintf(stream, "0x%x", item->data.int_value);
         break;
 
     case HEX_TYPE_STRING:
-        hex_print_string(stream, item.data.str_value);
+        hex_print_string(stream, item->data.str_value);
         break;
 
     case HEX_TYPE_USER_SYMBOL:
     case HEX_TYPE_NATIVE_SYMBOL:
-        fprintf(stream, "%s", item.token->value);
+        fprintf(stream, "%s", item->token->value);
         break;
 
     case HEX_TYPE_QUOTATION:
         fprintf(stream, "(");
-        for (size_t i = 0; i < item.quotation_size; i++)
+        for (size_t i = 0; i < item->quotation_size; i++)
         {
             if (i > 0)
             {
                 fprintf(stream, " ");
             }
-            hex_print_item(stream, *item.data.quotation_value[i]);
+            hex_print_item(stream, item->data.quotation_value[i]);
         }
         fprintf(stream, ")");
         break;

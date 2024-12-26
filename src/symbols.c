@@ -10,30 +10,47 @@
 
 int hex_symbol_store(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(name);
+    if (!name)
+    {
+        hex_error(ctx, "[symbol :] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, name);
-    if (name.type == HEX_TYPE_INVALID)
+    ;
+    if (name->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, name);
         return 1;
     }
+
+    HEX_ALLOC(value);
+    if (!value)
+    {
+        hex_error(ctx, "[symbol :] Memory allocation failed");
+        HEX_FREE(ctx, name);
+        return 1;
+    }
     HEX_POP(ctx, value);
-    if (value.type == HEX_TYPE_INVALID)
+    ;
+    if (value->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
     }
-    if (name.type != HEX_TYPE_STRING)
+
+    if (name->type != HEX_TYPE_STRING)
     {
         hex_error(ctx, "[symbol :] Symbol name must be a string");
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
     }
-    if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
+
+    if (hex_set_symbol(ctx, name->data.str_value, value, 0) != 0)
     {
-        hex_error(ctx, "[symbol :] Failed to store symbol '%s'", name.data.str_value);
+        hex_error(ctx, "[symbol :] Failed to store symbol '%s'", name->data.str_value);
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
@@ -43,68 +60,93 @@ int hex_symbol_store(hex_context_t *ctx)
 
 int hex_symbol_define(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(name);
+    if (!name)
+    {
+        hex_error(ctx, "[symbol ::] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, name);
-    if (name.type == HEX_TYPE_INVALID)
+    ;
+    if (name->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, name);
         return 1;
     }
+
+    HEX_ALLOC(value);
+    if (!value)
+    {
+        hex_error(ctx, "[symbol ::] Memory allocation failed");
+        HEX_FREE(ctx, name);
+        return 1;
+    }
     HEX_POP(ctx, value);
-    if (value.type == HEX_TYPE_INVALID)
+    ;
+    if (value->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
     }
-    if (name.type != HEX_TYPE_STRING)
+
+    if (name->type != HEX_TYPE_STRING)
     {
         hex_error(ctx, "[symbol ::] Symbol name must be a string");
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
     }
-    if (value.type == HEX_TYPE_QUOTATION)
+
+    if (value->type == HEX_TYPE_QUOTATION)
     {
-        value.operator= 1;
+        value->operator= 1;
     }
-    if (hex_set_symbol(ctx, name.data.str_value, value, 0) != 0)
+
+    if (hex_set_symbol(ctx, name->data.str_value, value, 0) != 0)
     {
-        hex_error(ctx, "[symbol ::] Failed to store symbol '%s'", name.data.str_value);
+        hex_error(ctx, "[symbol ::] Failed to store symbol '%s'", name->data.str_value);
         HEX_FREE(ctx, name);
         HEX_FREE(ctx, value);
         return 1;
     }
+
     return 0;
 }
 
 int hex_symbol_free(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol #] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type != HEX_TYPE_STRING)
+    if (item->type != HEX_TYPE_STRING)
     {
         HEX_FREE(ctx, item);
         hex_error(ctx, "[symbol #] Symbol name must be a string");
         return 1;
     }
-    if (hex_valid_native_symbol(ctx, item.data.str_value))
+    if (hex_valid_native_symbol(ctx, item->data.str_value))
     {
-        hex_error(ctx, "[symbol #] Cannot free native symbol '%s'", item.data.str_value);
+        hex_error(ctx, "[symbol #] Cannot free native symbol '%s'", item->data.str_value);
         HEX_FREE(ctx, item);
         return 1;
     }
     for (size_t i = 0; i < ctx->registry.size; i++)
     {
-        if (strcmp(ctx->registry.entries[i].key, item.data.str_value) == 0)
+        if (strcmp(ctx->registry.entries[i]->key, item->data.str_value) == 0)
         {
-            free(ctx->registry.entries[i].key);
-            HEX_FREE(ctx, ctx->registry.entries[i].value);
+            free(ctx->registry.entries[i]->key);
+            HEX_FREE(ctx, ctx->registry.entries[i]->value);
             for (size_t j = i; j < ctx->registry.size - 1; j++)
             {
                 ctx->registry.entries[j] = ctx->registry.entries[j + 1];
@@ -121,12 +163,29 @@ int hex_symbol_free(hex_context_t *ctx)
 int hex_symbol_symbols(hex_context_t *ctx)
 {
     hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry.size * sizeof(hex_item_t *));
+    if (!quotation)
+    {
+        hex_error(ctx, "[symbol symbols] Memory allocation failed");
+        return 1;
+    }
     for (size_t i = 0; i < ctx->registry.size; i++)
     {
-        char *id = malloc(strlen(ctx->registry.entries[i].key) * sizeof(char *));
-        strcpy(id, ctx->registry.entries[i].key);
+        char *id = malloc(strlen(ctx->registry.entries[i]->key) + 1);
+        if (!id)
+        {
+            hex_error(ctx, "[symbol symbols] Memory allocation failed");
+            hex_free_list(ctx, quotation, i);
+            return 1;
+        }
+        strcpy(id, ctx->registry.entries[i]->key);
         quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-        *quotation[i] = hex_string_item(ctx, id);
+        if (!quotation[i])
+        {
+            hex_error(ctx, "[symbol symbols] Memory allocation failed");
+            hex_free_list(ctx, quotation, i);
+            return 1;
+        }
+        *quotation[i] = *hex_string_item(ctx, id);
     }
     if (hex_push_quotation(ctx, quotation, ctx->registry.size) != 0)
     {
@@ -138,88 +197,105 @@ int hex_symbol_symbols(hex_context_t *ctx)
 
 int hex_symbol_type(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol type] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    return hex_push_string(ctx, hex_type(item.type));
+    int result = hex_push_string(ctx, hex_type(item->type));
+    HEX_FREE(ctx, item);
+    return result;
 }
 
 // Evaluation symbols
 
 int hex_symbol_i(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol .] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type != HEX_TYPE_QUOTATION)
+    if (item->type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "[symbol .] Quotation required");
         HEX_FREE(ctx, item);
         return 1;
     }
-    for (size_t i = 0; i < item.quotation_size; i++)
+    for (size_t i = 0; i < item->quotation_size; i++)
     {
-        if (hex_push(ctx, *item.data.quotation_value[i]) != 0)
+        if (hex_push(ctx, item->data.quotation_value[i]) != 0)
         {
             HEX_FREE(ctx, item);
             return 1;
         }
     }
+    HEX_FREE(ctx, item);
     return 0;
 }
 
 // evaluate a string or bytecode array
 int hex_symbol_eval(hex_context_t *ctx)
 {
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol !] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type == HEX_TYPE_STRING)
+    if (item->type == HEX_TYPE_STRING)
     {
-        return hex_interpret(ctx, item.data.str_value, "<!>", 1, 1);
+        int result = hex_interpret(ctx, item->data.str_value, "<!>", 1, 1);
+        HEX_FREE(ctx, item);
+        return result;
     }
-    else if (item.type == HEX_TYPE_QUOTATION)
+    else if (item->type == HEX_TYPE_QUOTATION)
     {
-        for (size_t i = 0; i < item.quotation_size; i++)
+        for (size_t i = 0; i < item->quotation_size; i++)
         {
-            if (item.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+            if (item->data.quotation_value[i]->type != HEX_TYPE_INTEGER)
             {
                 hex_error(ctx, "[symbol !] Quotation must contain only integers");
                 HEX_FREE(ctx, item);
                 return 1;
             }
         }
-        uint8_t *bytecode = (uint8_t *)malloc(item.quotation_size * sizeof(uint8_t));
+        uint8_t *bytecode = (uint8_t *)malloc(item->quotation_size * sizeof(uint8_t));
         if (!bytecode)
         {
             hex_error(ctx, "[symbol !] Memory allocation failed");
             HEX_FREE(ctx, item);
             return 1;
         }
-        for (size_t i = 0; i < item.quotation_size; i++)
+        for (size_t i = 0; i < item->quotation_size; i++)
         {
-            if (item.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
-            {
-                hex_error(ctx, "[symbol !] Quotation must contain only integers");
-                free(bytecode);
-                HEX_FREE(ctx, item);
-                return 1;
-            }
-            bytecode[i] = (uint8_t)item.data.quotation_value[i]->data.int_value;
+            bytecode[i] = (uint8_t)item->data.quotation_value[i]->data.int_value;
         }
-        int result = hex_interpret_bytecode(ctx, bytecode, item.quotation_size);
-        free(bytecode);
+        int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size);
+        HEX_FREE(ctx, item);
         return result;
     }
     else
@@ -234,49 +310,69 @@ int hex_symbol_eval(hex_context_t *ctx)
 
 int hex_symbol_puts(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol puts] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    hex_raw_print_item(stdout, item);
+    hex_raw_print_item(stdout, *item);
     printf("\n");
+    HEX_FREE(ctx, item);
     return 0;
 }
 
 int hex_symbol_warn(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol warn] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    hex_raw_print_item(stderr, item);
+    hex_raw_print_item(stderr, *item);
     printf("\n");
+    HEX_FREE(ctx, item);
     return 0;
 }
 
 int hex_symbol_print(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol print] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    hex_raw_print_item(stdout, item);
+    hex_raw_print_item(stdout, *item);
     fflush(stdout);
+    HEX_FREE(ctx, item);
     return 0;
 }
 
 int hex_symbol_gets(hex_context_t *ctx)
 {
-
     char input[HEX_STDIN_BUFFER_SIZE]; // Buffer to store the input (adjust size if needed)
     char *p = input;
 #if defined(__EMSCRIPTEN__)
@@ -303,22 +399,40 @@ int hex_symbol_gets(hex_context_t *ctx)
 // Mathematical symbols
 int hex_symbol_add(hex_context_t *ctx)
 {
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol +] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol +] Memory allocation failed");
+        HEX_FREE(ctx, b);
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.int_value + b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value + b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol +] Two integers required");
     HEX_FREE(ctx, a);
@@ -328,23 +442,40 @@ int hex_symbol_add(hex_context_t *ctx)
 
 int hex_symbol_subtract(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol -] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol -] Memory allocation failed");
+        HEX_FREE(ctx, b);
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.int_value - b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value - b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol -] Two integers required");
     HEX_FREE(ctx, a);
@@ -354,23 +485,40 @@ int hex_symbol_subtract(hex_context_t *ctx)
 
 int hex_symbol_multiply(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol *] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol *] Memory allocation failed");
+        HEX_FREE(ctx, b);
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.int_value * b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value * b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol *] Two integers required");
     HEX_FREE(ctx, a);
@@ -380,28 +528,47 @@ int hex_symbol_multiply(hex_context_t *ctx)
 
 int hex_symbol_divide(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol /] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol /] Memory allocation failed");
+        HEX_FREE(ctx, b);
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        if (b.data.int_value == 0)
+        if (b->data.int_value == 0)
         {
             hex_error(ctx, "[symbol /] Division by zero");
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);
             return 1;
         }
-        return hex_push_integer(ctx, a.data.int_value / b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value / b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol /] Two integers required");
     HEX_FREE(ctx, a);
@@ -411,28 +578,47 @@ int hex_symbol_divide(hex_context_t *ctx)
 
 int hex_symbol_modulo(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol %%] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol %%] Memory allocation failed");
+        HEX_FREE(ctx, b);
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        if (b.data.int_value == 0)
+        if (b->data.int_value == 0)
         {
             hex_error(ctx, "[symbol %%] Division by zero");
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);
             return 1;
         }
-        return hex_push_integer(ctx, a.data.int_value % b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value % b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol %%] Two integers required");
     HEX_FREE(ctx, a);
@@ -444,23 +630,40 @@ int hex_symbol_modulo(hex_context_t *ctx)
 
 int hex_symbol_bitand(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(right);
+    if (!right)
+    {
+        hex_error(ctx, "[symbol &] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, right);
-    if (right.type == HEX_TYPE_INVALID)
+    ;
+    if (right->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, right);
         return 1;
     }
+    HEX_ALLOC(left);
+    if (!left)
+    {
+        hex_error(ctx, "[symbol &] Memory allocation failed");
+        HEX_FREE(ctx, right);
+        return 1;
+    }
     HEX_POP(ctx, left);
-    if (left.type == HEX_TYPE_INVALID)
+    ;
+    if (left->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, left);
         HEX_FREE(ctx, right);
         return 1;
     }
-    if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
+    if (left->type == HEX_TYPE_INTEGER && right->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.int_value & right.data.int_value);
+        int result = hex_push_integer(ctx, left->data.int_value & right->data.int_value);
+        HEX_FREE(ctx, left);
+        HEX_FREE(ctx, right);
+        return result;
     }
     hex_error(ctx, "[symbol &] Two integers required");
     HEX_FREE(ctx, left);
@@ -470,23 +673,40 @@ int hex_symbol_bitand(hex_context_t *ctx)
 
 int hex_symbol_bitor(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(right);
+    if (!right)
+    {
+        hex_error(ctx, "[symbol |] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, right);
-    if (right.type == HEX_TYPE_INVALID)
+    ;
+    if (right->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, right);
         return 1;
     }
+    HEX_ALLOC(left);
+    if (!left)
+    {
+        hex_error(ctx, "[symbol |] Memory allocation failed");
+        HEX_FREE(ctx, right);
+        return 1;
+    }
     HEX_POP(ctx, left);
-    if (left.type == HEX_TYPE_INVALID)
+    ;
+    if (left->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, left);
         HEX_FREE(ctx, right);
         return 1;
     }
-    if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
+    if (left->type == HEX_TYPE_INTEGER && right->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.int_value | right.data.int_value);
+        int result = hex_push_integer(ctx, left->data.int_value | right->data.int_value);
+        HEX_FREE(ctx, left);
+        HEX_FREE(ctx, right);
+        return result;
     }
     hex_error(ctx, "[symbol |] Two integers required");
     HEX_FREE(ctx, left);
@@ -496,23 +716,40 @@ int hex_symbol_bitor(hex_context_t *ctx)
 
 int hex_symbol_bitxor(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(right);
+    if (!right)
+    {
+        hex_error(ctx, "[symbol ^] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, right);
-    if (right.type == HEX_TYPE_INVALID)
+    ;
+    if (right->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, right);
         return 1;
     }
+    HEX_ALLOC(left);
+    if (!left)
+    {
+        hex_error(ctx, "[symbol ^] Memory allocation failed");
+        HEX_FREE(ctx, right);
+        return 1;
+    }
     HEX_POP(ctx, left);
-    if (left.type == HEX_TYPE_INVALID)
+    ;
+    if (left->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, left);
         HEX_FREE(ctx, right);
         return 1;
     }
-    if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
+    if (left->type == HEX_TYPE_INTEGER && right->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.int_value ^ right.data.int_value);
+        int result = hex_push_integer(ctx, left->data.int_value ^ right->data.int_value);
+        HEX_FREE(ctx, left);
+        HEX_FREE(ctx, right);
+        return result;
     }
     hex_error(ctx, "[symbol ^] Two integers required");
     HEX_FREE(ctx, left);
@@ -522,23 +759,40 @@ int hex_symbol_bitxor(hex_context_t *ctx)
 
 int hex_symbol_shiftleft(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(right);
+    if (!right)
+    {
+        hex_error(ctx, "[symbol <<] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, right);
-    if (right.type == HEX_TYPE_INVALID)
+    ;
+    if (right->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, right);
         return 1;
     }
+    HEX_ALLOC(left);
+    if (!left)
+    {
+        hex_error(ctx, "[symbol <<] Memory allocation failed");
+        HEX_FREE(ctx, right);
+        return 1;
+    }
     HEX_POP(ctx, left);
-    if (left.type == HEX_TYPE_INVALID)
+    ;
+    if (left->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, left);
         HEX_FREE(ctx, right);
         return 1;
     }
-    if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
+    if (left->type == HEX_TYPE_INTEGER && right->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.int_value << right.data.int_value);
+        int result = hex_push_integer(ctx, left->data.int_value << right->data.int_value);
+        HEX_FREE(ctx, left);
+        HEX_FREE(ctx, right);
+        return result;
     }
     hex_error(ctx, "[symbol <<] Two integers required");
     HEX_FREE(ctx, left);
@@ -548,23 +802,40 @@ int hex_symbol_shiftleft(hex_context_t *ctx)
 
 int hex_symbol_shiftright(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(right);
+    if (!right)
+    {
+        hex_error(ctx, "[symbol >>] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, right);
-    if (right.type == HEX_TYPE_INVALID)
+    ;
+    if (right->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, right);
         return 1;
     }
+    HEX_ALLOC(left);
+    if (!left)
+    {
+        hex_error(ctx, "[symbol >>] Memory allocation failed");
+        HEX_FREE(ctx, right);
+        return 1;
+    }
     HEX_POP(ctx, left);
-    if (left.type == HEX_TYPE_INVALID)
+    ;
+    if (left->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, left);
         HEX_FREE(ctx, right);
         return 1;
     }
-    if (left.type == HEX_TYPE_INTEGER && right.type == HEX_TYPE_INTEGER)
+    if (left->type == HEX_TYPE_INTEGER && right->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, left.data.int_value >> right.data.int_value);
+        int result = hex_push_integer(ctx, left->data.int_value >> right->data.int_value);
+        HEX_FREE(ctx, left);
+        HEX_FREE(ctx, right);
+        return result;
     }
     hex_error(ctx, "[symbol >>] Two integers required");
     HEX_FREE(ctx, left);
@@ -574,16 +845,24 @@ int hex_symbol_shiftright(hex_context_t *ctx)
 
 int hex_symbol_bitnot(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol ~] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type == HEX_TYPE_INTEGER)
+    if (item->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, ~item.data.int_value);
+        int result = hex_push_integer(ctx, ~item->data.int_value);
+        HEX_FREE(ctx, item);
+        return result;
     }
     hex_error(ctx, "[symbol ~] Integer required");
     HEX_FREE(ctx, item);
@@ -594,16 +873,24 @@ int hex_symbol_bitnot(hex_context_t *ctx)
 
 int hex_symbol_int(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol int] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_STRING)
+    if (a->type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strtol(a.data.str_value, NULL, 16));
+        int result = hex_push_integer(ctx, strtol(a->data.str_value, NULL, 16));
+        HEX_FREE(ctx, a);
+        return result;
     }
     hex_error(ctx, "[symbol int] String representing a hexadecimal integer required");
     HEX_FREE(ctx, a);
@@ -612,16 +899,24 @@ int hex_symbol_int(hex_context_t *ctx)
 
 int hex_symbol_str(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol str] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_string(ctx, hex_itoa_hex(a.data.int_value));
+        int result = hex_push_string(ctx, hex_itoa_hex(a->data.int_value));
+        HEX_FREE(ctx, a);
+        return result;
     }
     hex_error(ctx, "[symbol str] Integer required");
     HEX_FREE(ctx, a);
@@ -630,17 +925,26 @@ int hex_symbol_str(hex_context_t *ctx)
 
 int hex_symbol_dec(hex_context_t *ctx)
 {
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol dec] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER)
     {
         char buffer[32];
-        snprintf(buffer, sizeof(buffer), "%d", a.data.int_value);
-        return hex_push_string(ctx, buffer);
+        snprintf(buffer, sizeof(buffer), "%d", a->data.int_value);
+        int result = hex_push_string(ctx, buffer);
+        HEX_FREE(ctx, a);
+        return result;
     }
     hex_error(ctx, "[symbol dec] Integer required");
     HEX_FREE(ctx, a);
@@ -649,16 +953,24 @@ int hex_symbol_dec(hex_context_t *ctx)
 
 int hex_symbol_hex(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol hex] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type == HEX_TYPE_STRING)
+    if (item->type == HEX_TYPE_STRING)
     {
-        return hex_push_integer(ctx, strtol(item.data.str_value, NULL, 10));
+        int result = hex_push_integer(ctx, strtol(item->data.str_value, NULL, 10));
+        HEX_FREE(ctx, item);
+        return result;
     }
     hex_error(ctx, "[symbol hex] String representing a decimal integer required");
     HEX_FREE(ctx, item);
@@ -667,27 +979,39 @@ int hex_symbol_hex(hex_context_t *ctx)
 
 int hex_symbol_ord(hex_context_t *ctx)
 {
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol ord] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type == HEX_TYPE_STRING)
+    if (item->type == HEX_TYPE_STRING)
     {
-        if (strlen(item.data.str_value) > 1)
+        if (strlen(item->data.str_value) > 1)
         {
-            return hex_push_integer(ctx, -1);
+            int result = hex_push_integer(ctx, -1);
+            HEX_FREE(ctx, item);
+            return result;
         }
-        unsigned char *str = (unsigned char *)item.data.str_value;
+        unsigned char *str = (unsigned char *)item->data.str_value;
+        int result;
         if (str[0] < 128)
         {
-            return hex_push_integer(ctx, str[0]);
+            result = hex_push_integer(ctx, str[0]);
         }
         else
         {
-            return hex_push_integer(ctx, -1);
+            result = hex_push_integer(ctx, -1);
         }
+        HEX_FREE(ctx, item);
+        return result;
     }
     hex_error(ctx, "[symbol ord] String required");
     HEX_FREE(ctx, item);
@@ -696,23 +1020,33 @@ int hex_symbol_ord(hex_context_t *ctx)
 
 int hex_symbol_chr(hex_context_t *ctx)
 {
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol chr] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type == HEX_TYPE_INTEGER)
+    if (item->type == HEX_TYPE_INTEGER)
     {
-        if (item.data.int_value >= 0 && item.data.int_value < 128)
+        int result;
+        if (item->data.int_value >= 0 && item->data.int_value < 128)
         {
-            char str[2] = {(char)item.data.int_value, '\0'};
-            return hex_push_string(ctx, str);
+            char str[2] = {(char)item->data.int_value, '\0'};
+            result = hex_push_string(ctx, str);
         }
         else
         {
-            return hex_push_string(ctx, "");
+            result = hex_push_string(ctx, "");
         }
+        HEX_FREE(ctx, item);
+        return result;
     }
     hex_error(ctx, "[symbol chr] Integer required");
     HEX_FREE(ctx, item);
@@ -721,39 +1055,39 @@ int hex_symbol_chr(hex_context_t *ctx)
 
 // Comparison symbols
 
-static int hex_equal(hex_item_t a, hex_item_t b)
+static int hex_equal(hex_item_t *a, hex_item_t *b)
 {
-    if (a.type == HEX_TYPE_INVALID || b.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID || b->type == HEX_TYPE_INVALID)
     {
         return 0;
     }
-    if (a.type == HEX_TYPE_NATIVE_SYMBOL || a.type == HEX_TYPE_USER_SYMBOL)
+    if (a->type == HEX_TYPE_NATIVE_SYMBOL || a->type == HEX_TYPE_USER_SYMBOL)
     {
-        return (strcmp(a.token->value, b.token->value) == 0);
+        return (strcmp(a->token->value, b->token->value) == 0);
     }
-    if (a.type != b.type)
+    if (a->type != b->type)
     {
         return 0;
     }
-    if (a.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER)
     {
-        return a.data.int_value == b.data.int_value;
+        return a->data.int_value == b->data.int_value;
     }
-    if (a.type == HEX_TYPE_STRING)
+    if (a->type == HEX_TYPE_STRING)
     {
-        return (strcmp(a.data.str_value, b.data.str_value) == 0);
+        return (strcmp(a->data.str_value, b->data.str_value) == 0);
     }
-    if (a.type == HEX_TYPE_QUOTATION)
+    if (a->type == HEX_TYPE_QUOTATION)
     {
-        if (a.quotation_size != b.quotation_size)
+        if (a->quotation_size != b->quotation_size)
         {
             return 0;
         }
         else
         {
-            for (size_t i = 0; i < a.quotation_size; i++)
+            for (size_t i = 0; i < a->quotation_size; i++)
             {
-                if (!hex_equal(*a.data.quotation_value[i], *b.data.quotation_value[i]))
+                if (!hex_equal(a->data.quotation_value[i], b->data.quotation_value[i]))
                 {
                     return 0;
                 }
@@ -851,160 +1185,191 @@ static int hex_greater(hex_context_t *ctx, hex_item_t *a, hex_item_t *b, char *s
 int hex_symbol_equal(hex_context_t *ctx)
 {
 
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a)
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if ((a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER) || (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING) || (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION))
+    if ((a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER) || (a->type == HEX_TYPE_STRING && b->type == HEX_TYPE_STRING) || (a->type == HEX_TYPE_QUOTATION && b->type == HEX_TYPE_QUOTATION))
     {
-        return hex_push_integer(ctx, hex_equal(a, b));
+        int result = hex_push_integer(ctx, hex_equal(a, b));
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     // Different types => false
-    return hex_push_integer(ctx, 0);
+    int result = hex_push_integer(ctx, 0);
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
+    return result;
 }
 
 int hex_symbol_notequal(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if ((a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER) || (a.type == HEX_TYPE_STRING && b.type == HEX_TYPE_STRING) || (a.type == HEX_TYPE_QUOTATION && b.type == HEX_TYPE_QUOTATION))
+    if ((a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER) || (a->type == HEX_TYPE_STRING && b->type == HEX_TYPE_STRING) || (a->type == HEX_TYPE_QUOTATION && b->type == HEX_TYPE_QUOTATION))
     {
-        return hex_push_integer(ctx, !hex_equal(a, b));
+        int result = hex_push_integer(ctx, !hex_equal(a, b));
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     // Different types => true
-    return hex_push_integer(ctx, 1);
+    int result = hex_push_integer(ctx, 1);
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
+    return result;
 }
 
 int hex_symbol_greater(hex_context_t *ctx)
 {
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
-
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    hex_item_t *pa = &a;
-    hex_item_t *pb = &b;
-    hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">"));
-    return 0;
+    hex_item_t *pa = a;
+    hex_item_t *pb = b;
+    int result = hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">"));
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
+    return result;
 }
 
 int hex_symbol_less(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    hex_item_t *pa = &a;
-    hex_item_t *pb = &b;
-    hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<"));
-    return 0;
+    hex_item_t *pa = a;
+    hex_item_t *pb = b;
+    int result = hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<"));
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
+    return result;
 }
 
 int hex_symbol_greaterequal(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    hex_item_t *pa = &a;
-    hex_item_t *pb = &b;
-    hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">") || hex_equal(a, b));
-    return 0;
+    hex_item_t *pa = a;
+    hex_item_t *pb = b;
+    int result = hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">") || hex_equal(a, b));
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
+    return result;
 }
 
 int hex_symbol_lessequal(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    hex_item_t *pa = &a;
-    hex_item_t *pb = &b;
-    hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
-    return 0;
+    hex_item_t *pa = a;
+    hex_item_t *pb = b;
+    int result = hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
+    return result;
 }
 
 // Boolean symbols
 
 int hex_symbol_and(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.int_value && b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value && b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol and] Two integers required");
     HEX_FREE(ctx, a);
@@ -1014,23 +1379,27 @@ int hex_symbol_and(hex_context_t *ctx)
 
 int hex_symbol_or(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.int_value || b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value || b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol or] Two integers required");
     HEX_FREE(ctx, a);
@@ -1040,16 +1409,23 @@ int hex_symbol_or(hex_context_t *ctx)
 
 int hex_symbol_not(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol not] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, !a.data.int_value);
+        int result = hex_push_integer(ctx, !a->data.int_value);
+        HEX_FREE(ctx, a);
+        return result;
     }
     hex_error(ctx, "[symbol not] Integer required");
     HEX_FREE(ctx, a);
@@ -1058,23 +1434,40 @@ int hex_symbol_not(hex_context_t *ctx)
 
 int hex_symbol_xor(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol xor] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         return 1;
     }
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol xor] Memory allocation failed");
+        HEX_FREE(ctx, b);
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
         return 1;
     }
-    if (a.type == HEX_TYPE_INTEGER && b.type == HEX_TYPE_INTEGER)
+    if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
-        return hex_push_integer(ctx, a.data.int_value ^ b.data.int_value);
+        int result = hex_push_integer(ctx, a->data.int_value ^ b->data.int_value);
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+        return result;
     }
     hex_error(ctx, "[symbol xor] Two integers required");
     HEX_FREE(ctx, a);
@@ -1083,19 +1476,31 @@ int hex_symbol_xor(hex_context_t *ctx)
 }
 
 // Quotation and String (List) Symbols
-
 int hex_symbol_cat(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(value);
+    if (!value)
+    {
+        hex_error(ctx, "[symbol cat] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, value);
-    if (value.type == HEX_TYPE_INVALID)
+    if (value->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, value);
         return 1; // Failed to pop value
     }
 
+    HEX_ALLOC(list);
+    if (!list)
+    {
+        hex_error(ctx, "[symbol cat] Memory allocation failed");
+        HEX_FREE(ctx, value);
+        return 1;
+    }
     HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
+    ;
+    if (list->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, value);
@@ -1104,12 +1509,12 @@ int hex_symbol_cat(hex_context_t *ctx)
 
     int result = 0;
 
-    if (list.type == HEX_TYPE_QUOTATION && value.type == HEX_TYPE_QUOTATION)
+    if (list->type == HEX_TYPE_QUOTATION && value->type == HEX_TYPE_QUOTATION)
     {
         // Concatenate two quotations
-        size_t newSize = list.quotation_size + value.quotation_size;
+        size_t newSize = list->quotation_size + value->quotation_size;
         hex_item_t **newQuotation = (hex_item_t **)realloc(
-            list.data.quotation_value, newSize * sizeof(hex_item_t *));
+            list->data.quotation_value, newSize * sizeof(hex_item_t *));
         if (!newQuotation)
         {
             hex_error(ctx, "[symbol cat] Memory allocation failed");
@@ -1118,20 +1523,20 @@ int hex_symbol_cat(hex_context_t *ctx)
         else
         {
             // Append items from the second quotation
-            for (size_t i = 0; i < (size_t)value.quotation_size; i++)
+            for (size_t i = 0; i < (size_t)value->quotation_size; i++)
             {
-                newQuotation[list.quotation_size + i] = value.data.quotation_value[i];
+                newQuotation[list->quotation_size + i] = value->data.quotation_value[i];
             }
 
-            list.data.quotation_value = newQuotation;
-            list.quotation_size = newSize;
-            result = hex_push_quotation(ctx, list.data.quotation_value, newSize);
+            list->data.quotation_value = newQuotation;
+            list->quotation_size = newSize;
+            result = hex_push_quotation(ctx, list->data.quotation_value, newSize);
         }
     }
-    else if (list.type == HEX_TYPE_STRING && value.type == HEX_TYPE_STRING)
+    else if (list->type == HEX_TYPE_STRING && value->type == HEX_TYPE_STRING)
     {
         // Concatenate two strings
-        size_t newLength = strlen(list.data.str_value) + strlen(value.data.str_value) + 1;
+        size_t newLength = strlen(list->data.str_value) + strlen(value->data.str_value) + 1;
         char *newStr = (char *)malloc(newLength);
         if (!newStr)
         {
@@ -1140,8 +1545,8 @@ int hex_symbol_cat(hex_context_t *ctx)
         }
         else
         {
-            strcpy(newStr, list.data.str_value);
-            strcat(newStr, value.data.str_value);
+            strcpy(newStr, list->data.str_value);
+            strcat(newStr, value->data.str_value);
             result = hex_push_string(ctx, newStr);
         }
     }
@@ -1164,20 +1569,27 @@ int hex_symbol_cat(hex_context_t *ctx)
 int hex_symbol_len(hex_context_t *ctx)
 {
 
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol len] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
     int result = 0;
-    if (item.type == HEX_TYPE_QUOTATION)
+    if (item->type == HEX_TYPE_QUOTATION)
     {
-        result = hex_push_integer(ctx, item.quotation_size);
+        result = hex_push_integer(ctx, item->quotation_size);
     }
-    else if (item.type == HEX_TYPE_STRING)
+    else if (item->type == HEX_TYPE_STRING)
     {
-        result = hex_push_integer(ctx, strlen(item.data.str_value));
+        result = hex_push_integer(ctx, strlen(item->data.str_value));
     }
     else
     {
@@ -1194,14 +1606,29 @@ int hex_symbol_len(hex_context_t *ctx)
 int hex_symbol_get(hex_context_t *ctx)
 {
 
+    HEX_ALLOC(index);
+    if (!index)
+    {
+        hex_error(ctx, "[symbol get] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, index);
-    if (index.type == HEX_TYPE_INVALID)
+    ;
+    if (index->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, index);
         return 1;
     }
+    HEX_ALLOC(list);
+    if (!list)
+    {
+        hex_error(ctx, "[symbol get] Memory allocation failed");
+        HEX_FREE(ctx, index);
+        return 1;
+    }
     HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
+    ;
+    if (list->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, index);
@@ -1209,41 +1636,41 @@ int hex_symbol_get(hex_context_t *ctx)
     }
     int result = 0;
     hex_item_t copy;
-    if (list.type == HEX_TYPE_QUOTATION)
+    if (list->type == HEX_TYPE_QUOTATION)
     {
-        if (index.type != HEX_TYPE_INTEGER)
+        if (index->type != HEX_TYPE_INTEGER)
         {
             hex_error(ctx, "[symbol get] Index must be an integer");
             result = 1;
         }
-        else if (index.data.int_value < 0 || (size_t)index.data.int_value >= list.quotation_size)
+        else if (index->data.int_value < 0 || (size_t)index->data.int_value >= list->quotation_size)
         {
             hex_error(ctx, "[symbol get] Index out of range");
             result = 1;
         }
         else
         {
-            copy = hex_copy_item(list.data.quotation_value[index.data.int_value]);
-            result = hex_push(ctx, copy);
+            copy = *hex_copy_item(list->data.quotation_value[index->data.int_value]);
+            result = hex_push(ctx, &copy);
         }
     }
-    else if (list.type == HEX_TYPE_STRING)
+    else if (list->type == HEX_TYPE_STRING)
     {
-        if (index.type != HEX_TYPE_INTEGER)
+        if (index->type != HEX_TYPE_INTEGER)
         {
             hex_error(ctx, "[symbol get] Index must be an integer");
             result = 1;
         }
-        else if (index.data.int_value < 0 || index.data.int_value >= (int)strlen(list.data.str_value))
+        else if (index->data.int_value < 0 || index->data.int_value >= (int)strlen(list->data.str_value))
         {
             hex_error(ctx, "[symbol get] Index out of range");
             result = 1;
         }
         else
         {
-            char str[2] = {list.data.str_value[index.data.int_value], '\0'};
-            copy = hex_string_item(ctx, str);
-            result = hex_push(ctx, copy);
+            char str[2] = {list->data.str_value[index->data.int_value], '\0'};
+            copy = *hex_string_item(ctx, str);
+            result = hex_push(ctx, &copy);
         }
     }
     else
@@ -1253,48 +1680,47 @@ int hex_symbol_get(hex_context_t *ctx)
     }
     if (result != 0)
     {
-
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, index);
-        HEX_FREE(ctx, copy);
     }
     return result;
 }
 
 int hex_symbol_index(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
+    HEX_ALLOC(list);
     HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
+    if (list->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, item);
         return 1;
     }
     int result = -1;
-    if (list.type == HEX_TYPE_QUOTATION)
+    if (list->type == HEX_TYPE_QUOTATION)
     {
-        for (size_t i = 0; i < list.quotation_size; i++)
+        for (size_t i = 0; i < list->quotation_size; i++)
         {
-            if (hex_equal(*list.data.quotation_value[i], item))
+            if (hex_equal(list->data.quotation_value[i], item))
             {
                 result = i;
                 break;
             }
         }
     }
-    else if (list.type == HEX_TYPE_STRING)
+    else if (list->type == HEX_TYPE_STRING)
     {
-        char *ptr = strstr(list.data.str_value, item.data.str_value);
+        char *ptr = strstr(list->data.str_value, item->data.str_value);
         if (ptr)
         {
-            result = ptr - list.data.str_value;
+            result = ptr - list->data.str_value;
         }
     }
     else
@@ -1311,29 +1737,43 @@ int hex_symbol_index(hex_context_t *ctx)
 
 int hex_symbol_join(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(separator);
+    if (!separator)
+    {
+        hex_error(ctx, "[symbol join] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, separator);
-    if (separator.type == HEX_TYPE_INVALID)
+    ;
+    if (separator->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, separator);
         return 1;
     }
+    HEX_ALLOC(list);
+    if (!list)
+    {
+        hex_error(ctx, "[symbol join] Memory allocation failed");
+        HEX_FREE(ctx, separator);
+        return 1;
+    }
     HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
+    ;
+    if (list->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, separator);
         return 1;
     }
     int result = 0;
-    if (list.type == HEX_TYPE_QUOTATION && separator.type == HEX_TYPE_STRING)
+    if (list->type == HEX_TYPE_QUOTATION && separator->type == HEX_TYPE_STRING)
     {
         int length = 0;
-        for (size_t i = 0; i < list.quotation_size; i++)
+        for (size_t i = 0; i < list->quotation_size; i++)
         {
-            if (list.data.quotation_value[i]->type == HEX_TYPE_STRING)
+            if (list->data.quotation_value[i]->type == HEX_TYPE_STRING)
             {
-                length += strlen(list.data.quotation_value[i]->data.str_value);
+                length += strlen(list->data.quotation_value[i]->data.str_value);
             }
             else
             {
@@ -1345,7 +1785,7 @@ int hex_symbol_join(hex_context_t *ctx)
         }
         if (result == 0)
         {
-            length += (list.quotation_size - 1) * strlen(separator.data.str_value);
+            length += (list->quotation_size - 1) * strlen(separator->data.str_value);
             char *newStr = (char *)malloc(length + 1);
             if (!newStr)
             {
@@ -1355,12 +1795,12 @@ int hex_symbol_join(hex_context_t *ctx)
                 return 1;
             }
             newStr[0] = '\0';
-            for (size_t i = 0; i < list.quotation_size; i++)
+            for (size_t i = 0; i < list->quotation_size; i++)
             {
-                strcat(newStr, list.data.quotation_value[i]->data.str_value);
-                if (i < list.quotation_size - 1)
+                strcat(newStr, list->data.quotation_value[i]->data.str_value);
+                if (i < list->quotation_size - 1)
                 {
-                    strcat(newStr, separator.data.str_value);
+                    strcat(newStr, separator->data.str_value);
                 }
             }
             result = hex_push_string(ctx, newStr);
@@ -1381,26 +1821,41 @@ int hex_symbol_join(hex_context_t *ctx)
 
 int hex_symbol_split(hex_context_t *ctx)
 {
+    HEX_ALLOC(separator);
+    if (!separator)
+    {
+        hex_error(ctx, "[symbol split] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, separator);
-    if (separator.type == HEX_TYPE_INVALID)
+    ;
+    if (separator->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, separator);
         return 1;
     }
+    HEX_ALLOC(str);
+    if (!str)
+    {
+        hex_error(ctx, "[symbol split] Memory allocation failed");
+        HEX_FREE(ctx, separator);
+        return 1;
+    }
     HEX_POP(ctx, str);
-    if (str.type == HEX_TYPE_INVALID)
+    ;
+    if (str->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, str);
         HEX_FREE(ctx, separator);
         return 1;
     }
     int result = 0;
-    if (str.type == HEX_TYPE_STRING && separator.type == HEX_TYPE_STRING)
+    if (str->type == HEX_TYPE_STRING && separator->type == HEX_TYPE_STRING)
     {
-        if (strlen(separator.data.str_value) == 0)
+        if (strlen(separator->data.str_value) == 0)
         {
             // Separator is an empty string: split into individual characters
-            size_t size = strlen(str.data.str_value);
+            size_t size = strlen(str->data.str_value);
             hex_item_t **quotation = (hex_item_t **)malloc(size * sizeof(hex_item_t *));
             if (!quotation)
             {
@@ -1426,8 +1881,8 @@ int hex_symbol_split(hex_context_t *ctx)
                         result = 1;
                         break;
                     }
-                    quotation[i]->data.str_value[0] = str.data.str_value[i]; // Copy the single character
-                    quotation[i]->data.str_value[1] = '\0';                  // Null-terminate the string
+                    quotation[i]->data.str_value[0] = str->data.str_value[i]; // Copy the single character
+                    quotation[i]->data.str_value[1] = '\0';                   // Null-terminate the string
                 }
                 if (result == 0)
                 {
@@ -1438,7 +1893,7 @@ int hex_symbol_split(hex_context_t *ctx)
         else
         {
             // Separator is not empty: split as usual
-            char *token = strtok(str.data.str_value, separator.data.str_value);
+            char *token = strtok(str->data.str_value, separator->data.str_value);
             size_t capacity = 2;
             size_t size = 0;
             hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
@@ -1466,7 +1921,7 @@ int hex_symbol_split(hex_context_t *ctx)
                     quotation[size]->type = HEX_TYPE_STRING;
                     quotation[size]->data.str_value = strdup(token);
                     size++;
-                    token = strtok(NULL, separator.data.str_value);
+                    token = strtok(NULL, separator->data.str_value);
                 }
                 if (result == 0)
                 {
@@ -1490,22 +1945,24 @@ int hex_symbol_split(hex_context_t *ctx)
 
 int hex_symbol_replace(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(replacement);
     HEX_POP(ctx, replacement);
-    if (replacement.type == HEX_TYPE_INVALID)
+    if (replacement->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, replacement);
         return 1;
     }
+    HEX_ALLOC(search);
     HEX_POP(ctx, search);
-    if (search.type == HEX_TYPE_INVALID)
+    if (search->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, search);
         HEX_FREE(ctx, replacement);
         return 1;
     }
+    HEX_ALLOC(list);
     HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
+    if (list->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, search);
@@ -1513,11 +1970,11 @@ int hex_symbol_replace(hex_context_t *ctx)
         return 1;
     }
     int result = 0;
-    if (list.type == HEX_TYPE_STRING && search.type == HEX_TYPE_STRING && replacement.type == HEX_TYPE_STRING)
+    if (list->type == HEX_TYPE_STRING && search->type == HEX_TYPE_STRING && replacement->type == HEX_TYPE_STRING)
     {
-        char *str = list.data.str_value;
-        char *find = search.data.str_value;
-        char *replace = replacement.data.str_value;
+        char *str = list->data.str_value;
+        char *find = search->data.str_value;
+        char *replace = replacement->data.str_value;
         char *ptr = strstr(str, find);
         if (ptr)
         {
@@ -1561,19 +2018,26 @@ int hex_symbol_replace(hex_context_t *ctx)
 
 int hex_symbol_read(hex_context_t *ctx)
 {
+    HEX_ALLOC(filename);
+    if (!filename)
+    {
+        hex_error(ctx, "[symbol read] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, filename);
-    if (filename.type == HEX_TYPE_INVALID)
+    ;
+    if (filename->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, filename);
         return 1;
     }
     int result = 0;
-    if (filename.type == HEX_TYPE_STRING)
+    if (filename->type == HEX_TYPE_STRING)
     {
-        FILE *file = fopen(filename.data.str_value, "rb");
+        FILE *file = fopen(filename->data.str_value, "rb");
         if (!file)
         {
-            hex_error(ctx, "[symbol read] Could not open file for reading: %s", filename.data.str_value);
+            hex_error(ctx, "[symbol read] Could not open file for reading: %s", filename->data.str_value);
             result = 1;
         }
         else
@@ -1620,11 +2084,12 @@ int hex_symbol_read(hex_context_t *ctx)
                     }
                     else
                     {
-                        hex_item_t item = {.type = HEX_TYPE_STRING, .data.str_value = str};
+                        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+                        item->type = HEX_TYPE_STRING;
+                        item->data.str_value = str;
                         result = HEX_PUSH(ctx, item);
                     }
                 }
-                free(buffer);
             }
             fclose(file);
         }
@@ -1643,52 +2108,53 @@ int hex_symbol_read(hex_context_t *ctx)
 
 int hex_symbol_write(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(filename);
     HEX_POP(ctx, filename);
-    if (filename.type == HEX_TYPE_INVALID)
+    if (filename->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, filename);
         return 1;
     }
+    HEX_ALLOC(data);
     HEX_POP(ctx, data);
-    if (data.type == HEX_TYPE_INVALID)
+    if (data->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, data);
         HEX_FREE(ctx, filename);
         return 1;
     }
     int result = 0;
-    if (filename.type == HEX_TYPE_STRING)
+    if (filename->type == HEX_TYPE_STRING)
     {
-        if (data.type == HEX_TYPE_STRING)
+        if (data->type == HEX_TYPE_STRING)
         {
-            FILE *file = fopen(filename.data.str_value, "w");
+            FILE *file = fopen(filename->data.str_value, "w");
             if (file)
             {
-                fputs(data.data.str_value, file);
+                fputs(data->data.str_value, file);
                 fclose(file);
                 result = 0;
             }
             else
             {
-                hex_error(ctx, "[symbol write] Could not open file for writing: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol write] Could not open file for writing: %s", filename->data.str_value);
                 result = 1;
             }
         }
-        else if (data.type == HEX_TYPE_QUOTATION)
+        else if (data->type == HEX_TYPE_QUOTATION)
         {
-            FILE *file = fopen(filename.data.str_value, "wb");
+            FILE *file = fopen(filename->data.str_value, "wb");
             if (file)
             {
-                for (size_t i = 0; i < data.quotation_size; i++)
+                for (size_t i = 0; i < data->quotation_size; i++)
                 {
-                    if (data.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+                    if (data->data.quotation_value[i]->type != HEX_TYPE_INTEGER)
                     {
                         hex_error(ctx, "[symbol write] Quotation must contain only integers");
                         result = 1;
                         break;
                     }
-                    uint8_t byte = (uint8_t)data.data.quotation_value[i]->data.int_value;
+                    uint8_t byte = (uint8_t)data->data.quotation_value[i]->data.int_value;
                     fwrite(&byte, 1, 1, file);
                 }
                 fclose(file);
@@ -1696,7 +2162,7 @@ int hex_symbol_write(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "[symbol write] Could not open file for writing: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol write] Could not open file for writing: %s", filename->data.str_value);
                 result = 1;
             }
         }
@@ -1722,51 +2188,66 @@ int hex_symbol_write(hex_context_t *ctx)
 int hex_symbol_append(hex_context_t *ctx)
 {
 
+    HEX_ALLOC(filename);
+    if (!filename)
+    {
+        hex_error(ctx, "[symbol append] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, filename);
-    if (filename.type == HEX_TYPE_INVALID)
+    ;
+    if (filename->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, filename);
         return 1;
     }
+    HEX_ALLOC(data);
+    if (!data)
+    {
+        hex_error(ctx, "[symbol append] Memory allocation failed");
+        HEX_FREE(ctx, filename);
+        return 1;
+    }
     HEX_POP(ctx, data);
-    if (data.type == HEX_TYPE_INVALID)
+    ;
+    if (data->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, data);
         HEX_FREE(ctx, filename);
         return 1;
     }
     int result = 0;
-    if (filename.type == HEX_TYPE_STRING)
+    if (filename->type == HEX_TYPE_STRING)
     {
-        if (data.type == HEX_TYPE_STRING)
+        if (data->type == HEX_TYPE_STRING)
         {
-            FILE *file = fopen(filename.data.str_value, "a");
+            FILE *file = fopen(filename->data.str_value, "a");
             if (file)
             {
-                fputs(data.data.str_value, file);
+                fputs(data->data.str_value, file);
                 fclose(file);
                 result = 0;
             }
             else
             {
-                hex_error(ctx, "[symbol append] Could not open file for appending: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol append] Could not open file for appending: %s", filename->data.str_value);
                 result = 1;
             }
         }
-        else if (data.type == HEX_TYPE_QUOTATION)
+        else if (data->type == HEX_TYPE_QUOTATION)
         {
-            FILE *file = fopen(filename.data.str_value, "ab");
+            FILE *file = fopen(filename->data.str_value, "ab");
             if (file)
             {
-                for (size_t i = 0; i < data.quotation_size; i++)
+                for (size_t i = 0; i < data->quotation_size; i++)
                 {
-                    if (data.data.quotation_value[i]->type != HEX_TYPE_INTEGER)
+                    if (data->data.quotation_value[i]->type != HEX_TYPE_INTEGER)
                     {
                         hex_error(ctx, "[symbol append] Quotation must contain only integers");
                         result = 1;
                         break;
                     }
-                    uint8_t byte = (uint8_t)data.data.quotation_value[i]->data.int_value;
+                    uint8_t byte = (uint8_t)data->data.quotation_value[i]->data.int_value;
                     fwrite(&byte, 1, 1, file);
                 }
                 fclose(file);
@@ -1774,7 +2255,7 @@ int hex_symbol_append(hex_context_t *ctx)
             }
             else
             {
-                hex_error(ctx, "[symbol append] Could not open file for appending: %s", filename.data.str_value);
+                hex_error(ctx, "[symbol append] Could not open file for appending: %s", filename->data.str_value);
                 result = 1;
             }
         }
@@ -1827,37 +2308,50 @@ int hex_symbol_args(hex_context_t *ctx)
 
 int hex_symbol_exit(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol exit] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (item.type != HEX_TYPE_INTEGER)
+    if (item->type != HEX_TYPE_INTEGER)
     {
         hex_error(ctx, "[symbol exit] Integer required");
         HEX_FREE(ctx, item);
         return 1;
     }
-    int exit_status = item.data.int_value;
+    int exit_status = item->data.int_value;
+    HEX_FREE(ctx, item);
     exit(exit_status);
     return 0; // This line will never be reached, but it's here to satisfy the return type
 }
 
 int hex_symbol_exec(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(command);
+    if (!command)
+    {
+        hex_error(ctx, "[symbol exec] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, command);
-    if (command.type == HEX_TYPE_INVALID)
+    ;
+    if (command->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, command);
         return 1;
     }
     int result = 0;
-    if (command.type == HEX_TYPE_STRING)
+    if (command->type == HEX_TYPE_STRING)
     {
-        int status = system(command.data.str_value);
+        int status = system(command->data.str_value);
         result = hex_push_integer(ctx, status);
     }
     else
@@ -1865,23 +2359,26 @@ int hex_symbol_exec(hex_context_t *ctx)
         hex_error(ctx, "[symbol exec] String required");
         result = 1;
     }
-    if (result != 0)
-    {
-        HEX_FREE(ctx, command);
-    }
+    HEX_FREE(ctx, command);
     return result;
 }
 
 int hex_symbol_run(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(command);
+    if (!command)
+    {
+        hex_error(ctx, "[symbol run] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, command);
-    if (command.type == HEX_TYPE_INVALID)
+    ;
+    if (command->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, command);
         return 1;
     }
-    if (command.type != HEX_TYPE_STRING)
+    if (command->type != HEX_TYPE_STRING)
     {
         hex_error(ctx, "[symbol run] String required");
         HEX_FREE(ctx, command);
@@ -1921,7 +2418,7 @@ int hex_symbol_run(hex_context_t *ctx)
     si.dwFlags |= STARTF_USESTDHANDLES;
 
     // Create the child process
-    if (!CreateProcess(NULL, command.data.str_value, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
+    if (!CreateProcess(NULL, command->data.str_value, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
     {
         hex_error(ctx, "[symbol run] Failed to create process");
         HEX_FREE(ctx, command);
@@ -1983,7 +2480,7 @@ int hex_symbol_run(hex_context_t *ctx)
         close(stderr_pipe[0]);
         dup2(stdout_pipe[1], STDOUT_FILENO);
         dup2(stderr_pipe[1], STDERR_FILENO);
-        execl("/bin/sh", "sh", "-c", command.data.str_value, (char *)NULL);
+        execl("/bin/sh", "sh", "-c", command->data.str_value, (char *)NULL);
         exit(1);
     }
     else
@@ -2030,6 +2527,8 @@ int hex_symbol_run(hex_context_t *ctx)
     quotation[2]->type = HEX_TYPE_STRING;
     quotation[2]->data.str_value = strdup(error);
 
+    HEX_FREE(ctx, command);
+
     return hex_push_quotation(ctx, quotation, 3);
 }
 
@@ -2037,38 +2536,67 @@ int hex_symbol_run(hex_context_t *ctx)
 
 int hex_symbol_if(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(elseBlock);
+    if (!elseBlock)
+    {
+        hex_error(ctx, "[symbol if] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, elseBlock);
-    if (elseBlock.type == HEX_TYPE_INVALID)
+    ;
+    if (elseBlock->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, elseBlock);
         return 1;
     }
+
+    HEX_ALLOC(thenBlock);
+    if (!thenBlock)
+    {
+        hex_error(ctx, "[symbol if] Memory allocation failed");
+        HEX_FREE(ctx, elseBlock);
+        return 1;
+    }
     HEX_POP(ctx, thenBlock);
-    if (thenBlock.type == HEX_TYPE_INVALID)
+    ;
+    if (thenBlock->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, thenBlock);
         HEX_FREE(ctx, elseBlock);
         return 1;
     }
+
+    HEX_ALLOC(condition);
+    if (!condition)
+    {
+        hex_error(ctx, "[symbol if] Memory allocation failed");
+        HEX_FREE(ctx, thenBlock);
+        HEX_FREE(ctx, elseBlock);
+        return 1;
+    }
     HEX_POP(ctx, condition);
-    if (condition.type == HEX_TYPE_INVALID)
+    ;
+    if (condition->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, condition);
         HEX_FREE(ctx, thenBlock);
         HEX_FREE(ctx, elseBlock);
         return 1;
     }
-    if (condition.type != HEX_TYPE_QUOTATION || thenBlock.type != HEX_TYPE_QUOTATION || elseBlock.type != HEX_TYPE_QUOTATION)
+
+    if (condition->type != HEX_TYPE_QUOTATION || thenBlock->type != HEX_TYPE_QUOTATION || elseBlock->type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "[symbol if] Three quotations required");
+        HEX_FREE(ctx, condition);
+        HEX_FREE(ctx, thenBlock);
+        HEX_FREE(ctx, elseBlock);
         return 1;
     }
     else
     {
-        for (size_t i = 0; i < condition.quotation_size; i++)
+        for (size_t i = 0; i < condition->quotation_size; i++)
         {
-            if (hex_push(ctx, *condition.data.quotation_value[i]) != 0)
+            if (hex_push(ctx, condition->data.quotation_value[i]) != 0)
             {
                 HEX_FREE(ctx, condition);
                 HEX_FREE(ctx, thenBlock);
@@ -2076,81 +2604,123 @@ int hex_symbol_if(hex_context_t *ctx)
                 return 1;
             }
         }
-        HEX_POP(ctx, evalResult);
-        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value > 0)
+        HEX_ALLOC(evalResult);
+        if (!evalResult)
         {
-            for (size_t i = 0; i < thenBlock.quotation_size; i++)
+            hex_error(ctx, "[symbol if] Memory allocation failed");
+            HEX_FREE(ctx, condition);
+            HEX_FREE(ctx, thenBlock);
+            HEX_FREE(ctx, elseBlock);
+            return 1;
+        }
+        HEX_POP(ctx, evalResult);
+        ;
+        if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value > 0)
+        {
+            for (size_t i = 0; i < thenBlock->quotation_size; i++)
             {
-                if (hex_push(ctx, *thenBlock.data.quotation_value[i]) != 0)
+                if (hex_push(ctx, thenBlock->data.quotation_value[i]) != 0)
                 {
                     HEX_FREE(ctx, condition);
                     HEX_FREE(ctx, thenBlock);
                     HEX_FREE(ctx, elseBlock);
+                    HEX_FREE(ctx, evalResult);
                     return 1;
                 }
             }
         }
         else
         {
-            for (size_t i = 0; i < elseBlock.quotation_size; i++)
+            for (size_t i = 0; i < elseBlock->quotation_size; i++)
             {
-                if (hex_push(ctx, *elseBlock.data.quotation_value[i]) != 0)
+                if (hex_push(ctx, elseBlock->data.quotation_value[i]) != 0)
                 {
                     HEX_FREE(ctx, condition);
                     HEX_FREE(ctx, thenBlock);
                     HEX_FREE(ctx, elseBlock);
+                    HEX_FREE(ctx, evalResult);
                     return 1;
                 }
             }
         }
+        HEX_FREE(ctx, evalResult);
     }
+    HEX_FREE(ctx, condition);
+    HEX_FREE(ctx, thenBlock);
+    HEX_FREE(ctx, elseBlock);
     return 0;
 }
 
 int hex_symbol_when(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(action);
+    if (!action)
+    {
+        hex_error(ctx, "[symbol when] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, action);
-    if (action.type == HEX_TYPE_INVALID)
+    ;
+    if (action->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, action);
         return 1;
     }
+
+    HEX_ALLOC(condition);
+    if (!condition)
+    {
+        hex_error(ctx, "[symbol when] Memory allocation failed");
+        HEX_FREE(ctx, action);
+        return 1;
+    }
     HEX_POP(ctx, condition);
-    if (condition.type == HEX_TYPE_INVALID)
+    ;
+    if (condition->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, condition);
         return 1;
     }
+
     int result = 0;
-    if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+    if (condition->type != HEX_TYPE_QUOTATION || action->type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "[symbol when] Two quotations required");
         result = 1;
     }
     else
     {
-        for (size_t i = 0; i < condition.quotation_size; i++)
+        for (size_t i = 0; i < condition->quotation_size; i++)
         {
-            if (hex_push(ctx, *condition.data.quotation_value[i]) != 0)
+            if (hex_push(ctx, condition->data.quotation_value[i]) != 0)
             {
                 result = 1;
                 break; // Break if pushing the item failed
             }
         }
-        HEX_POP(ctx, evalResult);
-        if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value > 0)
+        HEX_ALLOC(evalResult);
+        if (!evalResult)
         {
-            for (size_t i = 0; i < action.quotation_size; i++)
+            hex_error(ctx, "[symbol when] Memory allocation failed");
+            HEX_FREE(ctx, action);
+            HEX_FREE(ctx, condition);
+            return 1;
+        }
+        HEX_POP(ctx, evalResult);
+        ;
+        if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value > 0)
+        {
+            for (size_t i = 0; i < action->quotation_size; i++)
             {
-                if (hex_push(ctx, *action.data.quotation_value[i]) != 0)
+                if (hex_push(ctx, action->data.quotation_value[i]) != 0)
                 {
                     result = 1;
                     break;
                 }
             }
         }
+        HEX_FREE(ctx, evalResult);
     }
     if (result != 0)
     {
@@ -2162,21 +2732,37 @@ int hex_symbol_when(hex_context_t *ctx)
 
 int hex_symbol_while(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(action);
+    if (!action)
+    {
+        hex_error(ctx, "[symbol while] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, action);
-    if (action.type == HEX_TYPE_INVALID)
+    ;
+    if (action->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, action);
         return 1;
     }
+
+    HEX_ALLOC(condition);
+    if (!condition)
+    {
+        hex_error(ctx, "[symbol while] Memory allocation failed");
+        HEX_FREE(ctx, action);
+        return 1;
+    }
     HEX_POP(ctx, condition);
-    if (condition.type == HEX_TYPE_INVALID)
+    ;
+    if (condition->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, condition);
         return 1;
     }
-    if (condition.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+
+    if (condition->type != HEX_TYPE_QUOTATION || action->type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "[symbol while] Two quotations required");
         HEX_FREE(ctx, action);
@@ -2187,23 +2773,36 @@ int hex_symbol_while(hex_context_t *ctx)
     {
         while (1)
         {
-            for (size_t i = 0; i < condition.quotation_size; i++)
+            for (size_t i = 0; i < condition->quotation_size; i++)
             {
-                if (hex_push(ctx, *condition.data.quotation_value[i]) != 0)
+                if (hex_push(ctx, condition->data.quotation_value[i]) != 0)
                 {
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, condition);
                     return 1;
                 }
             }
-            HEX_POP(ctx, evalResult);
-            if (evalResult.type == HEX_TYPE_INTEGER && evalResult.data.int_value == 0)
+
+            HEX_ALLOC(evalResult);
+            if (!evalResult)
             {
+                hex_error(ctx, "[symbol while] Memory allocation failed");
+                HEX_FREE(ctx, action);
+                HEX_FREE(ctx, condition);
+                return 1;
+            }
+            HEX_POP(ctx, evalResult);
+            ;
+            if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value == 0)
+            {
+                HEX_FREE(ctx, evalResult);
                 break;
             }
-            for (size_t i = 0; i < action.quotation_size; i++)
+            HEX_FREE(ctx, evalResult);
+
+            for (size_t i = 0; i < action->quotation_size; i++)
             {
-                if (hex_push(ctx, *action.data.quotation_value[i]) != 0)
+                if (hex_push(ctx, action->data.quotation_value[i]) != 0)
                 {
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, condition);
@@ -2212,6 +2811,9 @@ int hex_symbol_while(hex_context_t *ctx)
             }
         }
     }
+
+    HEX_FREE(ctx, action);
+    HEX_FREE(ctx, condition);
     return 0;
 }
 
@@ -2225,25 +2827,47 @@ int hex_symbol_error(hex_context_t *ctx)
 
 int hex_symbol_try(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(catch_block);
+    if (!catch_block)
+    {
+        hex_error(ctx, "[symbol try] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, catch_block);
-    if (catch_block.type == HEX_TYPE_INVALID)
+    ;
+    if (catch_block->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, catch_block);
+        free(catch_block);
+        return 1;
+    }
+
+    HEX_ALLOC(try_block);
+    if (!try_block)
+    {
+        hex_error(ctx, "[symbol try] Memory allocation failed");
+        HEX_FREE(ctx, catch_block);
+        free(catch_block);
         return 1;
     }
     HEX_POP(ctx, try_block);
-    if (try_block.type == HEX_TYPE_INVALID)
+    ;
+    if (try_block->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, catch_block);
         HEX_FREE(ctx, try_block);
+        free(catch_block);
+        free(try_block);
         return 1;
     }
-    if (try_block.type != HEX_TYPE_QUOTATION || catch_block.type != HEX_TYPE_QUOTATION)
+
+    if (try_block->type != HEX_TYPE_QUOTATION || catch_block->type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "[symbol try] Two quotations required");
         HEX_FREE(ctx, catch_block);
         HEX_FREE(ctx, try_block);
+        free(catch_block);
+        free(try_block);
         return 1;
     }
     else
@@ -2253,23 +2877,25 @@ int hex_symbol_try(hex_context_t *ctx)
         ctx->error[0] = '\0';
 
         ctx->settings.errors_enabled = 0;
-        for (size_t i = 0; i < try_block.quotation_size; i++)
+        for (size_t i = 0; i < try_block->quotation_size; i++)
         {
-            if (hex_push(ctx, *try_block.data.quotation_value[i]) != 0)
+            if (hex_push(ctx, try_block->data.quotation_value[i]) != 0)
             {
                 ctx->settings.errors_enabled = 1;
             }
         }
         ctx->settings.errors_enabled = 1;
 
-        if (strcmp(ctx->error, ""))
+        if (strcmp(ctx->error, "") != 0)
         {
-            for (size_t i = 0; i < catch_block.quotation_size; i++)
+            for (size_t i = 0; i < catch_block->quotation_size; i++)
             {
-                if (hex_push(ctx, *catch_block.data.quotation_value[i]) != 0)
+                if (hex_push(ctx, catch_block->data.quotation_value[i]) != 0)
                 {
                     HEX_FREE(ctx, catch_block);
                     HEX_FREE(ctx, try_block);
+                    free(catch_block);
+                    free(try_block);
                     return 1;
                 }
             }
@@ -2277,24 +2903,37 @@ int hex_symbol_try(hex_context_t *ctx)
 
         strncpy(ctx->error, prevError, sizeof(ctx->error));
     }
+
+    HEX_FREE(ctx, catch_block);
+    HEX_FREE(ctx, try_block);
+    free(catch_block);
+    free(try_block);
     return 0;
 }
 
 int hex_symbol_throw(hex_context_t *ctx)
 {
+    HEX_ALLOC(message);
+    if (!message)
+    {
+        hex_error(ctx, "[symbol throw] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, message);
-    if (message.type == HEX_TYPE_INVALID)
+    ;
+    if (message->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, message);
         return 1;
     }
-    if (message.type != HEX_TYPE_STRING)
+    if (message->type != HEX_TYPE_STRING)
     {
         hex_error(ctx, "[symbol throw] String required");
         HEX_FREE(ctx, message);
         return 1;
     }
-    hex_error(ctx, message.data.str_value);
+    hex_error(ctx, message->data.str_value);
+    HEX_FREE(ctx, message);
     return 1;
 }
 
@@ -2302,9 +2941,15 @@ int hex_symbol_throw(hex_context_t *ctx)
 
 int hex_symbol_q(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol '] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
@@ -2318,27 +2963,32 @@ int hex_symbol_q(hex_context_t *ctx)
         return 1;
     }
 
-    *quotation = item;
+    *quotation = *item;
 
-    hex_item_t result;
-    result.type = HEX_TYPE_QUOTATION;
-    result.data.quotation_value = (hex_item_t **)malloc(sizeof(hex_item_t *));
-    if (!result.data.quotation_value)
+    hex_item_t *result = (hex_item_t *)malloc(sizeof(hex_item_t));
+    if (!result)
     {
-        HEX_FREE(ctx, item);
-        free(quotation);
         hex_error(ctx, "[symbol '] Memory allocation failed");
+        HEX_FREE(ctx, item);
         return 1;
     }
 
-    result.data.quotation_value[0] = quotation;
-    result.quotation_size = 1;
+    result->type = HEX_TYPE_QUOTATION;
+    result->data.quotation_value = (hex_item_t **)malloc(sizeof(hex_item_t *));
+    if (!result->data.quotation_value)
+    {
+        hex_error(ctx, "[symbol '] Memory allocation failed");
+        HEX_FREE(ctx, item);
+        return 1;
+    }
+
+    result->data.quotation_value[0] = quotation;
+    result->quotation_size = 1;
 
     if (HEX_PUSH(ctx, result) != 0)
     {
         HEX_FREE(ctx, item);
-        free(quotation);
-        free(result.data.quotation_value);
+        free(result->data.quotation_value);
         return 1;
     }
 
@@ -2347,21 +2997,37 @@ int hex_symbol_q(hex_context_t *ctx)
 
 int hex_symbol_map(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(action);
+    if (!action)
+    {
+        hex_error(ctx, "[symbol map] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, action);
-    if (action.type == HEX_TYPE_INVALID)
+    ;
+    if (action->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, action);
         return 1;
     }
+
+    HEX_ALLOC(list);
+    if (!list)
+    {
+        hex_error(ctx, "[symbol map] Memory allocation failed");
+        HEX_FREE(ctx, action);
+        return 1;
+    }
     HEX_POP(ctx, list);
-    if (list.type == HEX_TYPE_INVALID)
+    ;
+    if (list->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, action);
         HEX_FREE(ctx, list);
         return 1;
     }
-    if (list.type != HEX_TYPE_QUOTATION || action.type != HEX_TYPE_QUOTATION)
+
+    if (list->type != HEX_TYPE_QUOTATION || action->type != HEX_TYPE_QUOTATION)
     {
         hex_error(ctx, "[symbol map] Two quotations required");
         HEX_FREE(ctx, action);
@@ -2370,7 +3036,7 @@ int hex_symbol_map(hex_context_t *ctx)
     }
     else
     {
-        hex_item_t **quotation = (hex_item_t **)malloc(list.quotation_size * sizeof(hex_item_t *));
+        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error(ctx, "[symbol map] Memory allocation failed");
@@ -2378,18 +3044,18 @@ int hex_symbol_map(hex_context_t *ctx)
             HEX_FREE(ctx, list);
             return 1;
         }
-        for (size_t i = 0; i < list.quotation_size; i++)
+        for (size_t i = 0; i < list->quotation_size; i++)
         {
-            if (hex_push(ctx, *list.data.quotation_value[i]) != 0)
+            if (hex_push(ctx, list->data.quotation_value[i]) != 0)
             {
                 HEX_FREE(ctx, action);
                 HEX_FREE(ctx, list);
                 hex_free_list(ctx, quotation, i);
                 return 1;
             }
-            for (size_t j = 0; j < action.quotation_size; j++)
+            for (size_t j = 0; j < action->quotation_size; j++)
             {
-                if (hex_push(ctx, *action.data.quotation_value[j]) != 0)
+                if (hex_push(ctx, action->data.quotation_value[j]) != 0)
                 {
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, list);
@@ -2398,31 +3064,56 @@ int hex_symbol_map(hex_context_t *ctx)
                 }
             }
             quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-            *quotation[i] = hex_pop(ctx);
+            if (!quotation[i])
+            {
+                hex_error(ctx, "[symbol map] Memory allocation failed");
+                HEX_FREE(ctx, action);
+                HEX_FREE(ctx, list);
+                hex_free_list(ctx, quotation, i);
+                return 1;
+            }
+            *quotation[i] = *hex_copy_item(hex_pop(ctx));
         }
-        if (hex_push_quotation(ctx, quotation, list.quotation_size) != 0)
+        if (hex_push_quotation(ctx, quotation, list->quotation_size) != 0)
         {
             HEX_FREE(ctx, action);
             HEX_FREE(ctx, list);
-            hex_free_list(ctx, quotation, list.quotation_size);
+            hex_free_list(ctx, quotation, list->quotation_size);
             return 1;
         }
     }
+
+    HEX_FREE(ctx, action);
+    HEX_FREE(ctx, list);
     return 0;
 }
 
 // Stack manipulation symbols
 int hex_symbol_swap(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(a);
+    if (!a)
+    {
+        hex_error(ctx, "[symbol swap] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, a);
-    if (a.type == HEX_TYPE_INVALID)
+    ;
+    if (a->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, a);
         return 1;
     }
+    HEX_ALLOC(b);
+    if (!b)
+    {
+        hex_error(ctx, "[symbol swap] Memory allocation failed");
+        HEX_FREE(ctx, a);
+        return 1;
+    }
     HEX_POP(ctx, b);
-    if (b.type == HEX_TYPE_INVALID)
+    ;
+    if (b->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, b);
         HEX_FREE(ctx, a);
@@ -2445,14 +3136,26 @@ int hex_symbol_swap(hex_context_t *ctx)
 
 int hex_symbol_dup(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol dup] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
-    if (item.type == HEX_TYPE_INVALID)
+    ;
+    if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
-    hex_item_t copy = hex_copy_item(&item);
+    hex_item_t *copy = hex_copy_item(item);
+    if (!copy)
+    {
+        hex_error(ctx, "[symbol dup] Memory allocation failed");
+        HEX_FREE(ctx, item);
+        return 1;
+    }
     if (HEX_PUSH(ctx, copy) == 0 && HEX_PUSH(ctx, item) == 0)
     {
         HEX_FREE(ctx, item);
@@ -2465,7 +3168,6 @@ int hex_symbol_dup(hex_context_t *ctx)
 
 int hex_symbol_stack(hex_context_t *ctx)
 {
-
     hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack.top + 1) * sizeof(hex_item_t *));
     if (!quotation)
     {
@@ -2473,16 +3175,15 @@ int hex_symbol_stack(hex_context_t *ctx)
         return 1;
     }
     int count = 0;
-    for (size_t i = 0; i <= (size_t)ctx->stack.top + 1; i++)
+    for (size_t i = 0; i <= (size_t)ctx->stack.top; i++)
     {
-        quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
+        quotation[i] = hex_copy_item(ctx->stack.entries[i]);
         if (!quotation[i])
         {
             hex_error(ctx, "[symbol stack] Memory allocation failed");
             hex_free_list(ctx, quotation, count);
             return 1;
         }
-        *quotation[i] = hex_copy_item(&ctx->stack.entries[i]);
         count++;
     }
 
@@ -2497,7 +3198,12 @@ int hex_symbol_stack(hex_context_t *ctx)
 
 int hex_symbol_pop(hex_context_t *ctx)
 {
-
+    HEX_ALLOC(item);
+    if (!item)
+    {
+        hex_error(ctx, "[symbol pop] Memory allocation failed");
+        return 1;
+    }
     HEX_POP(ctx, item);
     HEX_FREE(ctx, item);
     return 0;

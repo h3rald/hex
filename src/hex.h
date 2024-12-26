@@ -63,7 +63,7 @@ typedef struct hex_token_t
     hex_token_type_t type;
     char *value;
     size_t quotation_size;
-    hex_file_position_t position;
+    hex_file_position_t *position;
 } hex_token_t;
 
 typedef struct hex_context_t hex_context_t;
@@ -86,25 +86,26 @@ typedef struct hex_item_t
 typedef struct hex_registry_entry
 {
     char *key;
-    hex_item_t value;
+    hex_item_t *value;
 } hex_registry_entry_t;
 
 typedef struct hex_stack_trace_t
 {
-    hex_token_t entries[HEX_STACK_TRACE_SIZE];
+    hex_token_t **entries;
     int start;   // Index of the oldest item
     size_t size; // Current number of items in the buffer
 } hex_stack_trace_t;
 
 typedef struct hex_stack_t
 {
-    hex_item_t entries[HEX_STACK_SIZE];
+    hex_item_t **entries;
     int top;
+    size_t capacity;
 } hex_stack_t;
 
 typedef struct hex_registry_t
 {
-    hex_registry_entry_t entries[HEX_REGISTRY_SIZE];
+    hex_registry_entry_t **entries;
     size_t size;
 } hex_registry_t;
 
@@ -118,7 +119,7 @@ typedef struct hex_doc_entry_t
 
 typedef struct hex_doc_dictionary_t
 {
-    hex_doc_entry_t entries[HEX_NATIVE_SYMBOLS];
+    hex_doc_entry_t **entries;
     size_t size;
 } hex_doc_dictionary_t;
 
@@ -245,38 +246,38 @@ void hex_print_help();
 void hex_print_docs(hex_doc_dictionary_t *docs);
 
 // Free data
-void hex_free_item(hex_context_t *ctx, hex_item_t item);
+void hex_free_item(hex_context_t *ctx, hex_item_t *item);
 void hex_free_token(hex_token_t *token);
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size);
 
 // Symbol management
 int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol);
 int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol);
-int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t value, int native);
+int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int native);
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)());
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
 
 // Errors and debugging
 void hex_error(hex_context_t *ctx, const char *format, ...);
 void hex_debug(hex_context_t *ctx, const char *format, ...);
-void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t item);
-void hex_print_item(FILE *stream, hex_item_t item);
+void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t *item);
+void hex_print_item(FILE *stream, hex_item_t *item);
 void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token);
 void print_stack_trace(hex_context_t *ctx);
 
 // Item constructors
-hex_item_t hex_string_item(hex_context_t *ctx, const char *value);
-hex_item_t hex_integer_item(hex_context_t *ctx, int value);
-hex_item_t hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, size_t size);
+hex_item_t *hex_string_item(hex_context_t *ctx, const char *value);
+hex_item_t *hex_integer_item(hex_context_t *ctx, int value);
+hex_item_t *hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, size_t size);
 
 // Stack management
-int hex_push(hex_context_t *ctx, hex_item_t item);
+int hex_push(hex_context_t *ctx, hex_item_t *item);
 int hex_push_integer(hex_context_t *ctx, int value);
 int hex_push_string(hex_context_t *ctx, const char *value);
 int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size);
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
-hex_item_t hex_pop(hex_context_t *ctx);
-hex_item_t hex_copy_item(const hex_item_t *item);
+hex_item_t *hex_pop(hex_context_t *ctx);
+hex_item_t *hex_copy_item(const hex_item_t *item);
 
 // Parser and interpreter
 hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);
@@ -401,8 +402,9 @@ int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecod
 char *hex_read_file(hex_context_t *ctx, const char *filename);
 
 // Common operations
-#define HEX_POP(ctx, x) hex_item_t x = hex_pop(ctx)
+#define HEX_POP(ctx, x) x = hex_pop(ctx)
 #define HEX_FREE(ctx, x) hex_free_item(ctx, x)
 #define HEX_PUSH(ctx, x) hex_push(ctx, x)
+#define HEX_ALLOC(x) hex_item_t *x = (hex_item_t *)malloc(sizeof(hex_item_t));
 
 #endif // HEX_H

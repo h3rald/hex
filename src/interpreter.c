@@ -44,7 +44,7 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
-            token->position.filename = strdup(filename);
+            token->position->filename = strdup(filename);
             result = hex_push_symbol(ctx, token);
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
@@ -80,7 +80,7 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
     }
     if (token != NULL && token->type == HEX_TOKEN_INVALID)
     {
-        token->position.filename = strdup(filename);
+        token->position->filename = strdup(filename);
         add_to_stack_trace(ctx, token);
         print_stack_trace(ctx);
         return 1;
