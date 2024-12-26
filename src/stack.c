@@ -9,12 +9,12 @@
 // Free a token
 void hex_free_token(hex_token_t *token)
 {
-    if (token)
-    {
-        free(token->value);
-        free(token);
-    }
+    if (token == NULL) return;
+    free(token->value);
+    token->value = NULL;
+    free(token); // Free the token itself
 }
+
 
 // Push functions
 int hex_push(hex_context_t *ctx, hex_item_t item)
@@ -152,42 +152,56 @@ hex_item_t hex_pop(hex_context_t *ctx)
     return ctx->stack.entries[ctx->stack.top--];
 }
 
-// Free a stack item
-void hex_free_item(hex_context_t *ctx, hex_item_t item)
+void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
-    hex_debug_item(ctx, "FREE", item);
-    if (item.type == HEX_TYPE_STRING && item.data.str_value != NULL)
-    {
-        item.data.str_value = NULL;
-        free(item.data.str_value);
-    }
+    if (!quotation) return;
 
-    else if (item.type == HEX_TYPE_QUOTATION && item.data.quotation_value != NULL)
+    for (size_t i = 0; i < size; i++)
     {
-        hex_free_list(ctx, item.data.quotation_value, item.quotation_size);
-        item.data.quotation_value = NULL;
-    }
-    else if (item.type == HEX_TYPE_NATIVE_SYMBOL && item.token->value != NULL)
-    {
-        item.token = NULL;
-        hex_free_token(item.token);
-    }
-    else if (item.type == HEX_TYPE_USER_SYMBOL && item.token->value != NULL)
-    {
-        item.token = NULL;
-        hex_free_token(item.token);
-    }
-    else
-    {
-        hex_debug(ctx, "FREE: ** nothing to free");
+        if (quotation[i])
+        {
+            hex_free_item(ctx, *quotation[i]); // Free each item
+            free(quotation[i]); // Free the pointer itself
+            quotation[i] = NULL; // Nullify after freeing
+        }
     }
 }
 
-void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
+void hex_free_item(hex_context_t *ctx, hex_item_t item)
 {
-    for (size_t i = 0; i < size; i++)
+    hex_debug_item(ctx, "FREE", item);
+
+    switch (item.type)
     {
-        HEX_FREE(ctx, *quotation[i]);
+        case HEX_TYPE_STRING:
+            if (item.data.str_value)
+            {
+                printf("Freeing: %s\n", item.data.str_value);
+                free(item.data.str_value);
+                item.data.str_value = NULL; // Prevent double free
+            }
+            break;
+
+        case HEX_TYPE_QUOTATION:
+            if (item.data.quotation_value)
+            {
+                hex_free_list(ctx, item.data.quotation_value, item.quotation_size);
+                free(item.data.quotation_value);
+                item.data.quotation_value = NULL; // Prevent double free
+            }
+            break;
+
+        case HEX_TYPE_NATIVE_SYMBOL:
+        case HEX_TYPE_USER_SYMBOL:
+            if (item.token)
+            {
+                hex_free_token(item.token);
+                item.token = NULL; // Prevent double free
+            }
+            break;
+
+        default:
+            break;
     }
 }
 
