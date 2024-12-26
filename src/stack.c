@@ -176,7 +176,6 @@ void hex_free_item(hex_context_t *ctx, hex_item_t item)
         case HEX_TYPE_STRING:
             if (item.data.str_value)
             {
-                printf("Freeing: %s\n", item.data.str_value);
                 free(item.data.str_value);
                 item.data.str_value = NULL; // Prevent double free
             }
