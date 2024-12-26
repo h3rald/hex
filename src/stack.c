@@ -190,3 +190,49 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         HEX_FREE(ctx, *quotation[i]);
     }
 }
+
+hex_item_t hex_copy_item(const hex_item_t *item)
+{
+    hex_item_t copy = *item; // Shallow copy the structure
+
+    switch (item->type)
+    {
+        case HEX_TYPE_STRING:
+            if (item->data.str_value)
+            {
+                copy.data.str_value = strdup(item->data.str_value); // Duplicate the string
+            }
+            break;
+
+        case HEX_TYPE_QUOTATION:
+            if (item->data.quotation_value)
+            {
+                copy.data.quotation_value = malloc(item->quotation_size * sizeof(hex_item_t *));
+                for (size_t i = 0; i < item->quotation_size; i++)
+                {
+                    copy.data.quotation_value[i] = malloc(sizeof(hex_item_t));
+                    *copy.data.quotation_value[i] = hex_copy_item(item->data.quotation_value[i]); // Deep copy each item
+                }
+            }
+            copy.quotation_size = item->quotation_size;
+            break;
+
+        case HEX_TYPE_NATIVE_SYMBOL:
+        case HEX_TYPE_USER_SYMBOL:
+            if (item->token)
+            {
+                copy.token = malloc(sizeof(hex_token_t));
+                *copy.token = *item->token; // Shallow copy the token structure
+                if (item->token->value)
+                {
+                    copy.token->value = strdup(item->token->value); // Deep copy the token's value
+                }
+            }
+            break;
+
+        default:
+            break;
+    }
+
+    return copy;
+}

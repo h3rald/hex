@@ -1208,6 +1208,7 @@ int hex_symbol_get(hex_context_t *ctx)
         return 1;
     }
     int result = 0;
+    hex_item_t copy;
     if (list.type == HEX_TYPE_QUOTATION)
     {
         if (index.type != HEX_TYPE_INTEGER)
@@ -1222,7 +1223,8 @@ int hex_symbol_get(hex_context_t *ctx)
         }
         else
         {
-            result = hex_push(ctx, *list.data.quotation_value[index.data.int_value]);
+            copy = hex_copy_item(list.data.quotation_value[index.data.int_value]);
+            result = hex_push(ctx, copy);
         }
     }
     else if (list.type == HEX_TYPE_STRING)
@@ -1240,7 +1242,8 @@ int hex_symbol_get(hex_context_t *ctx)
         else
         {
             char str[2] = {list.data.str_value[index.data.int_value], '\0'};
-            result = hex_push_string(ctx, str);
+            copy = hex_string_item(ctx, str);
+            result = hex_push(ctx, copy);
         }
     }
     else
@@ -1253,6 +1256,7 @@ int hex_symbol_get(hex_context_t *ctx)
 
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, index);
+        HEX_FREE(ctx, copy);
     }
     return result;
 }
@@ -2448,11 +2452,14 @@ int hex_symbol_dup(hex_context_t *ctx)
         HEX_FREE(ctx, item);
         return 1;
     }
-    if (HEX_PUSH(ctx, item) == 0 && HEX_PUSH(ctx, item) == 0)
+    hex_item_t copy = hex_copy_item(&item);
+    if (HEX_PUSH(ctx, copy) == 0 && HEX_PUSH(ctx, item) == 0)
     {
+        HEX_FREE(ctx, item);
         return 0;
     }
     HEX_FREE(ctx, item);
+    HEX_FREE(ctx, copy);
     return 1;
 }
 
@@ -2475,7 +2482,7 @@ int hex_symbol_stack(hex_context_t *ctx)
             hex_free_list(ctx, quotation, count);
             return 1;
         }
-        *quotation[i] = ctx->stack.entries[i];
+        *quotation[i] = hex_copy_item(&ctx->stack.entries[i]);
         count++;
     }
 
