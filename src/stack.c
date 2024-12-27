@@ -233,8 +233,6 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         if (quotation[i])
         {
             hex_free_item(ctx, quotation[i]); // Free each item
-            free(quotation[i]);               // Free the pointer itself
-            quotation[i] = NULL;              // Nullify after freeing
         }
     }
 }
@@ -279,6 +277,7 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
     }
 
     free(item); // Free the item itself
+    item = NULL;
 }
 
 hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
