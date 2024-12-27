@@ -2634,7 +2634,6 @@ int hex_symbol_if(hex_context_t *ctx)
                 }
             }
         }
-        HEX_FREE(ctx, evalResult);
     }
     return 0;
 }
@@ -2785,7 +2784,6 @@ int hex_symbol_while(hex_context_t *ctx)
                 HEX_FREE(ctx, evalResult);
                 break;
             }
-            HEX_FREE(ctx, evalResult);
 
             for (size_t i = 0; i < action->quotation_size; i++)
             {
