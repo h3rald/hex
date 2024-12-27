@@ -8,9 +8,16 @@
 
 void hex_set_doc(hex_doc_dictionary_t *dict, const char *name, const char *input, const char *output, const char *description)
 {
-    hex_doc_entry_t doc = {.name = name, .description = description, .input = input, .output = output};
-    // No overflow check as the dictionary is fixed size
-    *(dict->entries[dict->size]) = doc;
+    hex_doc_entry_t *doc = malloc(sizeof(hex_doc_entry_t));
+    if (doc == NULL)
+    {
+        return;
+    }
+    doc->name = name;
+    doc->description = description;
+    doc->input = input;
+    doc->output = output;
+    dict->entries[dict->size] = doc;
     dict->size++;
 }
 

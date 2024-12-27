@@ -67,6 +67,12 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
         return 1;
     }
 
+    ctx->registry->entries[ctx->registry->size] = malloc(sizeof(hex_registry_entry_t));
+    if (ctx->registry->entries[ctx->registry->size] == NULL)
+    {
+        hex_error(ctx, "Error: Memory allocation failed for registry entry");
+        return 1;
+    }
     ctx->registry->entries[ctx->registry->size]->key = strdup(key);
     ctx->registry->entries[ctx->registry->size]->value = value;
     ctx->registry->size++;

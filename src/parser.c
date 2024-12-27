@@ -33,6 +33,7 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = NULL;
+    token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
     token->position->line = position->line;
     token->position->column = position->column;
 
