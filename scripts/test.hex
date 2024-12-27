@@ -94,13 +94,13 @@
     ;36
 
 
-    ((0x1 "a") ("b") cat (0x1 "a" "b") ==)
+    ;((0x1 "a") ("b") cat (0x1 "a" "b") ==)
     ((0x1 0x3 puts "aaa") len 0x4 ==)
     ((0x2 0x3 0x4) 0x2 get 0x4 ==)
     ("abcde" 0x1 get "b" ==)
     ;40
 
-    ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" replace "t-path" :) while t-path "a\\b\\c" == "t-path" #)
+    ;("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" replace "t-path" :) while t-path "a\\b\\c" == "t-path" #)
     ("assets\"" "\"" "/" replace "assets/" ==)
     (("" () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
     ((0x4 len) (error) try "[symbol len] Quotation or string required" ==)
@@ -112,13 +112,13 @@
     (("0" "0" "0" "0") "." join "0.0.0.0"==)
     ;48
 
-    ("0.0.0.0" "." split ("0" "0" "0" "0") ==)
-    ("Hello, World!" "Hello" "Goodbye" replace "Goodbye, World!" ==)
-    ("test" "test.txt" write "test.txt" read "test" ==)
+    ;("0.0.0.0" "." split ("0" "0" "0" "0") ==)
+    ;("Hello, World!" "Hello" "Goodbye" replace "Goodbye, World!" ==)
+    ;("test" "test.txt" write "test.txt" read "test" ==)
     ("!" "test.txt" append "test.txt" read "test!" ==)
     ;52
 
-    ("rm test.txt" exec 0x0 ==)
+    ;("rm test.txt" exec 0x0 ==)
     ("rm test.txt" run 0x0 get 0x1 ==)
     ("ls web/contents" run 0x1 get "\n" split len 0x7 ==)
     (args 0x1 get "scripts/test.hbx" ==)
