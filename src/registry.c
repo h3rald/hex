@@ -70,7 +70,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
     ctx->registry->entries[ctx->registry->size] = malloc(sizeof(hex_registry_entry_t));
     if (ctx->registry->entries[ctx->registry->size] == NULL)
     {
-        hex_error(ctx, "Error: Memory allocation failed for registry entry");
+        hex_error(ctx, "[set symbol] Memory allocation failed for registry entry");
         return 1;
     }
     ctx->registry->entries[ctx->registry->size]->key = strdup(key);
@@ -85,7 +85,7 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
     hex_item_t *func_item = malloc(sizeof(hex_item_t));
     if (func_item == NULL)
     {
-        hex_error(ctx, "Error: Memory allocation failed for native symbol '%s'", name);
+        hex_error(ctx, "[set native symbol] Memory allocation failed for native symbol '%s'", name);
         return;
     }
     func_item->type = HEX_TYPE_NATIVE_SYMBOL;

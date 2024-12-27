@@ -342,14 +342,15 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
         if (copy->token->value == NULL)
         {
             hex_error(ctx, "[copy item] Failed to allocate memory for token value");
-            free(copy->token);
-            free(copy);
+            hex_free_token(copy->token);
+            hex_free_item(copy);
             return NULL;
         }
         break;
 
     default:
-        free(copy);
+        hex_error(ctx, "[copy item] Failed to copy %s item", hex_type(item->type));
+        hex_free_item(copy);
         return NULL;
     }
 
