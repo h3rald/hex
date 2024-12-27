@@ -211,7 +211,7 @@ int hex_symbol_type(hex_context_t *ctx)
         return 1;
     }
     int result = hex_push_string(ctx, hex_type(item->type));
-    HEX_FREE(ctx, item);
+    // HEX_FREE(ctx, item);
     return result;
 }
 
@@ -246,7 +246,6 @@ int hex_symbol_i(hex_context_t *ctx)
             return 1;
         }
     }
-    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -269,7 +268,7 @@ int hex_symbol_eval(hex_context_t *ctx)
     if (item->type == HEX_TYPE_STRING)
     {
         int result = hex_interpret(ctx, item->data.str_value, "<!>", 1, 1);
-        HEX_FREE(ctx, item);
+        // HEX_FREE(ctx, item);
         return result;
     }
     else if (item->type == HEX_TYPE_QUOTATION)
@@ -295,7 +294,6 @@ int hex_symbol_eval(hex_context_t *ctx)
             bytecode[i] = (uint8_t)item->data.quotation_value[i]->data.int_value;
         }
         int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size);
-        HEX_FREE(ctx, item);
         return result;
     }
     else
@@ -325,7 +323,6 @@ int hex_symbol_puts(hex_context_t *ctx)
     }
     hex_raw_print_item(stdout, *item);
     printf("\n");
-    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -346,7 +343,6 @@ int hex_symbol_warn(hex_context_t *ctx)
     }
     hex_raw_print_item(stderr, *item);
     printf("\n");
-    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -367,7 +363,6 @@ int hex_symbol_print(hex_context_t *ctx)
     }
     hex_raw_print_item(stdout, *item);
     fflush(stdout);
-    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -1635,7 +1630,7 @@ int hex_symbol_get(hex_context_t *ctx)
         return 1;
     }
     int result = 0;
-    hex_item_t copy;
+    hex_item_t *copy = malloc(sizeof(hex_item_t));
     if (list->type == HEX_TYPE_QUOTATION)
     {
         if (index->type != HEX_TYPE_INTEGER)
@@ -1650,8 +1645,8 @@ int hex_symbol_get(hex_context_t *ctx)
         }
         else
         {
-            copy = *hex_copy_item(ctx, list->data.quotation_value[index->data.int_value]);
-            result = hex_push(ctx, &copy);
+            copy = hex_copy_item(ctx, list->data.quotation_value[index->data.int_value]);
+            result = hex_push(ctx, copy);
         }
     }
     else if (list->type == HEX_TYPE_STRING)
@@ -1669,8 +1664,8 @@ int hex_symbol_get(hex_context_t *ctx)
         else
         {
             char str[2] = {list->data.str_value[index->data.int_value], '\0'};
-            copy = *hex_string_item(ctx, str);
-            result = hex_push(ctx, &copy);
+            copy = hex_string_item(ctx, str);
+            result = hex_push(ctx, copy);
         }
     }
     else
@@ -2328,7 +2323,6 @@ int hex_symbol_exit(hex_context_t *ctx)
         return 1;
     }
     int exit_status = item->data.int_value;
-    HEX_FREE(ctx, item);
     exit(exit_status);
     return 0; // This line will never be reached, but it's here to satisfy the return type
 }
@@ -2359,7 +2353,6 @@ int hex_symbol_exec(hex_context_t *ctx)
         hex_error(ctx, "[symbol exec] String required");
         result = 1;
     }
-    HEX_FREE(ctx, command);
     return result;
 }
 
@@ -2527,8 +2520,6 @@ int hex_symbol_run(hex_context_t *ctx)
     quotation[2]->type = HEX_TYPE_STRING;
     quotation[2]->data.str_value = strdup(error);
 
-    HEX_FREE(ctx, command);
-
     return hex_push_quotation(ctx, quotation, 3);
 }
 
@@ -2645,9 +2636,6 @@ int hex_symbol_if(hex_context_t *ctx)
         }
         HEX_FREE(ctx, evalResult);
     }
-    HEX_FREE(ctx, condition);
-    HEX_FREE(ctx, thenBlock);
-    HEX_FREE(ctx, elseBlock);
     return 0;
 }
 
@@ -2720,7 +2708,6 @@ int hex_symbol_when(hex_context_t *ctx)
                 }
             }
         }
-        HEX_FREE(ctx, evalResult);
     }
     if (result != 0)
     {
@@ -2812,8 +2799,6 @@ int hex_symbol_while(hex_context_t *ctx)
         }
     }
 
-    HEX_FREE(ctx, action);
-    HEX_FREE(ctx, condition);
     return 0;
 }
 
@@ -2895,9 +2880,6 @@ int hex_symbol_try(hex_context_t *ctx)
 
         strncpy(ctx->error, prevError, sizeof(ctx->error));
     }
-
-    HEX_FREE(ctx, catch_block);
-    HEX_FREE(ctx, try_block);
     return 0;
 }
 
@@ -2923,7 +2905,6 @@ int hex_symbol_throw(hex_context_t *ctx)
         return 1;
     }
     hex_error(ctx, message->data.str_value);
-    HEX_FREE(ctx, message);
     return 1;
 }
 
@@ -3072,8 +3053,6 @@ int hex_symbol_map(hex_context_t *ctx)
         }
     }
 
-    HEX_FREE(ctx, action);
-    HEX_FREE(ctx, list);
     return 0;
 }
 
@@ -3147,7 +3126,6 @@ int hex_symbol_dup(hex_context_t *ctx)
     }
     if (HEX_PUSH(ctx, copy) == 0 && HEX_PUSH(ctx, item) == 0)
     {
-        HEX_FREE(ctx, item);
         return 0;
     }
     HEX_FREE(ctx, item);
@@ -3194,7 +3172,10 @@ int hex_symbol_pop(hex_context_t *ctx)
         return 1;
     }
     HEX_POP(ctx, item);
-    HEX_FREE(ctx, item);
+    if (item != NULL)
+    {
+        HEX_FREE(ctx, item);
+    }
     return 0;
 }
 

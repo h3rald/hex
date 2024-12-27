@@ -260,7 +260,7 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
         if (item->data.quotation_value)
         {
             hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
-            free(item->data.quotation_value);
+            // free(item->data.quotation_value);
             item->data.quotation_value = NULL; // Prevent double free
         }
         break;
@@ -286,81 +286,71 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
     hex_item_t *copy = malloc(sizeof(hex_item_t));
     if (copy == NULL)
     {
+        hex_error(ctx, "[copy item] Failed to allocate memory for item");
         return NULL;
     }
 
-    *copy = *item; // Shallow copy the structure
-
+    copy->type = item->type;
     switch (item->type)
     {
     case HEX_TYPE_STRING:
-        if (item->data.str_value)
+        copy->data.str_value = strdup(item->data.str_value);
+        if (copy->data.str_value == NULL)
         {
-            copy->data.str_value = strdup(item->data.str_value); // Duplicate the string
-            if (copy->data.str_value == NULL)
-            {
-                HEX_FREE(ctx, copy);
-                return NULL;
-            }
+            hex_error(ctx, "[copy item] Failed to allocate memory for string");
+            free(copy);
+            return NULL;
         }
         break;
 
+    case HEX_TYPE_INTEGER:
+        copy->data.int_value = item->data.int_value;
+        break;
+
     case HEX_TYPE_QUOTATION:
-        if (item->data.quotation_value)
+        copy->quotation_size = item->quotation_size;
+        copy->data.quotation_value = malloc(copy->quotation_size * sizeof(hex_item_t *));
+        if (copy->data.quotation_value == NULL)
         {
-            copy->data.quotation_value = malloc(item->quotation_size * sizeof(hex_item_t *));
-            if (copy->data.quotation_value == NULL)
+            hex_error(ctx, "[copy item] Failed to allocate memory for quotation");
+            free(copy);
+            return NULL;
+        }
+        for (size_t i = 0; i < copy->quotation_size; i++)
+        {
+            copy->data.quotation_value[i] = hex_copy_item(ctx, item->data.quotation_value[i]);
+            if (copy->data.quotation_value[i] == NULL)
             {
-                HEX_FREE(ctx, copy);
+                hex_free_list(ctx, copy->data.quotation_value, i);
+                free(copy->data.quotation_value);
+                free(copy);
                 return NULL;
             }
-            for (size_t i = 0; i < item->quotation_size; i++)
-            {
-                if (item->data.quotation_value[i] != NULL)
-                {
-                    copy->data.quotation_value[i] = hex_copy_item(ctx, item->data.quotation_value[i]); // Deep copy each item
-                    if (copy->data.quotation_value[i] == NULL)
-                    {
-                        hex_free_list(ctx, copy->data.quotation_value, i);
-                        HEX_FREE(ctx, copy);
-                        return NULL;
-                    }
-                }
-                else
-                {
-                    copy->data.quotation_value[i] = NULL;
-                }
-            }
         }
-        copy->quotation_size = item->quotation_size;
         break;
 
     case HEX_TYPE_NATIVE_SYMBOL:
     case HEX_TYPE_USER_SYMBOL:
-        if (item->token)
+        copy->token = malloc(sizeof(hex_token_t));
+        if (copy->token == NULL)
         {
-            copy->token = malloc(sizeof(hex_token_t));
-            if (copy->token == NULL)
-            {
-                HEX_FREE(ctx, copy);
-                return NULL;
-            }
-            *copy->token = *item->token; // Shallow copy the token structure
-            if (item->token->value)
-            {
-                copy->token->value = strdup(item->token->value); // Deep copy the token's value
-                if (copy->token->value == NULL)
-                {
-                    hex_free_token(copy->token);
-                    HEX_FREE(ctx, copy);
-                    return NULL;
-                }
-            }
+            hex_error(ctx, "[copy item] Failed to allocate memory for token");
+            free(copy);
+            return NULL;
+        }
+        copy->token->value = strdup(item->token->value);
+        if (copy->token->value == NULL)
+        {
+            hex_error(ctx, "[copy item] Failed to allocate memory for token value");
+            free(copy->token);
+            free(copy);
+            return NULL;
         }
         break;
 
     default:
-        break;
+        free(copy);
+        return NULL;
     }
 
     return copy;
