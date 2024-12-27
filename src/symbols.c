@@ -1650,7 +1650,7 @@ int hex_symbol_get(hex_context_t *ctx)
         }
         else
         {
-            copy = *hex_copy_item(list->data.quotation_value[index->data.int_value]);
+            copy = *hex_copy_item(ctx, list->data.quotation_value[index->data.int_value]);
             result = hex_push(ctx, &copy);
         }
     }
@@ -3061,7 +3061,7 @@ int hex_symbol_map(hex_context_t *ctx)
                 hex_free_list(ctx, quotation, i);
                 return 1;
             }
-            *quotation[i] = *hex_copy_item(hex_pop(ctx));
+            *quotation[i] = *hex_copy_item(ctx, hex_pop(ctx));
         }
         if (hex_push_quotation(ctx, quotation, list->quotation_size) != 0)
         {
@@ -3138,7 +3138,7 @@ int hex_symbol_dup(hex_context_t *ctx)
         HEX_FREE(ctx, item);
         return 1;
     }
-    hex_item_t *copy = hex_copy_item(item);
+    hex_item_t *copy = hex_copy_item(ctx, item);
     if (!copy)
     {
         hex_error(ctx, "[symbol dup] Memory allocation failed");
@@ -3166,7 +3166,7 @@ int hex_symbol_stack(hex_context_t *ctx)
     int count = 0;
     for (size_t i = 0; i <= (size_t)ctx->stack->top; i++)
     {
-        quotation[i] = hex_copy_item(ctx->stack->entries[i]);
+        quotation[i] = hex_copy_item(ctx, ctx->stack->entries[i]);
         if (!quotation[i])
         {
             hex_error(ctx, "[symbol stack] Memory allocation failed");

@@ -44,7 +44,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
                     if (hex_push(ctx, value->data.quotation_value[i]) != 0)
                     {
                         HEX_FREE(ctx, value);
-                        free(value);
                         hex_debug_item(ctx, "FAIL", item);
                         return 1;
                     }
@@ -61,7 +60,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
             HEX_FREE(ctx, value);
             result = 1;
         }
-        free(value);
     }
     else if (item->type == HEX_TYPE_NATIVE_SYMBOL)
     {
@@ -83,7 +81,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
             HEX_FREE(ctx, value);
             result = 1;
         }
-        free(value);
     }
     else
     {
@@ -170,7 +167,6 @@ int hex_push_string(hex_context_t *ctx, const char *value)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
-    free(item);
     return result;
 }
 
@@ -182,7 +178,6 @@ int hex_push_integer(hex_context_t *ctx, int value)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
-    free(item);
     return result;
 }
 
@@ -194,7 +189,6 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
-    free(item);
     return result;
 }
 
@@ -206,7 +200,6 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
-    free(item);
     return result;
 }
 
@@ -218,14 +211,15 @@ hex_item_t *hex_pop(hex_context_t *ctx)
         hex_error(ctx, "[pop] Insufficient items on the stack");
         return NULL;
     }
-    hex_debug_item(ctx, " POP", ctx->stack->entries[ctx->stack->top]);
     hex_item_t *item = malloc(sizeof(hex_item_t));
     if (item == NULL)
     {
         hex_error(ctx, "[pop] Failed to allocate memory for item");
         return NULL;
     }
-    *item = *ctx->stack->entries[ctx->stack->top--];
+    *item = *ctx->stack->entries[ctx->stack->top];
+    hex_debug_item(ctx, " POP", item);
+    ctx->stack->top--;
     return item;
 }
 
@@ -287,7 +281,7 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
     free(item); // Free the item itself
 }
 
-hex_item_t *hex_copy_item(const hex_item_t *item)
+hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
 {
     hex_item_t *copy = malloc(sizeof(hex_item_t));
     if (copy == NULL)
@@ -305,7 +299,7 @@ hex_item_t *hex_copy_item(const hex_item_t *item)
             copy->data.str_value = strdup(item->data.str_value); // Duplicate the string
             if (copy->data.str_value == NULL)
             {
-                free(copy);
+                HEX_FREE(ctx, copy);
                 return NULL;
             }
         }
@@ -322,7 +316,7 @@ hex_item_t *hex_copy_item(const hex_item_t *item)
             }
             for (size_t i = 0; i < item->quotation_size; i++)
             {
-                copy->data.quotation_value[i] = hex_copy_item(item->data.quotation_value[i]); // Deep copy each item
+                copy->data.quotation_value[i] = hex_copy_item(ctx, item->data.quotation_value[i]); // Deep copy each item
                 if (copy->data.quotation_value[i] == NULL)
                 {
                     hex_free_list(NULL, copy->data.quotation_value, i);
