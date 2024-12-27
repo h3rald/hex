@@ -33,6 +33,7 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = NULL;
+    token->type = HEX_TOKEN_INVALID;
     token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
     token->position->line = position->line;
     token->position->column = position->column;
@@ -184,12 +185,14 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
     else if (*ptr == '(')
     {
         token->type = HEX_TOKEN_QUOTATION_START;
+        token->value = strdup("(");
         ptr++;
         position->column++;
     }
     else if (*ptr == ')')
     {
         token->type = HEX_TOKEN_QUOTATION_END;
+        token->value = strdup(")");
         ptr++;
         position->column++;
     }
@@ -218,21 +221,19 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
             token->position->column = position->column;
         }
     }
-
     *input = ptr;
     return token;
 }
 
 int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol)
 {
-    hex_doc_entry_t *doc = malloc(sizeof(hex_doc_entry_t *));
-    for (size_t i = 0; i < HEX_NATIVE_SYMBOLS; i++)
+    hex_doc_entry_t *doc = malloc(sizeof(hex_doc_entry_t));
+    if (hex_get_doc(ctx->docs, symbol, doc))
     {
-        if (hex_get_doc(ctx->docs, symbol, doc))
-        {
-            return 1;
-        }
+        free(doc);
+        return 1;
     }
+    free(doc);
     return 0;
 }
 
@@ -358,6 +359,5 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
     result->type = HEX_TYPE_QUOTATION;
     result->data.quotation_value = quotation;
     result->quotation_size = size;
-    hex_free_token(token);
     return 0;
 }

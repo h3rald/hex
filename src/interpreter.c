@@ -76,7 +76,6 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
                 int quotation_size = quotationItem->quotation_size;
                 result = hex_push_quotation(ctx, quotation, quotation_size);
             }
-            free(quotationItem);
         }
 
         if (result != 0)
@@ -95,6 +94,5 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
         print_stack_trace(ctx);
         return 1;
     }
-    hex_free_token(token);
     return 0;
 }

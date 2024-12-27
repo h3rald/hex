@@ -311,18 +311,24 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
             copy->data.quotation_value = malloc(item->quotation_size * sizeof(hex_item_t *));
             if (copy->data.quotation_value == NULL)
             {
-                free(copy);
+                HEX_FREE(ctx, copy);
                 return NULL;
             }
             for (size_t i = 0; i < item->quotation_size; i++)
             {
-                copy->data.quotation_value[i] = hex_copy_item(ctx, item->data.quotation_value[i]); // Deep copy each item
-                if (copy->data.quotation_value[i] == NULL)
+                if (item->data.quotation_value[i] != NULL)
                 {
-                    hex_free_list(NULL, copy->data.quotation_value, i);
-                    free(copy->data.quotation_value);
-                    free(copy);
-                    return NULL;
+                    copy->data.quotation_value[i] = hex_copy_item(ctx, item->data.quotation_value[i]); // Deep copy each item
+                    if (copy->data.quotation_value[i] == NULL)
+                    {
+                        hex_free_list(ctx, copy->data.quotation_value, i);
+                        HEX_FREE(ctx, copy);
+                        return NULL;
+                    }
+                }
+                else
+                {
+                    copy->data.quotation_value[i] = NULL;
                 }
             }
         }
@@ -336,7 +342,7 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
             copy->token = malloc(sizeof(hex_token_t));
             if (copy->token == NULL)
             {
-                free(copy);
+                HEX_FREE(ctx, copy);
                 return NULL;
             }
             *copy->token = *item->token; // Shallow copy the token structure
@@ -345,8 +351,8 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
                 copy->token->value = strdup(item->token->value); // Deep copy the token's value
                 if (copy->token->value == NULL)
                 {
-                    free(copy->token);
-                    free(copy);
+                    hex_free_token(copy->token);
+                    HEX_FREE(ctx, copy);
                     return NULL;
                 }
             }
