@@ -122,9 +122,9 @@ static void do_repl(void *v_ctx)
     // Tokenize and process the input
     hex_interpret(ctx, line, "<repl>", 1, 1);
     // Print the top item of the stack
-    if (ctx->stack.top >= 0)
+    if (ctx->stack->top >= 0)
     {
-        hex_print_item(stdout, *ctx->stack.entries[ctx->stack.top]);
+        hex_print_item(stdout, ctx->stack->entries[ctx->stack->top]);
         // hex_print_item(stdout, HEX_STACK[HEX_TOP]);
         printf("\n");
     }
