@@ -87,13 +87,14 @@
     (0x1 0x1 xor not)
     ;32
 
-    ("hello" " world" cat "hello world" ==)
-    ((0x1 "a") ("b") cat (0x1 "a" "b") ==)
     ((() not) (error) try "[symbol not] Integer required" ==)
     ((() 0x1 xor) (error) try "[symbol xor] Two integers required" ==)
+    ("aaaaa" len 0x5 ==)
+    ("hello" " world" cat "hello world" ==)
     ;36
 
-    ("aaaaa" len 0x5 ==)
+
+    ((0x1 "a") ("b") cat (0x1 "a" "b") ==)
     ((0x1 0x3 puts "aaa") len 0x4 ==)
     ((0x2 0x3 0x4) 0x2 get 0x4 ==)
     ("abcde" 0x1 get "b" ==)
