@@ -98,7 +98,8 @@ void print_stack_trace(hex_context_t *ctx)
     for (size_t i = 0; i < ctx->stack_trace->size; i++)
     {
         int index = (ctx->stack_trace->start + ctx->stack_trace->size - 1 - i) % HEX_STACK_TRACE_SIZE;
-        hex_token_t token = *ctx->stack_trace->entries[index];
-        fprintf(stderr, "  %s (%s:%d:%d)\n", token.value, token.position->filename, token.position->line, token.position->column);
+        hex_token_t *token = malloc(sizeof(hex_token_t));
+        token = ctx->stack_trace->entries[index];
+        fprintf(stderr, "  %s (%s:%d:%d)\n", token->value, token->position->filename, token->position->line, token->position->column);
     }
 }

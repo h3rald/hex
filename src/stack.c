@@ -207,16 +207,17 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 // Pop function
 hex_item_t *hex_pop(hex_context_t *ctx)
 {
-    if (ctx->stack->top < 0)
-    {
-        hex_error(ctx, "[pop] Insufficient items on the stack");
-        return NULL;
-    }
     hex_item_t *item = malloc(sizeof(hex_item_t));
     if (item == NULL)
     {
         hex_error(ctx, "[pop] Failed to allocate memory for item");
         return NULL;
+    }
+    if (ctx->stack->top < 0)
+    {
+        hex_error(ctx, "[pop] Insufficient items on the stack");
+        item->type = HEX_TYPE_INVALID;
+        return item;
     }
     *item = *ctx->stack->entries[ctx->stack->top];
     hex_debug_item(ctx, " POP", item);
