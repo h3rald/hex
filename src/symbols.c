@@ -48,6 +48,10 @@ int hex_symbol_store(hex_context_t *ctx)
         return 1;
     }
 
+    if (value->type == HEX_TYPE_QUOTATION)
+    {
+        value->operator= 0;
+    }
     if (hex_set_symbol(ctx, name->data.str_value, value, 0) != 0)
     {
         hex_error(ctx, "[symbol :] Failed to store symbol '%s'", name->data.str_value);
@@ -234,7 +238,7 @@ int hex_symbol_i(hex_context_t *ctx)
     }
     if (item->type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "[symbol .] Quotation required, got %s", hex_type(item->type));
+        hex_error(ctx, "[symbol .] Quotation required", hex_type(item->type));
         HEX_FREE(ctx, item);
         return 1;
     }

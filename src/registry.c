@@ -123,7 +123,7 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
                 return 0;
             }
             *result = *item;
-            hex_debug_item(ctx, "DONE: ", result);
+            hex_debug_item(ctx, "DONE", result);
             return 1;
         }
     }

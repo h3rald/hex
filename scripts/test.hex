@@ -27,6 +27,7 @@
         if
     ) 
         (
+            "test" throw
             ; Store error
             errors " - Test #" test-count dec cat ": " cat error cat ' cat "errors" :  
             "x" print
