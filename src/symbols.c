@@ -166,7 +166,7 @@ int hex_symbol_free(hex_context_t *ctx)
 
 int hex_symbol_symbols(hex_context_t *ctx)
 {
-    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry->size * sizeof(hex_item_t *));
+    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry->size * sizeof(hex_item_t));
     if (!quotation)
     {
         hex_error(ctx, "[symbol symbols] Memory allocation failed");
@@ -1550,7 +1550,7 @@ int hex_symbol_cat(hex_context_t *ctx)
         // Concatenate two quotations
         size_t newSize = list->quotation_size + value->quotation_size;
         hex_item_t **newQuotation = (hex_item_t **)realloc(
-            list->data.quotation_value, newSize * sizeof(hex_item_t *));
+            list->data.quotation_value, newSize * sizeof(hex_item_t));
         if (!newQuotation)
         {
             hex_error(ctx, "[symbol cat] Memory allocation failed");
@@ -1892,7 +1892,7 @@ int hex_symbol_split(hex_context_t *ctx)
         {
             // Separator is an empty string: split into individual characters
             size_t size = strlen(str->data.str_value);
-            hex_item_t **quotation = (hex_item_t **)malloc(size * sizeof(hex_item_t *));
+            hex_item_t **quotation = (hex_item_t **)malloc(size * sizeof(hex_item_t));
             if (!quotation)
             {
                 hex_error(ctx, "[symbol split] Memory allocation failed");
@@ -1932,7 +1932,7 @@ int hex_symbol_split(hex_context_t *ctx)
             char *token = strtok(str->data.str_value, separator->data.str_value);
             size_t capacity = 2;
             size_t size = 0;
-            hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
+            hex_item_t **quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t));
             if (!quotation)
             {
                 hex_error(ctx, "[symbol split] Memory allocation failed");
@@ -1945,7 +1945,7 @@ int hex_symbol_split(hex_context_t *ctx)
                     if (size >= capacity)
                     {
                         capacity *= 2;
-                        quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
+                        quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t));
                         if (!quotation)
                         {
                             hex_error(ctx, "[symbol split] Memory allocation failed");
@@ -2093,7 +2093,7 @@ int hex_symbol_read(hex_context_t *ctx)
                 size_t bytesRead = fread(buffer, 1, length, file);
                 if (hex_is_binary(buffer, bytesRead))
                 {
-                    hex_item_t **quotation = (hex_item_t **)malloc(bytesRead * sizeof(hex_item_t *));
+                    hex_item_t **quotation = (hex_item_t **)malloc(bytesRead * sizeof(hex_item_t));
                     if (!quotation)
                     {
                         hex_error(ctx, "[symbol read] Memory allocation failed");
@@ -2319,7 +2319,7 @@ int hex_symbol_append(hex_context_t *ctx)
 int hex_symbol_args(hex_context_t *ctx)
 {
 
-    hex_item_t **quotation = (hex_item_t **)malloc(ctx->argc * sizeof(hex_item_t *));
+    hex_item_t **quotation = (hex_item_t **)malloc(ctx->argc * sizeof(hex_item_t));
     if (!quotation)
     {
         hex_error(ctx, "[symbol args] Memory allocation failed");
@@ -2548,7 +2548,7 @@ int hex_symbol_run(hex_context_t *ctx)
 #endif
 
     // Push the return code, output, and error as a quotation
-    hex_item_t **quotation = (hex_item_t **)malloc(3 * sizeof(hex_item_t *));
+    hex_item_t **quotation = (hex_item_t **)malloc(3 * sizeof(hex_item_t));
     quotation[0] = (hex_item_t *)malloc(sizeof(hex_item_t));
     quotation[0]->type = HEX_TYPE_INTEGER;
     quotation[0]->data.int_value = return_code;
@@ -2984,7 +2984,7 @@ int hex_symbol_q(hex_context_t *ctx)
     }
 
     result->type = HEX_TYPE_QUOTATION;
-    result->data.quotation_value = (hex_item_t **)malloc(sizeof(hex_item_t *));
+    result->data.quotation_value = (hex_item_t **)malloc(sizeof(hex_item_t));
     if (!result->data.quotation_value)
     {
         hex_error(ctx, "[symbol '] Memory allocation failed");
@@ -3045,7 +3045,7 @@ int hex_symbol_map(hex_context_t *ctx)
     }
     else
     {
-        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t *));
+        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t));
         if (!quotation)
         {
             hex_error(ctx, "[symbol map] Memory allocation failed");
@@ -3174,14 +3174,24 @@ int hex_symbol_dup(hex_context_t *ctx)
 
 int hex_symbol_stack(hex_context_t *ctx)
 {
-    hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack->top + 1) * sizeof(hex_item_t *));
+    hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack->top + 2) * sizeof(hex_item_t));
     if (!quotation)
     {
         hex_error(ctx, "[symbol stack] Memory allocation failed");
         return 1;
     }
     int count = 0;
-    for (size_t i = 0; i <= (size_t)ctx->stack->top; i++)
+    if (ctx->stack->top == -1)
+    {
+        if (hex_push_quotation(ctx, NULL, 0) != 0)
+        {
+            hex_error(ctx, "[symbol stack] An error occurred while pushing empty quotation");
+            hex_free_list(ctx, quotation, count);
+            return 1;
+        }
+        return 0;
+    }
+    for (size_t i = 0; i <= (size_t)ctx->stack->top + 1; i++)
     {
         quotation[i] = hex_copy_item(ctx, ctx->stack->entries[i]);
         if (!quotation[i])
@@ -3193,7 +3203,7 @@ int hex_symbol_stack(hex_context_t *ctx)
         count++;
     }
 
-    if (hex_push_quotation(ctx, quotation, ctx->stack->top + 1) != 0)
+    if (hex_push_quotation(ctx, quotation, ctx->stack->top + 2) != 0)
     {
         hex_error(ctx, "[symbol stack] An error occurred while pushing quotation");
         hex_free_list(ctx, quotation, count);
