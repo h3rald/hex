@@ -406,7 +406,8 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     item->type = HEX_TYPE_NATIVE_SYMBOL;
     HEX_ALLOC(value);
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
-    token->value = (char *)symbol;
+    token->value = strdup(symbol);
+    token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
     token->position->line = 0;
     token->position->column = position;
     if (hex_get_symbol(ctx, token->value, value))
@@ -421,7 +422,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         hex_free_token(token);
         return 1;
     }
-    hex_debug(ctx, ">> NATSYM[X]: %s", opcode, symbol);
+    hex_debug(ctx, ">> NATSYM[%02x]: %s", opcode, token->value);
     *result = *item;
     return 0;
 }
@@ -459,6 +460,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
 
     token->value = (char *)malloc(length + 1);
     strncpy(token->value, value, length + 1);
+    token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
     token->position->line = 0;
     token->position->column = position;
 
@@ -505,7 +507,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         (*bytecode)++;
         (*size)--;
 
-        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+        HEX_ALLOC(item);
         switch (opcode)
         {
         case HEX_OP_PUSHIN:
@@ -546,7 +548,6 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
         }
         items[i] = item;
     }
-
     result->type = HEX_TYPE_QUOTATION;
     result->data.quotation_value = items;
     result->quotation_size = n_items;
@@ -599,7 +600,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
         bytecode++;
         size--;
 
-        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+        HEX_ALLOC(item);
         switch (opcode)
         {
         case HEX_OP_PUSHIN:
