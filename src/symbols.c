@@ -1198,14 +1198,20 @@ int hex_symbol_equal(hex_context_t *ctx)
     if ((a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER) || (a->type == HEX_TYPE_STRING && b->type == HEX_TYPE_STRING) || (a->type == HEX_TYPE_QUOTATION && b->type == HEX_TYPE_QUOTATION))
     {
         int result = hex_push_integer(ctx, hex_equal(a, b));
-        HEX_FREE(ctx, a);
-        HEX_FREE(ctx, b);
+        if (result != 0)
+        {
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);
+        } 
         return result;
     }
     // Different types => false
     int result = hex_push_integer(ctx, 0);
-    HEX_FREE(ctx, a);
-    HEX_FREE(ctx, b);
+    if (result != 0)
+    {
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+    }
     return result;
 }
 
@@ -1229,14 +1235,20 @@ int hex_symbol_notequal(hex_context_t *ctx)
     if ((a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER) || (a->type == HEX_TYPE_STRING && b->type == HEX_TYPE_STRING) || (a->type == HEX_TYPE_QUOTATION && b->type == HEX_TYPE_QUOTATION))
     {
         int result = hex_push_integer(ctx, !hex_equal(a, b));
-        HEX_FREE(ctx, a);
-        HEX_FREE(ctx, b);
+        if (result != 0)
+        {
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);
+        } 
         return result;
     }
     // Different types => true
     int result = hex_push_integer(ctx, 1);
-    HEX_FREE(ctx, a);
-    HEX_FREE(ctx, b);
+    if (result != 0)
+    {
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+    } 
     return result;
 }
 
@@ -1260,8 +1272,11 @@ int hex_symbol_greater(hex_context_t *ctx)
     hex_item_t *pa = a;
     hex_item_t *pb = b;
     int result = hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">"));
-    HEX_FREE(ctx, a);
-    HEX_FREE(ctx, b);
+    if (result != 0)
+    {
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+    } 
     return result;
 }
 
@@ -1285,8 +1300,11 @@ int hex_symbol_less(hex_context_t *ctx)
     hex_item_t *pa = a;
     hex_item_t *pb = b;
     int result = hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<"));
-    HEX_FREE(ctx, a);
-    HEX_FREE(ctx, b);
+    if (result != 0)
+    {
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+    } 
     return result;
 }
 
@@ -1310,8 +1328,11 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
     hex_item_t *pa = a;
     hex_item_t *pb = b;
     int result = hex_push_integer(ctx, hex_greater(ctx, pa, pb, ">") || hex_equal(a, b));
-    HEX_FREE(ctx, a);
-    HEX_FREE(ctx, b);
+    if (result != 0)
+    {
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+    } 
     return result;
 }
 
@@ -1335,8 +1356,11 @@ int hex_symbol_lessequal(hex_context_t *ctx)
     hex_item_t *pa = a;
     hex_item_t *pb = b;
     int result = hex_push_integer(ctx, hex_greater(ctx, pb, pa, "<") || hex_equal(a, b));
-    HEX_FREE(ctx, a);
-    HEX_FREE(ctx, b);
+    if (result != 0)
+    {
+        HEX_FREE(ctx, a);
+        HEX_FREE(ctx, b);
+    } 
     return result;
 }
 
@@ -1362,8 +1386,11 @@ int hex_symbol_and(hex_context_t *ctx)
     if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
         int result = hex_push_integer(ctx, a->data.int_value && b->data.int_value);
-        HEX_FREE(ctx, a);
-        HEX_FREE(ctx, b);
+        if (result != 0)
+        {
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);
+        } 
         return result;
     }
     hex_error(ctx, "[symbol and] Two integers required");
@@ -1392,8 +1419,11 @@ int hex_symbol_or(hex_context_t *ctx)
     if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
         int result = hex_push_integer(ctx, a->data.int_value || b->data.int_value);
-        HEX_FREE(ctx, a);
-        HEX_FREE(ctx, b);
+        if (result != 0)
+        {
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);   
+        }  
         return result;
     }
     hex_error(ctx, "[symbol or] Two integers required");
@@ -1419,7 +1449,10 @@ int hex_symbol_not(hex_context_t *ctx)
     if (a->type == HEX_TYPE_INTEGER)
     {
         int result = hex_push_integer(ctx, !a->data.int_value);
-        HEX_FREE(ctx, a);
+        if (result != 0)
+        {
+            HEX_FREE(ctx, a);
+        } 
         return result;
     }
     hex_error(ctx, "[symbol not] Integer required");
@@ -1460,8 +1493,11 @@ int hex_symbol_xor(hex_context_t *ctx)
     if (a->type == HEX_TYPE_INTEGER && b->type == HEX_TYPE_INTEGER)
     {
         int result = hex_push_integer(ctx, a->data.int_value ^ b->data.int_value);
-        HEX_FREE(ctx, a);
-        HEX_FREE(ctx, b);
+        if (result != 0)
+        {
+            HEX_FREE(ctx, a);
+            HEX_FREE(ctx, b);
+        } 
         return result;
     }
     hex_error(ctx, "[symbol xor] Two integers required");
