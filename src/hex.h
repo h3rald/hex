@@ -278,6 +278,7 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size);
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
 hex_item_t *hex_pop(hex_context_t *ctx);
 hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item);
+hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token);
 
 // Parser and interpreter
 hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);

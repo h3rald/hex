@@ -75,7 +75,7 @@ void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token)
     if (ctx->stack_trace->size < HEX_STACK_TRACE_SIZE)
     {
         // Buffer is not full; add item
-        ctx->stack_trace->entries[index] = token;
+        ctx->stack_trace->entries[index] = hex_copy_token(ctx, token);
         ctx->stack_trace->size++;
     }
     else
