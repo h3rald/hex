@@ -443,7 +443,7 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
 
     default:
         // Unsupported type
-        hex_error(ctx, "[copy item] Unsupported item type: %d", item->type);
+        hex_error(ctx, "[copy item] Unsupported item type: %s", hex_type(item->type));
         hex_free_item(ctx, copy);
         return NULL;
     }

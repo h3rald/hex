@@ -3174,6 +3174,7 @@ int hex_symbol_dup(hex_context_t *ctx)
 
 int hex_symbol_stack(hex_context_t *ctx)
 {
+
     hex_item_t **quotation = (hex_item_t **)malloc((ctx->stack->top + 2) * sizeof(hex_item_t));
     if (!quotation)
     {
@@ -3183,15 +3184,14 @@ int hex_symbol_stack(hex_context_t *ctx)
     int count = 0;
     if (ctx->stack->top == -1)
     {
-        if (hex_push_quotation(ctx, NULL, 0) != 0)
+        if (hex_push_quotation(ctx, quotation, 0) != 0)
         {
             hex_error(ctx, "[symbol stack] An error occurred while pushing empty quotation");
-            hex_free_list(ctx, quotation, count);
             return 1;
         }
         return 0;
     }
-    for (size_t i = 0; i <= (size_t)ctx->stack->top + 1; i++)
+    for (int i = 0; i <= ctx->stack->top; i++)
     {
         quotation[i] = hex_copy_item(ctx, ctx->stack->entries[i]);
         if (!quotation[i])
@@ -3203,7 +3203,7 @@ int hex_symbol_stack(hex_context_t *ctx)
         count++;
     }
 
-    if (hex_push_quotation(ctx, quotation, ctx->stack->top + 2) != 0)
+    if (hex_push_quotation(ctx, quotation, count) != 0)
     {
         hex_error(ctx, "[symbol stack] An error occurred while pushing quotation");
         hex_free_list(ctx, quotation, count);
