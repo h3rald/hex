@@ -80,6 +80,7 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
 
         if (result != 0)
         {
+            hex_error(ctx, "[interpret] Unable to push: %s", token->value);
             hex_free_token(token);
             print_stack_trace(ctx);
             return result;

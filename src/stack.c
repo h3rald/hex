@@ -51,6 +51,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
             }
             else
             {
+                hex_debug_item(ctx, "Value: ", value);
                 result = hex_push(ctx, value);
             }
         }
@@ -133,13 +134,13 @@ hex_item_t *hex_integer_item(hex_context_t *ctx, int value)
 
 hex_item_t *hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
-    (void)(ctx);
     hex_item_t *item = malloc(sizeof(hex_item_t));
     if (item == NULL)
     {
         hex_error(ctx, "[create quotation] Failed to allocate memory for item");
         return NULL;
     }
+    item->operator = 0;
     item->type = HEX_TYPE_QUOTATION;
     item->data.quotation_value = quotation;
     item->quotation_size = size;

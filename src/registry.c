@@ -105,7 +105,9 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
     {
         if (strcmp(ctx->registry->entries[i]->key, key) == 0)
         {
+            hex_debug(ctx, "LOOK: %s", key);
             *result = *ctx->registry->entries[i]->value;
+            //hex_debug_item(ctx, "DONE: ", result);
             return 1;
         }
     }
