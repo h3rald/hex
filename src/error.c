@@ -93,7 +93,7 @@ void print_stack_trace(hex_context_t *ctx)
     {
         return;
     }
-    fprintf(stderr, "[stack trace] (most recent symbol first):\n");
+    fprintf(stderr, "[stack trace] (most recent operator symbol first):\n");
 
     for (size_t i = 0; i < ctx->stack_trace->size; i++)
     {

@@ -36,9 +36,9 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         }
         if (hex_get_symbol(ctx, item->token->value, value))
         {
-            add_to_stack_trace(ctx, item->token);
             if (value->type == HEX_TYPE_QUOTATION && value->operator)
             {
+                add_to_stack_trace(ctx, item->token);
                 for (size_t i = 0; i < value->quotation_size; i++)
                 {
                     if (hex_push(ctx, value->data.quotation_value[i]) != 0)
