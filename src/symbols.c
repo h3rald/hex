@@ -1479,7 +1479,8 @@ int hex_symbol_cat(hex_context_t *ctx)
         hex_error(ctx, "[symbol cat] Memory allocation failed");
         return 1;
     }
-    HEX_POP(ctx, value);
+    //HEX_POP(ctx, value);
+    value = hex_pop(ctx);
     if (value->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, value);
