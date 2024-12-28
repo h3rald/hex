@@ -234,7 +234,7 @@ int hex_symbol_i(hex_context_t *ctx)
     }
     if (item->type != HEX_TYPE_QUOTATION)
     {
-        hex_error(ctx, "[symbol .] Quotation required");
+        hex_error(ctx, "[symbol .] Quotation required, got %s", hex_type(item->type));
         HEX_FREE(ctx, item);
         return 1;
     }
@@ -1202,7 +1202,7 @@ int hex_symbol_equal(hex_context_t *ctx)
         {
             HEX_FREE(ctx, a);
             HEX_FREE(ctx, b);
-        } 
+        }
         return result;
     }
     // Different types => false
@@ -1239,7 +1239,7 @@ int hex_symbol_notequal(hex_context_t *ctx)
         {
             HEX_FREE(ctx, a);
             HEX_FREE(ctx, b);
-        } 
+        }
         return result;
     }
     // Different types => true
@@ -1248,7 +1248,7 @@ int hex_symbol_notequal(hex_context_t *ctx)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
-    } 
+    }
     return result;
 }
 
@@ -1276,7 +1276,7 @@ int hex_symbol_greater(hex_context_t *ctx)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
-    } 
+    }
     return result;
 }
 
@@ -1304,7 +1304,7 @@ int hex_symbol_less(hex_context_t *ctx)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
-    } 
+    }
     return result;
 }
 
@@ -1332,7 +1332,7 @@ int hex_symbol_greaterequal(hex_context_t *ctx)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
-    } 
+    }
     return result;
 }
 
@@ -1360,7 +1360,7 @@ int hex_symbol_lessequal(hex_context_t *ctx)
     {
         HEX_FREE(ctx, a);
         HEX_FREE(ctx, b);
-    } 
+    }
     return result;
 }
 
@@ -1390,7 +1390,7 @@ int hex_symbol_and(hex_context_t *ctx)
         {
             HEX_FREE(ctx, a);
             HEX_FREE(ctx, b);
-        } 
+        }
         return result;
     }
     hex_error(ctx, "[symbol and] Two integers required");
@@ -1422,8 +1422,8 @@ int hex_symbol_or(hex_context_t *ctx)
         if (result != 0)
         {
             HEX_FREE(ctx, a);
-            HEX_FREE(ctx, b);   
-        }  
+            HEX_FREE(ctx, b);
+        }
         return result;
     }
     hex_error(ctx, "[symbol or] Two integers required");
@@ -1452,7 +1452,7 @@ int hex_symbol_not(hex_context_t *ctx)
         if (result != 0)
         {
             HEX_FREE(ctx, a);
-        } 
+        }
         return result;
     }
     hex_error(ctx, "[symbol not] Integer required");
@@ -1497,7 +1497,7 @@ int hex_symbol_xor(hex_context_t *ctx)
         {
             HEX_FREE(ctx, a);
             HEX_FREE(ctx, b);
-        } 
+        }
         return result;
     }
     hex_error(ctx, "[symbol xor] Two integers required");
@@ -1515,7 +1515,7 @@ int hex_symbol_cat(hex_context_t *ctx)
         hex_error(ctx, "[symbol cat] Memory allocation failed");
         return 1;
     }
-    //HEX_POP(ctx, value);
+    // HEX_POP(ctx, value);
     value = hex_pop(ctx);
     if (value->type == HEX_TYPE_INVALID)
     {

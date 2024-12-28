@@ -90,11 +90,16 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
     }
     func_item->type = HEX_TYPE_NATIVE_SYMBOL;
     func_item->data.fn_value = func;
+    // Need to create a fake token for native symbols as well.
+    func_item->token = malloc(sizeof(hex_token_t));
+    func_item->token->type = HEX_TOKEN_SYMBOL;
+    func_item->token->value = strdup(name);
+    func_item->token->position = NULL;
 
     if (hex_set_symbol(ctx, name, func_item, 1) != 0)
     {
         hex_error(ctx, "Error: Failed to register native symbol '%s'", name);
-        free(func_item);
+        hex_free_item(ctx, func_item);
     }
 }
 
@@ -105,9 +110,20 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
     {
         if (strcmp(ctx->registry->entries[i]->key, key) == 0)
         {
+            if (ctx->registry->entries[i]->value == NULL)
+            {
+                hex_error(ctx, "[get symbol] Registry entry value is NULL for key: %s", key);
+                return 0;
+            }
             hex_debug(ctx, "LOOK: %s", key);
-            *result = *ctx->registry->entries[i]->value;
-            //hex_debug_item(ctx, "DONE: ", result);
+            hex_item_t *item = hex_copy_item(ctx, ctx->registry->entries[i]->value);
+            if (item == NULL)
+            {
+                hex_error(ctx, "[get symbol] Failed to copy item for key: %s", key);
+                return 0;
+            }
+            *result = *item;
+            hex_debug_item(ctx, "DONE: ", result);
             return 1;
         }
     }
