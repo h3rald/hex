@@ -149,15 +149,21 @@ int hex_symbol_free(hex_context_t *ctx)
     {
         if (strcmp(ctx->registry->entries[i]->key, item->data.str_value) == 0)
         {
+            // Free the memory associated with this entry
             free(ctx->registry->entries[i]->key);
             HEX_FREE(ctx, ctx->registry->entries[i]->value);
+            // Shift entries down to fill the gap
             for (size_t j = i; j < ctx->registry->size - 1; j++)
             {
                 ctx->registry->entries[j] = ctx->registry->entries[j + 1];
             }
+            // Clear the last entry to avoid dangling pointers
+            ctx->registry->entries[ctx->registry->size - 1] = NULL;
+            // Decrement the registry size
             ctx->registry->size--;
+            // Free the `item` as it is no longer needed
             HEX_FREE(ctx, item);
-            return 0;
+            return 0; // Exit after removing the entry
         }
     }
     HEX_FREE(ctx, item);
