@@ -6,6 +6,96 @@
 // Registry Implementation            //
 ////////////////////////////////////////
 
+static size_t hash_function(const char *key, size_t bucket_count)
+{
+    size_t hash = 5381;
+    while (*key)
+    {
+        hash = ((hash << 5) + hash) + (unsigned char)(*key); // hash * 33 + key[i]
+        key++;
+    }
+    return hash % bucket_count;
+}
+
+
+hex_registry_t *hex_registry_create()
+{
+    hex_registry_t *registry = malloc(sizeof(hex_registry_t));
+    if (registry == NULL)
+    {
+        return NULL;
+    }
+
+    registry->bucket_count = HEX_INITIAL_REGISTRY_SIZE;
+    registry->size = 0;
+    registry->buckets = calloc(HEX_INITIAL_REGISTRY_SIZE, sizeof(hex_registry_entry_t *));
+    if (registry->buckets == NULL)
+    {
+        free(registry);
+        return NULL;
+    }
+
+    return registry;
+}
+
+int hex_registry_resize(hex_context_t *ctx)
+{
+    hex_registry_t *registry = ctx->registry;
+    
+
+    hex_registry_entry_t **new_buckets = calloc(registry->bucket_count * 2, sizeof(hex_registry_entry_t *));
+    if (new_buckets == NULL)
+    {
+        return 1; // Memory allocation failed
+    }
+
+    // Rehash all existing entries into the new buckets
+    for (size_t i = 0; i < registry->bucket_count; i++)
+    {
+        hex_registry_entry_t *entry = registry->buckets[i];
+        while (entry)
+        {
+            hex_registry_entry_t *next = entry->next;
+
+            // Recompute hash index
+            size_t new_bucket_index = hash_function(entry->key, new_bucket_count);
+            entry->next = new_buckets[new_bucket_index];
+            new_buckets[new_bucket_index] = entry;
+
+            entry = next;
+        }
+    }
+
+    // Replace old buckets with new ones
+    free(registry->buckets);
+    registry->buckets = new_buckets;
+    registry->bucket_count = new_bucket_count;
+
+    return 0;
+}
+
+void hex_registry_destroy(hex_context_t *ctx)
+{
+    hex_registry_t *registry = ctx->registry;
+
+    for (size_t i = 0; i < registry->bucket_count; i++)
+    {
+        hex_registry_entry_t *entry = registry->buckets[i];
+        while (entry)
+        {
+            hex_registry_entry_t *next = entry->next;
+            free(entry->key);
+            hex_free_item(NULL, entry->value);
+            free(entry);
+            entry = next;
+        }
+    }
+
+    free(registry->buckets);
+    free(registry);
+}
+
+
 int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
 {
     // Check that key starts with a letter, or underscore
@@ -36,8 +126,50 @@ int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
     return 1;
 }
 
+int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value)
+{
+    hex_registry_t *registry = ctx->registry;
+    if (hex_valid_user_symbol(ctx, key) == 0)
+    {
+        return 1;
+    }
+
+    size_t bucket_index = hash_function(key, registry->bucket_count);
+    hex_registry_entry_t *entry = registry->buckets[bucket_index];
+
+    // Search for an existing key in the bucket
+    while (entry)
+    {
+        if (strcmp(entry->key, key) == 0)
+        {
+            // Key already exists, update its value
+            hex_free_item(NULL, entry->value); // Free old value
+            entry->value = value;
+            return 0;
+        }
+        entry = entry->next;
+    }
+
+    // Add a new entry to the bucket
+    hex_registry_entry_t *new_entry = malloc(sizeof(hex_registry_entry_t));
+    if (new_entry == NULL)
+    {
+        return 1; // Memory allocation failed
+    }
+
+    new_entry->key = strdup(key);
+    new_entry->value = value;
+    new_entry->next = registry->buckets[bucket_index];
+    registry->buckets[bucket_index] = new_entry;
+
+    registry->size++;
+
+    return 0;
+}
+
+
 // Add a symbol to the registry
-int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int native)
+int hex_set_symbolOLD(hex_context_t *ctx, const char *key, hex_item_t *value, int native)
 {
 
     if (!native && hex_valid_user_symbol(ctx, key) == 0)
