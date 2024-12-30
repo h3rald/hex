@@ -59,6 +59,7 @@ hex
 src/hex.c
 example.hex
 web/out/
+web/out2/
 web/assets/hex.js
 web/assets/hex.wasm
 *.com.dbg

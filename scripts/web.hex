@@ -4,7 +4,7 @@
 "web/assets" "d-assets" :
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
-"web/out" "d-out" :
+"web/out2" "d-out" :
 "releases" "d-releases" :
 
 ; Get all files from a directory
@@ -69,10 +69,10 @@ d-templates "/page.html" cat "t-page" :
     ; Push highlighted text on the stack
     t-text
     ; Free temporary symbols
-    "t-text" #
-    "t-count" #
-    "t-delimiter" #
-    "t-replacement" #
+    ;"t-text" #
+    ;"t-count" #
+    ;"t-delimiter" #
+    ;"t-replacement" #
 ) "highlight" ::
 
 ; Convenience symbol for debugging
@@ -92,9 +92,9 @@ d-templates "/page.html" cat "t-page" :
         (pt-content pt-tag tag pt-repl replace "pt-content" :)
     while 
     pt-content
-    "pt-repl"    #
-    "pt-tag"     #
-    "pt-content" #
+    ;"pt-repl"    #
+    ;"pt-tag"     #
+    ;"pt-content" #
 ) "process-tag" ::
 
 
@@ -122,10 +122,10 @@ d-templates "/page.html" cat "t-page" :
     t-repl 
     process-tag
     ; Free temporary symbols
-    "t-repl" #
-    "t-symtag" #
-    "t-href" #
-    "t-symbol" #
+    ;"t-repl" #
+    ;"t-symtag" #
+    ;"t-href" #
+    ;"t-symbol" #
 ) "process-symbol" ::
 
 ; Load releases content for changelog
@@ -141,8 +141,8 @@ d-templates "/page.html" cat "t-page" :
             _releases_count 0x1 - "_releases_count" :
         )
     while
-    "_releases_count"        #
-    "id-release"    #
+    ;"_releases_count"        #
+    ;"id-release"    #
 ) "process-releases" ::
 
 ; Create changelog toc
@@ -165,8 +165,8 @@ d-templates "/page.html" cat "t-page" :
     "</ul>\n" 
     cat cat
     "changelog-toc" : 
-    "_gct_count"        #
-    "id-release"    #
+    ;"_gct_count"        #
+    ;"id-release"    #
 
 ) "generate-changelog-toc" ::
 
@@ -191,7 +191,7 @@ d-contents "/" "changelog.html" cat cat read
         _c 0x1 + "_c" :
     )
 while
-"_c" #
+;"_c" #
 
 ; Write CHANGELOG.md
 changelog-content
@@ -223,7 +223,7 @@ changelog-content
                 _i 0x1 + "_i" :
             )
         while
-        "_i" #
+        ;"_i" #
         ; Highlight syntax
         new-content  highlight "new-content" :
         (fn-content "home.html" ==)
@@ -233,6 +233,7 @@ changelog-content
             ) 
             (
                 (d-out id-content "index.html") () map "/" join "dst-file" :
+                ("sh -c \"mkdir -p " d-out "/" id-content "\"") () map "" join exec
             )
         if
         "  - Writing: " dst-file cat puts
@@ -240,7 +241,7 @@ changelog-content
         _c 0x1 + "_c" :
     )
 while
-"_c" #
+;"_c" #
 
 
 ; Write assets
@@ -259,7 +260,7 @@ while
         _c 0x1 + "_c" :
     )
 while
-"_c" #
+;"_c" #
 
 "*** Done!" puts
 
