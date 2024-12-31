@@ -136,6 +136,12 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
         return 1;
     }
     
+    if (!native && hex_valid_native_symbol(ctx, key)
+    {
+        hex_error(ctx, "[set symbol] Cannot overwrite native symbol '%s'", key);
+        return 1;
+    }
+    
     if ((float)registry->size / registry->bucket_count > 0.75)
     {
         hex_registry_resize(ctx);
