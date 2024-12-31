@@ -241,7 +241,7 @@ int hex_symbol_i(hex_context_t *ctx)
     {
         if (hex_push(ctx, item->data.quotation_value[i]) != 0)
         {
-            HEX_FREE(ctx, item);
+            //HEX_FREE(ctx, item);
             return 1;
         }
     }
