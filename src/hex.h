@@ -251,12 +251,16 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item);
 void hex_free_token(hex_token_t *token);
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size);
 
-// Symbol management
+// Symbol and registry management
+hex_registry_t *hex_registry_create();
+int hex_registry_resize(hex_context_t *ctx);
+void hex_registry_destroy(hex_context_t *ctx);
 int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol);
 int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol);
 int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int native);
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)());
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
+int hex_delete_symbol(hex_context_t *ctx, const char *key);
 
 // Errors and debugging
 void hex_error(hex_context_t *ctx, const char *format, ...);

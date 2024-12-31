@@ -126,12 +126,18 @@ int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
     return 1;
 }
 
-int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value)
+int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int native)
 {
     hex_registry_t *registry = ctx->registry;
-    if (hex_valid_user_symbol(ctx, key) == 0)
+    if (!native && hex_valid_user_symbol(ctx, key) == 0)
     {
+        hex_error(ctx, "[set symbol] Invalid user symbol %s", name);
         return 1;
+    }
+    
+    if ((float)registry->size / registry->bucket_count > 0.75)
+    {
+        hex_registry_resize(registry, registry->bucket_count * 2);
     }
 
     size_t bucket_index = hash_function(key, registry->bucket_count);
@@ -168,50 +174,6 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value)
 }
 
 
-// Add a symbol to the registry
-int hex_set_symbolOLD(hex_context_t *ctx, const char *key, hex_item_t *value, int native)
-{
-
-    if (!native && hex_valid_user_symbol(ctx, key) == 0)
-    {
-        return 1;
-    }
-    for (size_t i = 0; i < ctx->registry->size; i++)
-    {
-        if (strcmp(ctx->registry->entries[i]->key, key) == 0)
-        {
-            if (ctx->registry->entries[i]->value->type == HEX_TYPE_NATIVE_SYMBOL)
-            {
-                hex_error(ctx, "[set symbol] Cannot overwrite native symbol '%s'", key);
-                return 1;
-            }
-            free(ctx->registry->entries[i]->key);
-            ctx->registry->entries[i]->key = strdup(key);
-            ctx->registry->entries[i]->value = value;
-            return 0;
-        }
-    }
-
-    if (ctx->registry->size >= HEX_REGISTRY_SIZE)
-    {
-        hex_error(ctx, "Registry overflow");
-        hex_free_token(value->token);
-        return 1;
-    }
-
-    ctx->registry->entries[ctx->registry->size] = malloc(sizeof(hex_registry_entry_t));
-    if (ctx->registry->entries[ctx->registry->size] == NULL)
-    {
-        hex_error(ctx, "[set symbol] Memory allocation failed for registry entry");
-        return 1;
-    }
-    ctx->registry->entries[ctx->registry->size]->key = strdup(key);
-    ctx->registry->entries[ctx->registry->size]->value = value;
-    ctx->registry->size++;
-    return 0;
-}
-
-// Register a native symbol
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 {
     hex_item_t *func_item = malloc(sizeof(hex_item_t));
@@ -235,29 +197,68 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
     }
 }
 
-// Get a symbol value from the registry
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
-    for (size_t i = 0; i < ctx->registry->size; i++)
+    hex_registry_t *registry = ctx->registry;
+    hex_debug(ctx, "LOOK: %s", key);
+    size_t bucket_index = hash_function(key) % registry->bucket_count;
+
+    hex_registry_entry_t *entry = registry->buckets[bucket_index];
+    while (entry != NULL)
     {
-        if (strcmp(ctx->registry->entries[i]->key, key) == 0)
+        if (strcmp(entry->key, key) == 0)
         {
-            if (ctx->registry->entries[i]->value == NULL)
-            {
-                hex_error(ctx, "[get symbol] Registry entry value is NULL for key: %s", key);
-                return 0;
-            }
-            hex_debug(ctx, "LOOK: %s", key);
-            hex_item_t *item = hex_copy_item(ctx, ctx->registry->entries[i]->value);
-            if (item == NULL)
+            // Key found, copy the value to result
+            *result = hex_copy_item(ctx, entry->value); // Copy the value structure
+            if (result == NULL)
             {
                 hex_error(ctx, "[get symbol] Failed to copy item for key: %s", key);
                 return 0;
             }
-            *result = *item;
             hex_debug_item(ctx, "DONE", result);
-            return 1;
+            return 1;                  // Success
         }
+        entry = entry->next; // Move to the next entry in the bucket
     }
+
+    hex_debug_item(ctx, "FAIL", result);
+    // Key not found
     return 0;
+}
+
+int hex_delete_symbol(hex_context_t *ctx, const char *key)
+{
+    hex_registry_t *registry = ctx->registry;
+
+    size_t bucket_index = hash_function(key, registry->bucket_count);
+    hex_registry_entry_t *entry = registry->buckets[bucket_index];
+    hex_registry_entry_t *prev = NULL;
+
+    while (entry)
+    {
+        if (strcmp(entry->key, key) == 0)
+        {
+            // Key found, remove it
+            if (prev)
+            {
+                prev->next = entry->next;
+            }
+            else
+            {
+                registry->buckets[bucket_index] = entry->next;
+            }
+
+            free(entry->key);
+            hex_free_item(NULL, entry->value);
+            free(entry);
+            registry->size--;
+
+            return 0;
+        }
+
+        prev = entry;
+        entry = entry->next;
+    }
+
+    return 1; // Key not found
 }
