@@ -156,41 +156,78 @@ int hex_symbol_free(hex_context_t *ctx)
 
 int hex_symbol_symbols(hex_context_t *ctx)
 {
-    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry->size * sizeof(hex_item_t));
+    // Allocate memory for the quotation
+    hex_item_t **quotation = (hex_item_t **)malloc(ctx->registry->size * sizeof(hex_item_t *));
     if (!quotation)
     {
-        hex_error(ctx, "[symbol symbols] Memory allocation failed");
+        hex_error(ctx, "[symbol symbols] Memory allocation failed for quotation");
         return 1;
     }
+
+    size_t quotation_size = 0;
+
+    // Iterate through each bucket in the hash table
     for (size_t i = 0; i < ctx->registry->bucket_count; i++)
     {
         hex_registry_entry_t *entry = ctx->registry->buckets[i];
         while (entry != NULL)
+        {
+            // Duplicate the symbol ID
+            char *id = strdup(entry->key);
+            if (!id)
+            {
+                hex_error(ctx, "[symbol symbols] Memory allocation failed for ID");
+                // Free already allocated items
+                for (size_t j = 0; j < quotation_size; j++)
+                {
+                    free(quotation[j]->data.str_value); // Free string value
+                    free(quotation[j]);               // Free hex_item_t
+                }
+                free(quotation);
+                return 1;
+            }
 
-    {
-        char *id = strdup(entry->key);
-        if (!id)
-        {
-            hex_error(ctx, "[symbol symbols] Memory allocation failed");
-            hex_free_list(ctx, quotation, i);
-            return 1;
+            // Allocate a new hex_item_t
+            hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+            if (!item)
+            {
+                hex_error(ctx, "[symbol symbols] Memory allocation failed for hex_item_t");
+                free(id);
+                for (size_t j = 0; j < quotation_size; j++)
+                {
+                    free(quotation[j]->data.str_value);
+                    free(quotation[j]);
+                }
+                free(quotation);
+                return 1;
+            }
+
+            // Initialize the hex_item_t as a string item
+            item->type = HEX_TYPE_STRING;
+            item->data.str_value = id;
+
+            // Add the item to the quotation
+            quotation[quotation_size++] = item;
+
+            // Move to the next entry in the bucket
+            entry = entry->next;
         }
-        quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-        if (!quotation[i])
-        {
-            hex_error(ctx, "[symbol symbols] Memory allocation failed");
-            hex_free_list(ctx, quotation, i);
-            return 1;
-        }
-        *quotation[i] = *hex_string_item(ctx, id);
-        entry = entry->next;
     }
-    }
-    if (hex_push_quotation(ctx, quotation, ctx->registry->size) != 0)
+
+    // Push the quotation onto the stack
+    if (hex_push_quotation(ctx, quotation, quotation_size) != 0)
     {
-        hex_free_list(ctx, quotation, ctx->registry->size);
+        hex_error(ctx, "[symbol symbols] Failed to push quotation onto the stack");
+        for (size_t j = 0; j < quotation_size; j++)
+        {
+            free(quotation[j]->data.str_value);
+            free(quotation[j]);
+        }
+        free(quotation);
         return 1;
     }
+
+    // Successfully pushed quotation
     return 0;
 }
 
