@@ -2901,6 +2901,7 @@ int hex_symbol_try(hex_context_t *ctx)
 
         if (strcmp(ctx->error, "") != 0)
         {
+            hex_debug(ctx, "[symbol try] Handling error: %s", ctx->error);
             for (size_t i = 0; i < catch_block->quotation_size; i++)
             {
                 if (hex_push(ctx, catch_block->data.quotation_value[i]) != 0)
