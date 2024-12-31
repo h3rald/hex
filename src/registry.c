@@ -150,7 +150,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
         if (strcmp(entry->key, key) == 0)
         {
             // Key already exists, update its value
-            hex_free_item(NULL, entry->value); // Free old value
+            hex_free_item(ctx, entry->value); // Free old value
             entry->value = value;
             return 0;
         }
@@ -210,12 +210,14 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
         if (strcmp(entry->key, key) == 0)
         {
             // Key found, copy the value to result
-            result = hex_copy_item(ctx, entry->value); // Copy the value structure
-            if (result == NULL)
+            HEX_ALLOC(item);
+            item = hex_copy_item(ctx, entry->value); // Copy the value structure
+            if (item == NULL)
             {
                 hex_error(ctx, "[get symbol] Failed to copy item for key: %s", key);
                 return 0;
             }
+            *result = *item;
             hex_debug_item(ctx, "DONE", result);
             return 1;                  // Success
         }
@@ -250,7 +252,7 @@ int hex_delete_symbol(hex_context_t *ctx, const char *key)
             }
 
             free(entry->key);
-            hex_free_item(NULL, entry->value);
+            hex_free_item(ctx, entry->value);
             free(entry);
             registry->size--;
 
