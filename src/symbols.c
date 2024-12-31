@@ -145,28 +145,12 @@ int hex_symbol_free(hex_context_t *ctx)
         HEX_FREE(ctx, item);
         return 1;
     }
-    for (size_t i = 0; i < ctx->registry->size; i++)
+    if (hex_delete_symbol(ctx, item->data.str_value) != 0)
     {
-        if (strcmp(ctx->registry->entries[i]->key, item->data.str_value) == 0)
-        {
-            // Free the memory associated with this entry
-            free(ctx->registry->entries[i]->key);
-            HEX_FREE(ctx, ctx->registry->entries[i]->value);
-            // Shift entries down to fill the gap
-            for (size_t j = i; j < ctx->registry->size - 1; j++)
-            {
-                ctx->registry->entries[j] = ctx->registry->entries[j + 1];
-            }
-            // Clear the last entry to avoid dangling pointers
-            ctx->registry->entries[ctx->registry->size - 1] = NULL;
-            // Decrement the registry size
-            ctx->registry->size--;
-            // Free the `item` as it is no longer needed
-            HEX_FREE(ctx, item);
-            return 0; // Exit after removing the entry
-        }
+        hex_error(ctx, "[symbol #] Symbol not found: %s", item->data.str_value);
+        HEX_FREE(ctx, item);
+        return 1;
     }
-    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -178,16 +162,19 @@ int hex_symbol_symbols(hex_context_t *ctx)
         hex_error(ctx, "[symbol symbols] Memory allocation failed");
         return 1;
     }
-    for (size_t i = 0; i < ctx->registry->size; i++)
+    for (size_t i = 0; i < ctx->registry->bucket_count; i++)
     {
-        char *id = malloc(strlen(ctx->registry->entries[i]->key) + 1);
+        hex_registry_entry_t *entry = ctx->registry->buckets[i];
+        while (entry != NULL)
+
+    {
+        char *id = strdup(entry->key);
         if (!id)
         {
             hex_error(ctx, "[symbol symbols] Memory allocation failed");
             hex_free_list(ctx, quotation, i);
             return 1;
         }
-        strcpy(id, ctx->registry->entries[i]->key);
         quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
         if (!quotation[i])
         {
@@ -196,6 +183,8 @@ int hex_symbol_symbols(hex_context_t *ctx)
             return 1;
         }
         *quotation[i] = *hex_string_item(ctx, id);
+        entry = entry->next;
+    }
     }
     if (hex_push_quotation(ctx, quotation, ctx->registry->size) != 0)
     {

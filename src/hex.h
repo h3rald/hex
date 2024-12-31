@@ -84,12 +84,6 @@ typedef struct hex_item_t
     size_t quotation_size; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } hex_item_t;
 
-typedef struct hex_registry_entry
-{
-    char *key;
-    hex_item_t *value;
-} hex_registry_entry_t;
-
 typedef struct hex_stack_trace_t
 {
     hex_token_t **entries;
@@ -104,11 +98,20 @@ typedef struct hex_stack_t
     size_t capacity;
 } hex_stack_t;
 
+typedef struct hex_registry_entry_t
+{
+    char *key;
+    hex_item_t *value;
+    struct hex_registry_entry_t *next; // For collision resolution (chaining)
+} hex_registry_entry_t;
+
 typedef struct hex_registry_t
 {
-    hex_registry_entry_t **entries;
-    size_t size;
+    hex_registry_entry_t **buckets; // Array of bucket pointers
+    size_t bucket_count;           // Number of buckets
+    size_t size;                   // Number of stored entries
 } hex_registry_t;
+
 
 typedef struct hex_doc_entry_t
 {

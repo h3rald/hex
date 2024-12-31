@@ -43,7 +43,8 @@ int hex_registry_resize(hex_context_t *ctx)
     hex_registry_t *registry = ctx->registry;
     
 
-    hex_registry_entry_t **new_buckets = calloc(registry->bucket_count * 2, sizeof(hex_registry_entry_t *));
+    int new_bucket_count = registry->bucket_count * 2;
+    hex_registry_entry_t **new_buckets = calloc(new_bucket_count, sizeof(hex_registry_entry_t *));
     if (new_buckets == NULL)
     {
         return 1; // Memory allocation failed
@@ -110,11 +111,11 @@ int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
         hex_error(ctx, "Invalid symbol: %s", symbol);
         return 0;
     }
-    /*if (strlen(symbol) > HEX_MAX_SYMBOL_LENGTH)
+    if (strlen(symbol) > HEX_MAX_SYMBOL_LENGTH)
     {
-        hex_error(ctx, "Symbol name too long: %s", symbol);
+        hex_error(ctx, "[check valid symbol] Symbol name too long: %s", symbol);
         return 0;
-    }*/
+    }
     for (size_t j = 1; j < strlen(symbol); j++)
     {
         if (!isalnum(symbol[j]) && symbol[j] != '_' && symbol[j] != '-')
@@ -131,13 +132,13 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
     hex_registry_t *registry = ctx->registry;
     if (!native && hex_valid_user_symbol(ctx, key) == 0)
     {
-        hex_error(ctx, "[set symbol] Invalid user symbol %s", name);
+        hex_error(ctx, "[set symbol] Invalid user symbol %s", key);
         return 1;
     }
     
     if ((float)registry->size / registry->bucket_count > 0.75)
     {
-        hex_registry_resize(registry, registry->bucket_count * 2);
+        hex_registry_resize(ctx);
     }
 
     size_t bucket_index = hash_function(key, registry->bucket_count);
@@ -201,7 +202,7 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
 {
     hex_registry_t *registry = ctx->registry;
     hex_debug(ctx, "LOOK: %s", key);
-    size_t bucket_index = hash_function(key) % registry->bucket_count;
+    size_t bucket_index = hash_function(key, registry->bucket_count);
 
     hex_registry_entry_t *entry = registry->buckets[bucket_index];
     while (entry != NULL)
@@ -209,7 +210,7 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
         if (strcmp(entry->key, key) == 0)
         {
             // Key found, copy the value to result
-            *result = hex_copy_item(ctx, entry->value); // Copy the value structure
+            result = hex_copy_item(ctx, entry->value); // Copy the value structure
             if (result == NULL)
             {
                 hex_error(ctx, "[get symbol] Failed to copy item for key: %s", key);

@@ -11,9 +11,7 @@ hex_context_t *hex_init()
     hex_context_t *context = malloc(sizeof(hex_context_t));
     context->argc = 0;
     context->argv = NULL;
-    context->registry = malloc(sizeof(hex_registry_t));
-    context->registry->entries = malloc(HEX_REGISTRY_SIZE * sizeof(hex_registry_entry_t *));
-    context->registry->size = 0;
+    context->registry = hex_registry_create();
     context->docs = malloc(sizeof(hex_doc_dictionary_t));
     context->docs->entries = malloc(HEX_NATIVE_SYMBOLS * sizeof(hex_doc_entry_t));
     context->docs->size = 0;
