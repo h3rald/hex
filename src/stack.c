@@ -243,7 +243,7 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
     if (item == NULL)
         return;
 
-    hex_debug(ctx, "FREE: %s", hex_type(item->type));
+    hex_debug_item(ctx, "FREE", item);
 
     switch (item->type)
     {
