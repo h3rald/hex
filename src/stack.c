@@ -9,7 +9,7 @@
 // Free a token
 void hex_free_token(hex_token_t *token)
 {
-    if (token == NULL)
+    if (token == NULL || token->value == NULL)
         return;
     free(token->value);
     token->value = NULL;
