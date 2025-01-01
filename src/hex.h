@@ -411,7 +411,7 @@ int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecod
 char *hex_read_file(hex_context_t *ctx, const char *filename);
 
 // Common operations
-#define HEX_POP(ctx, x) x = hex_pop(ctx)
+#define HEX_POP(ctx, x) hex_item_t *x = hex_pop(ctx)
 #define HEX_FREE(ctx, x) hex_free_item(ctx, x)
 #define HEX_PUSH(ctx, x) hex_push(ctx, x)
 #define HEX_ALLOC(x) hex_item_t *x = (hex_item_t *)malloc(sizeof(hex_item_t));
