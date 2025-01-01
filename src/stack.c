@@ -481,7 +481,7 @@ void hex_cleanup_push(hex_context_t *ctx, hex_item_t *item)
 
 void hex_cleanup_free(hex_context_t *ctx)
 {
-    for (int i = 0; i < ctx->cleanup_stack->count; i++)  {
+    for (size_t i = 0; i < ctx->cleanup_stack->count; i++)  {
         HEX_FREE(ctx, ctx->cleanup_stack->entries[i]);
     }
     ctx->cleanup_stack->count = 0;
