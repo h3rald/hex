@@ -23,7 +23,6 @@ hex_context_t *hex_init()
     context->stack_trace->start = 0;
     context->stack_trace->size = 0;
     context->cleanup_stack = malloc(sizeof(hex_cleanup_stack_t)); 
-    context->cleanup_stack->entries = {NULL};
     context->cleanup_stack->count = 0;
     context->settings = malloc(sizeof(hex_settings_t));
     context->settings->debugging_enabled = 0;
