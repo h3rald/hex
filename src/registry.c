@@ -157,7 +157,8 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
         {
             // Key already exists, update its value
             hex_free_item(ctx, entry->value); // Free old value
-            entry->value = value;
+            entry->value = malloc(sizeof(hex_item_t));
+            entry->value = hex_copy_item(ctx, value);
             return 0;
         }
         entry = entry->next;
@@ -171,7 +172,8 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
     }
 
     new_entry->key = strdup(key);
-    new_entry->value = value;
+    new_entry->value = malloc(sizeof(hex_item_t)); 
+    new_entry->value = hex_copy_item(ctx, value);
     new_entry->next = registry->buckets[bucket_index];
     registry->buckets[bucket_index] = new_entry;
 
