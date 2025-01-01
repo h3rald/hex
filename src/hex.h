@@ -26,6 +26,7 @@ int isatty(int fd);
 #define HEX_REGISTRY_SIZE 1024
 #define HEX_STACK_SIZE 256
 #define HEX_STACK_TRACE_SIZE 16
+#define HEX_CLEANUP_STACK_SIZE 16
 #define HEX_NATIVE_SYMBOLS 64
 #define HEX_MAX_SYMBOL_LENGTH 256
 #define HEX_MAX_USER_SYMBOLS (HEX_REGISTRY_SIZE - HEX_NATIVE_SYMBOLS)
@@ -91,6 +92,12 @@ typedef struct hex_stack_trace_t
     size_t size; // Current number of items in the buffer
 } hex_stack_trace_t;
 
+typedef struct hex_cleanup_stack_t
+{
+    hex_item_t *entries[16];
+    size_t count;
+} hex_cleanup_stack_t;
+
 typedef struct hex_stack_t
 {
     hex_item_t **entries;
@@ -145,6 +152,7 @@ typedef struct hex_context_t
     hex_stack_t *stack;
     hex_registry_t *registry;
     hex_stack_trace_t *stack_trace;
+    hex_cleanup_stack_t *cleanup_stack;
     hex_settings_t *settings;
     hex_doc_dictionary_t *docs;
     hex_symbol_table_t *symbol_table;
@@ -288,6 +296,10 @@ hex_item_t *hex_pop(hex_context_t *ctx);
 hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item);
 hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token);
 
+// Cleanup stack management
+void hex_cleanup_push(hex_context_t *ctx, hex_item_t *item);
+void hex_cleanup_free(hex_context_t *ctx);
+
 // Parser and interpreter
 hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_position_t *position);
 int32_t hex_parse_integer(const char *hex_str);
@@ -415,5 +427,6 @@ char *hex_read_file(hex_context_t *ctx, const char *filename);
 #define HEX_FREE(ctx, x) hex_free_item(ctx, x)
 #define HEX_PUSH(ctx, x) hex_push(ctx, x)
 #define HEX_ALLOC(x) hex_item_t *x = (hex_item_t *)malloc(sizeof(hex_item_t));
+#define HEX_CLEANUP(ctx) hex_cleanup_free(ctx);
 
 #endif // HEX_H

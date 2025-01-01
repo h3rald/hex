@@ -221,6 +221,7 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     *item = *ctx->stack->entries[ctx->stack->top];
     hex_debug_item(ctx, " POP", item);
     ctx->stack->top--;
+    hex_cleanup_push(ctx, item);
     return item;
 }
 
@@ -466,3 +467,23 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
 
     return copy;
 }
+
+void hex_cleanup_push(hex_context_t *ctx, hex_item_t *item)
+{
+    if (ctx->cleanup_stack->count < HEX_CLEANUP_STACK_SIZE) {  // Ensure we don't overflow the array
+        ctx->cleanup_stack->entries[ctx->cleanup_stack->count++] = item;
+    }
+    else
+    {
+        hex_error(ctx, "[cleanup push] Cleanup stack is full");
+    }
+}
+
+void hex_cleanup_free(hex_context_t *ctx)
+{
+    for (int i = 0; i < ctx->cleanup_stack->count; i++)  {
+        HEX_FREE(ctx, ctx->cleanup_stack->entries[i]);
+    }
+    ctx->cleanup_stack->count = 0;
+}
+

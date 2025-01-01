@@ -22,6 +22,7 @@ hex_context_t *hex_init()
     context->stack_trace->entries = malloc(HEX_STACK_TRACE_SIZE * sizeof(hex_token_t));
     context->stack_trace->start = 0;
     context->stack_trace->size = 0;
+    context->cleanup_stack->count = 0
     context->settings = malloc(sizeof(hex_settings_t));
     context->settings->debugging_enabled = 0;
     context->settings->errors_enabled = 1;
