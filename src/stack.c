@@ -221,7 +221,7 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     *item = *ctx->stack->entries[ctx->stack->top];
     hex_debug_item(ctx, " POP", item);
     ctx->stack->top--;
-    hex_cleanup_push(ctx, item);
+    //hex_cleanup_push(ctx, item);
     return item;
 }
 
