@@ -1238,13 +1238,6 @@ int hex_symbol_xor(hex_context_t *ctx)
         HEX_FREE(ctx, b);
         return 1;
     }
-    HEX_ALLOC(a);
-    if (!a)
-    {
-        hex_error(ctx, "[symbol xor] Memory allocation failed");
-        HEX_FREE(ctx, b);
-        return 1;
-    }
     HEX_POP(ctx, a);
     ;
     if (a->type == HEX_TYPE_INVALID)
@@ -2047,7 +2040,7 @@ int hex_symbol_exec(hex_context_t *ctx)
 
 int hex_symbol_run(hex_context_t *ctx)
 {
-    HEX_POP(command);
+    HEX_POP(ctx, command);
     if (command->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, command);
@@ -2253,15 +2246,6 @@ int hex_symbol_if(hex_context_t *ctx)
                 HEX_FREE(ctx, elseBlock);
                 return 1;
             }
-        }
-        HEX_ALLOC(evalResult);
-        if (!evalResult)
-        {
-            hex_error(ctx, "[symbol if] Memory allocation failed");
-            HEX_FREE(ctx, condition);
-            HEX_FREE(ctx, thenBlock);
-            HEX_FREE(ctx, elseBlock);
-            return 1;
         }
         HEX_POP(ctx, evalResult);
         ;
