@@ -996,11 +996,8 @@ int hex_symbol_equal(hex_context_t *ctx)
     }
     // Different types => false
     int result = hex_push_integer(ctx, 0);
-    if (result != 0)
-    {
-        HEX_FREE(ctx, a);
-        HEX_FREE(ctx, b);
-    }
+    HEX_FREE(ctx, a);
+    HEX_FREE(ctx, b);
     return result;
 }
 
