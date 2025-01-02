@@ -385,3 +385,48 @@ size_t hex_min_bytes_to_encode_integer(int32_t value)
 
     return 4; // Default to 4 bytes if no smaller size is found.
 }
+
+char *hex_unescape_string(const char *input) 
+{
+    if (input == NULL) {
+        return NULL; // Handle null input
+    }
+
+    // Allocate memory for the output string (worst-case size: same as input)
+    char *output = (char *)malloc(strlen(input) + 1);
+    if (output == NULL) {
+        fprintf(stderr, "Memory allocation failed\n");
+        return NULL;
+    }
+
+    const char *src = input;
+    char *dst = output;
+
+    while (*src) {
+        if (*src == '\\' && *(src + 1)) {
+            switch (*(src + 1)) {
+                case 'n': *dst = '\n'; break;
+                case 't': *dst = '\t'; break;
+                case 'r': *dst = '\r'; break;
+                case '\\': *dst = '\\'; break;
+                case '\'': *dst = '\''; break;
+                case '\"': *dst = '\"'; break;
+                case 'b': *dst = '\b'; break;
+                case 'f': *dst = '\f'; break;
+                case 'v': *dst = '\v'; break;
+                default:
+                    // If not a valid escape, copy the backslash and next character
+                    *dst++ = *src;
+                    *dst = *(src + 1);
+            }
+            src += 2; // Skip the escape sequence
+        } else {
+            *dst = *src;
+            src++;
+        }
+        dst++;
+    }
+
+    *dst = '\0'; // Null-terminate the output string
+    return output;
+} 

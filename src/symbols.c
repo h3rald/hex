@@ -1835,7 +1835,7 @@ int hex_symbol_write(hex_context_t *ctx)
             FILE *file = fopen(filename->data.str_value, "w");
             if (file)
             {
-                fputs(data->data.str_value, file);
+                fputs(hex_unescape_string(data->data.str_value), file);
                 fclose(file);
                 result = 0;
             }
