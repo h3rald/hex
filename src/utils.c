@@ -346,6 +346,13 @@ char *hex_process_string(const char *value)
             case '\"':
                 *dst++ = '\"';
                 break;
+            case '\\':
+                *dst++ = '\\';
+                if (*(src + 2))
+                {
+                    *dst++ = *(src + 2);
+                    src++;
+                }
             default:
                 *dst++ = '\\';
                 *dst++ = *src;
