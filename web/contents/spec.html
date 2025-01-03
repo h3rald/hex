@@ -312,7 +312,7 @@
     <p>It is important to note that the registry is a global store, meaning that symbols are not lexically scoped and
         can be accessed from anywhere in the program. This design choice was made to keep the language simple and
         straightforward.</p>
-    <p>In the canonical hex implementation, the registry can hold up to 1024 symbols (960 of which can be user-defined
+    <p>In the canonical hex implementation, the registry can hold up to 4096 symbols (4032 of which can be user-defined
         symbols).</p>
     <h3 id="hbx">Hex Bytecode eXecutable (HBX) Format<a href="#top"></a></h3>
     <p>hex programs can be compiled to a binary format called Hex Bytecode eXecutable (HBX). HBX is a compact binary
@@ -347,8 +347,8 @@
             null-terminated).</li>
     </ul>
     <p>The symbol table can theoretically contain up to 65536 entries (the maximum size representable in two bytes);
-        however, the maximum number of user-defined symbols is currently limited to 960, since the <a
-            href="#registry">registry</a> has a maximum size of 1024 items and 64 are reserved for native symbols.
+        however, the maximum number of user-defined symbols is currently limited to 4032, since the <a
+            href="#registry">registry</a> has a maximum size of 4096 items and 64 are reserved for native symbols.
     </p>
     <h4 id="bytecode">Bytecode Program<a href="#top"></a></h4>
     <p>The bytecode program in an HBX file contains the compiled hex program as a sequence of opcodes and payload. Each
