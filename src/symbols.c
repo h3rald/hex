@@ -287,6 +287,34 @@ int hex_symbol_eval(hex_context_t *ctx)
     }
 }
 
+int hex_symbol_debug(hex_context_t *ctx)
+{
+    HEX_POP(ctx, item);
+    if (item->type == HEX_TYPE_INVALID)
+    {
+        HEX_FREE(ctx, item);
+        return 1;
+    }
+    if (item->type != HEX_TYPE_QUOTATION)
+    {
+        hex_error(ctx, "[symbol debug] Quotation required", hex_type(item->type));
+        HEX_FREE(ctx, item);
+        return 1;
+    }
+    ctx->settings->debugging_enabled = 1;
+    for (size_t i = 0; i < item->quotation_size; i++)
+    {
+        if (hex_push(ctx, item->data.quotation_value[i]) != 0)
+        {
+            //HEX_FREE(ctx, item);
+            ctx->settings->debugging_enabled = 0;
+            return 1;
+        }
+    }
+    ctx->settings->debugging_enabled = 0;
+    return 0;
+}
+
 // IO Symbols
 
 int hex_symbol_puts(hex_context_t *ctx)
@@ -2277,60 +2305,6 @@ int hex_symbol_if(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_when(hex_context_t *ctx)
-{
-    HEX_POP(ctx, action);
-    if (action->type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        return 1;
-    }
-    HEX_POP(ctx, condition);
-    ;
-    if (condition->type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, condition);
-        return 1;
-    }
-
-    int result = 0;
-    if (condition->type != HEX_TYPE_QUOTATION || action->type != HEX_TYPE_QUOTATION)
-    {
-        hex_error(ctx, "[symbol when] Two quotations required");
-        result = 1;
-    }
-    else
-    {
-        for (size_t i = 0; i < condition->quotation_size; i++)
-        {
-            if (hex_push(ctx, condition->data.quotation_value[i]) != 0)
-            {
-                result = 1;
-                break; // Break if pushing the item failed
-            }
-        }
-        HEX_POP(ctx, evalResult);
-        if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value > 0)
-        {
-            for (size_t i = 0; i < action->quotation_size; i++)
-            {
-                if (hex_push(ctx, action->data.quotation_value[i]) != 0)
-                {
-                    result = 1;
-                    break;
-                }
-            }
-        }
-    }
-    if (result != 0)
-    {
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, condition);
-    }
-    return result;
-}
-
 int hex_symbol_while(hex_context_t *ctx)
 {
     HEX_POP(ctx, action);
@@ -2731,6 +2705,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
     hex_set_native_symbol(ctx, "!", hex_symbol_eval);
+    hex_set_native_symbol(ctx, "debug", hex_symbol_debug);
     hex_set_native_symbol(ctx, "puts", hex_symbol_puts);
     hex_set_native_symbol(ctx, "warn", hex_symbol_warn);
     hex_set_native_symbol(ctx, "print", hex_symbol_print);
@@ -2777,7 +2752,6 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "exec", hex_symbol_exec);
     hex_set_native_symbol(ctx, "run", hex_symbol_run);
     hex_set_native_symbol(ctx, "if", hex_symbol_if);
-    hex_set_native_symbol(ctx, "when", hex_symbol_when);
     hex_set_native_symbol(ctx, "while", hex_symbol_while);
     hex_set_native_symbol(ctx, "error", hex_symbol_error);
     hex_set_native_symbol(ctx, "try", hex_symbol_try);

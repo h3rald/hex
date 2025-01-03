@@ -44,7 +44,6 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
 
     // Control flow
     hex_set_doc(docs, "if", "q q q", "*", "If 'q1' is not 0x0, executes 'q2', else 'q3'.");
-    hex_set_doc(docs, "when", "q1 q2", "*", "If 'q1' is not 0x0, executes 'q2'.");
     hex_set_doc(docs, "while", "q1 q2", "*", "While 'q1' is not 0x0, executes 'q2'.");
     hex_set_doc(docs, "error", "", "s", "Returns the last error message.");
     hex_set_doc(docs, "try", "q1 q2", "*", "If 'q1' fails, executes 'q2'.");
@@ -60,6 +59,7 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, ".", "q", "*", "Pushes each item of 'q' on the stack.");
     hex_set_doc(docs, "!", "(s|q)", "*", "Evaluates 's' as a hex program or 'q' as hex bytecode.");
     hex_set_doc(docs, "'", "a", "q", "Wraps 'a' in a quotation.");
+    hex_set_doc(docs, "debug", "q", "*", "Enables debug mode and pushes each item of 'q' on the stack.");
 
     // Arithmetic
     hex_set_doc(docs, "+", "i1 12", "i", "Adds two integers.");

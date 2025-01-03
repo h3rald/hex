@@ -25,10 +25,6 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_IF;
     }
-    else if (strcmp(symbol, "when") == 0)
-    {
-        return HEX_OP_WHEN;
-    }
     else if (strcmp(symbol, "while") == 0)
     {
         return HEX_OP_WHILE;
@@ -72,6 +68,10 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     else if (strcmp(symbol, "'") == 0)
     {
         return HEX_OP_QUOTE;
+    }
+    else if (strcmp(symbol, "debug") == 0)
+    {
+        return HEX_OP_DEBUG;
     }
     else if (strcmp(symbol, "+") == 0)
     {
@@ -278,8 +278,6 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "symbols";
     case HEX_OP_IF:
         return "if";
-    case HEX_OP_WHEN:
-        return "when";
     case HEX_OP_WHILE:
         return "while";
     case HEX_OP_ERROR:
@@ -302,6 +300,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "!";
     case HEX_OP_QUOTE:
         return "'";
+    case HEX_OP_DEBUG:
+        return "debug";
     case HEX_OP_ADD:
         return "+";
     case HEX_OP_SUB:

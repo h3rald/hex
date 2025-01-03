@@ -9,6 +9,17 @@
 
 (dup puts) "_" ::
 
+(
+  "_when_q"    :
+  "_when_cond" :
+  (_when_cond .)
+    (_when_q .)
+    ()
+  if
+  "_when_q"    #
+  "_when_cond" #
+) "when" ::
+
 
 (
     "current-test" :
@@ -125,7 +136,7 @@
     ;56
 
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
-    ((args len 0x3 !=) ("yes") when "yes" ==)
+    ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
     (symbols len 0x4c ==)
     ;60
@@ -220,7 +231,6 @@
     ((() chr) (error) try "[symbol chr] Integer required" ==)
     ;120
 
-    ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (
       "test\ntest\\ntest\t\"hello\"!" "_str" :
       _str "test1.txt" write
