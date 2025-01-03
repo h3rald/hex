@@ -222,9 +222,9 @@ changelog-content
                 _i 0x1 + "_i" :
             )
         while
-        ;"_i" #
+        "_i" #
         ; Highlight syntax
-        new-content  highlight "new-content" :
+        ;new-content  highlight "new-content" :
         (fn-content "home.html" ==)
             (
                 ; Process home page
