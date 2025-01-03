@@ -8,8 +8,8 @@ if exists("b:current_syntax")
   finish
 endif
 
-syntax keyword          hexNativeSymbol         if when while error symbols throw try dup pop swap stack and or not xor int str hex dec type 
-syntax keyword          hexNativeSymbol         cat chr len get ord index join split replace map puts warn print gets 
+syntax keyword          hexNativeSymbol         if while error symbols throw try dup pop swap stack and or not xor int str hex dec type 
+syntax keyword          hexNativeSymbol         cat chr len get ord index join split replace debug map puts warn print gets 
 syntax keyword          hexNativeSymbol         read write append args exit exec run
 syntax match            hexNativeSymbol         /\v\!/
 syntax match            hexNativeSymbol         /\v\!\=/ 
