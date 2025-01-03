@@ -212,7 +212,7 @@ changelog-content
         "release" meta-release process-tag
         "year" meta-year process-tag
         "changelog-toc" changelog-toc process-tag
-        "releases" releases-content process-tag
+        "releases" releases-content process-tag _
         "new-content" :
         ; Replace symbols with links
         0x0 "_i" :
@@ -224,7 +224,7 @@ changelog-content
         while
         "_i" #
         ; Highlight syntax
-        ;new-content  highlight "new-content" :
+        new-content  highlight "new-content" :
         (fn-content "home.html" ==)
             (
                 ; Process home page
