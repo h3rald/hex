@@ -221,8 +221,10 @@
     ;120
 
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
-
-
+    (
+      "test\ntest\\ntest\t\"hello\"!" :str
+      str "test1.txt" write
+      "test1.txt" read str == "str" #)
     
 ) "tests" :
 
