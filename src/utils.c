@@ -307,7 +307,8 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
     return str;
 }
 
-char* hex_process_string(const char* input) {
+char* hex_process_string(const char* input)
+{
     size_t len = strlen(input);
     size_t new_len = 0;
 
@@ -372,7 +373,8 @@ size_t hex_min_bytes_to_encode_integer(int32_t value)
     return 4; // Default to 4 bytes if no smaller size is found.
 }
 
-char *hex_unescape_string(const char *input) {
+char *hex_unescape_string(const char *input) 
+{
     size_t len = strlen(input);
     char* unescaped = (char*)malloc(len + 1);
 
@@ -400,6 +402,49 @@ char *hex_unescape_string(const char *input) {
     return unescaped;
 }
 
-// Normalize newlines f
+char* hex_normalize_newlines(const char* input) 
+{
+    size_t len = strlen(input);
+    size_t new_len = 0;
+
+    // First pass: Calculate the length of normalized string
+    for (size_t i = 0; i < len; i++) {
+        if (input[i] == '\r') {
+            if (i + 1 < len && input[i + 1] == '\n') {
+                // Windows-style CRLF -> LF
+                new_len++;
+                i++;
+            } else {
+                // Mac-style CR -> LF
+                new_len++;
+            }
+        } else {
+            new_len++;
+        }
+    }
+
+    // Allocate memory for the normalized string
+    char* normalized = (char*)malloc(new_len + 1);
+    if (!normalized) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    // Second pass: Build the normalized string
+    size_t j = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (input[i] == '\r') {
+            if (i + 1 < len && input[i + 1] == '\n') {
+                normalized[j++] = '\n';
+                i++;
+            } else {
+                normalized[j++] = '\n';
+            }
+        } else {
+            normalized[j++] = input[i];
+        }
+    }
+    normalized[j] = '\0'; // Null-terminate the string
+    return normalized;
 }
 
