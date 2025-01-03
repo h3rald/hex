@@ -1792,7 +1792,7 @@ int hex_symbol_read(hex_context_t *ctx)
                     {
                         hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
                         item->type = HEX_TYPE_STRING;
-                        item->data.str_value = hex_process_string(str);
+                        item->data.str_value = str;
                         result = HEX_PUSH(ctx, item);
                     }
                 }
