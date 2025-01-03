@@ -16,8 +16,8 @@
     (_when_q .)
     ()
   if
-  "_when_q"    #
-  "_when_cond" #
+  ;"_when_q"    #
+  ;"_when_cond" #
 ) "when" ::
 
 
@@ -138,7 +138,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x4c ==)
+    (symbols len 0x4d ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
