@@ -16,7 +16,7 @@
 
 <h4>New Features</h4>
 <ul>
-    <li>Added symbol {{sym-debug}} to dequote a quotation in debug mode.</li>
+    <li>Added symbol <a href="https://hex.2c.fyi/spec#debug-symbol">debug</a> to dequote a quotation in debug mode.</li>
     <li>The registry has been reimplemented as a hash table that can store up to 4096 symbols.</li>
 </ul>
 
@@ -24,7 +24,7 @@
 <ul>
     <li>Improved string escaping/unescaping.</li>
     <li>Values bound to symbols are deep-copied before being pushed on the stack.</li>
-    <li>Action quotations are now deep-copied in <a href="https://hex.2c.fyi/spec#while-symbol">while</a> and {{sym-map}} symbols.</li>
+    <li>Action quotations are now deep-copied in <a href="https://hex.2c.fyi/spec#while-symbol">while</a> and <a href="https://hex.2c.fyi/spec#map-symbol">map</a> symbols.</li>
 </ul>
 
 <h4>Chores</h4>
