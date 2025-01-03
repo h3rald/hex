@@ -72,9 +72,23 @@
   "_ends_offset" #
 ) "ends" ::
 
+;;; when
+;; q1 q2 -> *
+;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
+(
+  "_when_q"    :
+  "_when_cond" :
+  (_when_cond .)
+    (_when_q .)
+    ()
+  if
+  "_when_q"    #
+  "_when_cond" #
+) "when" ::
+
 ;;; cleanup
 ;; s ->
-;; Frees all symbols starting %:s%%.
+;; Frees all symbols starting with %:s%%.
 (
   "_cleanup_prefix" :
   0x0 "_cleanup_c" :
