@@ -1792,7 +1792,7 @@ int hex_symbol_read(hex_context_t *ctx)
                     {
                         hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
                         item->type = HEX_TYPE_STRING;
-                        item->data.str_value = str;
+                        item->data.str_value = hex_process_string(str);
                         result = HEX_PUSH(ctx, item);
                     }
                 }
@@ -1835,7 +1835,7 @@ int hex_symbol_write(hex_context_t *ctx)
             FILE *file = fopen(filename->data.str_value, "w");
             if (file)
             {
-                fputs(hex_unescape_string(data->data.str_value), file);
+                fputs(data->data.str_value, file);
                 fclose(file);
                 result = 0;
             }
