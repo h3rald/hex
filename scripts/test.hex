@@ -234,7 +234,9 @@
     (
       "test\ntest\\ntest\t\"hello\"!" "_str" :
       _str "test1.txt" write
-      "test1.txt" read _str == "_str" #)
+      "test1.txt" read _str == "_str" #
+      "rm test1.txt" exec pop
+    )
     
 ) "tests" :
 
