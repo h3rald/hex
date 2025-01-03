@@ -10,10 +10,10 @@
   "_begins_prefix" :
   "_begins_s"      :
   0x1 "_begins_result" :
+  0x0 "_begins_c" :
   (_begins_s len _begins_prefix len <)
     (0x0 "_begins_result" :)
     (
-      0x0 "_begins_c" :
       (
         _begins_c _begins_prefix len <
         _begins_result and
@@ -44,10 +44,10 @@
   "_ends_suffix" :
   "_ends_s"      :
   0x1 "_ends_result" :
+   _ends_suffix len 0x1 - "_ends_c" :
   (_ends_s len _ends_suffix len <)
     (0x0 "_ends_result" :)
     (
-      _ends_suffix len 0x1 - "_ends_c" :
       _ends_s len _ends_suffix len - "_ends_offset" :
       (
         _ends_c 0x0 >=
