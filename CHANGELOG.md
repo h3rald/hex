@@ -1,9 +1,35 @@
 <article>
     <h2>Changelog</h2>
     <ul>
+<li><a href="#v0.4.0">v0.4.0</a></li>
 <li><a href="#v0.3.0">v0.3.0</a></li>
 <li><a href="#v0.2.0">v0.2.0</a></li>
 <li><a href="#v0.1.0">v0.1.0</a></li>
+</ul>
+<h3 id="v0.4.0">v0.4.0 &mdash; 2025-01-03</h3>
+
+<h4>Breaking Changes</h4>
+<ul>
+    <li>Removed the native symbol %:when%%.</li>
+    <li>Bytecode: some opcodes changed values; programs compiled with tbe previous version must be recompiled.</li>
+</ul>
+
+<h4>New Features</h4>
+<ul>
+    <li>Added symbol {{sym-debug}} to dequote a quotation in debug mode.</li>
+    <li>The registry has been reimplemented as a hash table that can store up to 4096 symbols.</li>
+</ul>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Improved string escaping/unescaping.</li>
+    <li>Values bound to symbols are deep-copied before being pushed on the stack.</li>
+    <li>Action quotations are now deep-copied in <a href="https://hex.2c.fyi/spec#while-symbol">while</a> and {{sym-map}} symbols.</li>
+</ul>
+
+<h4>Chores</h4>
+<ul>
+    <li>Updated Vim syntax highlighting (%:hex.vim%%).</li>
 </ul>
 <h3 id="v0.3.0">v0.3.0 &mdash; 2024-12-25</h3>
 
