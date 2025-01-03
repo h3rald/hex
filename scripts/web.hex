@@ -78,6 +78,18 @@ d-templates "/page.html" cat "t-page" :
 ; Convenience symbol for debugging
 (dup puts) "_" ::
 
+; when operator
+(
+  "_when_q"    :
+  "_when_cond" :
+  (_when_cond .)
+    (_when_q .)
+    ()
+  if
+  "_when_q"    #
+  "_when_cond" #
+) "when" ::
+
 ; Generate tag placeholder
 (
     "{{" swap "}}" cat cat
