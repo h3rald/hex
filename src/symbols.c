@@ -25,7 +25,6 @@ int hex_symbol_store(hex_context_t *ctx)
         HEX_FREE(ctx, value);
         return 1;
     }
-
     if (name->type != HEX_TYPE_STRING)
     {
         hex_error(ctx, "[symbol :] Symbol name must be a string");
@@ -2378,11 +2377,13 @@ int hex_symbol_while(hex_context_t *ctx)
                 break;
             }
 
-            for (size_t i = 0; i < action->quotation_size; i++)
+            hex_item_t *act = hex_copy_item(ctx, action);
+            for (size_t i = 0; i < act->quotation_size; i++)
             {
-                if (hex_push(ctx, action->data.quotation_value[i]) != 0)
+                if (hex_push(ctx, act->data.quotation_value[i]) != 0)
                 {
                     HEX_FREE(ctx, action);
+                    HEX_FREE(ctx, act);
                     HEX_FREE(ctx, condition);
                     return 1;
                 }
