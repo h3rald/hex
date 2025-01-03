@@ -1,10 +1,10 @@
 
-"2024" "meta-year" : 
+"2025" "meta-year" : 
 "0.3.0" "meta-release" :
 "web/assets" "d-assets" :
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
-"web/out2" "d-out" :
+"web/out" "d-out" :
 "releases" "d-releases" :
 
 ; Get all files from a directory
