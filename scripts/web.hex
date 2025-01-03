@@ -88,7 +88,7 @@ d-templates "/page.html" cat "t-page" :
     "pt-repl" :
     "pt-tag" :
     "pt-content" :
-    (pt-content pt-tag tag index 0x0 >)
+    (pt-content pt-tag tag index 0x0 >=)
         (pt-content pt-tag tag pt-repl replace "pt-content" :)
     while 
     pt-content
@@ -205,14 +205,14 @@ changelog-content
         contents _c get "fn-content" :
         fn-content ".html" "" replace "id-content" :
         d-contents "/" fn-content cat cat read "content" :
-        t-page read
+        t-page read 
         ; Replace tags
         "content" content process-tag
         "title" id-content process-tag
         "release" meta-release process-tag
         "year" meta-year process-tag
         "changelog-toc" changelog-toc process-tag
-        "releases" releases-content process-tag _
+        "releases" releases-content process-tag 
         "new-content" :
         ; Replace symbols with links
         0x0 "_i" :
