@@ -541,30 +541,24 @@ $; Lookup second symbol (factorial)$$
     <p>Stores the literal <code>a</code> in the registry as the symbol <code>s</code>. If %:a%% is a quotation, it will be immediately dequoted when pushed on the stack.</p>
      <h5 id="free-symbol"><code>$:#$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr;</mark></p>
-    <aside>OPCODE: <code>11</code></aside>
+    <aside>OPCODE: <code>12</code></aside>
     <p>Frees the symbol <code>s</code> from the registry.</p>
     <h5 id="symbols-symbol"><code>$:symbols$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>&rarr; q</mark></p>
-    <aside>OPCODE: <code>11</code></aside>
+    <aside>OPCODE: <code>13</code></aside>
     <p>Pushes a quotation on the stack containing the identifiers of a the symbols currently stored in the registry.</p>
     <h4 id="control-flow-symbols">Control Flow Symbols<a href="#top"></a></h4>
     <h5 id="if-symbol"><code>$:if$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 q3 &rarr; *</mark></p>
-    <aside>OPCODE: <code>12</code></aside>
+    <aside>OPCODE: <code>14</code></aside>
     <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes
         <code>q2</code>,
         otherwise
         dequotes <code>q3</code>.
-    </p>
-    <h5 id="when-symbol"><code>$:when$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark>q1 q2 &rarr; *</mark></p>
-    <aside>OPCODE: <code>13</code></aside>
-    <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes
-        <code>q2</code>.
-    </p>
+    </p> 
     <h5 id="while-symbol"><code>$:while$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
-    <aside>OPCODE: <code>14</code></aside>
+    <aside>OPCODE: <code>15</code></aside>
     <p>Dequotes quotation <code>q1</code>, if it pushes a positive integer on the stack it dequotes
         <code>q2</code>
         and
@@ -572,153 +566,157 @@ $; Lookup second symbol (factorial)$$
     </p>
     <h5 id="error-symbol"><code>$:error$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>&rarr; s</mark></p>
-    <aside>OPCODE: <code>15</code></aside>
+    <aside>OPCODE: <code>16</code></aside>
     <p>Pushes the last error message to the stack.</p>
     <h5 id="try-symbol"><code>$:try$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 &rarr; *</mark></p>
-    <aside>OPCODE: <code>16</code></aside>
+    <aside>OPCODE: <code>17</code></aside>
     <p>Dequotes quotation <code>q1</code>, if it throws an error it dequotes <code>q2</code>.</p>
      <h5 id="throw-symbol"><code>$:throw$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr;</mark></p>
-    <aside>OPCODE: <code>11</code></aside>
+    <aside>OPCODE: <code>18</code></aside>
     <p>Throws an error printing error message %:s%%.</p>
     <h4 id="stack-management-symbols">Stack Management Symbol<a href="#top"></a></h4>
     <h5 id="dup-symbol"><code>$:dup$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr; a a</mark></p>
-    <aside>OPCODE: <code>17</code></aside>
+    <aside>OPCODE: <code>19</code></aside>
     <p>Duplicates literal <code>a</code> and pushes it on the stack.</p>
     <h5 id="stack-symbol"><code>$:stack$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr; q</mark></p>
-    <aside>OPCODE: <code>18</code></aside>
+    <aside>OPCODE: <code>1a</code></aside>
     <p>Pushes the items currently on the stack as a quotation on the stack.</p>
     <h5 id="pop-symbol"><code>$:pop$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
-    <aside>OPCODE: <code>1a</code></aside>
+    <aside>OPCODE: <code>1b</code></aside>
     <p>Removes the top item from the stack.</p>
     <h5 id="swap-symbol"><code>$:swap$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a1 a2 &rarr; a2 a1</mark></p>
-    <aside>OPCODE: <code>1b</code></aside>
+    <aside>OPCODE: <code>1c</code></aside>
     <p>Swaps the top two items on the stack.</p>
     <h4 id="evaluation-symbols">Evaluation Symbols<a href="#top"></a></h4>
     <h5 id="i-symbol"><code>$:.$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q &rarr; *</mark></p>
-    <aside>OPCODE: <code>1c</code></aside>
+    <aside>OPCODE: <code>1d</code></aside>
     <p>Dequotes quotation <code>q</code>.</p>
     <h5 id="eval-symbol"><code>$:!$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>(s|q) &rarr; *</mark></p>
-    <aside>OPCODE: <code>1d</code></aside>
+    <aside>OPCODE: <code>1e</code></aside>
     <p>Evaluates the string <code>s</code> as an hex program, or the array of integers to be interpreted as hex
         bytecode
         (HBX format).</p>
     <h5 id="quote-symbol"><code>$:&#39;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>a &rarr; q</mark></p>
-    <aside>OPCODE: <code>1e</code></aside>
+    <aside>OPCODE: <code>1f</code></aside>
     <p>Pushes the literal <code>a</code> wrapped in a quotation on the stack.</p>
+     <h5 id="debug-symbol"><code>$:&#39;$$</code> Symbol<a href="#top"></a></h5>
+    <p><mark>q &rarr; *</mark></p>
+    <aside>OPCODE: <code>20</code></aside>
+    <p>Dequotes <code>q</code> with debugging enabled.</p>
     <h4 id="arithmetic-symbols">Arithmetic Symbols<a href="#top"></a></h4>
     <h5 id="add-symbol"><code>$:+$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
-    <aside>OPCODE: <code>1f</code></aside>
+    <aside>OPCODE: <code>21</code></aside>
     <p>Pushes the result of the sum of <code>i1</code> and <code>i2</code> on the stack.</p>
     <h5 id="subtract-symbol"><code>$:-$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>20</code></aside>
+    <aside>OPCODE: <code>22</code></aside>
     <p>Pushes the result of the subtraction of <code>12</code> from <code>i1</code> on the stack.</p>
     <h5 id="multiply-symbol"><code>$:*$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>21</code></aside>
+    <aside>OPCODE: <code>23</code></aside>
     <p>Pushes the result of the multiplication of <code>i1</code> and <code>12</code> on the stack.</p>
     <h5 id="divide-symbol"><code>$:/$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>22</code></aside>
+    <aside>OPCODE: <code>24</code></aside>
     <p>Pushes the result of the division of <code>i1</code> by <code>12</code> on the stack.</p>
     <h5 id="modulo-symbol"><code>$:%$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>23</code></aside>
+    <aside>OPCODE: <code>25</code></aside>
     <p>Pushes the result of the modulo of <code>i1</code> by <code>12</code> on the stack.</p>
     <h4 id="bitwise-operations-symbols">Bitwise Operations Symbols<a href="#top"></a></h4>
     <h5 id="bitwise-and-symbol"><code>$:&amp;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>24</code></aside>
+    <aside>OPCODE: <code>26</code></aside>
     <p>Pushes the result of a bitwise and of <code>i1</code> and <code>i2</code> on the stack.</p>
     <h5 id="bitwise-or-symbol"><code>$:|$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>25</code></aside>
+    <aside>OPCODE: <code>27</code></aside>
     <p>Pushes the result of a bitwise or of <code>i1</code> and <code>i2</code> on the stack.</p>
     <h5 id="bitwise-xor-symbol"><code>$:^$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>26</code></aside>
+    <aside>OPCODE: <code>28</code></aside>
     <p>Pushes the result of a bitwise xor of <code>i1</code> and <code>i2</code> on the stack.</p>
     <h5 id="bitwise-not-symbol"><code>$:~$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; i</mark></p>
-    <aside>OPCODE: <code>27</code></aside>
+    <aside>OPCODE: <code>29</code></aside>
     <p>Pushes the result of a bitwise not of <code>i</code> on the stack.</p>
     <h5 id="bitwise-leftshift-symbol"><code>$:&lt;&lt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>28</code></aside>
+    <aside>OPCODE: <code>2a</code></aside>
     <p>Pushes the result of shifting <code>i1</code> by <code>i2</code> bits to the left.</p>
     <h5 id="bitwise-rightshift-symbol"><code>$:&gt;&gt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>29</code></aside>
+    <aside>OPCODE: <code>2b</code></aside>
     <p>Pushes the result of shifting <code>i1</code> by <code>i2</code> bits to the right.</p>
     <h4 id="comparisons-symbols">Comparisons Symbols<a href="#top"></a></h4>
     <h5 id="equal-symbol"><code>$:==$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a1 a2 &rarr; i</mark></p>
-    <aside>OPCODE: <code>2a</code></aside>
+    <aside>OPCODE: <code>2c</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are equal, or
         <code>0x0</code>
         otherwise.
     </p>
     <h5 id="notequal-symbol"><code>$:!=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>2b</code></aside>
+    <aside>OPCODE: <code>2d</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are not equal, or
         <code>0x0</code>
         otherwise.
     </p>
     <h5 id="greaterthan-symbol"><code>$:&gt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>2c</code></aside>
+    <aside>OPCODE: <code>2e</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or
         <code>0x0</code>
         otherwise.
     </p>
     <h5 id="lessthan-symbol"><code>$:&lt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>2d</code></aside>
+    <aside>OPCODE: <code>2f</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is less than <code>i2</code>, or <code>0x0</code>
         otherwise.</p>
     <h5 id="greaterthanequal-symbol"><code>$:&gt;=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
-    <aside>OPCODE: <code>2e</code></aside>
+    <aside>OPCODE: <code>30</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than or equal to <code>i2</code>, or
         <code>0x0</code> otherwise.
     </p>
     <h5 id="lessthanequal-symbol"><code>$:&lt;=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
-    <aside>OPCODE: <code>2f</code></aside>
+    <aside>OPCODE: <code>31</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is less than or equal to <code>i2</code>, or
         <code>0x0</code> otherwise.
     </p>
     <h4 id="boolean-logic-symbols">Boolean Logic Symbols<a href="#top"></a></h4>
     <h5 id="and-symbol"><code>$:and$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
-    <aside>OPCODE: <code>30</code></aside>
+    <aside>OPCODE: <code>32</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are non-zero integers, or
         <code>0x0</code> otherwise.
     </p>
     <h5 id="or-symbol"><code>$:or$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
-    <aside>OPCODE: <code>31</code></aside>
+    <aside>OPCODE: <code>33</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> or <code>i2</code> are non-zero integers, or
         <code>0x0</code> otherwise.
     </p>
     <h5 id="not-symbol"><code>$:not$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; i</mark></p>
-    <aside>OPCODE: <code>32</code></aside>
+    <aside>OPCODE: <code>34</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i</code> is zero, or <code>0x0</code> otherwise.</p>
     <h5 id="xor-symbol"><code>$:xor$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
-    <aside>OPCODE: <code>33</code></aside>
+    <aside>OPCODE: <code>35</code></aside>
     <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are different, or
         <code>0x0</code>
         otherwise.
@@ -726,33 +724,33 @@ $; Lookup second symbol (factorial)$$
     <h4 id="type-checking-and-conversion-symbols">Type Checking and Conversion Symbols<a href="#top"></a></h4>
     <h5 id="int-symbol"><code>$:int$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>s &rarr; i</mark></p>
-    <aside>OPCODE: <code>34</code></aside>
+    <aside>OPCODE: <code>36</code></aside>
     <p>Converts the string <code>s</code> representing a hexadecimal integer to an integer value and pushes it
         on
         the
         stack.</p>
     <h5 id="str-symbol"><code>$:str$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
-    <aside>OPCODE: <code>35</code></aside>
+    <aside>OPCODE: <code>37</code></aside>
     <p>Converts the integer <code>i</code> to a string representing a hexadecimal integer and pushes it on the
         stack.
     </p>
     <h5 id="dec-symbol"><code>$:dec$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
-    <aside>OPCODE: <code>36</code></aside>
+    <aside>OPCODE: <code>38</code></aside>
     <p>Converts the integer <code>i</code> to a string representing a decimal integer and pushes it on the
         stack.
     </p>
     <h5 id="hex-symbol"><code>$:hex$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
-    <aside>OPCODE: <code>37</code></aside>
+    <aside>OPCODE: <code>39</code></aside>
     <p>Converts the string <code>s</code> representing a decimal integer to an integer value and pushes it on
         the
         stack.
     </p>
     <h5 id="ord-symbol"><code>$:ord$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s &rarr; i</mark></p>
-    <aside>OPCODE: <code>38</code></aside>
+    <aside>OPCODE: <code>3a</code></aside>
     <p>Pushes the ASCII value of the string <code>s</code> on the stack.</p>
     <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between
         $0x0$$
@@ -760,12 +758,12 @@ $; Lookup second symbol (factorial)$$
         $0x7f$$, <code>$0xffffffff$$</code> is pushed on the stack.</p>
     <h5 id="chr-symbol"><code>$:chr$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
-    <aside>OPCODE: <code>39</code></aside>
+    <aside>OPCODE: <code>3b</code></aside>
     <p>Pushes the ASCII character represented by the integer <code>i</code> on the stack.</p>
     <p>If <code>i</code> is not between $0x0$$ and $0x7f$$, an empty string is pushed on the stack.</p>
     <h5 id="type-symbol"><code>$:type$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr; s</mark></p>
-    <aside>OPCODE: <code>3a</code></aside>
+    <aside>OPCODE: <code>3c</code></aside>
     <p>Pushes the type of the literal <code>a</code> on the stack (<code>integer</code>, <code>string</code>,
         <code>quotation</code>, <code>native-symbol</code>, <code>user-symbol</code>, <code>invalid</code>, or
         <code>unknown</code>).
@@ -773,44 +771,44 @@ $; Lookup second symbol (factorial)$$
     <h4 id="list-symbols">List (Strings and Quotations) Symbols<a href="#top"></a></h4>
     <h5 id="cat-symbol"><code>$:cat$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s1 s2|q1 q2) &rarr; (s|q)</mark></p>
-    <aside>OPCODE: <code>3b</code></aside>
+    <aside>OPCODE: <code>3d</code></aside>
     <p>Pushes the result of the concatenation of two strings or two quotations on the stack.</p>
     <h5 id="len-symbol"><code>$:len$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s|q) &rarr; i</mark></p>
-    <aside>OPCODE: <code>3c</code></aside>
+    <aside>OPCODE: <code>3e</code></aside>
     <p>Pushes the length of a string or a quotation on the stack.</p>
     <h5 id="get-symbol"><code>$:get$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s|q) i &rarr; a</mark></p>
-    <aside>OPCODE: <code>3d</code></aside>
+    <aside>OPCODE: <code>3f</code></aside>
     <p>Pushes the <code>i</code>th item of a string or a quotation on the stack.</p>
     <h5 id="index-symbol"><code>$:index$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> (s a|q a) &rarr; i</mark></p>
-    <aside>OPCODE: <code>3e</code></aside>
+    <aside>OPCODE: <code>40</code></aside>
     <p>Pushes the index of the first occurrence of the literal <code>a</code> in a string or a quotation on the
         stack.
         If <code>a</code> is not found, <code>$0xffffffff$$</code> is pushed on the stack.</p>
     <h5 id="join-symbol"><code>$:join$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q s1 &rarr; s2</mark></p>
-    <aside>OPCODE: <code>3f</code></aside>
+    <aside>OPCODE: <code>41</code></aside>
     <p>Assuming that <code>q</code> is a quotation containing only strings, pushes the string <code>s2</code>
         obtained
         by joining each element of <code>q</code> together using <code>s1</code> as a delimiter. </p>
     <h5 id="split-symbol"><code>$:split$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s1 s2 &rarr; q</mark></p>
-    <aside>OPCODE: <code>40</code></aside>
+    <aside>OPCODE: <code>42</code></aside>
     <p>Pushes a quotation <code>q</code> containing the strings obtained by splitting <code>s1</code> using
         <code>s2</code> as a delimiter.
     </p>
     <h5 id="replace-symbol"><code>$:replace$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> s1 s2 s3 &rarr; s4</mark></p>
-    <aside>OPCODE: <code>41</code></aside>
+    <aside>OPCODE: <code>43</code></aside>
     <p>Pushes the string <code>s4</code> obtained by replacing the first occurrence of <code>s2</code> in
         <code>s1</code> by
         <code>s3</code>.
     </p> 
     <h5 id="map-symbol"><code>$:map$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q1 q2 &rarr; q3</mark></p>
-    <aside>OPCODE: <code>43</code></aside>
+    <aside>OPCODE: <code>44</code></aside>
     <p>Dequotes quotation <code>q1</code> and applies it to each item of quotation <code>q2</code> to obtain a
         new
         quotation <code>q3</code>.
