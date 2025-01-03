@@ -2575,11 +2575,13 @@ int hex_symbol_map(hex_context_t *ctx)
                 hex_free_list(ctx, quotation, i);
                 return 1;
             }
-            for (size_t j = 0; j < action->quotation_size; j++)
+            hex_item_t *act = hex_copy_item(ctx, action);
+            for (size_t j = 0; j < act->quotation_size; j++)
             {
-                if (hex_push(ctx, action->data.quotation_value[j]) != 0)
+                if (hex_push(ctx, act->data.quotation_value[j]) != 0)
                 {
                     HEX_FREE(ctx, action);
+                    HEX_FREE(ctx, act);
                     HEX_FREE(ctx, list);
                     hex_free_list(ctx, quotation, i);
                     return 1;
@@ -2591,6 +2593,7 @@ int hex_symbol_map(hex_context_t *ctx)
                 hex_error(ctx, "[symbol map] Memory allocation failed");
                 HEX_FREE(ctx, action);
                 HEX_FREE(ctx, list);
+                HEX_FREE(ctx, act);
                 hex_free_list(ctx, quotation, i);
                 return 1;
             }
