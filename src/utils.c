@@ -307,46 +307,59 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
     return str;
 }
 
-char* hex_process_string(const char* input)
+char *hex_process_string(const char *value)
 {
-    size_t len = strlen(input);
-    size_t new_len = 0;
+    int len = strlen(value);
+    char *processed_str = (char *)malloc(len + 1);
+    if (!processed_str)
+    {
+        return NULL;
+    }
 
-    // First pass: Calculate the length of the escaped string
-    for (size_t i = 0; i < len; i++) {
-        switch (input[i]) {
-            case '\n': case '\t': case '\r': case '\\':
-            case '\"': case '\'': case '\v': case '\f':
-            case '\a': case '\b':
-                new_len += 2; // Escaped version adds one extra character
+    char *dst = processed_str;
+    const char *src = value;
+    while (*src)
+    {
+        if (*src == '\\' && *(src + 1))
+        {
+            src++;
+            switch (*src)
+            {
+            case 'n':
+                *dst++ = '\n';
+                break;
+            case 't':
+                *dst++ = '\t';
+                break;
+            case 'r':
+                *dst++ = '\r';
+                break;
+            case 'b':
+                *dst++ = '\b';
+                break;
+            case 'f':
+                *dst++ = '\f';
+                break;
+            case 'v':
+                *dst++ = '\v';
+                break;
+            case '\"':
+                *dst++ = '\"';
                 break;
             default:
-                new_len++;
+                *dst++ = '\\';
+                *dst++ = *src;
+                break;
+            }
         }
-    }
-
-    // Allocate memory for the escaped string
-    char* escaped = (char*)malloc(new_len + 1);
-
-    // Second pass: Build the escaped string
-    size_t j = 0;
-    for (size_t i = 0; i < len; i++) {
-        switch (input[i]) {
-            case '\n': escaped[j++] = '\\'; escaped[j++] = 'n'; break;
-            case '\t': escaped[j++] = '\\'; escaped[j++] = 't'; break;
-            case '\r': escaped[j++] = '\\'; escaped[j++] = 'r'; break;
-            case '\\': escaped[j++] = '\\'; escaped[j++] = '\\'; break;
-            case '\"': escaped[j++] = '\\'; escaped[j++] = '\"'; break;
-            case '\'': escaped[j++] = '\\'; escaped[j++] = '\''; break;
-            case '\v': escaped[j++] = '\\'; escaped[j++] = 'v'; break;
-            case '\f': escaped[j++] = '\\'; escaped[j++] = 'f'; break;
-            case '\a': escaped[j++] = '\\'; escaped[j++] = 'a'; break;
-            case '\b': escaped[j++] = '\\'; escaped[j++] = 'b'; break;
-            default: escaped[j++] = input[i];
+        else
+        {
+            *dst++ = *src;
         }
+        src++;
     }
-    escaped[j] = '\0'; // Null-terminate the string
-    return escaped;
+    *dst = '\0';
+    return processed_str;
 }
 
 size_t hex_min_bytes_to_encode_integer(int32_t value)
