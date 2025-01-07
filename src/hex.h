@@ -108,10 +108,9 @@ typedef struct hex_registry_entry_t
 typedef struct hex_registry_t
 {
     hex_registry_entry_t **buckets; // Array of bucket pointers
-    size_t bucket_count;           // Number of buckets
-    size_t size;                   // Number of stored entries
+    size_t bucket_count;            // Number of buckets
+    size_t size;                    // Number of stored entries
 } hex_registry_t;
-
 
 typedef struct hex_doc_entry_t
 {
@@ -309,7 +308,7 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size);
 char *hex_process_string(const char *value);
 size_t hex_min_bytes_to_encode_integer(int32_t value);
 char *hex_unescape_string(const char *input);
-char* hex_normalize_newlines(const char* input);
+char *hex_normalize_newlines(const char *input);
 
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);
@@ -389,10 +388,10 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
 int hex_bytecode_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, const char *value);
 int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result);
 int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, hex_item_t *result);
-int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, hex_item_t *result);
-int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result);
-int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result);
-int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size);
+int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, const char *filename, hex_item_t *result);
+int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, const char *filename, hex_item_t *result);
+int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, const char *filename, hex_item_t *result);
+int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size, const char *filename);
 void hex_header(hex_context_t *ctx, uint8_t header[8]);
 int hex_validate_header(uint8_t header[8]);
 

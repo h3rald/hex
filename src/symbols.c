@@ -146,7 +146,7 @@ int hex_symbol_symbols(hex_context_t *ctx)
                 for (size_t j = 0; j < quotation_size; j++)
                 {
                     free(quotation[j]->data.str_value); // Free string value
-                    free(quotation[j]);               // Free hex_item_t
+                    free(quotation[j]);                 // Free hex_item_t
                 }
                 free(quotation);
                 return 1;
@@ -231,7 +231,7 @@ int hex_symbol_i(hex_context_t *ctx)
     {
         if (hex_push(ctx, item->data.quotation_value[i]) != 0)
         {
-            //HEX_FREE(ctx, item);
+            // HEX_FREE(ctx, item);
             return 1;
         }
     }
@@ -276,7 +276,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         {
             bytecode[i] = (uint8_t)item->data.quotation_value[i]->data.int_value;
         }
-        int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size);
+        int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size, "<eval>");
         return result;
     }
     else
@@ -306,7 +306,7 @@ int hex_symbol_debug(hex_context_t *ctx)
     {
         if (hex_push(ctx, item->data.quotation_value[i]) != 0)
         {
-            //HEX_FREE(ctx, item);
+            // HEX_FREE(ctx, item);
             ctx->settings->debugging_enabled = 0;
             return 1;
         }
@@ -1508,7 +1508,7 @@ int hex_symbol_index(hex_context_t *ctx)
 // String symbols
 
 int hex_symbol_join(hex_context_t *ctx)
-{ 
+{
     HEX_POP(ctx, separator);
     if (separator->type == HEX_TYPE_INVALID)
     {

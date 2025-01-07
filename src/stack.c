@@ -63,7 +63,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     }
     else if (item->type == HEX_TYPE_NATIVE_SYMBOL)
     {
-        hex_item_t *value = malloc(sizeof(hex_item_t));
+        HEX_ALLOC(value);
         if (value == NULL)
         {
             hex_error(ctx, "[push] Failed to allocate memory for value");
@@ -299,7 +299,14 @@ hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token)
 
     // Copy basic fields
     copy->type = token->type;
-    copy->quotation_size = token->quotation_size;
+    if (token->type == HEX_TOKEN_QUOTATION_START || token->type == HEX_TOKEN_QUOTATION_END)
+    {
+        copy->quotation_size = token->quotation_size;
+    }
+    else
+    {
+        copy->quotation_size = 0;
+    }
 
     // Copy the token's value
     if (token->value)
@@ -347,8 +354,22 @@ hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token)
             copy->position->filename = NULL;
         }
 
-        copy->position->line = token->position->line;
-        copy->position->column = token->position->column;
+        if (token->position->line)
+        {
+            copy->position->line = token->position->line;
+        }
+        else
+        {
+            copy->position->line = 0;
+        }
+        if (token->position->column)
+        {
+            copy->position->column = token->position->column;
+        }
+        else
+        {
+            copy->position->column = 0;
+        }
     }
     else
     {

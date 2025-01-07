@@ -376,7 +376,7 @@ int main(int argc, char *argv[])
                 }
                 fread(bytecode, 1, bytecode_size, bytecode_file);
                 fclose(bytecode_file);
-                hex_interpret_bytecode(ctx, bytecode, bytecode_size);
+                hex_interpret_bytecode(ctx, bytecode, bytecode_size, file);
                 free(bytecode);
             }
             else

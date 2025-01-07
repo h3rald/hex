@@ -392,7 +392,7 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     return 0;
 }
 
-int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, hex_item_t *result)
+int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, size_t position, const char *filename, hex_item_t *result)
 {
 
     const char *symbol = hex_opcode_to_symbol(opcode);
@@ -408,6 +408,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = strdup(symbol);
     token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
+    token->position->filename = strdup(filename);
     token->position->line = 0;
     token->position->column = position;
     if (hex_get_symbol(ctx, token->value, value))
@@ -427,7 +428,7 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
     return 0;
 }
 
-int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
+int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, const char *filename, hex_item_t *result)
 {
     // Get the index of the symbol (one byte)
     if (*size == 0)
@@ -461,6 +462,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     token->value = (char *)malloc(length + 1);
     strncpy(token->value, value, length + 1);
     token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
+    token->position->filename = strdup(filename);
     token->position->line = 0;
     token->position->column = position;
 
@@ -473,7 +475,7 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
     return 0;
 }
 
-int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, hex_item_t *result)
+int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, const char *filename, hex_item_t *result)
 {
     size_t n_items = 0;
     int shift = 0;
@@ -525,21 +527,21 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
             }
             break;
         case HEX_OP_LOOKUP:
-            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, position, item) != 0)
+            if (hex_interpret_bytecode_user_symbol(ctx, bytecode, size, position, filename, item) != 0)
             {
                 hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
         case HEX_OP_PUSHQT:
-            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, position, item) != 0)
+            if (hex_interpret_bytecode_quotation(ctx, bytecode, size, position, filename, item) != 0)
             {
                 hex_free_list(ctx, items, n_items);
                 return 1;
             }
             break;
         default:
-            if (hex_interpret_bytecode_native_symbol(ctx, opcode, *size, item) != 0)
+            if (hex_interpret_bytecode_native_symbol(ctx, opcode, *size, filename, item) != 0)
             {
                 hex_free_list(ctx, items, n_items);
                 return 1;
@@ -556,7 +558,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     return 0;
 }
 
-int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
+int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size, const char *filename)
 {
     size_t bytecode_size = size;
     size_t position = bytecode_size;
@@ -618,7 +620,7 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
             }
             break;
         case HEX_OP_LOOKUP:
-            if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size, position, item) != 0)
+            if (hex_interpret_bytecode_user_symbol(ctx, &bytecode, &size, position, filename, item) != 0)
             {
                 HEX_FREE(ctx, item);
                 return 1;
@@ -626,14 +628,14 @@ int hex_interpret_bytecode(hex_context_t *ctx, uint8_t *bytecode, size_t size)
             break;
         case HEX_OP_PUSHQT:
 
-            if (hex_interpret_bytecode_quotation(ctx, &bytecode, &size, position, item) != 0)
+            if (hex_interpret_bytecode_quotation(ctx, &bytecode, &size, position, filename, item) != 0)
             {
                 HEX_FREE(ctx, item);
                 return 1;
             }
             break;
         default:
-            if (hex_interpret_bytecode_native_symbol(ctx, opcode, position, item) != 0)
+            if (hex_interpret_bytecode_native_symbol(ctx, opcode, position, filename, item) != 0)
             {
                 HEX_FREE(ctx, item);
                 return 1;
