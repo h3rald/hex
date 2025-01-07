@@ -308,7 +308,6 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size);
 char *hex_process_string(const char *value);
 size_t hex_min_bytes_to_encode_integer(int32_t value);
 char *hex_unescape_string(const char *input);
-char *hex_normalize_newlines(const char *input);
 
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);

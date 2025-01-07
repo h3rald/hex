@@ -277,7 +277,7 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size)
                 i++; // Skip the '\n' part of the '\r\n' sequence
             }
             *ptr++ = '\\';
-            *ptr++ = 'r';
+            *ptr++ = 'n';
             break;
         case '\b':
             *ptr++ = '\\';
@@ -386,78 +386,67 @@ size_t hex_min_bytes_to_encode_integer(int32_t value)
     return 4; // Default to 4 bytes if no smaller size is found.
 }
 
-char *hex_unescape_string(const char *input) 
+char *hex_unescape_string(const char *input)
 {
     size_t len = strlen(input);
-    char* unescaped = (char*)malloc(len + 1);
+    char *unescaped = (char *)malloc(len + 1);
 
     size_t j = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (input[i] == '\\' && i + 1 < len) {
-            switch (input[i + 1]) {
-                case 'n': unescaped[j++] = '\n'; i++; break;
-                case 't': unescaped[j++] = '\t'; i++; break;
-                case 'r': unescaped[j++] = '\r'; i++; break;
-                case '\\': unescaped[j++] = '\\'; i++; break;
-                case '\"': unescaped[j++] = '\"'; i++; break;
-                case '\'': unescaped[j++] = '\''; i++; break;
-                case 'v': unescaped[j++] = '\v'; i++; break;
-                case 'f': unescaped[j++] = '\f'; i++; break;
-                case 'a': unescaped[j++] = '\a'; i++; break;
-                case 'b': unescaped[j++] = '\b'; i++; break;
-                default: unescaped[j++] = input[i];
+    for (size_t i = 0; i < len; i++)
+    {
+        if (input[i] == '\\' && i + 1 < len)
+        {
+            switch (input[i + 1])
+            {
+            case 'n':
+                unescaped[j++] = '\n';
+                i++;
+                break;
+            case 't':
+                unescaped[j++] = '\t';
+                i++;
+                break;
+            case 'r':
+                unescaped[j++] = '\r';
+                i++;
+                break;
+            case '\\':
+                unescaped[j++] = '\\';
+                i++;
+                break;
+            case '\"':
+                unescaped[j++] = '\"';
+                i++;
+                break;
+            case '\'':
+                unescaped[j++] = '\'';
+                i++;
+                break;
+            case 'v':
+                unescaped[j++] = '\v';
+                i++;
+                break;
+            case 'f':
+                unescaped[j++] = '\f';
+                i++;
+                break;
+            case 'a':
+                unescaped[j++] = '\a';
+                i++;
+                break;
+            case 'b':
+                unescaped[j++] = '\b';
+                i++;
+                break;
+            default:
+                unescaped[j++] = input[i];
             }
-        } else {
+        }
+        else
+        {
             unescaped[j++] = input[i];
         }
     }
     unescaped[j] = '\0'; // Null-terminate the string
     return unescaped;
 }
-
-char* hex_normalize_newlines(const char* input) 
-{
-    size_t len = strlen(input);
-    size_t new_len = 0;
-
-    // First pass: Calculate the length of normalized string
-    for (size_t i = 0; i < len; i++) {
-        if (input[i] == '\r') {
-            if (i + 1 < len && input[i + 1] == '\n') {
-                // Windows-style CRLF -> LF
-                new_len++;
-                i++;
-            } else {
-                // Mac-style CR -> LF
-                new_len++;
-            }
-        } else {
-            new_len++;
-        }
-    }
-
-    // Allocate memory for the normalized string
-    char* normalized = (char*)malloc(new_len + 1);
-    if (!normalized) {
-        fprintf(stderr, "Memory allocation failed.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Second pass: Build the normalized string
-    size_t j = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (input[i] == '\r') {
-            if (i + 1 < len && input[i + 1] == '\n') {
-                normalized[j++] = '\n';
-                i++;
-            } else {
-                normalized[j++] = '\n';
-            }
-        } else {
-            normalized[j++] = input[i];
-        }
-    }
-    normalized[j] = '\0'; // Null-terminate the string
-    return normalized;
-}
-
