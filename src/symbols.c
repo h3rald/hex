@@ -35,7 +35,7 @@ int hex_symbol_store(hex_context_t *ctx)
 
     if (value->type == HEX_TYPE_QUOTATION)
     {
-        value->operator= 0;
+        value->is_operator = 0;
     }
     if (hex_set_symbol(ctx, name->data.str_value, value, 0) != 0)
     {
@@ -75,7 +75,7 @@ int hex_symbol_define(hex_context_t *ctx)
 
     if (value->type == HEX_TYPE_QUOTATION)
     {
-        value->operator= 1;
+        value->is_operator = 1;
     }
 
     if (hex_set_symbol(ctx, name->data.str_value, value, 0) != 0)

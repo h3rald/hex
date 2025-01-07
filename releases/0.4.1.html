@@ -1,0 +1,10 @@
+<h3 id="v0.4.1">v0.4.1 &mdash; 2025-01-07</h3>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Addressed segmentation fault when interpreting bytecode on Windows (filename was not populated for symbol
+        position).</li>
+    <li>Ensured that newlines are correctly processed on Windows.</li>
+    <li>Renamed the <code>operator</code> property in <code>hex_item_t</code> to <code>is_operator</code> to avoid
+        conflicts in C++ code (operator is a reserved keyword).</li>
+</ul>

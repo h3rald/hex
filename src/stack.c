@@ -36,7 +36,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         }
         if (hex_get_symbol(ctx, item->token->value, value))
         {
-            if (value->type == HEX_TYPE_QUOTATION && value->operator)
+            if (value->type == HEX_TYPE_QUOTATION && value->is_operator)
             {
                 add_to_stack_trace(ctx, item->token);
                 for (size_t i = 0; i < value->quotation_size; i++)
@@ -139,7 +139,7 @@ hex_item_t *hex_quotation_item(hex_context_t *ctx, hex_item_t **quotation, size_
         hex_error(ctx, "[create quotation] Failed to allocate memory for item");
         return NULL;
     }
-    item->operator= 0;
+    item->is_operator = 0;
     item->type = HEX_TYPE_QUOTATION;
     item->data.quotation_value = quotation;
     item->quotation_size = size;
@@ -397,7 +397,7 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
 
     // Copy basic fields
     copy->type = item->type;
-    copy->operator= item->operator;
+    copy->is_operator = item->is_operator;
     copy->quotation_size = item->quotation_size;
 
     // Copy the union field based on the type

@@ -20,7 +20,7 @@ int isatty(int fd);
 #endif
 
 // Constants
-#define HEX_VERSION "0.4.0"
+#define HEX_VERSION "0.4.1"
 #define HEX_STDIN_BUFFER_SIZE 16384
 #define HEX_INITIAL_REGISTRY_SIZE 512
 #define HEX_REGISTRY_SIZE 4096
@@ -79,7 +79,7 @@ typedef struct hex_item_t
         int (*fn_value)(hex_context_t *);
         struct hex_item_t **quotation_value;
     } data;
-    int operator;
+    int is_operator;
     hex_token_t *token;    // Token containing stack information (valid for HEX_TYPE_NATIVE_SYMBOL and HEX_TYPE_USER_SYMBOL)
     size_t quotation_size; // Size of the quotation (valid for HEX_TYPE_QUOTATION)
 } hex_item_t;

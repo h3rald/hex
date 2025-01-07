@@ -1,10 +1,21 @@
 <article>
     <h2>Changelog</h2>
     <ul>
+<li><a href="#v0.4.1">v0.4.1</a></li>
 <li><a href="#v0.4.0">v0.4.0</a></li>
 <li><a href="#v0.3.0">v0.3.0</a></li>
 <li><a href="#v0.2.0">v0.2.0</a></li>
 <li><a href="#v0.1.0">v0.1.0</a></li>
+</ul>
+<h3 id="v0.4.1">v0.4.1 &mdash; 2025-01-07</h3>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Addressed segmentation fault when interpreting bytecode on Windows (filename was not populated for symbol
+        position).</li>
+    <li>Ensured that newlines are correctly processed on Windows.</li>
+    <li>Renamed the <code>operator</code> property in <code>hex_item_t</code> to <code>is_operator</code> to avoid
+        conflicts in C++ code (operator is a reserved keyword).</li>
 </ul>
 <h3 id="v0.4.0">v0.4.0 &mdash; 2025-01-03</h3>
 
