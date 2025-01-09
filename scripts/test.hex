@@ -16,8 +16,8 @@
     (_when_q .)
     ()
   if
-  ;"_when_q"    #
-  ;"_when_cond" #
+  "_when_q"    #
+  "_when_cond" #
 ) "when" ::
 
 
