@@ -481,6 +481,7 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
     int shift = 0;
 
     // Decode the variable-length integer for the number of items
+
     do
     {
         if (*size == 0)
@@ -488,11 +489,39 @@ int hex_interpret_bytecode_quotation(hex_context_t *ctx, uint8_t **bytecode, siz
             hex_error(ctx, "[interpret bytecode quotation] Bytecode size too small to contain a quotation length");
             return 1;
         }
-        n_items |= ((**bytecode & 0x7F) << shift);
+
+        // Extract the current byte
+        uint8_t current_byte = **bytecode;
+
+        // Add the lower 7 bits of the current byte to the result
+        n_items |= ((current_byte & 0x7F) << shift);
+
+        // Check if MSB is set (continuation flag)
+        if ((current_byte & 0x80) == 0)
+        {
+            // Last byte of the integer; decoding complete
+            break;
+        }
+
+        // Update shift for the next byte
         shift += 7;
+
+        // Prevent overflow for excessively large shifts
+        if (shift >= 32)
+        {
+            hex_error(ctx, "[interpret bytecode quotation] Shift overflow while decoding variable-length integer");
+            return 1;
+        }
+
+        // Move to the next byte
         (*bytecode)++;
         (*size)--;
-    } while (**bytecode & 0x80);
+
+    } while (1); // Loop until the break condition is met
+
+    // Move to the next byte after the loop
+    (*bytecode)++;
+    (*size)--;
 
     hex_debug(ctx, ">> PUSHQT[03]: <start> (items: %zu)", n_items);
 

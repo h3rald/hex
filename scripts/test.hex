@@ -237,6 +237,21 @@
       "test1.txt" read _str == "_str" #
       "rm test1.txt" exec pop
     )
+    (("a" not) (error) try "[symbol not] Integer required" ==)
+    ((0x1 () xor) (error) try "[symbol xor] Two integers required" ==)
+    ((() "aaa" cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
+    ;124
+
+    ((0x4 () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
+    ((0x4 len) (error) try "[symbol len] Quotation or string required" ==)
+    ((0x1 0x4 index) (error) try "[symbol index] Quotation or string required" ==)
+    ((("a" 0x2 "b") "-" join) (error) try "[symbol join] Quotation must contain only strings" ==)
+    ;128
+
+    ((("a" "b" "c") 0x1 join) (error) try "[symbol join] Quotation and string required" ==)
+    (("a" 0x1 split) (error) try "[symbol split] Two strings required" ==)
+    
+    ;(() (error) try "" ==)
     
 ) "tests" :
 
