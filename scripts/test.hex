@@ -250,8 +250,53 @@
 
     ((("a" "b" "c") 0x1 join) (error) try "[symbol join] Quotation and string required" ==)
     (("a" 0x1 split) (error) try "[symbol split] Two strings required" ==)
+    ((("aaa") "a" "b" replace) (error) try "[symbol replace] Three strings required" ==)
+    ((0x1 read) (error) try "[symbol read] String required" ==)
+    ;132
+
+    (("invalid-file.txt" read) (error) try "[symbol read] Could not open file for reading: invalid-file.txt" ==)
+    (("test" "invalid-file//" write) (error) try "[symbol write] Could not open file for writing: invalid-file//" ==)
+    (((0x2 0x4 "a") "test.txt" write) (error) try "[symbol write] Quotation must contain only integers" == "rm test.txt" exec pop)
+    ((0x2 "test.txt" write) (error) try "[symbol write] String or quotation of integers required" ==)
+    ;136
+
+    (("a" () write) (error) try "[symbol write] String required" ==)
+    (("aaa" "invalid-file//" append) (error) try "[symbol append] Could not open file for appending: invalid-file//" ==)
+    (((0x2 "" 0x5) "test.txt" append) (error) try "[symbol append] Quotation must contain only integers" == "rm test.txt" exec pop)
+    ((0x2 "test.txt" append) (error) try "[symbol append] String or quotation of integers required" ==)
+    ;140
+
+    (("a" 0x1 append) (error) try "[symbol append] String required" ==)
+    (("error" exit) (error) try "[symbol exit] Integer required" ==)
+    ((0x1 exec) (error) try "[symbol exec] String required" ==)
+    ((() run) (error) try "[symbol run] String required" ==)
+    ;144
     
-    ;(() (error) try "" ==)
+    ((() () "" if) (error) try "[symbol if] Three quotations required" ==)
+    ((() "" while) (error) try "[symbol while] Two quotations required" ==)
+    ((() 0x1 try) (error) try "[symbol try] Two quotations required" ==)
+    ((0x1 throw) (error) try "[symbol throw] String required" ==)
+    ;148
+
+    ((() 0x1 map) (error) try "[symbol map] Two quotations required" ==)
+    (
+      (
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+      ) len "130" hex ==
+    )
+    ;150
     
 ) "tests" :
 
