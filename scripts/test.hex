@@ -1,11 +1,15 @@
 #!/usr/bin/env hex
- 
-0x0 "test-count" :
-0x0 "successes" :
-0x0 "failures" :
-() "errors" :
-() "fails" :
-0x0 "result" :
+
+; --- Globals
+
+0x0 "TEST-COUNT"  :
+0x0 "SUCCESSES"   :
+0x0 "FAILURES"    :
+()  "ERRORS"      :
+()  "FAILS"       :
+0x0 "RESULT"      :
+
+; --- Utilities
 
 (dup puts) "_" ::
 
@@ -23,32 +27,32 @@
 
 (
     "current-test" :
-    test-count 0x1 + "test-count" :
+    TEST-COUNT 0x1 + "TEST-COUNT" :
     (
         (current-test .)
             (
                 "." print 
-                successes 0x1 + "successes" :
+                SUCCESSES 0x1 + "SUCCESSES" :
             )
             (
                 "x" print
-                failures 0x1 + "failures" :
-                fails test-count dec ' cat "fails" :
+                FAILURES 0x1 + "FAILURES" :
+                FAILS TEST-COUNT dec ' cat "FAILS" :
             )
         if
     ) 
         (
             ; Store error
-            errors " - Test #" test-count dec cat ": " cat error cat ' cat "errors" :  
+            ERRORS " - Test #" TEST-COUNT dec cat ": " cat error cat ' cat "ERRORS" :  
             "x" print
-            failures 0x1 + "failures" :
-            fails test-count dec ' cat "fails" :
+            FAILURES 0x1 + "FAILURES" :
+            FAILS TEST-COUNT dec ' cat "FAILS" :
         )
     try
 ) "test" ::
 
+; --- Test Definitions
 
-; --- Define tests
 (
     (0x1 "a" : a 0x1 ==)
     ("a" # 0x1)
@@ -298,14 +302,14 @@
     )
     ;150
     
-) "tests" :
+) "TESTS" :
 
+; --- Run Tests
 
-; --- Run tests
 0x0 "_c" :
-(_c tests len <)
+(_c TESTS len <)
   (
-    tests _c get
+    TESTS _c get
     test
     _c 0x1 + "_c" :
   )
@@ -313,30 +317,30 @@ while
 "_c" #
 
 ; --- Report
-"\nSuccessful Tests: " print successes dec print "/" print successes failures + dec puts
 
+"\nSuccessful Tests: " print SUCCESSES dec print "/" print SUCCESSES FAILURES + dec puts
 
-(errors len 0x0 >)
+(ERRORS len 0x0 >)
     (
         "Errors:" warn
         0x0 "_c" :
-        (_c errors len <)
+        (_c ERRORS len <)
           (
-            errors _c get
+            ERRORS _c get
             warn
             _c 0x1 + "_c" :
           )
         while
         "_c" #
-        0x1 "result" :
+        0x1 "RESULT" :
     )
 when
-(fails len 0x0 >)
+
+(FAILS len 0x0 >)
     (
-        "Failed Tests: " fails ", " join cat warn
-        0x1 "result" :
+        "Failed Tests: " FAILS ", " join cat warn
+        0x1 "RESULT" :
     )
 when
 
-
-result exit
+RESULT exit
