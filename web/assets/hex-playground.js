@@ -29,7 +29,7 @@ eval.addEventListener("click", (e) => {
     eval.style.display = "none";
     upload.style.display = "block";
     hide.style.display = "none";
-    prompt.style.display = "block";
+    prompt.style.display = "flex";
 });
 
 upload.addEventListener("click", () => {
@@ -45,7 +45,7 @@ hide.addEventListener("click", () => {
   upload.style.display = "block";
   eval.style.display = "none";
   hide.style.display = "none";
-  prompt.style.display = "block";
+  prompt.style.display = "flex";
 });
 
 
