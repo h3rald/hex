@@ -1,5 +1,6 @@
 Module.pending_fgets = [];
 Module.pending_lines = [];
+const prompt = document.getElementById("input");
 const inputBox = document.querySelector("article input");
 const textarea = document.querySelector("article textarea");
 const upload = document.getElementById("upload");
@@ -28,7 +29,7 @@ eval.addEventListener("click", (e) => {
     eval.style.display = "none";
     upload.style.display = "block";
     hide.style.display = "none";
-    inputBox.style.display = "block";
+    prompt.style.display = "block";
 });
 
 upload.addEventListener("click", () => {
@@ -36,7 +37,7 @@ upload.addEventListener("click", () => {
   textarea.style.display = "flex";
   eval.style.display = "block";
   hide.style.display = "block";
-  inputBox.style.display = "none";
+  prompt.style.display = "none";
 });
 
 hide.addEventListener("click", () => {
@@ -44,7 +45,7 @@ hide.addEventListener("click", () => {
   upload.style.display = "block";
   eval.style.display = "none";
   hide.style.display = "none";
-  inputBox.style.display = "block";
+  prompt.style.display = "block";
 });
 
 
