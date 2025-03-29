@@ -67,7 +67,7 @@
     <p>What's missing? Let's see, we talked about <em>integers</em>, <em>strings</em>, and even a little bit
         about <em>symbols</em>... Ah! Right: <strong>quotations</strong>, of course!</p>
     <p>A quotation is a fancy name for an array, or a list. In <em>hex</em> quotations have no internal separators
-        between items, and are delimited by ~~square~~ round brackets, like this:</p>
+        between items, and are delimited by <s>square</s> round brackets, like this:</p>
     <pre><code>($0x1$$ $"two"$$ $:three$$ $:!$$)</code></pre>
     <p>Oh my! You really can put <em>anything</em> in quotations, right? Assuming that it's a valid literal, a known
         native symbol (like {{sym-!}}), or a syntactically-valid user-defined symbol (even if it doesn't exist, like
@@ -157,7 +157,7 @@
 <p>Alright, let's do something actually useful. I know: let's implement a new operator to implement the <em>factorial</em> of an integer! You never know when you'll need a factorial these days.</p>
 <p>Here goes:</p>
 <pre><code>(
-  $"_fact_n"$$ $:$$
+  $"_fact_n"$$ $::$$
   ($:_fact_n$$ $0x0$$ $:&lt;=$$)
     ($0x1$$)
     ($:_fact_n$$ $:_fact_n$$ $0x1$$ $:-$$ $:fact$$ $:*$$)
@@ -170,7 +170,7 @@ $0x5$$ $:fact$$ $:dec$$ $:puts$$ $; Prints 120 $$
 <p>Woah! That was a mouthful, wasn't it? Before breaking it down, look at the very end of the program: see that {{sym-::}}? That's the symbol to store <em>operator</em> symbols in The Registry. Operator symbols are defined using a quotation, but unlike ordinary quotations (stored using {{sym-:}}), they will be <em>immediately dequoted</em> when pushed on the stack. In other words, our $:fact$$ operator symbols will behave exactly like one of the built-in native symbol.</p>
 <p>Let's see what is happening inside the quotation:</p>
 <ul>
-<li>First, we are storing a symbol &quot;_fact_n&quot; in the registry. Wait, but there's no value? Correct, the value will be provided when the symbol is used, so like $0x5$$ $:fact$$. It's like saying that we are <em>expecting</em> a value on the stack (and here we are assuming it's an integer, but that's ok for this example).</li>
+<li>First, we are storing a symbol $:_fact_n$$ in the registry. Wait, but there's no value? Correct, the value will be provided when the symbol is used, so like $0x5$$ $:fact$$. It's like saying that we are <em>expecting</em> a value on the stack (and here we are assuming it's an integer, but that's ok for this example).</li>
 <li>Then three (!) quotations and the symbol {{sym-if}} will be pushed on the stack. Yep, you got that right: that's a good old if clause. The first quotation is the condition to be checked, then the <em>then</em> quotation, and finally the <em>else</em> quotation. Note how we can recursively call the $:fact$$ operator that we are just defining... mind-blowing, I am sure.</li>
 <li>Finally, we need to free the temporary symbol $:_fact_n$$ using {{sym-#}}. It is always good practice to do so, otherwise The Registry will be littered with stale symbols nobody uses anymore... quite a sore sight, believe me! Plus they take up precious memory.</li>
 </ul>
