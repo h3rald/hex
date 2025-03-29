@@ -280,10 +280,10 @@
         be <em>dequoted</em> through symbols like {{sym-.}}, which pushes all the items in a quotations
         on the stack, one by one.</p>
     <p>Consider the following example hex program:</p>
-    <pre><code>    ($:dup$$ $:*$$ $:*$$) $"square"$$ $:::$$
+    <pre><code>    ($:dup$$ $:*$$ $:*$$) $"square"$$ $::$$
     $0x3$$ $:square$$ $:.$$ $:puts$$ $; prints 9$$</code></pre>
     <p>This program defines a symbol $:square$$ that can be used to calculate the square value of an integer, using the
-        symbol {{sym-::}}. From then on, if $:square$$ is found anywhere in the same hex program, it
+        symbol {{sym-:}}. From then on, if $:square$$ is found anywhere in the same hex program, it
         will be substituted with <code>($:*$$ $:*$$)</code>. However, this is not enough to calculate the square value,
         because the logic to do so is in a quotation. To "execute" (dequote) a quotation, you must use the {{sym-.}}
         symbol, which pushes all the items in the quotation on the stack, which is equivalent
