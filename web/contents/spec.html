@@ -256,7 +256,7 @@
     <p>In the canonical implementation, the hex stack can contain up to 256 items. If you try to push more items on the
         stack, a stack overflow error will be raised and the program will terminate. While this may seem a relatively
         low number, it is important to note that typically there will not be more than 5-10 items on the stack at any
-        time, because typically symbols are used to frequently pop them out of the stacks.</p>
+        time, because typically symbols are used to frequently pop them out of the stack.</p>
     <h4 id="pushing-literals">Pushing Literals<a href="#top"></a></h4>
     <p>Literals are values that are directly pushed onto the stack. In hex, literals can be integers, strings, or
         quotations. When a literal is encountered in a hex program, it is pushed onto the stack for further processing.
@@ -546,7 +546,7 @@ $; Lookup second symbol (factorial)$$
     <h5 id="symbols-symbol"><code>$:symbols$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>&rarr; q</mark></p>
     <aside>OPCODE: <code>13</code></aside>
-    <p>Pushes a quotation on the stack containing the identifiers of a the symbols currently stored in the registry.</p>
+    <p>Pushes a quotation on the stack containing the identifiers of all the symbols currently stored in the registry.</p>
     <h4 id="control-flow-symbols">Control Flow Symbols<a href="#top"></a></h4>
     <h5 id="if-symbol"><code>$:if$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>q1 q2 q3 &rarr; *</mark></p>
@@ -584,7 +584,7 @@ $; Lookup second symbol (factorial)$$
     <h5 id="stack-symbol"><code>$:stack$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> &rarr; q</mark></p>
     <aside>OPCODE: <code>1a</code></aside>
-    <p>Pushes the items currently on the stack as a quotation on the stack.</p>
+    <p>Pushes the items currently on the stack as a quotation.</p>
     <h5 id="pop-symbol"><code>$:pop$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr;</mark></p>
     <aside>OPCODE: <code>1b</code></aside>
