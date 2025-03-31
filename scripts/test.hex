@@ -1,5 +1,7 @@
 #!/usr/bin/env hex
 
+"lib/utils.hex" read !
+
 ; --- Globals
 
 0x0 "TEST-COUNT"  :
@@ -10,20 +12,6 @@
 0x0 "RESULT"      :
 
 ; --- Utilities
-
-(dup puts) "_" ::
-
-(
-  "_when_q"    :
-  "_when_cond" :
-  (_when_cond .)
-    (_when_q .)
-    ()
-  if
-  "_when_q"    #
-  "_when_cond" #
-) "when" ::
-
 
 (
     "current-test" :
@@ -142,7 +130,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x4d ==)
+    (symbols len 0x62 ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
@@ -301,6 +289,11 @@
       ) len "130" hex ==
     )
     ;150
+
+    ;;; utils.hex tests ;;;
+    ("This is a test" "This" begins)
+    ("This is a test" "this" begins not)
+    ;152
     
 ) "TESTS" :
 

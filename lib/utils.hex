@@ -3,6 +3,20 @@
 ;; Duplicates and prints (with newline) the top item on the stack.
 (dup puts) "_" ::
 
+;;; when
+;; q1 q2 -> *
+;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
+(
+  "_when_q"    :
+  "_when_cond" :
+  (_when_cond .)
+    (_when_q .)
+    ()
+  if
+  "_when_q"    #
+  "_when_cond" #
+) "when" ::
+
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
@@ -71,20 +85,6 @@
   "_ends_c"      # 
   "_ends_offset" #
 ) "ends" ::
-
-;;; when
-;; q1 q2 -> *
-;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
-(
-  "_when_q"    :
-  "_when_cond" :
-  (_when_cond .)
-    (_when_q .)
-    ()
-  if
-  "_when_q"    #
-  "_when_cond" #
-) "when" ::
 
 ;;; cleanup
 ;; s ->
@@ -404,9 +404,47 @@
 ;;; filter
 ;; q1 q2-> q3
 ;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
+(
+  "_filter_fn" qpop
+  "_filter_list" qpop
+  () "_filter_result" :
+  _filter_list (
+    "_filter_each_item" :
+    (_filter_each_item _filter_fn)
+      (
+        _filter_result _filter_each_item push "_filter_result" :
+      ) 
+    when
+  ) each
+  _filter_result
+  cleanup
+) "filter" ::
 
 
 ;;; slice
 ;; s1 i1 i2 -> s2
 ;; Extracts the portion of the string between indices %:i1%% and %:i2%%.
+(
+  "_slice_end" ipop
+  "_slice_start" ipop
+  "_slice_str" spop
+  _slice_str len "_len" :
+  (_slice_start _len >= _slice_start 0x0 < or)
+    ("[symbol slice] Start index out of bounds" throw)
+  when
+  (_slice_end _len >= _slice_end 0x0 < or)
+    ("[symbol slice] End index out of bounds" throw)
+  when
+  (_slice_start _slice_end <)
+    (0x0 "_slice_result" :)
+    (
+      _slice_str _slice_start get _slice_result : 
+      _slice_start 0x1 + "_slice_start" :
+    )
+  while
+  (_slice_str iss)
+    (_slice_result "" join "_slice_result" :)
+  when
+  cleanup
+) "slice" ::
 
