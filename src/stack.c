@@ -270,16 +270,7 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
 
     case HEX_TYPE_NATIVE_SYMBOL:
     case HEX_TYPE_USER_SYMBOL:
-        if (item->token)
-        {
-            // TODO: Cannot free the token here, as it may be shared with other items
-            // Need to implement a reference counting mechanism for symbols
-            /*
-            hex_debug_item(ctx, "FREE", item);
-            hex_free_token(item->token);
-            item->token = NULL; // Prevent double free
-            */
-        }
+        // Cannot "free" symbols because we are not keeping track of how many times they are referenced.
         break;
 
     default:
