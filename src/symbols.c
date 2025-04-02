@@ -276,7 +276,11 @@ int hex_symbol_eval(hex_context_t *ctx)
         {
             bytecode[i] = (uint8_t)item->data.quotation_value[i]->data.int_value;
         }
+        // Copy the current symbol table before evaluating the bytecode
+        hex_symbol_table_t *symbol_table_copy = hex_symboltable_copy(ctx);
         int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size, "<eval>");
+        // Restore the original symbol table
+        ctx->symbol_table = symbol_table_copy;
         return result;
     }
     else

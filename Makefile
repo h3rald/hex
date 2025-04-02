@@ -31,6 +31,7 @@ clean:
 	rm -f hex.wasm
 
 test: hex
+	./hex -b lib/utils.hex
 	./hex -b scripts/test.hex
 	./hex scripts/test.hbx
 

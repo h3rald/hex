@@ -104,3 +104,42 @@ uint8_t *hex_encode_bytecode_symboltable(hex_context_t *ctx, size_t *out_size)
     *out_size = total_size;
     return bytecode;
 }
+
+hex_symbol_table_t *hex_symboltable_copy(hex_context_t *ctx)
+{
+    hex_symbol_table_t *original = ctx->symbol_table;
+    hex_symbol_table_t *copy = malloc(sizeof(hex_symbol_table_t));
+    if (copy == NULL)
+    {
+        hex_error(ctx, "[symbol table copy] Memory allocation failed");
+        return NULL;
+    }
+
+    copy->symbols = malloc(sizeof(char *) * HEX_MAX_USER_SYMBOLS);
+    if (copy->symbols == NULL)
+    {
+        hex_error(ctx, "[symbol table copy] Memory allocation failed for symbols array");
+        free(copy);
+        return NULL;
+    }
+
+    copy->count = original->count;
+    for (uint16_t i = 0; i < original->count; ++i)
+    {
+        copy->symbols[i] = strdup(original->symbols[i]);
+        if (copy->symbols[i] == NULL)
+        {
+            hex_error(ctx, "[symbol table copy] Memory allocation failed for symbol");
+            // Free already allocated symbols
+            for (uint16_t j = 0; j < i; ++j)
+            {
+                free(copy->symbols[j]);
+            }
+            free(copy->symbols);
+            free(copy);
+            return NULL;
+        }
+    }
+
+    return copy;
+}
