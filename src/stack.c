@@ -233,6 +233,7 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
     {
         if (quotation[i])
         {
+            hex_debug(ctx, "FREE: item #%zu", i);
             hex_free_item(ctx, quotation[i]); // Free each item
         }
     }
@@ -243,42 +244,47 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
     if (item == NULL)
         return;
 
-    hex_debug_item(ctx, "FREE", item);
-
     switch (item->type)
     {
     case HEX_TYPE_STRING:
         if (item->data.str_value)
         {
+            hex_debug_item(ctx, "FREE", item);
             free(item->data.str_value);
             item->data.str_value = NULL; // Prevent double free
         }
+        free(item); // Free the item itself
+        item = NULL;
         break;
 
     case HEX_TYPE_QUOTATION:
         if (item->data.quotation_value)
         {
+            hex_debug_item(ctx, "FREE", item);
             hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
-            // free(item->data.quotation_value);
             item->data.quotation_value = NULL; // Prevent double free
         }
+        free(item); // Free the item itself
+        item = NULL;
         break;
 
     case HEX_TYPE_NATIVE_SYMBOL:
     case HEX_TYPE_USER_SYMBOL:
         if (item->token)
         {
+            // TODO: Cannot free the token here, as it may be shared with other items
+            // Need to implement a reference counting mechanism for symbols
+            /*
+            hex_debug_item(ctx, "FREE", item);
             hex_free_token(item->token);
             item->token = NULL; // Prevent double free
+            */
         }
         break;
 
     default:
         break;
     }
-
-    free(item); // Free the item itself
-    item = NULL;
 }
 
 hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token)

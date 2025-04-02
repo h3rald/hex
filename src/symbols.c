@@ -2389,7 +2389,6 @@ int hex_symbol_try(hex_context_t *ctx)
         return 1;
     }
     HEX_POP(ctx, try_block);
-    ;
     if (try_block->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, catch_block);

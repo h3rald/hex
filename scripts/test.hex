@@ -290,10 +290,34 @@
     )
     ;150
 
-    ;;; utils.hex tests ;;;
-    ("This is a test" "This" begins)
-    ("This is a test" "this" begins not)
+    ;------------------------------------------------------------------------;
+    ; utils.hex tests                                                        ;
+    ;------------------------------------------------------------------------;
+    ("aa" iss)
+    (0x0 iss not)
     ;152
+
+    ((a b c) iss not)
+    ((a b c) isq)
+    ("sdgas" isq not)
+    (0x0 isq not)
+    ;156
+
+    (0x1 isi)
+    ("aaa" isi not)
+    (("test") isi not)
+    ("This is a test" "This" begins)
+    ;160
+
+    ("This is a test" "this" begins not)
+    ;((0x0 "aaa" begins) (error) try _ "[symbol begins] A string item is required" ==)
+    ;(("aaa" () begins) (error) try _ "[symbol begins] A string prefix is required" ==)
+    ("This is a test" "test" ends)
+    ;164
+
+    ("This is a test" "Test" ends not)
+    ;((0x0 "aaa" ends) (error) try _ "[symbol ends] A string item is required" ==)
+    (("aaa" () ends) (error) try "[symbol ends] A string suffix is required" ==)
     
 ) "TESTS" :
 

@@ -17,6 +17,27 @@
   "_when_cond" #
 ) "when" ::
 
+;; isi
+;; a -> i
+;; Pushes %%0x1%% on the stack if %:a%% is an integer, %%0x0%% otherwise.
+(
+  type "integer" ==
+) "isi" ::
+
+;; iss
+;; a -> i
+;; Pushes $0x1$$ on the stack if %:a%% is a string, $0x0$$ otherwise.
+(
+  type "string" ==
+) "iss" ::
+
+;; isq
+;; a -> i
+;; Pushes $0x1$$ on the stack if %%a%% is a quotation, $0x0$$ otherwise.
+(
+  type "quotation" ==
+) "isq" ::
+
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
@@ -25,6 +46,12 @@
   "_begins_s"      :
   0x1 "_begins_result" :
   0x0 "_begins_c" :
+  (_begins_prefix iss not)
+    ("[symbol begins] A string prefix is required" throw)
+  when
+  (_begins_s iss not)
+    ("[symbol begins] A string item is required" throw)
+  when
   (_begins_s len _begins_prefix len <)
     (0x0 "_begins_result" :)
     (
@@ -58,6 +85,12 @@
   "_ends_suffix" :
   "_ends_s"      :
   0x1 "_ends_result" :
+   (_ends_suffix iss not)
+    ("[symbol ends] A string suffix is required" throw)
+  when
+  (_ends_s iss not)
+    ("[symbol ends] A string item is required" throw)
+  when
    _ends_suffix len 0x1 - "_ends_c" :
   (_ends_s len _ends_suffix len <)
     (0x0 "_ends_result" :)
@@ -105,27 +138,6 @@
   "_cleanup_item"   #
   "_cleanup_c"      #
 ) "cleanup" ::
-
-;; isi
-;; a -> i
-;; Pushes %%0x1%% on the stack if %:a%% is an integer, %%0x0%% otherwise.
-(
-  type "integer" ==
-) "isi" ::
-
-;; iss
-;; a -> i
-;; Pushes $0x1$$ on the stack if %:a%% is a string, $0x0$$ otherwise.
-(
-  type "string" ==
-) "iss" ::
-
-;; isq
-;; a -> i
-;; Pushes $0x1$$ on the stack if %%a%% is a quotation, $0x0$$ otherwise.
-(
-  type "quotation" ==
-) "isq" ::
 
 ;;; ipop
 ;; s -> i
@@ -229,7 +241,7 @@
   (_list iss)
     (
       (_item iss not)
-        ("[symbol push] A string item is required" fail)
+        ("[symbol push] A string item is required" throw)
       when
       0x1 "_is-str" :
       _list "" split "_list" :
@@ -312,7 +324,7 @@
   "_src"  :
   "_text" :
   (_text iss _src iss _rep iss and and not)
-    ("[symbol replace-all] Three strings required." fail)
+    ("[symbol replace-all] Three strings required." throw)
   when
   (_text _src index 0x0 >=)
     (_text _src _rep replace "_text" :)
@@ -328,7 +340,7 @@
   "_list" qpop
   () "_result" :
   (_list len 0x0 ==)
-    ("[symbol min] Not enough items" fail)
+    ("[symbol min] Not enough items" throw)
   when
   0x0 get "_result" :
   0x1 "_c" :
@@ -351,7 +363,7 @@
   "_list" qpop
   () "_result" :
   (_list len 0x0 ==)
-    ("[symbol max] Not enough items" fail)
+    ("[symbol max] Not enough items" throw)
   when
   0x0 get "_result" :
   0x1 "_c" :
