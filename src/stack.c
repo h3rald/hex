@@ -43,7 +43,8 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
                 {
                     if (hex_push(ctx, value->data.quotation_value[i]) != 0)
                     {
-                        HEX_FREE(ctx, value);
+                        // Cannot free the item here because it is still in use
+                        // HEX_FREE(ctx, value);
                         hex_debug_item(ctx, "FAIL", item);
                         return 1;
                     }
@@ -237,6 +238,7 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
             hex_free_item(ctx, quotation[i]); // Free each item
         }
     }
+    hex_debug(ctx, "FREE: quotation freed (%zu items)", size);
 }
 
 void hex_free_item(hex_context_t *ctx, hex_item_t *item)

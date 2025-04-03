@@ -7,15 +7,18 @@
 ;; q1 q2 -> *
 ;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
 (
-  "_when_q"    :
-  "_when_cond" :
-  (_when_cond .)
-    (_when_q .)
-    ()
+  ()
   if
-  "_when_q"    #
-  "_when_cond" #
 ) "when" ::
+
+;;; unless
+;; q1 q2 -> *
+;; If %:q1%% pushes 0x0 on the stack, dequotes %:q2%%.
+(
+  ()
+  swap
+  if
+) "unless" ::
 
 ;; isi
 ;; a -> i
