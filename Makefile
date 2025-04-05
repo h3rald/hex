@@ -31,9 +31,12 @@ clean:
 	rm -f hex.wasm
 
 test: hex
-	./hex -b lib/utils.hex
 	./hex -b scripts/test.hex
 	./hex scripts/test.hbx
 
-web: playground hex
+web: playground utils hex
+	./hex -b scripts/web.hex
 	./hex scripts/web.hex
+
+utils: hex
+	./hex -b lib/utils.hex
