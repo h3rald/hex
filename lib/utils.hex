@@ -20,33 +20,102 @@
   if
 ) "unless" ::
 
-;; isi
+;;; isi
 ;; a -> i
 ;; Pushes %%0x1%% on the stack if %:a%% is an integer, %%0x0%% otherwise.
 (
   type "integer" ==
 ) "isi" ::
 
-;; iss
+;;; iss
 ;; a -> i
 ;; Pushes $0x1$$ on the stack if %:a%% is a string, $0x0$$ otherwise.
 (
   type "string" ==
 ) "iss" ::
 
-;; isq
+;;; isq
 ;; a -> i
 ;; Pushes $0x1$$ on the stack if %%a%% is a quotation, $0x0$$ otherwise.
 (
   type "quotation" ==
 ) "isq" ::
 
+;;; parentsym
+;; -> s
+;; Returns the name of the pare t symbol
+(
+  stacktrace stacktrace len 2 - get
+) "parentsym" ::
+
+;;; let
+;; a s ->
+;; Stores %:a%% to local variable %:s%%.
+(
+  "__" parentsym "__" cat cat swap cat :
+) "let" ::
+
+;;; i
+;; i -> i
+;; Throws an error if %:i%% is not an integer.
+(
+  dup
+  (isi not)
+    (
+      pop
+      "[symbol " parentsym "] Integer required"
+      cat cat cat throw
+    ) 
+    () 
+  if
+) "i" ::
+
+;;; s
+;; s -> s
+;; Throws an error if %:s%% is not a string.
+(
+  dup
+  (iss not)
+    (
+      pop
+      "[symbol " parentsym "] String required"
+      cat cat cat throw
+    ) 
+    () 
+  if
+) "s" ::
+
+;;; q
+;; q -> q
+;; Throws an error if %:q%% is not a quotation.
+(
+  dup
+  (isq not)
+    (
+      pop
+      "[symbol " parentsym "] Quotation required"
+      cat cat cat throw
+    ) 
+    () 
+  if
+) "q" ::
+
+;;; defined
+;; s -> i
+;; Pushes $0x1$$ on the stack if a %:s%% is defined, $0x0$$ otherwise.
+(
+  (s symbols swap index 0x1 >=)
+    (0x1)
+    (x0)
+  if 
+) "defined" ::
+
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
 (
-  "_begins_prefix" :
-  "_begins_s"      :
+  s "_begins_prefix" :
+  s "_begins_s"      :
   0x1 "_begins_result" :
   0x0 "_begins_c" :
   (_begins_prefix iss not)
@@ -85,8 +154,8 @@
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
 (
-  "_ends_suffix" :
-  "_ends_s"      :
+  s "_ends_suffix" :
+  s "_ends_s"      :
   0x1 "_ends_result" :
    (_ends_suffix iss not)
     ("[symbol ends] A string suffix is required" throw)
