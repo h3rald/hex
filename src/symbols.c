@@ -119,6 +119,16 @@ int hex_symbol_free(hex_context_t *ctx)
     return 0;
 }
 
+int hex_symbol_symbol(hex_context_t *ctx)
+{
+    char *sym = "";
+    if (ctx->stack_trace->size > 1)
+    {
+        sym = strdup(ctx->stack_trace->entries[ctx->stack_trace->size - 2]->value);
+    }
+    return hex_push_string(ctx, sym);
+}
+
 int hex_symbol_symbols(hex_context_t *ctx)
 {
     // Allocate memory for the quotation
@@ -2705,6 +2715,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "::", hex_symbol_define);
     hex_set_native_symbol(ctx, "#", hex_symbol_free);
     hex_set_native_symbol(ctx, "symbols", hex_symbol_symbols);
+    hex_set_native_symbol(ctx, "symbol", hex_symbol_symbol);
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
     hex_set_native_symbol(ctx, "!", hex_symbol_eval);
@@ -2760,7 +2771,6 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "try", hex_symbol_try);
     hex_set_native_symbol(ctx, "throw", hex_symbol_throw);
     hex_set_native_symbol(ctx, "'", hex_symbol_q);
-    hex_set_native_symbol(ctx, "map", hex_symbol_map);
     hex_set_native_symbol(ctx, "swap", hex_symbol_swap);
     hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
     hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
