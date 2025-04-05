@@ -48,12 +48,56 @@
   stacktrace stacktrace len 2 - get
 ) "parentsym" ::
 
+;;; defined
+;; s -> i
+;; Pushes $0x1$$ on the stack if a %:s%% is defined, $0x0$$ otherwise.
+(
+  (s symbols swap index 0x1 >=)
+    (0x1)
+    (0x0)
+  if 
+) "defined" ::
+
 ;;; let
 ;; a s ->
 ;; Stores %:a%% to local variable %:s%%.
 (
   "__" parentsym "__" cat cat swap cat :
 ) "let" ::
+
+;;; bind
+;; a s ->
+;; Set %:a%% to local variable %:s%% (must exist).
+(
+  dup
+  "__" parentsym "__" cat cat swap cat 
+  dup
+  (defined)
+    (swap pop :)
+    (
+      pop 
+      "[symbol bind] local '" swap "' not found"
+      cat cat throw
+    ) 
+  if
+) "bind" ::
+
+;;; _
+;; s -> a
+;; Pushes the of local variable %:s%% (must exist) on the stack.
+(
+  dup
+  "__" parentsym "__" cat cat swap cat 
+  dup
+  (defined)
+    (swap pop !)
+    (
+      pop 
+      "[symbol _] local '" swap "' not found"
+      cat cat throw
+    ) 
+  if
+) "_" ::
 
 ;;; i
 ;; i -> i
@@ -69,6 +113,21 @@
     () 
   if
 ) "i" ::
+
+;;; l
+;; a -> a
+;; Throws an error if %:a%% is not a string or a quotation.
+(
+  dup dup
+  (isi)
+    (
+      pop
+      "[symbol " parentsym "] String or quotation required"
+      cat cat cat throw
+    ) 
+    () 
+  if
+) "l" ::
 
 ;;; s
 ;; s -> s
@@ -100,206 +159,146 @@
   if
 ) "q" ::
 
-;;; defined
-;; s -> i
-;; Pushes $0x1$$ on the stack if a %:s%% is defined, $0x0$$ otherwise.
-(
-  (s symbols swap index 0x1 >=)
-    (0x1)
-    (x0)
-  if 
-) "defined" ::
-
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
 (
-  s "_begins_prefix" :
-  s "_begins_s"      :
-  0x1 "_begins_result" :
-  0x0 "_begins_c" :
-  (_begins_prefix iss not)
+  s "prefix"   let
+  s "s"        let
+  0x1 "result" let
+  0x0 "c"      let
+  ("prefix" _ iss not)
     ("[symbol begins] A string prefix is required" throw)
   when
-  (_begins_s iss not)
+  ("s" _ iss not)
     ("[symbol begins] A string item is required" throw)
   when
-  (_begins_s len _begins_prefix len <)
-    (0x0 "_begins_result" :)
+  ("s" _ len "prefix" _ len <)
+    (0x0 "result" bind)
     (
       (
-        _begins_c _begins_prefix len <
-        _begins_result and
+        "c" _ "prefix" _ len <
+        "result" _ and
       )
         (
           (
-            _begins_prefix _begins_c get
-            _begins_s _begins_c get ==
+            "prefix" _ "c" _ get
+            "s" _ "c" _ get ==
           )
-            (_begins_c 0x1 + "_begins_c" :)
-            (0x0 "_begins_result" :)
+            ("c" _ 0x1 + "c" bind)
+            (0x0 "result" bind)
           if  
         )
       while
     )
   if
-  _begins_result
-  "_begins_result" #
-  "_begins_prefix" #
-  "_begins_s"      #
-  "_begins_c"      # 
+  "result" _
+  "__begins__result" #
+  "__begins__prefix" #
+  "__begins__s"      #
+  "__begins__c"      # 
 ) "begins" ::
 
 ;;; ends
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
 (
-  s "_ends_suffix" :
-  s "_ends_s"      :
-  0x1 "_ends_result" :
-   (_ends_suffix iss not)
+  s "suffix"   let
+  s "s"        let
+  0x1 "result" let
+   ("suffix" _ iss not)
     ("[symbol ends] A string suffix is required" throw)
   when
-  (_ends_s iss not)
+  ("s" _ iss not)
     ("[symbol ends] A string item is required" throw)
   when
-   _ends_suffix len 0x1 - "_ends_c" :
-  (_ends_s len _ends_suffix len <)
-    (0x0 "_ends_result" :)
+  "suffix" _ len 0x1 - "c" bind
+  ("s" _ len _"suffix" _ len <)
+    (0x0 "result" bind)
     (
-      _ends_s len _ends_suffix len - "_ends_offset" :
+      "s" _ len "suffix" _ len - "offset" let
       (
-        _ends_c 0x0 >=
-        _ends_result and
+        "c" _ 0x0 >=
+        "result" _ and
       )
         (
           (
-            _ends_suffix _ends_c get
-            _ends_s _ends_offset _ends_c + get ==
+            "suffix" _ "c" _ get
+            "s" _ "offset" _ "c" _ + get ==
           )
-            (_ends_c 0x1 - "_ends_c" :)
-            (0x0 "_ends_result" :)
+            ("c" _ 0x1 - "c" bind)
+            (0x0 "result" bind)
           if  
         )
       while
     )
   if
-  _ends_result
-  "_ends_suffix" #
-  "_ends_s"      #
-  "_ends_c"      # 
-  "_ends_offset" #
+  "result" _
+  "__ends__suffix" #
+  "__ends__s"      #
+  "__ends__c"      # 
+  "__ends__offset" #
 ) "ends" ::
 
-;;; cleanup
-;; s ->
-;; Frees all symbols starting with %:s%%.
+;;; gc
+;; ->
+;; Frees all local symbols.
 (
-  "_cleanup_prefix" :
-  0x0 "_cleanup_c" :
-  (_cleanup_c symbols len <)
+  
+  0x0 "c" let
+  "__" parentsym "__" cat cat "prefix" let
+  ("c" _ symbols len <)
     (
-      symbols _cleanup_c get "_cleanup_item" :
-      (_cleanup_item _cleanup_prefix begins)
-        (_cleanup_item #)
-      when 
-      _cleanup_c 0x1 + "_cleanup_c" :
+      symbols "c" _ get dup
+      ("prefix" _ begins)
+        (#)
+        (pop)
+      if
+      "c" _ 0x1 + "c" bind
     )
   while
-  "_cleanup_prefix" #
-  "_cleanup_item"   #
-  "_cleanup_c"      #
-) "cleanup" ::
-
-;;; ipop
-;; s -> i
-;; Stores symbol %%s%% by popping an integer from the stack, throws an error otherwise.
-(
-  "_ipop_id" :
-  "_ipop_a" :
-  (_ipop_a isi not)
-    ("Integer required" throw)
-  when 
-  _ipop_a _ipop_id :
-  "_ipop_" cleanup
-) "ipop" ::
-
-;;; spop
-;; s -> s
-;; Stores symbol %%s%% by popping a string from the stack, throws an error otherwise.
-(
-  "_spop_id" :
-  "_spop_a" :
-  (_spop_a iss not)
-    ("String required" throw)
-  when 
-  _spop_a _spop_id :
-  "_spop_" cleanup
-) "spop" ::
-
-;;; qpop
-;; s -> q
-;; Stores symbol %%s%% by popping a quotation from the stack, throws an error otherwise.
-(
-  "_qpop_id" :
-  "_qpop_a" :
-  (_qpop_a isq not)
-    ("Quotation required" throw)
-  when 
-  _qpop_a _qpop_id :
-  "_qpop_" cleanup
-) "qpop" ::
-
-;;; lpop
-;; s -> (q|s)
-;; Stores symbol %%s%% by popping a quotation or a string from the stack, throws an error otherwise.
-(
-  "_lpop_id" :
-  "_lpop_a" :
-  (_lpop_a isi)
-    ("String or quotation required" throw)
-  when 
-  _lpop_a _lpop_id :
-  "_lpop_" cleanup
-) "lpop" ::
+  "__gc__prefix" #
+  "__gc__item"   #
+  "__gc__c"      #
+) "gc" ::
 
 ;; insert
 ;; (q1|s1) a i -> (q2|s2)
 ;; Inserts item %:a%% at position %:i%% within a quotation or string.
 (
-  "_insert_index" ipop
-  "_insert_item" :
-  "_insert_list" lpop
-  0x0 "_insert_is-str" :
-  _insert_list len "_insert_len" :
-  (_insert_index _insert_len >= _insert_index 0x0 < or)
+  i "index" let
+  l "item"  let
+  l "list"  let
+  0x0 "is-str" let
+  "list" _ len "len" let
+  ("index" _ "len" _ >= "index" _ 0x0 < or)
     ("[symbol insert] Index out of bounds" throw)
   when
-  (_insert_list iss)
+  ("list" _ iss)
     ( 
-      0x1 "_insert_is-str" :
-      (_insert_item iss not)
+      0x1 "is-str" bind
+      ("item" _ iss not)
         ("[symbol insert] A string item is required" throw)
       when
-      _insert_list "" split "_insert_list" :
+      "list" _ "" split "list" bind
     )
   when
-  0x0 "_insert_c" :
-  () "_insert_result" :
-  (_insert_c _insert_len <)
+  0x0 "c" let
+  () "result" bind
+  ("c" _ "len" _ <)
     (
-      (_insert_c _insert_index ==)
-        (_insert_result _insert_item ' cat "_insert_result" :)
+      ("c" _ "index" _ ==)
+        ("result" _ "item" _ ' cat "result" bind)
       when
-      _insert_result _insert_list  _insert_c get ' cat "_insert_result" :
-      _insert_c 0x1 + "_insert_c" :
+      "result" _ "list" _  "c" _ get ' cat "result" bind
+      "c" _ 0x1 + "c" bind
     )
   while
-  (_insert_is-str)
-    (_insert_result "" join "_insert_result" :)
+  ("is-str" _)
+    ("result" _ "" join "result" bind)
   when
-  _insert_result
-  "_insert_" cleanup
+  "result" _
+  gc
 ) "insert" ::
 
 
@@ -307,23 +306,23 @@
 ;; (q1|s1) a -> (q2|s2)
 ;; Pushes %:a%% to the end of a quotation or string.
 (
-  "_push_item" :
-  "_push_list" lpop
-  0x0 "_push_is-str" :
-  (_push_list iss)
+  "item" let
+  l "list" let
+  0x0 "is-str" let
+  ("list" _ iss)
     (
-      (_push_item iss not)
+      ("item" _ iss not)
         ("[symbol push] A string item is required" throw)
       when
-      0x1 "_push_is-str" :
-      _push_list "" split "_push_list" :
+      0x1 "is-str" bind
+      "list" _ "" split "list" bind
     )
   when
-  _push_list _push_item ' cat
-  (_push_is-str)
+  "list" _ "item" _ ' cat
+  ("is-str" _)
     ( "" join)
   when
-  "_push_" cleanup
+  gc
 ) "push" ::
 
 
@@ -331,61 +330,60 @@
 ;; (q1|s1) -> (q2|s2)
 ;; Reverses the order of the elements in a string or quotation.
 (
-  "_list" lpop
-  (_list iss)
-    (_list "" split "_list" :)
+  l "list" let
+  ("list" _ iss)
+    ("list" _ "" split "list" bind)
   when
-  _list len 0x1 - "_c" : 
-  () "_result" :
-  (_c 0x0 <=)
+  "list" _ len 0x1 - "c" let
+  () "result" let
+  ("c" _ 0x0 <=)
     (
-       _result _list _c get ' cat "_result" :
-       _c 0x1 - "_c" :
+       "result" _ "list" _ "c" _ get ' cat "result" bind
+       "c" _ 0x1 - "c" bind
     )
   while
-  _result
-  (_list iss)
-    (_result "" join "_result" :)
+  "result" _
+  ("list" _ iss)
+    ("result" _ "" join "result" bind)
   when
-  cleanup
+  gc
 ) "reverse" ::
 
 ;;; sort
 ;; (q1|s1) q2 -> (q3|s2)
 ;; Sorts the items of a quotation or string.
 (
-  "_check" :
-  "_list" lpop
+  q "check" let
+  l "list" let
+  ("list" _ iss)
+    ("list" _ "" split "list" bind)
   when
-  (_list iss)
-    (_list "" split "_list" :)
-  when
-  _list len "_len" :
-  _list _len 0x1 - "_pivot" :
-  0x0 "_c" :
-  () "_left" :
-  () "_right" :
-  (0x1 len <=)
-    (_list)
+  "list" _ len "len" let
+  "list" _ "len" _ 0x1 - "pivot" let
+  0x0 "c" let
+  () "left" let
+  () "right" let
+  (0x1 "len" _ <=)
+    ("list" _)
     (
-      (_c len <)
+      ("c" _ len <)
         (
-          (_list _c get _pivot _check .)
-            (_left _item push "_left" :)
-            (_right _item push "_right" :)
+          ("list" _ "c" _ get "pivot" _ "check" _ .)
+            ("left" _ "item" _ push "left" bind)
+            ("right" _ "item" _ push "right" bind)
           if
-          _c 0x1 + "_c" :
+          "c" _ 0x1 + "c" bind
         )
       while
-      _left sort pivot ' _right sort 
-      cat cat "_result" :
+      "left" _ sort "pivot" _ ' "right" _ sort 
+      cat cat "result" bind
     )
   if
-  (_list iss)
-    (_result "" join "_result" :)
+  ("list" _ iss)
+    ("result" _ "" join "result" bind)
   when
-  _result
-  cleanup
+  "result" _
+  gc
 ) "sort" ::
 
 ;;; replace-all
@@ -472,38 +470,38 @@
 ;; q1 q2 -> *
 ;; Applies %:q2%% to each element of %:q1%%.
 (
-  "_each_fn" qpop
-  "_each_list" qpop
-  _each_list len "_each_len" :
-  0x0 "_c" :
-  (_each_c _each_len <)
+  q "fn" let
+  q "list" let
+  "list" _ len "len" len
+  0x0 "c" bund
+  ("c" _ "len" _ <)
     (
-      _each_list _each_c get _each_fn .
-      _each_c 0x1 + "_each_c" :
+      "list" _ "c" _ get "fn" _ .
+      "c" _ 0x1 + "c" bind
     )
   while
-  "_each_" cleanup
+  gc
 ) "each" ::
 
 ;;; map
 ;; q1 q2 -> q3
 ;; Returns %:q3%% contains the results of %:q2%% applied to each element of %:q1%%, 
 (
-  "_map_fn" qpop
-  "_map_list" qpop
-  _map_list len "_map_len" :
-  () "_map_result" :
-  0x0 "_map_c" :
-  (_map_c _map_len <)
+  q "fn" let
+  q "list" let
+  "list" _ len "len" let
+  () "result" let
+  0x0 "c" let
+  ("c" _ "len" _ <)
     (
-      _map_result 
-      _map_list _map_c get _map_fn .
-      ' cat "_map_result" :
-      _map_c 0x1 + "_map_c" :
+      "result" _
+      "list" _ "c" _ get "fn" _ .
+      ' cat "result" bind
+      "c" _ 0x1 + "c" bind
     )
   while
-  _map_result
-  "_map_" cleanup
+  "result" _ 
+  gc
 ) "map2" ::
 
 ;;; filter
