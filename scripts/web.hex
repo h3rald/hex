@@ -20,8 +20,8 @@ d-releases ls "releases" :
 d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
-("map" "debug" "split" "run" "get" "puts" ":" "::" "." "#" "==" "'" 
-"swap" "dup" "while" "+" "*" "-" "each" "cat" "throw" 
+("map2" "debug" "split" "run" "get" "puts" ":" "::" "." "#" "==" "'" 
+"swap" "dup" "while" "+" "*" "-" "each" "cat" "throw" "map"
 "symbols" "print" "read" "dec" "write" "append" "!" 
 "<=" "if") "symbol-links" :
 
@@ -115,7 +115,7 @@ d-templates "/page.html" cat "t-page" :
     (t-symbol "::" ==)("operator" "t-href" :) when
     (t-symbol "*" ==)("multiply" "t-href" :) when
     (t-symbol "-" ==)("subtract" "t-href" :) when
-    ("<a href=\"https://hex.2c.fyi/spec#" t-href "-symbol\">" t-symbol "</a>") () map "" join "t-repl" :
+    ("<a href=\"https://hex.2c.fyi/spec#" t-href "-symbol\">" t-symbol "</a>") () map2 "" join "t-repl" :
     ; Push replacement content on the stack
     t-content 
     "sym-" t-symbol cat 
@@ -153,7 +153,7 @@ d-templates "/page.html" cat "t-page" :
         (
             releases _gct_count 0x1 - get ".html" "" replace "id-release" :
             changelog-toc
-            ("<li><a href=\"#v" id-release "\">v" id-release "</a></li>\n") () map "" join 
+            ("<li><a href=\"#v" id-release "\">v" id-release "</a></li>\n") () map2 "" join 
             cat
             "changelog-toc" :
             _gct_count 0x1 - "_gct_count" :
@@ -231,8 +231,8 @@ changelog-content
                 d-out "/index.html" cat "dst-file" :
             ) 
             (
-                (d-out id-content "index.html") () map "/" join "dst-file" :
-                ("sh -c \"mkdir -p " d-out "/" id-content "\"") () map "" join exec
+                (d-out id-content "index.html") () map2 "/" join "dst-file" :
+                ("sh -c \"mkdir -p " d-out "/" id-content "\"") () map2 "" join exec
             )
         if
         "  - Writing: " dst-file cat puts
@@ -244,18 +244,18 @@ while
 
 
 ; Write assets
-("sh -c \"mkdir -p " d-out "/assets\"") () map ""  join exec
+("sh -c \"mkdir -p " d-out "/assets\"") () map2 ""  join exec
 0x0 "_c" :
 (_c assets len <)
     (
         assets _c get "fn-asset" :
-        (d-out "assets" fn-asset) () map "/" join "dst-file" :
+        (d-out "assets" fn-asset) () map2 "/" join "dst-file" :
         (fn-asset "robots.txt" ==)
-            ((d-out fn-asset) () map "/" join "dst-file" :)
+            ((d-out fn-asset) () map2 "/" join "dst-file" :)
         when
-        (d-assets fn-asset) () map "/" join "src-file" :
+        (d-assets fn-asset) () map2 "/" join "src-file" :
         "  - Writing: " dst-file cat puts
-        ("cp" src-file dst-file) () map " " join exec  
+        ("cp" src-file dst-file) () map2 " " join exec  
         _c 0x1 + "_c" :
     )
 while

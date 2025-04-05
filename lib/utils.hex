@@ -1,7 +1,7 @@
 ;;; _
 ;; a -> a
 ;; Duplicates and prints (with newline) the top item on the stack.
-(dup puts) "_" ::
+(dup puts) "dputs" ::
 
 ;;; when
 ;; q1 q2 -> *
@@ -238,23 +238,23 @@
 ;; (q1|s1) a -> (q2|s2)
 ;; Pushes %:a%% to the end of a quotation or string.
 (
-  "_item" :
-  "_list" lpop
-  0x0 "_is-str" :
-  (_list iss)
+  "_push_item" :
+  "_push_list" lpop
+  0x0 "_push_is-str" :
+  (_push_list iss)
     (
-      (_item iss not)
+      (_push_item iss not)
         ("[symbol push] A string item is required" throw)
       when
-      0x1 "_is-str" :
-      _list "" split "_list" :
+      0x1 "_push_is-str" :
+      _push_list "" split "_push_list" :
     )
   when
-  _list _item ' cat
-  (_is-str)
+  _push_list _push_item ' cat
+  (_push_is-str)
     ( "" join)
   when
-  cleanup
+  "_push_" cleanup
 ) "push" ::
 
 
@@ -403,18 +403,39 @@
 ;; q1 q2 -> *
 ;; Applies %:q2%% to each element of %:q1%%.
 (
-  "_fn" qpop
-  "_list" qpop
-   _list len "_len" :
-   0x0 "_c" :
-   (_c len <)
-     (
-       _list _c get _fn .
-       _c 0x1 + "_c" :
-     )
-   while
-   cleanup
+  "_each_fn" qpop
+  "_each_list" qpop
+  _each_list len "_each_len" :
+  0x0 "_c" :
+  (_each_c _each_len <)
+    (
+      _each_list _each_c get _each_fn .
+      _each_c 0x1 + "_each_c" :
+    )
+  while
+  "_each_" cleanup
 ) "each" ::
+
+;;; map
+;; q1 q2 -> q3
+;; Returns %:q3%% contains the results of %:q2%% applied to each element of %:q1%%, 
+(
+  "_map_fn" qpop
+  "_map_list" qpop
+  _map_list len "_map_len" :
+  () "_map_result" :
+  0x0 "_map_c" :
+  (_map_c _map_len <)
+    (
+      _map_result 
+      _map_list _map_c get _map_fn .
+      ' cat "_map_result" :
+      _map_c 0x1 + "_map_c" :
+    )
+  while
+  _map_result
+  "_map_" cleanup
+) "map2" ::
 
 ;;; filter
 ;; q1 q2-> q3
@@ -432,7 +453,7 @@
     when
   ) each
   _filter_result
-  cleanup
+  "_filter_" cleanup
 ) "filter" ::
 
 

@@ -130,13 +130,13 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x63 ==)
+    (symbols len 0x64 ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
     (error "" ==)
     ("a" ' ' ' ((("a"))) ==)
-    ((0x1 0x2 0x3) (dup dup * *) map (0x1 0x8 0x1b) ==)
+    ((0x1 0x2 0x3) (dup dup * *) map2 (0x1 0x8 0x1b) ==)
     ;64
 
     (0x2 dup stack (0x2 0x2) ==)
@@ -270,7 +270,7 @@
     ((0x1 throw) (error) try "[symbol throw] String required" ==)
     ;148
 
-    ((() 0x1 map) (error) try "[symbol map] Two quotations required" ==)
+    ((() 0x1 map2) (error) try "Quotation required" ==)
     (
       (
         0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
