@@ -428,7 +428,7 @@ int main(int argc, char *argv[])
 #endif
     else
     {
-        ctx->settings->stack_trace_enabled = 0;
+        ctx->settings->stack_trace_enabled = 1;
         // Start REPL
         hex_repl(ctx);
     }
