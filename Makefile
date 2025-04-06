@@ -30,13 +30,13 @@ clean:
 	rm -f hex.js
 	rm -f hex.wasm
 
-test: hex
+test: hex utils.hbx
 	./hex -b scripts/test.hex
 	./hex scripts/test.hbx
 
-web: playground utils hex
+web: playground utils.hbx hex
 	./hex -b scripts/web.hex
 	./hex scripts/web.hex
 
-utils: hex
+utils.hbx: hex
 	./hex -b lib/utils.hex
