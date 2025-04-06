@@ -1,7 +1,7 @@
-;;; _
+;;; dputs
 ;; a -> a
 ;; Duplicates and prints (with newline) the top item on the stack.
-(dup puts) "_" ::
+(dup puts) "dputs" ::
 
 ;;; when
 ;; q1 q2 -> *
@@ -311,101 +311,101 @@
   "_sort_" cleanup
 ) "sort" ::
 
-;;; replace-all
+;;; gsub
 ;; s1 s2 s3 -> s4
 ;; Replaces all occurrences of %:s2%% with %%s3%% in %:s1%%.
 (
-  s "_rep"  :
-  s "_src"  :
-  s "_text" :
-  (_text iss _src iss _rep iss and and not)
-    ("[symbol replace-all] Three strings required." throw)
+  s "_gsub_rep"  :
+  s "_gsub_src"  :
+  s "_gsub_text" :
+  (_gsub_text iss _gsub_src iss _gsub_rep iss and and not)
+    ("[symbol gsub] Three strings required." throw)
   when
-  (_text _src index 0x0 >=)
-    (_text _src _rep replace "_text" :)
+  (_gsub_text _gsub_src index 0x0 >=)
+    (_gsub_text _gsub_src _gsub_rep replace "_text" :)
   while
-  _text
-  cleanup
-) "replace-all" :
+  _gsub_text
+  "_gsub_" cleanup
+) "gsub" :
 
 ;;; min
 ;; q -> a
 ;; Pushes the minimum item in a quotation on the stack.
 (
-  q "_list" :
-  () "_result" :
-  (_list len 0x0 ==)
+  q "_min_list" :
+  () "_min_result" :
+  (_min_list len 0x0 ==)
     ("[symbol min] Not enough items" throw)
   when
-  0x0 get "_result" :
-  0x1 "_c" :
-  _list len "_len" :
-  (_c len <)
+  0x0 get "_min_result" :
+  0x1 "_min_c" :
+  _min_list len "_min_len" :
+  (_min_c len <)
     (
-      (_result _list _c get <)
-        (_list _c get "_result" :)
+      (_min_result _min_list _min_c get <)
+        (_min_list _min_c get "_min_result" :)
       when
     )
   while
-  _result
-  cleanup
+  _min_result
+  "_min_" cleanup
 ) "min" ::
 
 ;;; max
 ;; q -> a
 ;; Pushes the maximum item in a quotation on the stack.
 (
-  q "_list" :
-  () "_result" :
-  (_list len 0x0 ==)
+  q "_max_list" :
+  () "_max_result" :
+  (_max_list len 0x0 ==)
     ("[symbol max] Not enough items" throw)
   when
-  0x0 get "_result" :
-  0x1 "_c" :
-  _list len "_len" :
-  (_c len <)
+  0x0 get "_max_result" :
+  0x1 "_max_c" :
+  _max_list len "_max_len" :
+  (_max_c len <)
     (
-      (_result _list _c get >)
-        (_list _c get "_result" :)
+      (_max_result _max_list _max_c get >)
+        (_max_list _max_c get "_max_result" :)
       when
     )
   while
-  _result
-  cleanup
+  _max_result
+  "_max_" cleanup
 ) "max" ::
 
 ;;; intpl
 ;; s1 q -> s2
 ;; Substitutes %:$0%% to %%$9%% placeholders in %:s1%% with items in %:q%%.
 (
-  s "_s" :
-  q "_q" :
-  _q len "_len" :
-  0x0 "_c" :
-  (_c len <)
+  s "_intpl_s" :
+  q "_intpl_q" :
+  _intpl_q len "_intpl_len" :
+  0x0 "_intpl_c" :
+  (_intpl_c len <)
      (
-       _s "$" _c str cat _list _c get cat replace-all "_s" :
-       _c 0x1 + "_c" :
+       _intpl_s "$" _intpl_c str cat _intpl_list _intpl_c get cat gsub "_intpl_s" :
+       _intpl_c 0x1 + "_intpl_c" :
      )
    while
-   cleanup
+   "_intpl_" cleanup
 ) "intpl" ::
 
 ;;; each
 ;; q1 q2 -> *
 ;; Applies %:q2%% to each element of %:q1%%.
 (
-  q "_fn" :
-  q "_list" :
-   _list len "_len" :
-   0x0 "_c" :
-   (_c len <)
+  q "_each_fn" :
+  q "_each_list" :
+   _each_list len "_each_len" :
+   0x0 "_each_c" :
+   (_each_c len <)
      (
-       _list _c get _fn .
-       _c 0x1 + "_c" :
+       _each_list _each_c get _each_fn .
+       _each_c 0x1 + "_each_c" :
      )
    while
-   cleanup
+   "_each_" cleanup
 ) "each" ::
 
 ;;; filter
@@ -424,7 +424,7 @@
     when
   ) each
   _filter_result
-  cleanup
+  "_filter_" cleanup
 ) "filter" ::
 
 
@@ -452,6 +452,6 @@
   (_slice_str iss)
     (_slice_result "" join "_slice_result" :)
   when
-  cleanup
+  "_slice_" cleanup
 ) "slice" ::
 
