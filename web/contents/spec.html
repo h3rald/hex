@@ -599,11 +599,11 @@ $; Lookup second symbol (factorial)$$
     <aside>OPCODE: <code>1d</code></aside>
     <p>Dequotes quotation <code>q</code>.</p>
     <h5 id="eval-symbol"><code>$:!$$</code> Symbol<a href="#top"></a></h5>
-    <p><mark>(s|q) &rarr; *</mark></p>
+    <p><mark>(s1|q) s2 &rarr; *</mark></p>
     <aside>OPCODE: <code>1e</code></aside>
-    <p>Evaluates the string <code>s</code> as an hex program, or the array of integers to be interpreted as hex
+    <p>Evaluates the string <code>s1</code> as an hex program, or the array of integers to be interpreted as hex
         bytecode
-        (HBX format).</p>
+        (HBX format). <code>s2</code> will be used as the file name to display in stack traces.</p>
     <h5 id="quote-symbol"><code>$:&#39;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark>a &rarr; q</mark></p>
     <aside>OPCODE: <code>1f</code></aside>

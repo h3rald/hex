@@ -48,7 +48,7 @@
     ((0x1 0x2 +) . 0x3 ==)
     ;4
 
-    ("0x2 0x2 -" ! 0x0 ==)
+    ("0x2 0x2 -" "test.hex" ! 0x0 ==)
     (0x4 0x5 + 0x9 ==)
     (0x5 0x3 - 0x2 ==)
     (0x5 0x2 * 0xa ==)
@@ -152,7 +152,7 @@
     ;72
 
     (("puts" .) (error) try "[symbol .] Quotation required" ==)
-    (((puts) !) (error) try "[symbol !] Quotation must contain only integers" ==)
+    (((puts) "test.hex" !) (error) try "[symbol !] Quotation must contain only integers" ==)
     (("3" 0x3 +) (error) try "[symbol +] Two integers required" ==)
     (("3" 0x3 -) (error) try "[symbol -] Two integers required" ==)
     ;76

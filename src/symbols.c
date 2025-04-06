@@ -241,16 +241,28 @@ int hex_symbol_i(hex_context_t *ctx)
 // evaluate a string or bytecode array
 int hex_symbol_eval(hex_context_t *ctx)
 {
+    HEX_POP(ctx, file);
     HEX_POP(ctx, item);
-    ;
+    if (file->type == HEX_TYPE_INVALID)
+    {
+        HEX_FREE(ctx, file);
+        return 1;
+    }
+    if (file->type != HEX_TYPE_STRING)
+    {
+        hex_error(ctx, "[symbol !] File name or scope identifier required");
+        HEX_FREE(ctx, file);
+        return 1;
+    }
     if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
+        HEX_FREE(ctx, file);
         return 1;
     }
     if (item->type == HEX_TYPE_STRING)
     {
-        int result = hex_interpret(ctx, item->data.str_value, "<!>", 1, 1);
+        int result = hex_interpret(ctx, item->data.str_value, file->data.str_value, 1, 1);
         // HEX_FREE(ctx, item);
         return result;
     }
@@ -270,6 +282,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         {
             hex_error(ctx, "[symbol !] Memory allocation failed");
             HEX_FREE(ctx, item);
+            HEX_FREE(ctx, file);
             return 1;
         }
         for (size_t i = 0; i < item->quotation_size; i++)
@@ -278,7 +291,7 @@ int hex_symbol_eval(hex_context_t *ctx)
         }
         // Copy the current symbol table before evaluating the bytecode
         hex_symbol_table_t *symbol_table_copy = hex_symboltable_copy(ctx);
-        int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size, "<eval>");
+        int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size, file->data.str_value);
         // Restore the original symbol table
         ctx->symbol_table = symbol_table_copy;
         return result;
@@ -287,6 +300,7 @@ int hex_symbol_eval(hex_context_t *ctx)
     {
         hex_error(ctx, "[symbol !] String or a quotation of integers required");
         HEX_FREE(ctx, item);
+        HEX_FREE(ctx, file);
         return 1;
     }
 }

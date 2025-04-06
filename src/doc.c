@@ -57,7 +57,7 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
 
     // Evaluation
     hex_set_doc(docs, ".", "q", "*", "Pushes each item of 'q' on the stack.");
-    hex_set_doc(docs, "!", "(s|q)", "*", "Evaluates 's' as a hex program or 'q' as hex bytecode.");
+    hex_set_doc(docs, "!", "(s1|q) s2", "*", "Evaluates 's1' as a hex program or 'q' as hex bytecode (using s2 as file name).");
     hex_set_doc(docs, "'", "a", "q", "Wraps 'a' in a quotation.");
     hex_set_doc(docs, "debug", "q", "*", "Enables debug mode and pushes each item of 'q' on the stack.");
 
