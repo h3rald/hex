@@ -1,6 +1,6 @@
 #!/usr/bin/env hex
 
-"lib/utils.hbx" read "utils.hbx" !
+"./lib/utils.hbx" read "utils.hbx" !
 
 "2025" "meta-year" : 
 "0.4.1" "meta-release" :

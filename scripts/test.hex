@@ -1,6 +1,6 @@
 #!/usr/bin/env hex
 
-"lib/utils.hbx" read "utils.hbx" !
+"./lib/utils.hbx" read "utils.hbx" !
 
 ; --- Globals
 
