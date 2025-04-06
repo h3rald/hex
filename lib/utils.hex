@@ -34,7 +34,7 @@
   "_over_a" :
   dup _over_a swap
   "_over_a" #
-) "ovar" ::
+) "over" ::
 
 ;; isi
 ;; a -> i
