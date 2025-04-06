@@ -421,14 +421,12 @@ int main(int argc, char *argv[])
 #if !(__EMSCRIPTEN__)
     if (!isatty(fileno(stdin)))
     {
-        ctx->settings->stack_trace_enabled = 0;
         // Process piped input from stdin
         hex_process_stdin(ctx);
     }
 #endif
     else
     {
-        ctx->settings->stack_trace_enabled = 0;
         // Start REPL
         hex_repl(ctx);
     }
