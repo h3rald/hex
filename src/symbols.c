@@ -119,14 +119,50 @@ int hex_symbol_free(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_symbol(hex_context_t *ctx)
+int hex_symbol_stacktrace(hex_context_t *ctx)
 {
-    char *sym = "";
-    if (ctx->stack_trace->size > 1)
+    hex_item_t **quotation = (hex_item_t **)malloc(ctx->stack_trace->size * sizeof(hex_item_t *));
+    if (!quotation)
     {
-        sym = strdup(ctx->stack_trace->entries[ctx->stack_trace->size - 2]->value);
+        hex_error(ctx, "[symbol stacktrace] Memory allocation failed for quotation");
+        return 1;
     }
-    return hex_push_string(ctx, sym);
+    size_t quotation_size = 0;
+    for (size_t i = 0; i < ctx->stack_trace->size; i++)
+    {
+        hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+        if (!item)
+        {
+            hex_error(ctx, "[symbol stacktrace] Memory allocation failed for hex_item_t");
+            for (size_t j = 0; j < quotation_size; j++)
+            {
+                free(quotation[j]->data.str_value);
+                free(quotation[j]);
+            }
+            free(quotation);
+            return 1;
+        }
+        item->type = HEX_TYPE_STRING;
+        item->data.str_value = strdup(ctx->stack_trace->entries[i]->value);
+        quotation[i] = item;
+        quotation_size++;
+    }
+
+    // Push the quotation onto the stack
+    if (hex_push_quotation(ctx, quotation, quotation_size) != 0)
+    {
+        hex_error(ctx, "[symbol stacktrace] Failed to push quotation onto the stack");
+        for (size_t j = 0; j < quotation_size; j++)
+        {
+            free(quotation[j]->data.str_value);
+            free(quotation[j]);
+        }
+        free(quotation);
+        return 1;
+    }
+
+    // Successfully pushed quotation
+    return 0;
 }
 
 int hex_symbol_symbols(hex_context_t *ctx)
@@ -2518,86 +2554,6 @@ int hex_symbol_q(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_map(hex_context_t *ctx)
-{
-    HEX_POP(ctx, action);
-    ;
-    if (action->type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        return 1;
-    }
-    HEX_POP(ctx, list);
-    ;
-    if (list->type == HEX_TYPE_INVALID)
-    {
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, list);
-        return 1;
-    }
-
-    if (list->type != HEX_TYPE_QUOTATION || action->type != HEX_TYPE_QUOTATION)
-    {
-        hex_error(ctx, "[symbol map] Two quotations required");
-        HEX_FREE(ctx, action);
-        HEX_FREE(ctx, list);
-        return 1;
-    }
-    else
-    {
-        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t));
-        if (!quotation)
-        {
-            hex_error(ctx, "[symbol map] Memory allocation failed");
-            HEX_FREE(ctx, action);
-            HEX_FREE(ctx, list);
-            return 1;
-        }
-        for (size_t i = 0; i < list->quotation_size; i++)
-        {
-            if (hex_push(ctx, list->data.quotation_value[i]) != 0)
-            {
-                HEX_FREE(ctx, action);
-                HEX_FREE(ctx, list);
-                hex_free_list(ctx, quotation, i);
-                return 1;
-            }
-            hex_item_t *act = hex_copy_item(ctx, action);
-            for (size_t j = 0; j < act->quotation_size; j++)
-            {
-                if (hex_push(ctx, act->data.quotation_value[j]) != 0)
-                {
-                    HEX_FREE(ctx, action);
-                    HEX_FREE(ctx, act);
-                    HEX_FREE(ctx, list);
-                    hex_free_list(ctx, quotation, i);
-                    return 1;
-                }
-            }
-            quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-            if (!quotation[i])
-            {
-                hex_error(ctx, "[symbol map] Memory allocation failed");
-                HEX_FREE(ctx, action);
-                HEX_FREE(ctx, list);
-                HEX_FREE(ctx, act);
-                hex_free_list(ctx, quotation, i);
-                return 1;
-            }
-            *quotation[i] = *hex_copy_item(ctx, hex_pop(ctx));
-        }
-        if (hex_push_quotation(ctx, quotation, list->quotation_size) != 0)
-        {
-            HEX_FREE(ctx, action);
-            HEX_FREE(ctx, list);
-            hex_free_list(ctx, quotation, list->quotation_size);
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
 // Stack manipulation symbols
 int hex_symbol_swap(hex_context_t *ctx)
 {
@@ -2715,7 +2671,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "::", hex_symbol_define);
     hex_set_native_symbol(ctx, "#", hex_symbol_free);
     hex_set_native_symbol(ctx, "symbols", hex_symbol_symbols);
-    hex_set_native_symbol(ctx, "symbol", hex_symbol_symbol);
+    hex_set_native_symbol(ctx, "stacktrace", hex_symbol_stacktrace);
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
     hex_set_native_symbol(ctx, "!", hex_symbol_eval);

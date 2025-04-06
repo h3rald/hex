@@ -213,7 +213,7 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_REPLACE;
     }
-    else if (strcmp(symbol, "map") == 0)
+    else if (strcmp(symbol, "stacktrace") == 0)
     {
         return HEX_OP_MAP;
     }
@@ -373,7 +373,7 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
     case HEX_OP_REPLACE:
         return "replace";
     case HEX_OP_MAP:
-        return "map";
+        return "stacktrace";
     case HEX_OP_PUTS:
         return "puts";
     case HEX_OP_WARN:

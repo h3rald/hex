@@ -259,22 +259,22 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
            "  Oh, and of course all integers are in hexadecimal format! ;)\n"
            "\n"
            "SYMBOLS\n"
-           "  +---------+----------------------------+--------------------------------------------------------------------+\n"
-           "  | Symbol  | Input -> Output            | Description                                                        |\n"
-           "  +---------+----------------------------+--------------------------------------------------------------------+\n");
+           "  +------------+----------------------------+------------------------------------------------------------------------+\n"
+           "  | Symbol     | Input -> Output            | Description                                                            |\n"
+           "  +------------+----------------------------+------------------------------------------------------------------------+\n");
     for (size_t i = 0; i < docs->size; i++)
     {
         printf("  | ");
-        hex_rpad(docs->entries[i]->name, 7);
+        hex_rpad(docs->entries[i]->name, 10);
         printf(" | ");
         hex_lpad(docs->entries[i]->input, 15);
         printf(" -> ");
         hex_rpad(docs->entries[i]->output, 7);
         printf(" | ");
-        hex_rpad(docs->entries[i]->description, 66);
+        hex_rpad(docs->entries[i]->description, 70);
         printf(" |\n");
     }
-    printf("  +---------+----------------------------+--------------------------------------------------------------------+\n");
+    printf("  +------------+----------------------------+------------------------------------------------------------------------+\n");
 }
 
 int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecode, size_t size)

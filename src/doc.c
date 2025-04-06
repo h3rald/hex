@@ -40,6 +40,7 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, ":", "a s", "", "Stores 'a' as the literal symbol 's'.");
     hex_set_doc(docs, "::", "a s", "", "Defines 'a' as the operator symbol 's'.");
     hex_set_doc(docs, "#", "s", "", "Deletes user symbol 's'.");
+    hex_set_doc(docs, "stacktrace", "", "q", "Pushes a quotation containing the list of previously-executed symbols.");
     hex_set_doc(docs, "symbols", "", "q", "Pushes a quotation containing all registered symbols on the stack.");
 
     // Control flow
@@ -107,7 +108,6 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, "join", "q s", "s", "Joins the strings in 'q' using separator 's'.");
     hex_set_doc(docs, "split", "s1 s2", "q", "Splits 's1' using separator 's2'.");
     hex_set_doc(docs, "replace", "s1 s2 s3", "s", "Replaces 's2' with 's3' within 's1'.");
-    hex_set_doc(docs, "map", "q1 q2", "q3", "Applies 'q2' to 'q1' items and returns results.");
 
     // I/O
     hex_set_doc(docs, "puts", "a", "", "Prints 'a' and a new line to standard output.");

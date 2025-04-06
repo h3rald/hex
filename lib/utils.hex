@@ -45,7 +45,7 @@
 ;; -> s
 ;; Returns the name of the pare t symbol
 (
-  stacktrace stacktrace len 2 - get
+  stacktrace stacktrace len 0x3 - get
 ) "parentsym" ::
 
 ;;; defined
@@ -149,6 +149,8 @@
 ;; Throws an error if %:q%% is not a quotation.
 (
   dup
+  stack puts
+  stacktrace puts
   (isq not)
     (
       pop
