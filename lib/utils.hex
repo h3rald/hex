@@ -395,17 +395,7 @@
 ;; q1 q2 -> *
 ;; Applies %:q2%% to each element of %:q1%%.
 (
-  q "_each_fn" :
-  q "_each_list" :
-   _each_list len "_each_len" :
-   0x0 "_each_c" :
-   (_each_c len <)
-     (
-       _each_list _each_c get _each_fn .
-       _each_c 0x1 + "_each_c" :
-     )
-   while
-   "_each_" cleanup
+  0x0 ' cat map pop
 ) "each" ::
 
 ;;; filter
