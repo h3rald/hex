@@ -20,6 +20,22 @@
   if
 ) "unless" ::
 
+;;; cons
+;; a q1 -> q2
+;; Prepends %:a%% to %:q1%%.
+(
+  swap quote swap cat
+) "cons" ::
+
+;;; over
+;; a1 a2 -> a1 a2 a1
+;; Copies the second item on the stack and pushes it on top
+(
+  "_over_a" :
+  dup _over_a swap
+  "_over_a" #
+) "ovar" ::
+
 ;; isi
 ;; a -> i
 ;; Pushes %%0x1%% on the stack if %:a%% is an integer, %%0x0%% otherwise.
