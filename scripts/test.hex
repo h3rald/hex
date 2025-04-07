@@ -130,7 +130,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x65 ==)
+    (symbols len 0x5e ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
@@ -293,38 +293,12 @@
     ;------------------------------------------------------------------------;
     ; utils.hex tests                                                        ;
     ;------------------------------------------------------------------------;
-    ("aa" iss)
-    (0x0 iss not)
-    ;152
-
-    ((a b c) iss not)
-    ((a b c) isq)
-    ("sdgas" isq not)
-    (0x0 isq not)
-    ;156
-
-    (0x1 isi)
-    ("aaa" isi not)
-    (("test") isi not)
     ("This is a test" "This" begins)
-    ;160
-
     ("This is a test" "this" begins not)
-    ((0x0 "aaa" begins) (error) try "[symbol begins] A string item is required" ==)
-    (("aaa" () begins) (error) try "[symbol begins] A string prefix is required" ==)
     ("This is a test" "test" ends)
-    ;164
-
     ("This is a test" "Test" ends not)
-    ((0x0 "aaa" ends) (error) try "[symbol ends] A string item is required" ==)
-    (("aaa" () ends) (error) try "[symbol ends] A string suffix is required" ==)
-    ((0x1 isi)(0x2) when 0x2 ==)
-    ;168
+    ;154
 
-    (0x1 (0x4 iss)(0x2) when 0x1 ==)
-    (0x3 (0x4 isi)(0x2) unless 0x3 ==)
-    ((0x1 iss)(0x2) unless 0x2 ==)
-    
 ) "TESTS" :
 
 ; --- Run Tests

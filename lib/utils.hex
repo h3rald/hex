@@ -36,71 +36,6 @@
   "_over_a" #
 ) "over" ::
 
-;; isi
-;; a -> i
-;; Pushes %%0x1%% on the stack if %:a%% is an integer, %%0x0%% otherwise.
-(
-  type "integer" ==
-) "isi" ::
-
-;; iss
-;; a -> i
-;; Pushes $0x1$$ on the stack if %:a%% is a string, $0x0$$ otherwise.
-(
-  type "string" ==
-) "iss" ::
-
-;; isq
-;; a -> i
-;; Pushes $0x1$$ on the stack if %%a%% is a quotation, $0x0$$ otherwise.
-(
-  type "quotation" ==
-) "isq" ::
-
-;;; i
-;; i -> i
-;; Throws an error if %:i%% is not an integer.
-(
-  dup
-  (isi not)
-    (pop "Integer required" throw) 
-    () 
-  if
-) "i" ::
-
-;;; l
-;; a -> a
-;; Throws an error if %:a%% is not a string or a quotation.
-(
-  dup dup
-  (isi)
-    (pop "String or quotation required" throw) 
-    () 
-  if
-) "l" ::
-
-;;; s
-;; s -> s
-;; Throws an error if %:s%% is not a string.
-(
-  dup
-  (iss not)
-    (pop "String required" throw) 
-    () 
-  if
-) "s" ::
-
-;;; q
-;; q -> q
-;; Throws an error if %:q%% is not a quotation.
-(
-  dup
-  (isq not)
-    (pop "Quotation required" throw) 
-    () 
-  if
-) "q" ::
-
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
@@ -109,12 +44,6 @@
   "_begins_s"      :
   0x1 "_begins_result" :
   0x0 "_begins_c" :
-  (_begins_prefix iss not)
-    ("[symbol begins] A string prefix is required" throw)
-  when
-  (_begins_s iss not)
-    ("[symbol begins] A string item is required" throw)
-  when
   (_begins_s len _begins_prefix len <)
     (0x0 "_begins_result" :)
     (
@@ -148,13 +77,7 @@
   "_ends_suffix" :
   "_ends_s"      :
   0x1 "_ends_result" :
-   (_ends_suffix iss not)
-    ("[symbol ends] A string suffix is required" throw)
-  when
-  (_ends_s iss not)
-    ("[symbol ends] A string item is required" throw)
-  when
-   _ends_suffix len 0x1 - "_ends_c" :
+  _ends_suffix len 0x1 - "_ends_c" :
   (_ends_s len _ends_suffix len <)
     (0x0 "_ends_result" :)
     (
@@ -203,28 +126,18 @@
 ) "cleanup" ::
 
 ;; insert
-;; (q1|s1) a i -> (q2|s2)
-;; Inserts item %:a%% at position %:i%% within a quotation or string.
+;; q1 a i -> q2
+;; Inserts item %:a%% at position %:i%% within a quotation.
 (
   i "_insert_index" :
   "_insert_item" :
   i "_insert_list" :
-  0x0 "_insert_is-str" :
+  0x0 "_insert_c" :
+  () "_insert_result" :
   _insert_list len "_insert_len" :
   (_insert_index _insert_len >= _insert_index 0x0 < or)
     ("[symbol insert] Index out of bounds" throw)
   when
-  (_insert_list iss)
-    ( 
-      0x1 "_insert_is-str" :
-      (_insert_item iss not)
-        ("[symbol insert] A string item is required" throw)
-      when
-      _insert_list "" split "_insert_list" :
-    )
-  when
-  0x0 "_insert_c" :
-  () "_insert_result" :
   (_insert_c _insert_len <)
     (
       (_insert_c _insert_index ==)
@@ -234,77 +147,54 @@
       _insert_c 0x1 + "_insert_c" :
     )
   while
-  (_insert_is-str)
-    (_insert_result "" join "_insert_result" :)
-  when
   _insert_result
-  "_insert_" cleanup
+  "_insert_index"   #
+  "_insert_item"    #
+  "_insert_list"    #
+  "_insert_c"       #
+  "_insert_result"  #
+  "_insert_len"     #
 ) "insert" ::
 
 
 ;;; push
-;; (q1|s1) a -> (q2|s2)
-;; Pushes %:a%% to the end of a quotation or string.
+;; q1 a -> q2
+;; Pushes %:a%% to the end of a quotation.
 (
-  "_push_item" :
-  l "_push_list" :
-  0x0 "_push_is-str" :
-  (_push_list iss)
-    (
-      (_push_item iss not)
-        ("[symbol push] A string item is required" throw)
-      when
-      0x1 "_push_is-str" :
-      _push_list "" split "_push_list" :
-    )
-  when
-  _push_list _push_item ' cat
-  (_push_is-str)
-    ( "" join)
-  when
-  "_push_" cleanup
+  ' cat
 ) "push" ::
 
-
 ;;; reverse
-;; (q1|s1) -> (q2|s2)
-;; Reverses the order of the elements in a string or quotation.
+;; q1 -> q2
+;; Reverses the order of the items in a quotation.
 (
-  l "_reverse_list" :
-  (_reverse_list iss)
-    (_reverse_list "" split "_reverse_list" :)
-  when
+  "_reverse_list" :
   _reverse_list len 0x1 - "_reverse_c" : 
   () "_reverse_result" :
   (_reverse_c 0x0 <=)
     (
        _reverse_result _reverse_list _reverse_c get ' cat "_reverse_result" :
-       _c 0x1 - "_c" :
+       _reverse_c 0x1 - "_reverse_c" :
     )
   while
   _reverse_result
-  (_reverse_list iss)
-    (_reverse_result "" join "_reverse_result" :)
-  when
-  "_reverse_" cleanup
+  "_reverse_list"   #
+  "_reverse_c"      # 
+  "_reverse_result" # 
 ) "reverse" ::
 
 ;;; sort
-;; (q1|s1) q2 -> (q3|s2)
-;; Sorts the items of a quotation or string.
+;; q1 q2 -> q3
+;; Sorts the items of a quotation.
 (
   "_sort_check" :
-  l "_sort_list" :
-  when
-  (_sort_list iss)
-    (_sort_list "" split "_sort_list" :)
-  when
-  _sort_list len "_sort_len" :
+  "_sort_list" :
+  () "_sort_result" :
   _sort_list _len 0x1 - "_sort_pivot" :
   0x0 "_sort_c" :
   () "_sort_left" :
   () "_sort_right" :
-  (0x1 len <=)
+  (0x1 _sort_list len <=)
     (_sort_list)
     (
       (_sort_c len <)
@@ -320,42 +210,40 @@
       cat cat "_sort_result" :
     )
   if
-  (_sort_list iss)
-    (_sort_result "" join "_sort_result" :)
-  when
   _sort_result
-  "_sort_" cleanup
+  "_sort_check"  #
+  "_sort_list"   #
+  "_sort_result" #
+  "_sort_pivot"  #
+  "_sort_c"      #
+  "_sort_left"   #
+  "_sort_right"  #
 ) "sort" ::
 
 ;;; gsub
 ;; s1 s2 s3 -> s4
 ;; Replaces all occurrences of %:s2%% with %%s3%% in %:s1%%.
 (
-  s "_gsub_rep"  :
-  s "_gsub_src"  :
-  s "_gsub_text" :
-  (_gsub_text iss _gsub_src iss _gsub_rep iss and and not)
-    ("[symbol gsub] Three strings required." throw)
-  when
+  "_gsub_rep"  :
+  "_gsub_src"  :
+  "_gsub_text" :
   (_gsub_text _gsub_src index 0x0 >=)
-    (_gsub_text _gsub_src _gsub_rep replace "_text" :)
+    (_gsub_text _gsub_src _gsub_rep replace "_gsub_text" :)
   while
   _gsub_text
-  "_gsub_" cleanup
+  "_gsub_rep"  #
+  "_gsub_src"  #
+  "_gsub_text" #
 ) "gsub" :
 
 ;;; min
 ;; q -> a
 ;; Pushes the minimum item in a quotation on the stack.
 (
-  q "_min_list" :
+  "_min_list" :
   () "_min_result" :
-  (_min_list len 0x0 ==)
-    ("[symbol min] Not enough items" throw)
-  when
   0x0 get "_min_result" :
   0x1 "_min_c" :
-  _min_list len "_min_len" :
   (_min_c len <)
     (
       (_min_result _min_list _min_c get <)
@@ -364,21 +252,20 @@
     )
   while
   _min_result
-  "_min_" cleanup
+  "_min_list"   #
+  "_min_result" #
+  "_min_result" #
+  "_min_c"      #
 ) "min" ::
 
 ;;; max
 ;; q -> a
 ;; Pushes the maximum item in a quotation on the stack.
 (
-  q "_max_list" :
+  "_max_list" :
   () "_max_result" :
-  (_max_list len 0x0 ==)
-    ("[symbol max] Not enough items" throw)
-  when
   0x0 get "_max_result" :
   0x1 "_max_c" :
-  _max_list len "_max_len" :
   (_max_c len <)
     (
       (_max_result _max_list _max_c get >)
@@ -387,24 +274,29 @@
     )
   while
   _max_result
-  "_max_" cleanup
+  "_max_list"   #
+  "_max_result" #
+  "_max_result" #
+  "_max_c"      #
 ) "max" ::
 
 ;;; intpl
 ;; s1 q -> s2
 ;; Substitutes %:$0%% to %%$9%% placeholders in %:s1%% with items in %:q%%.
 (
-  s "_intpl_s" :
-  q "_intpl_q" :
-  _intpl_q len "_intpl_len" :
+  "_intpl_s" :
+  "_intpl_q" :
   0x0 "_intpl_c" :
-  (_intpl_c len <)
+  (_intpl_c _intpl_s len <)
      (
        _intpl_s "$" _intpl_c str cat _intpl_list _intpl_c get cat gsub "_intpl_s" :
        _intpl_c 0x1 + "_intpl_c" :
      )
    while
    "_intpl_" cleanup
+  "_intpl_s" #
+  "_intpl_q" #
+  "_intpl_c" #
 ) "intpl" ::
 
 ;;; each
@@ -418,8 +310,8 @@
 ;; q1 q2-> q3
 ;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
 (
-  q "_filter_fn" :
-  q "_filter_list" :
+  "_filter_fn" :
+  "_filter_list" :
   () "_filter_result" :
   _filter_list (
     "_filter_each_item" :
@@ -430,24 +322,18 @@
     when
   ) each
   _filter_result
-  "_filter_" cleanup
+  "_filter_fn"     #
+  "_filter_list"   #
+  "_filter_result" #
 ) "filter" ::
-
 
 ;;; slice
 ;; s1 i1 i2 -> s2
 ;; Extracts the portion of the string between indices %:i1%% and %:i2%%.
 (
-  i "_slice_end" :
-  i "_slice_start" :
-  s "_slice_str" :
-  _slice_str len "_len" :
-  (_slice_start _len >= _slice_start 0x0 < or)
-    ("[symbol slice] Start index out of bounds" throw)
-  when
-  (_slice_end _len >= _slice_end 0x0 < or)
-    ("[symbol slice] End index out of bounds" throw)
-  when
+  "_slice_end" :
+  "_slice_start" :
+  "_slice_str" :
   (_slice_start _slice_end <)
     (0x0 "_slice_result" :)
     (
@@ -455,9 +341,8 @@
       _slice_start 0x1 + "_slice_start" :
     )
   while
-  (_slice_str iss)
-    (_slice_result "" join "_slice_result" :)
-  when
-  "_slice_" cleanup
+  "_slice_end"   #
+  "_slice_start" #
+  "_slice_str"   #
 ) "slice" ::
 
