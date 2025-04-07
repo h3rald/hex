@@ -1703,7 +1703,7 @@ int hex_symbol_split(hex_context_t *ctx)
     return result;
 }
 
-int hex_symbol_replace(hex_context_t *ctx)
+int hex_symbol_sub(hex_context_t *ctx)
 {
     HEX_POP(ctx, replacement);
     if (replacement->type == HEX_TYPE_INVALID)
@@ -1741,7 +1741,7 @@ int hex_symbol_replace(hex_context_t *ctx)
             char *newStr = (char *)malloc(newLen);
             if (!newStr)
             {
-                hex_error(ctx, "[symbol replace] Memory allocation failed");
+                hex_error(ctx, "[symbol sub] Memory allocation failed");
                 result = 1;
             }
             else
@@ -1759,7 +1759,7 @@ int hex_symbol_replace(hex_context_t *ctx)
     }
     else
     {
-        hex_error(ctx, "[symbol replace] Three strings required");
+        hex_error(ctx, "[symbol sub] Three strings required");
         result = 1;
     }
     if (result != 0)
@@ -2760,7 +2760,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "index", hex_symbol_index);
     hex_set_native_symbol(ctx, "join", hex_symbol_join);
     hex_set_native_symbol(ctx, "split", hex_symbol_split);
-    hex_set_native_symbol(ctx, "replace", hex_symbol_replace);
+    hex_set_native_symbol(ctx, "sub", hex_symbol_sub);
     hex_set_native_symbol(ctx, "read", hex_symbol_read);
     hex_set_native_symbol(ctx, "write", hex_symbol_write);
     hex_set_native_symbol(ctx, "append", hex_symbol_append);

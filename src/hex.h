@@ -185,9 +185,9 @@ typedef enum hex_opcode_t
     HEX_OP_DEBUG = 0x20,
 
     HEX_OP_ADD = 0x21,
-    HEX_OP_SUB = 0x22,
-    HEX_OP_MUL = 0x23,
-    HEX_OP_DIV = 0x24,
+    HEX_OP_SUBTRACT = 0x22,
+    HEX_OP_MULTIPLY = 0x23,
+    HEX_OP_DIVIDE = 0x24,
     HEX_OP_MOD = 0x25,
 
     HEX_OP_BITAND = 0x26,
@@ -223,7 +223,7 @@ typedef enum hex_opcode_t
     HEX_OP_INDEX = 0x40,
     HEX_OP_JOIN = 0x41,
     HEX_OP_SPLIT = 0x42,
-    HEX_OP_REPLACE = 0x43,
+    HEX_OP_SUB = 0x43,
     HEX_OP_MAP = 0x44,
 
     HEX_OP_PUTS = 0x45,
@@ -353,7 +353,7 @@ int hex_symbol_insert(hex_context_t *ctx);
 int hex_symbol_index(hex_context_t *ctx);
 int hex_symbol_join(hex_context_t *ctx);
 int hex_symbol_split(hex_context_t *ctx);
-int hex_symbol_replace(hex_context_t *ctx);
+int hex_symbol_sub(hex_context_t *ctx);
 int hex_symbol_read(hex_context_t *ctx);
 int hex_symbol_write(hex_context_t *ctx);
 int hex_symbol_append(hex_context_t *ctx);

@@ -103,8 +103,8 @@
     ("abcde" 0x1 get "b" ==)
     ;40
 
-    ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" replace "t-path" :) while t-path "a\\b\\c" == "t-path" #)
-    ("assets\"" "\"" "/" replace "assets/" ==)
+    ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" sub "t-path" :) while t-path "a\\b\\c" == "t-path" #)
+    ("assets\"" "\"" "/" sub "assets/" ==)
     (("" () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
     ((0x4 len) (error) try "[symbol len] Quotation or string required" ==)
     ;44
@@ -116,7 +116,7 @@
     ;48
 
     ("0.0.0.0" "." split ("0" "0" "0" "0") ==)
-    ("Hello, World!" "Hello" "Goodbye" replace "Goodbye, World!" ==)
+    ("Hello, World!" "Hello" "Goodbye" sub "Goodbye, World!" ==)
     ("test" "test.txt" write "test.txt" read "test" ==)
     ("!" "test.txt" append "test.txt" read "test!" ==)
     ;52
@@ -242,7 +242,7 @@
 
     ((("a" "b" "c") 0x1 join) (error) try "[symbol join] Quotation and string required" ==)
     (("a" 0x1 split) (error) try "[symbol split] Two strings required" ==)
-    ((("aaa") "a" "b" replace) (error) try "[symbol replace] Three strings required" ==)
+    ((("aaa") "a" "b" sub) (error) try "[symbol sub] Three strings required" ==)
     ((0x1 read) (error) try "[symbol read] String required" ==)
     ;132
 

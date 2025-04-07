@@ -79,15 +79,15 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     }
     else if (strcmp(symbol, "-") == 0)
     {
-        return HEX_OP_SUB;
+        return HEX_OP_SUBTRACT;
     }
     else if (strcmp(symbol, "*") == 0)
     {
-        return HEX_OP_MUL;
+        return HEX_OP_MULTIPLY;
     }
     else if (strcmp(symbol, "/") == 0)
     {
-        return HEX_OP_DIV;
+        return HEX_OP_DIVIDE;
     }
     else if (strcmp(symbol, "%") == 0)
     {
@@ -209,9 +209,9 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_SPLIT;
     }
-    else if (strcmp(symbol, "replace") == 0)
+    else if (strcmp(symbol, "sub") == 0)
     {
-        return HEX_OP_REPLACE;
+        return HEX_OP_SUB;
     }
     else if (strcmp(symbol, "map") == 0)
     {
@@ -304,11 +304,11 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "debug";
     case HEX_OP_ADD:
         return "+";
-    case HEX_OP_SUB:
+    case HEX_OP_SUBTRACT:
         return "-";
-    case HEX_OP_MUL:
+    case HEX_OP_MULTIPLY:
         return "*";
-    case HEX_OP_DIV:
+    case HEX_OP_DIVIDE:
         return "/";
     case HEX_OP_MOD:
         return "%";
@@ -370,8 +370,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "join";
     case HEX_OP_SPLIT:
         return "split";
-    case HEX_OP_REPLACE:
-        return "replace";
+    case HEX_OP_SUB:
+        return "sub";
     case HEX_OP_MAP:
         return "map";
     case HEX_OP_PUTS:
