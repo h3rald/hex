@@ -20,22 +20,6 @@
   if
 ) "unless" ::
 
-;;; cons
-;; a q1 -> q2
-;; Prepends %:a%% to %:q1%%.
-(
-  swap quote swap cat
-) "cons" ::
-
-;;; over
-;; a1 a2 -> a1 a2 a1
-;; Copies the second item on the stack and pushes it on top
-(
-  "_over_a" :
-  dup _over_a swap
-  "_over_a" #
-) "over" ::
-
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
@@ -136,13 +120,35 @@
   "_insert_len"     #
 ) "insert" ::
 
-
 ;;; push
 ;; q1 a -> q2
-;; Pushes %:a%% to the end of a quotation.
+;; Appends %:a%% to the end of %:q1%%.
 (
   ' cat
 ) "push" ::
+
+;;; cons
+;; a q1 -> q2
+;; Prepends %:a%% to the beginning of %:q1%%.
+(
+  swap quote swap cat
+) "cons" ::
+
+;;; over
+;; a1 a2 -> a1 a2 a1
+;; Copies the second item on the stack and pushes it on top
+(
+  "_over_a" :
+  dup _over_a swap
+  "_over_a" #
+) "over" ::
+
+;;; dip
+;; a1 (a2) -> a2 a1
+;; Dequotes the first item on the stack and restores the second item on top.
+(
+  swap ' cat .
+) "dip" ::
 
 ;;; reverse
 ;; q1 -> q2
