@@ -105,26 +105,6 @@
   "_ends_offset" #
 ) "ends" ::
 
-;;; cleanup
-;; s ->
-;; Frees all symbols starting with %:s%%.
-(
-  "_cleanup_prefix" :
-  0x0 "_cleanup_c" :
-  (_cleanup_c symbols len <)
-    (
-      symbols _cleanup_c get "_cleanup_item" :
-      (_cleanup_item _cleanup_prefix begins)
-        (_cleanup_item #)
-      when 
-      _cleanup_c 0x1 + "_cleanup_c" :
-    )
-  while
-  "_cleanup_prefix" #
-  "_cleanup_item"   #
-  "_cleanup_c"      #
-) "cleanup" ::
-
 ;; insert
 ;; q1 a i -> q2
 ;; Inserts item %:a%% at position %:i%% within a quotation.
@@ -293,7 +273,6 @@
        _intpl_c 0x1 + "_intpl_c" :
      )
    while
-   "_intpl_" cleanup
   "_intpl_s" #
   "_intpl_q" #
   "_intpl_c" #
