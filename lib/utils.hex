@@ -20,38 +20,41 @@
   if
 ) "unless" ::
 
+;;; push
+;; q1 a -> q2
+;; Appends %:a%% to the end of %:q1%%.
+(
+  ' cat
+) "push" ::
+
+;;; cons
+;; a q1 -> q2
+;; Prepends %:a%% to the beginning of %:q1%%.
+(
+  swap quote swap cat
+) "cons" ::
+
+;;; over
+;; a1 a2 -> a1 a2 a1
+;; Copies the second item on the stack and pushes it on top
+(
+  "_over_a" :
+  dup _over_a swap
+  "_over_a" #
+) "over" ::
+
+;;; dip
+;; a1 (a2) -> a2 a1
+;; Dequotes the first item on the stack and restores the second item on top.
+(
+  swap ' cat .
+) "dip" ::
+
 ;;; begins
 ;; s1 s2 -> s3
 ;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
 (
-  "_begins_prefix" :
-  "_begins_s"      :
-  0x1 "_begins_result" :
-  0x0 "_begins_c" :
-  (_begins_s len _begins_prefix len <)
-    (0x0 "_begins_result" :)
-    (
-      (
-        _begins_c _begins_prefix len <
-        _begins_result and
-      )
-        (
-          (
-            _begins_prefix _begins_c get
-            _begins_s _begins_c get ==
-          )
-            (_begins_c 0x1 + "_begins_c" :)
-            (0x0 "_begins_result" :)
-          if  
-        )
-      while
-    )
-  if
-  _begins_result
-  "_begins_result" #
-  "_begins_prefix" #
-  "_begins_s"      #
-  "_begins_c"      # 
+  index 0x0 ==
 ) "begins" ::
 
 ;;; ends
@@ -60,33 +63,11 @@
 (
   "_ends_suffix" :
   "_ends_s"      :
-  0x1 "_ends_result" :
-  _ends_suffix len 0x1 - "_ends_c" :
-  (_ends_s len _ends_suffix len <)
-    (0x0 "_ends_result" :)
-    (
-      _ends_s len _ends_suffix len - "_ends_offset" :
-      (
-        _ends_c 0x0 >=
-        _ends_result and
-      )
-        (
-          (
-            _ends_suffix _ends_c get
-            _ends_s _ends_offset _ends_c + get ==
-          )
-            (_ends_c 0x1 - "_ends_c" :)
-            (0x0 "_ends_result" :)
-          if  
-        )
-      while
-    )
-  if
-  _ends_result
+  _ends_s _ends_suffix index 
+  _ends_s len _ends_suffix len -
+  ==
   "_ends_suffix" #
   "_ends_s"      #
-  "_ends_c"      # 
-  "_ends_offset" #
 ) "ends" ::
 
 ;; insert
@@ -119,36 +100,6 @@
   "_insert_result"  #
   "_insert_len"     #
 ) "insert" ::
-
-;;; push
-;; q1 a -> q2
-;; Appends %:a%% to the end of %:q1%%.
-(
-  ' cat
-) "push" ::
-
-;;; cons
-;; a q1 -> q2
-;; Prepends %:a%% to the beginning of %:q1%%.
-(
-  swap quote swap cat
-) "cons" ::
-
-;;; over
-;; a1 a2 -> a1 a2 a1
-;; Copies the second item on the stack and pushes it on top
-(
-  "_over_a" :
-  dup _over_a swap
-  "_over_a" #
-) "over" ::
-
-;;; dip
-;; a1 (a2) -> a2 a1
-;; Dequotes the first item on the stack and restores the second item on top.
-(
-  swap ' cat .
-) "dip" ::
 
 ;;; reverse
 ;; q1 -> q2
