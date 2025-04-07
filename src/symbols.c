@@ -2699,7 +2699,7 @@ int hex_symbol_stack(hex_context_t *ctx)
     return 0;
 }
 
-int hex_symbol_pop(hex_context_t *ctx)
+int hex_symbol_drop(hex_context_t *ctx)
 {
     HEX_POP(ctx, item);
     if (item != NULL)
@@ -2778,5 +2778,5 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "swap", hex_symbol_swap);
     hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
     hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
-    hex_set_native_symbol(ctx, "pop", hex_symbol_pop);
+    hex_set_native_symbol(ctx, "drop", hex_symbol_drop);
 }

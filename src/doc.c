@@ -51,7 +51,7 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
 
     // Stack
     hex_set_doc(docs, "dup", "a", "a a", "Duplicates 'a'.");
-    hex_set_doc(docs, "pop", "a", "", "Removes the top item from the stack.");
+    hex_set_doc(docs, "drop", "a", "", "Removes the top item from the stack.");
     hex_set_doc(docs, "swap", "a1 a2", "a2 a1", "Swaps 'a2' with 'a1'.");
     hex_set_doc(docs, "stack", "", "q", "Returns the contents of the stack.");
 

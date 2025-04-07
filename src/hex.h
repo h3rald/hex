@@ -176,7 +176,7 @@ typedef enum hex_opcode_t
 
     HEX_OP_DUP = 0x19,
     HEX_OP_STACK = 0x1a,
-    HEX_OP_POP = 0x1b,
+    HEX_OP_DROP = 0x1b,
     HEX_OP_SWAP = 0x1c,
 
     HEX_OP_I = 0x1d,
@@ -372,7 +372,7 @@ int hex_symbol_map(hex_context_t *ctx);
 int hex_symbol_swap(hex_context_t *ctx);
 int hex_symbol_dup(hex_context_t *ctx);
 int hex_symbol_stack(hex_context_t *ctx);
-int hex_symbol_pop(hex_context_t *ctx);
+int hex_symbol_drop(hex_context_t *ctx);
 
 // Opcodes
 uint8_t hex_symbol_to_opcode(const char *symbol);

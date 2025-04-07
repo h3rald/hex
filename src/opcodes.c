@@ -49,9 +49,9 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_STACK;
     }
-    else if (strcmp(symbol, "pop") == 0)
+    else if (strcmp(symbol, "drop") == 0)
     {
-        return HEX_OP_POP;
+        return HEX_OP_DROP;
     }
     else if (strcmp(symbol, "swap") == 0)
     {
@@ -290,8 +290,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "dup";
     case HEX_OP_STACK:
         return "stack";
-    case HEX_OP_POP:
-        return "pop";
+    case HEX_OP_DROP:
+        return "drop";
     case HEX_OP_SWAP:
         return "swap";
     case HEX_OP_I:

@@ -142,7 +142,7 @@
     (0x2 dup stack (0x2 0x2) ==)
     ((dup *) "square" :: 0x3 square 0x9 == "square" #)
     (("test" throw) (error "test" ==) try)
-    (0x1 0x2 swap pop pop pop stack (0x2) ==)
+    (0x1 0x2 swap drop drop drop stack (0x2) ==)
     ;68
 
     (("aaa" "puts" :) (error) try "[symbol :] Failed to store symbol 'puts'" ==)
@@ -227,7 +227,7 @@
       "test\ntest\\ntest\t\"hello\"!" "_str" :
       _str "test1.txt" write
       "test1.txt" read _str == "_str" #
-      "rm test1.txt" exec pop
+      "rm test1.txt" exec drop
     )
     (("a" not) (error) try "[symbol not] Integer required" ==)
     ((0x1 () xor) (error) try "[symbol xor] Two integers required" ==)
@@ -248,13 +248,13 @@
 
     (("invalid-file.txt" read) (error) try "[symbol read] Could not open file for reading: invalid-file.txt" ==)
     (("test" "invalid-file//" write) (error) try "[symbol write] Could not open file for writing: invalid-file//" ==)
-    (((0x2 0x4 "a") "test.txt" write) (error) try "[symbol write] Quotation must contain only integers" == "rm test.txt" exec pop)
+    (((0x2 0x4 "a") "test.txt" write) (error) try "[symbol write] Quotation must contain only integers" == "rm test.txt" exec drop)
     ((0x2 "test.txt" write) (error) try "[symbol write] String or quotation of integers required" ==)
     ;136
 
     (("a" () write) (error) try "[symbol write] String required" ==)
     (("aaa" "invalid-file//" append) (error) try "[symbol append] Could not open file for appending: invalid-file//" ==)
-    (((0x2 "" 0x5) "test.txt" append) (error) try "[symbol append] Quotation must contain only integers" == "rm test.txt" exec pop)
+    (((0x2 "" 0x5) "test.txt" append) (error) try "[symbol append] Quotation must contain only integers" == "rm test.txt" exec drop)
     ((0x2 "test.txt" append) (error) try "[symbol append] String or quotation of integers required" ==)
     ;140
 
