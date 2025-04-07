@@ -27,6 +27,25 @@
   ' cat
 ) "push" ::
 
+;;; pop
+;; q1 -> q2
+;; Removes the last item at the end of %:q1%%.
+(
+  "_pop_q" :
+  () "_pop_res" :
+  0x0 "_pop_c" :
+  (_pop_c _pop_q len 1 - <)
+    (
+      _pop_res _pop_q _pop_c get push "_pop_res" :
+      _pop_c 0x1 + "_pop_c" :
+    )
+  while
+  _pop_res
+  "_pop_q"   #
+  "_pop_res" #
+  "_pop_c"   #
+) "pop"
+
 ;;; cons
 ;; a q1 -> q2
 ;; Prepends %:a%% to the beginning of %:q1%%.
