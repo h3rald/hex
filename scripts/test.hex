@@ -14,10 +14,10 @@
 ; --- Utilities
 
 (
-    "current-test" :
+    "_test_current" :
     TEST-COUNT 0x1 + "TEST-COUNT" :
     (
-        (current-test .)
+        (_test_current .)
             (
                 "." print 
                 SUCCESSES 0x1 + "SUCCESSES" :
@@ -37,6 +37,7 @@
             FAILS TEST-COUNT dec ' cat "FAILS" :
         )
     try
+    "_test_current" #
 ) "test" ::
 
 ; --- Test Definitions

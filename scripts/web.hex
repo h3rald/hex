@@ -3,7 +3,7 @@
 "./lib/utils.hbx" read "utils.hbx" !
 
 "2025" "meta-year" : 
-"0.4.1" "meta-release" :
+"0.5.0" "meta-release" :
 "web/assets" "d-assets" :
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
@@ -21,7 +21,7 @@ d-templates "/page.html" cat "t-page" :
 
 ; Symbols to substitute with the corresponding links 
 ("map" "debug" "split" "run" "get" "puts" ":" "::" "." "#" "==" "'" 
-"swap" "dup" "while" "+" "*" "-" "each" "cat" "throw" 
+"swap" "dup" "while" "+" "*" "-" "each" "cat" "throw" "drop" "sub"
 "symbols" "print" "read" "dec" "write" "append" "!" 
 "<=" "if") "symbol-links" :
 

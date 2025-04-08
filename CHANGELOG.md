@@ -1,11 +1,30 @@
 <article>
     <h2>Changelog</h2>
     <ul>
+<li><a href="#v0.5.0">v0.5.0</a></li>
 <li><a href="#v0.4.1">v0.4.1</a></li>
 <li><a href="#v0.4.0">v0.4.0</a></li>
 <li><a href="#v0.3.0">v0.3.0</a></li>
 <li><a href="#v0.2.0">v0.2.0</a></li>
 <li><a href="#v0.1.0">v0.1.0</a></li>
+</ul>
+<h3 id="v0.5.0">v0.5.0 &mdash; 2025-04-08</h3>
+
+<h4>Breaking Changes</h4>
+<ul>
+    <li>Renamed %:pop%% to <a href="https://hex.2c.fyi/spec#drop-symbol">drop</a>.</li>
+    <li>Renamed %:replace%% to <a href="https://hex.2c.fyi/spec#sub-symbol">sub</a>.</li>
+</ul>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Fixed some documentation typos and inaccuracies.</li>
+    <li>Fixed incorrect bytecode processing for quotations with more than 127 items</li>
+</ul>
+
+<h4>Chores</h4>
+<ul>
+    <li>Added more tests.</li>
 </ul>
 <h3 id="v0.4.1">v0.4.1 &mdash; 2025-01-07</h3>
 
