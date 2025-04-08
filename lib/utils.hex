@@ -34,7 +34,7 @@
   "_pop_q" :
   () "_pop_res" :
   0x0 "_pop_c" :
-  (_pop_c _pop_q len 1 - <)
+  (_pop_c _pop_q len 0x1 - <)
     (
       _pop_res _pop_q _pop_c get push "_pop_res" :
       _pop_c 0x1 + "_pop_c" :
@@ -44,7 +44,7 @@
   "_pop_q"   #
   "_pop_res" #
   "_pop_c"   #
-) "pop"
+) "pop" ::
 
 ;;; cons
 ;; a q1 -> q2

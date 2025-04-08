@@ -130,7 +130,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x5e ==)
+    (symbols len 0x5f ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
@@ -142,7 +142,7 @@
     (0x2 dup stack (0x2 0x2) ==)
     ((dup *) "square" :: 0x3 square 0x9 == "square" #)
     (("test" throw) (error "test" ==) try)
-    (0x1 0x2 swap drop drop drop stack (0x2) ==)
+    (0x1 0x2 swap drop drop drop stack (0x2) == swap drop) ; Also make sure to clear the stack polluted with #65
     ;68
 
     (("aaa" "puts" :) (error) try "[symbol :] Failed to store symbol 'puts'" ==)
