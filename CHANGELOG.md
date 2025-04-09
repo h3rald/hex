@@ -12,14 +12,15 @@
 
 <h4>Breaking Changes</h4>
 <ul>
-    <li>Renamed %:pop%% to <a href="https://hex.2c.fyi/spec#drop-symbol">drop</a>.</li>
-    <li>Renamed %:replace%% to <a href="https://hex.2c.fyi/spec#sub-symbol">sub</a>.</li>
+    <li>Renamed <code>pop</code> to <a href="https://hex.2c.fyi/spec#drop-symbol">drop</a>.</li>
+    <li>Renamed <code>replace</code> to <a href="https://hex.2c.fyi/spec#sub-symbol">sub</a>.</li>
+    <li><a href="https://hex.2c.fyi/spec#eval-symbol">!</a> now requires an extra string on the stack to be used as the file name/identifier in stack traces.
 </ul>
 
 <h4>Fixes</h4>
 <ul>
     <li>Fixed some documentation typos and inaccuracies.</li>
-    <li>Fixed incorrect bytecode processing for quotations with more than 127 items</li>
+    <li>Fixed incorrect bytecode processing for quotations with more than 127 items.</li>
 </ul>
 
 <h4>Chores</h4>
@@ -40,7 +41,7 @@
 
 <h4>Breaking Changes</h4>
 <ul>
-    <li>Removed the native symbol %:when%%.</li>
+    <li>Removed the native symbol <code>when</code>.</li>
     <li>Bytecode: some opcodes changed values; programs compiled with tbe previous version must be recompiled.</li>
 </ul>
 
@@ -59,13 +60,13 @@
 
 <h4>Chores</h4>
 <ul>
-    <li>Updated Vim syntax highlighting (%:hex.vim%%).</li>
+    <li>Updated Vim syntax highlighting (<code>hex.vim</code>).</li>
 </ul>
 <h3 id="v0.3.0">v0.3.0 &mdash; 2024-12-25</h3>
 
 <h4>Breaking Changes</h4>
 <ul>
-    <li>Removed the native symbols %:filter%%, %:clear%%, and %:each%%.</li>
+    <li>Removed the native symbols <code>filter</code>, <code>clear</code>, and <code>each</code>.</li>
     <li>Bytecode: some opcodes changed values; programs compiled with tbe previous version must be recompiled.</li>
 </ul>
 
@@ -84,7 +85,7 @@
 
 <h4>Chores</h4>
 <ul>
-    <li>Updated Vim syntax highlighting (%:hex.vim%%).</li>
+    <li>Updated Vim syntax highlighting (<code>hex.vim</code>).</li>
 </ul>
 <h3 id="v0.2.0">v0.2.0 &mdash; 2024-12-20</h3>
 
