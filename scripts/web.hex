@@ -193,7 +193,7 @@ while
 "_c" #
 
 ; Write CHANGELOG.md
-changelog-content
+changelog-content highlight
 "CHANGELOG.md" write
 "*** Done!" puts
 
