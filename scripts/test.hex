@@ -131,7 +131,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x5f ==)
+    (symbols len 0x60 ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
@@ -299,6 +299,18 @@
     ("This is a test" "test" ends)
     ("This is a test" "Test" ends not)
     ;154
+
+    (0x2 (0x1) (0x1) when 0x1 == swap drop)
+    (0x2 (0x0) (0x1) when 0x2 ==)
+    ("ccc" ("aaa") ("bbb") when "ccc" ==)
+    ((0x1) ("yes") ("no") unless "no" == swap drop) 
+    ;158
+
+    (() 0x1 push (0x1) ==)
+    ((0x1 0x2 0x3) pop (0x1 0x2) ==)
+    (0x0 (0x1 0x2 0x3) cons (0x0 0x1 0x2 0x3) ==)
+    ((0x1 0x2 0x3) uncons stack (0x1 (0x2 0x3)) == swap drop swap drop)
+    ;162
 
 ) "TESTS" :
 

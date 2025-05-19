@@ -50,8 +50,28 @@
 ;; a q1 -> q2
 ;; Prepends %:a%% to the beginning of %:q1%%.
 (
-  swap quote swap cat
+  swap ' swap cat
 ) "cons" ::
+
+;;; uncons
+;; q1 -> a q2
+;; Removes the first item from %:q1%% and pushes it on the stack along with %:q2%% containing the rest of the items of %:q1%%.
+(
+  "_uncons_list" :
+  () "_uncons_result" :
+  0x1 "_uncons_c" :
+  _uncons_list 0x0 get ; Push the first item
+  (_uncons_c _uncons_list len <)
+    (
+      _uncons_result _uncons_list _uncons_c get push "_uncons_result" :
+      _uncons_c 0x1 + "_uncons_c" :
+    )
+  while
+  _uncons_result ; Push the rest of the items
+  "_uncons_list"   #
+  "_uncons_result" #
+  "_uncons_c"      #
+) "uncons" ::
 
 ;;; over
 ;; a1 a2 -> a1 a2 a1
