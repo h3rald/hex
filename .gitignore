@@ -56,7 +56,6 @@ hex
 # Other
 .vscode/
 *.hbx
-src/hex.c
 example.hex
 web/out/
 web/out2/
