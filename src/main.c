@@ -228,6 +228,9 @@ void hex_print_help()
            "  -b, --bytecode  Generate a .hbx bytecode file.\n"
            "  -d, --debug     Enable debug mode.\n"
            "  -h, --help      Display this help message.\n"
+           "  -l, --load      Load a .hex or .hbx file before interpreting\n"
+           "                  the main file or starting the REPL\n"
+           "                  (can be specified multiple times).\n"
            "  -m, --manual    Display the manual.\n"
            "  -v, --version   Display hex version.\n\n");
 }
@@ -300,6 +303,44 @@ int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecod
     return 0;
 }
 
+int hex_interpret_file(hex_context_t *ctx, const char *file)
+{
+    int result = 0;
+    if (strstr(file, ".hbx") != NULL)
+    {
+        FILE *bytecode_file = fopen(file, "rb");
+        if (bytecode_file == NULL)
+        {
+            hex_error(ctx, "[open hbx file] Failed to open bytecode file: %s", file);
+            return 1;
+        }
+        fseek(bytecode_file, 0, SEEK_END);
+        size_t bytecode_size = ftell(bytecode_file);
+        fseek(bytecode_file, 0, SEEK_SET);
+        uint8_t *bytecode = (uint8_t *)malloc(bytecode_size);
+        if (bytecode == NULL)
+        {
+            hex_error(ctx, "[read hbx file] Memory allocation failed");
+            fclose(bytecode_file);
+            return 1;
+        }
+        fread(bytecode, 1, bytecode_size, bytecode_file);
+        fclose(bytecode_file);
+        result = hex_interpret_bytecode(ctx, bytecode, bytecode_size, file);
+        free(bytecode);
+    }
+    else
+    {
+        char *fileContent = hex_read_file(ctx, file);
+        if (fileContent == NULL)
+        {
+            return 1;
+        }
+        result = hex_interpret(ctx, fileContent, file, 1 + ctx->hashbang, 1);
+    }
+    return result;
+}
+
 ////////////////////////////////////////
 // Main Program                       //
 ////////////////////////////////////////
@@ -349,6 +390,20 @@ int main(int argc, char *argv[])
             {
                 generate_bytecode = 1;
             }
+            else if ((strcmp(arg, "-l") == 0 || strcmp(arg, "--load") == 0))
+            {
+                // interpret a library file (e.g. hexlib.hex or hexlib.hbx)
+                // before executing the main file
+                i++;
+                if (i >= argc)
+                {
+                    hex_error(ctx, "[load] No file specified");
+                    return 1;
+                }
+                char *libfile = strdup(argv[i]);
+                hex_interpret_file(ctx, libfile);
+                free(libfile);
+            }
             else
             {
                 file = arg;
@@ -356,66 +411,40 @@ int main(int argc, char *argv[])
         }
         if (file)
         {
-            if (strstr(file, ".hbx") != NULL)
+            if (generate_bytecode)
             {
-                FILE *bytecode_file = fopen(file, "rb");
-                if (bytecode_file == NULL)
-                {
-                    hex_error(ctx, "[open hbx file] Failed to open bytecode file: %s", file);
-                    return 1;
-                }
-                fseek(bytecode_file, 0, SEEK_END);
-                size_t bytecode_size = ftell(bytecode_file);
-                fseek(bytecode_file, 0, SEEK_SET);
-                uint8_t *bytecode = (uint8_t *)malloc(bytecode_size);
-                if (bytecode == NULL)
-                {
-                    hex_error(ctx, "[read hbx file] Memory allocation failed");
-                    fclose(bytecode_file);
-                    return 1;
-                }
-                fread(bytecode, 1, bytecode_size, bytecode_file);
-                fclose(bytecode_file);
-                hex_interpret_bytecode(ctx, bytecode, bytecode_size, file);
-                free(bytecode);
-            }
-            else
-            {
+                uint8_t *bytecode;
+                size_t bytecode_size = 0;
+                hex_file_position_t position;
+                position.column = 1;
+                position.line = 1 + ctx->hashbang;
+                position.filename = file;
+                char *bytecode_file = strdup(file);
+                char *ext = strrchr(bytecode_file, '.');
                 char *fileContent = hex_read_file(ctx, file);
-                if (generate_bytecode)
+                if (ext != NULL)
                 {
-                    uint8_t *bytecode;
-                    size_t bytecode_size = 0;
-                    hex_file_position_t position;
-                    position.column = 1;
-                    position.line = 1 + ctx->hashbang;
-                    position.filename = file;
-                    char *bytecode_file = strdup(file);
-                    char *ext = strrchr(bytecode_file, '.');
-                    if (ext != NULL)
-                    {
-                        strcpy(ext, ".hbx");
-                    }
-                    else
-                    {
-                        strcat(bytecode_file, ".hbx");
-                    }
-                    if (hex_bytecode(ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
-                    {
-                        hex_error(ctx, "[generate bytecode] Failed to generate bytecode");
-                        return 1;
-                    }
-                    if (hex_write_bytecode_file(ctx, bytecode_file, bytecode, bytecode_size) != 0)
-                    {
-                        return 1;
-                    }
+                    strcpy(ext, ".hbx");
                 }
                 else
                 {
-                    hex_interpret(ctx, fileContent, file, 1 + ctx->hashbang, 1);
+                    strcat(bytecode_file, ".hbx");
                 }
+                if (hex_bytecode(ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
+                {
+                    hex_error(ctx, "[generate bytecode] Failed to generate bytecode");
+                    return 1;
+                }
+                if (hex_write_bytecode_file(ctx, bytecode_file, bytecode, bytecode_size) != 0)
+                {
+                    return 1;
+                }
+                return 0;
             }
-            return 0;
+            else
+            {
+                return hex_interpret_file(ctx, file);
+            }
         }
     }
 #if !(__EMSCRIPTEN__)

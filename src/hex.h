@@ -409,6 +409,7 @@ void hex_repl(hex_context_t *ctx);
 void hex_process_stdin(hex_context_t *ctx);
 void hex_handle_sigint(int sig);
 int hex_write_bytecode_file(hex_context_t *ctx, char *filename, uint8_t *bytecode, size_t size);
+int hex_interpret_file(hex_context_t *ctx, const char *file);
 char *hex_read_file(hex_context_t *ctx, const char *filename);
 
 // Common operations
