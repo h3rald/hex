@@ -689,7 +689,7 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
     case HEX_TYPE_QUOTATION:
         if (item->data.quotation_value)
         {
-            hex_debug_item(ctx, "FREE", item);
+            // hex_debug_item(ctx, "FREE", item); // May cause segfaults
             hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
             item->data.quotation_value = NULL; // Prevent double free
         }

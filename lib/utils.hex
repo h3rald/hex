@@ -186,41 +186,73 @@
   "_reverse_result" # 
 ) "reverse" ::
 
+;;; set
+;; q1 a i -> q2
+;; Sets the item at index %:i%% of %:q1%% to %:a%%.
+(
+  "_set_index" :
+  "_set_item"  :
+  "_set_list"  :
+  () "_set_result" :
+  (_set_index _set_list len >= dputs _set_index 0x0 < or)
+    ("[symbol set] Index out of bounds" throw)
+  when
+  0x0 "_set_c" :
+  (_set_c _set_list len <)
+    (
+      (_set_c _set_index ==)
+        (_set_result _set_item ' cat "_set_result" :)
+        (_set_result _set_list  _set_c get ' cat "_set_result" :)
+      if
+      _set_c 0x1 + "_set_c" :
+    )
+  while
+  _set_result
+  "_set_index"   #
+  "_set_c"       #
+  "_set_item"    #
+  "_set_list"    #
+  "_set_result"  #
+) "set" ::
+
 ;;; sort
 ;; q1 q2 -> q3
 ;; Sorts the items of q1 based on q2.
 (
   "_sort_check" :
   "_sort_list" :
-  () "_sort_result" :
-  _sort_list len 0x1 - "_sort_pivot" :
-  0x0 "_sort_c" :
-  () "_sort_left" :
-  () "_sort_right" :
-  (_sort_list len 0x1 <=)
-    (_sort_list)
+  0x0 "_sort_i" :
+  0x0 "_sort_j" :
+  0x0 "_sort_current" :
+  0x0 "_sort_next" :
+  (_sort_i _sort_list len 0x1 - <=)
     (
-      (_sort_c len <)
+      (_sort_j _sort_list len _sort_i - 0x1 - <=)
         (
-          (_sort_list _sort_c get _sort_pivot _sort_check .)
-            (_sort_left _sort_item push "_sort_left" :)
-            (_sort_right _sort_item push "_sort_right" :)
-          if
-          _sort_c 0x1 + "_sort_c" :
+          _sort_list _sort_j get "_sort_current" :
+          _sort_list _sort_j 0x1 + get "_sort_next" :
+          (_sort_current _sort_next _sort_check 0x1 ==)
+            (
+              _sort_list 
+                _sort_current _sort_j 0x1 + set
+                _sort_next _sort_j set
+              "_sort_list" :
+            )
+          when
+          _sort_j 0x1 + "_sort_j" :
         )
       while
-      _sort_left sort _sort_pivot ' _sort_right sort 
-      cat cat "_sort_result" :
+      _sort_i 0x1 + "_sort_i" :
     )
-  if
-  _sort_result
-  "_sort_check"  #
-  "_sort_list"   #
-  "_sort_result" #
-  "_sort_pivot"  #
-  "_sort_c"      #
-  "_sort_left"   #
-  "_sort_right"  #
+  while
+  _sort_list
+  "_sort_list" #
+  "_sort_check" #
+  "_sort_j" #
+  "_sort_current" #
+  "_sort_next" #
+  "_sort_i" #
+
 ) "sort" ::
 
 ;;; gsub
