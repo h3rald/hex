@@ -194,7 +194,7 @@
   "_set_item"  :
   "_set_list"  :
   () "_set_result" :
-  (_set_index _set_list len >= dputs _set_index 0x0 < or)
+  (_set_index _set_list len >= _set_index 0x0 < or)
     ("[symbol set] Index out of bounds" throw)
   when
   0x0 "_set_c" :
@@ -217,7 +217,7 @@
 
 ;;; sort
 ;; q1 q2 -> q3
-;; Sorts the items of q1 based on q2.
+;; Sorts the items of q1 based on the comparison quotation q2 (must push 0x0 or 0x1 on the stack).
 (
   "_sort_check" :
   "_sort_list" :
@@ -226,18 +226,20 @@
   0x0 "_sort_current" :
   0x0 "_sort_next" :
   0x0 "_sort_swapped" :
-  (_sort_i _sort_list len 0x1 - <=)
+  (_sort_i _sort_list len 0x1 - <)
     (
-      (_sort_j _sort_list len _sort_i - 0x1 - <=)
+      0x0 "_sort_swapped" :
+      (_sort_j _sort_list len _sort_i - 0x1 - < _sort_swapped not and)
         (
           _sort_list _sort_j get "_sort_current" :
           _sort_list _sort_j 0x1 + get "_sort_next" :
-          (_sort_current _sort_next _sort_check 0x1 ==)
+          (_sort_current _sort_next >)
             (
               _sort_list 
-                _sort_current _sort_j 0x1 + set
                 _sort_next _sort_j set
+                _sort_current _sort_j 0x1 + set
               "_sort_list" :
+              0x1 "_sort_swapped" :
             )
           when
           _sort_j 0x1 + "_sort_j" :
@@ -248,7 +250,6 @@
   while
   _sort_list
   "_sort_list" #
-  "_sort_check" #
   "_sort_j" #
   "_sort_current" #
   "_sort_next" #
