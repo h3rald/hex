@@ -253,9 +253,10 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
         {
             hex_debug_item(ctx, "FREE", item);
             free(item->data.str_value);
+            item->data.str_value = NULL; // Set to NULL to avoid double free
         }
         free(item); // Free the item itself
-        // item = NULL;
+        item = NULL;
         break;
 
     case HEX_TYPE_QUOTATION:
@@ -263,9 +264,11 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
         {
             hex_debug_item(ctx, "FREE", item);
             hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
-            free(item->data.quotation_value); // Free the array of items
+            free(item->data.quotation_value);  // Free the array of items
+            item->data.quotation_value = NULL; // Set to NULL to avoid double free
         }
         free(item); // Free the item itself
+        item = NULL;
         break;
 
     case HEX_TYPE_NATIVE_SYMBOL:
