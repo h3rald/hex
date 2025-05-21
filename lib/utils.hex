@@ -225,6 +225,7 @@
   0x0 "_sort_j" :
   0x0 "_sort_current" :
   0x0 "_sort_next" :
+  0x0 "_sort_swapped" :
   (_sort_i _sort_list len 0x1 - <=)
     (
       (_sort_j _sort_list len _sort_i - 0x1 - <=)

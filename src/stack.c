@@ -12,7 +12,7 @@ void hex_free_token(hex_token_t *token)
     if (token == NULL || token->value == NULL)
         return;
     free(token->value);
-    token->value = NULL;
+    // token->value = NULL;
     free(token); // Free the token itself
 }
 
@@ -253,10 +253,9 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
         {
             hex_debug_item(ctx, "FREE", item);
             free(item->data.str_value);
-            item->data.str_value = NULL; // Prevent double free
         }
         free(item); // Free the item itself
-        item = NULL;
+        // item = NULL;
         break;
 
     case HEX_TYPE_QUOTATION:
@@ -264,10 +263,9 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
         {
             hex_debug_item(ctx, "FREE", item);
             hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
-            item->data.quotation_value = NULL; // Prevent double free
+            free(item->data.quotation_value); // Free the array of items
         }
         free(item); // Free the item itself
-        item = NULL;
         break;
 
     case HEX_TYPE_NATIVE_SYMBOL:
@@ -440,7 +438,6 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
                 if (!copy->data.quotation_value[i])
                 {
                     // Cleanup on failure
-                    hex_free_list(ctx, copy->data.quotation_value, i); // Free copied items
                     hex_free_item(ctx, copy);
                     hex_error(ctx, "[copy item] Failed to copy quotation item");
                     return NULL;
