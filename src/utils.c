@@ -133,7 +133,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
         fprintf(stream, "<invalid>");
         break;
     default:
-        fprintf(stream, "<unknown>");
+        fprintf(stream, "<unknown:%d>", item.type);
         break;
     }
 }
@@ -244,7 +244,7 @@ void hex_print_item(FILE *stream, hex_item_t *item)
         fprintf(stream, "<invalid>");
         break;
     default:
-        fprintf(stream, "<unknown>");
+        fprintf(stream, "<unknown:%d>", item->type);
         break;
     }
 }

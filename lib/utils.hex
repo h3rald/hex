@@ -253,7 +253,6 @@
   "_sort_current" #
   "_sort_next" #
   "_sort_i" #
-
 ) "sort" ::
 
 ;;; gsub

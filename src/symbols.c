@@ -2362,7 +2362,6 @@ int hex_symbol_while(hex_context_t *ctx)
                 }
             }
             HEX_POP(ctx, evalResult);
-            ;
             if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value == 0)
             {
                 HEX_FREE(ctx, evalResult);
@@ -2374,8 +2373,8 @@ int hex_symbol_while(hex_context_t *ctx)
             {
                 if (hex_push(ctx, act->data.quotation_value[i]) != 0)
                 {
-                    HEX_FREE(ctx, action);
                     HEX_FREE(ctx, act);
+                    HEX_FREE(ctx, action);
                     HEX_FREE(ctx, condition);
                     return 1;
                 }

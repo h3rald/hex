@@ -439,7 +439,7 @@ void hex_free_token(hex_token_t *token)
     if (token == NULL || token->value == NULL)
         return;
     free(token->value);
-    // token->value = NULL;
+    //  token->value = NULL;
     free(token); // Free the token itself
 }
 
@@ -745,7 +745,7 @@ hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token)
     }
     else
     {
-        // copy->value = NULL;
+        copy->value = NULL;
     }
 
     // Copy the file position if it exists
@@ -821,8 +821,6 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
 
     // Copy basic fields
     copy->type = item->type;
-    copy->is_operator = item->is_operator;
-    copy->quotation_size = item->quotation_size;
 
     // Copy the union field based on the type
     switch (item->type)
@@ -849,13 +847,15 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
         break;
 
     case HEX_TYPE_QUOTATION:
-        if (item->data.quotation_value && item->quotation_size > 0)
+        copy->quotation_size = item->quotation_size;
+        copy->is_operator = item->is_operator;
+        if (item->data.quotation_value)
         {
             copy->data.quotation_value = (hex_item_t **)malloc(item->quotation_size * sizeof(hex_item_t *));
             if (!copy->data.quotation_value)
             {
-                hex_free_item(ctx, copy);
                 hex_error(ctx, "[copy item] Failed to allocate memory for quotation array");
+                hex_free_item(ctx, copy);
                 return NULL;
             }
 
@@ -865,8 +865,8 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
                 if (!copy->data.quotation_value[i])
                 {
                     // Cleanup on failure
-                    hex_free_item(ctx, copy);
                     hex_error(ctx, "[copy item] Failed to copy quotation item");
+                    hex_free_item(ctx, copy);
                     return NULL;
                 }
             }
@@ -882,7 +882,6 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
         break;
 
     case HEX_TYPE_USER_SYMBOL:
-        // User symbols do not have a function pointer, so no additional copying here
         break;
 
     default:
@@ -898,14 +897,14 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
         copy->token = hex_copy_token(ctx, item->token);
         if (!copy->token)
         {
-            hex_free_item(ctx, copy);
             hex_error(ctx, "[copy item] Failed to copy token");
+            hex_free_item(ctx, copy);
             return NULL;
         }
     }
     else
     {
-        copy->token = NULL;
+        // copy->token = NULL;
     }
 
     return copy;
@@ -3289,7 +3288,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
         fprintf(stream, "<invalid>");
         break;
     default:
-        fprintf(stream, "<unknown>");
+        fprintf(stream, "<unknown:%d>", item.type);
         break;
     }
 }
@@ -3400,7 +3399,7 @@ void hex_print_item(FILE *stream, hex_item_t *item)
         fprintf(stream, "<invalid>");
         break;
     default:
-        fprintf(stream, "<unknown>");
+        fprintf(stream, "<unknown:%d>", item->type);
         break;
     }
 }
@@ -5973,7 +5972,6 @@ int hex_symbol_while(hex_context_t *ctx)
                 }
             }
             HEX_POP(ctx, evalResult);
-            ;
             if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value == 0)
             {
                 HEX_FREE(ctx, evalResult);
@@ -5985,8 +5983,8 @@ int hex_symbol_while(hex_context_t *ctx)
             {
                 if (hex_push(ctx, act->data.quotation_value[i]) != 0)
                 {
-                    HEX_FREE(ctx, action);
                     HEX_FREE(ctx, act);
+                    HEX_FREE(ctx, action);
                     HEX_FREE(ctx, condition);
                     return 1;
                 }
