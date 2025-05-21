@@ -659,6 +659,7 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 
     for (size_t i = 0; i < size; i++)
     {
+        printf("===> %zu \n", i);
         if (quotation[i])
         {
             hex_debug(ctx, "FREE: item #%zu", i);
@@ -689,7 +690,9 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
     case HEX_TYPE_QUOTATION:
         if (item->data.quotation_value)
         {
-            hex_debug_item(ctx, "FREE", item);
+            hex_debug(ctx, "FREE: freeing quotation (%zu items)", item->quotation_size);
+            // Temporarily comment out the free to avoid double free (probably need refcounting instead)
+            // This happens in case of nested quotations, e.g. a failure in a nested quotation
             // hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
             free(item->data.quotation_value);  // Free the array of items
             item->data.quotation_value = NULL; // Set to NULL to avoid double free
