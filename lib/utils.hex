@@ -215,6 +215,32 @@
   "_set_result"  #
 ) "set" ::
 
+;;; rem
+;; q1 i -> q2
+;; Removes the item at index %:i%% of %:q1%%.
+(
+  "_rem_index" :
+  "_rem_list"  :
+  () "_rem_result" :
+  (_rem_index _rem_list len >= _rem_index 0x0 < or)
+    ("[symbol rem] Index out of bounds" throw)
+  when
+  0x0 "_rem_c" :
+  (_rem_c _rem_list len <)
+    (
+      (_rem_c _rem_index !=)
+        (_rem_result _rem_list _rem_c get ' cat "_rem_result" :)
+      when
+      _rem_c 0x1 + "_rem_c" :
+    )
+  while
+  _rem_result
+  "_rem_index"   #
+  "_rem_c"       #
+  "_rem_list"    #
+  "_rem_result"  #
+) "rem" ::
+
 ;;; sort
 ;; q1 q2 -> q3
 ;; Sorts the items of q1 based on the comparison quotation q2 (must push 0x0 or 0x1 on the stack).
