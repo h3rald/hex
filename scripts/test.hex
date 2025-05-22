@@ -349,6 +349,12 @@
     ((0x1 0x2 0x3 0x4) 0x3 rem (0x1 0x2 0x3) ==)
     ;186
 
+    ("This is a test! And another test" "test" "sample" gsub "This is a sample! And another sample" ==)
+    ("This is a test! And another test" "sample" "test" gsub "This is a test! And another test" ==)
+    ((0x1 0x4 0x5) min 0x1 ==)
+    ((0x1 0x4 0x5) max 0x5 ==)
+    ;190
+
 ) "TESTS" :
 
 ; --- Run Tests

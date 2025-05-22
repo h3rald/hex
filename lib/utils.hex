@@ -290,54 +290,52 @@
   "_gsub_src"  :
   "_gsub_text" :
   (_gsub_text _gsub_src index 0x0 >=)
-    (_gsub_text _gsub_src _gsub_rep replace "_gsub_text" :)
+    (_gsub_text _gsub_src _gsub_rep sub "_gsub_text" :)
   while
   _gsub_text
   "_gsub_rep"  #
   "_gsub_src"  #
   "_gsub_text" #
-) "gsub" :
+) "gsub" ::
 
 ;;; min
 ;; q -> a
-;; Pushes the minimum item in a quotation on the stack.
+;; Pushes the minimum item of q on the stack.
 (
   "_min_list" :
-  () "_min_result" :
-  0x0 get "_min_result" :
+  _min_list 0x0 get "_min_result" :
   0x1 "_min_c" :
-  (_min_c len <)
+  (_min_c _min_list len <)
     (
-      (_min_result _min_list _min_c get <)
+      (_min_result _min_list _min_c get >)
         (_min_list _min_c get "_min_result" :)
       when
+      _min_c 0x1 + "_min_c" :
     )
   while
   _min_result
   "_min_list"   #
-  "_min_result" #
   "_min_result" #
   "_min_c"      #
 ) "min" ::
 
 ;;; max
 ;; q -> a
-;; Pushes the maximum item in a quotation on the stack.
+;; Pushes the maximum item of q on the stack.
 (
   "_max_list" :
-  () "_max_result" :
-  0x0 get "_max_result" :
+  _max_list 0x0 get "_max_result" :
   0x1 "_max_c" :
-  (_max_c len <)
+  (_max_c _max_list len <)
     (
-      (_max_result _max_list _max_c get >)
+      (_max_result _max_list _max_c get <)
         (_max_list _max_c get "_max_result" :)
       when
+      _max_c 0x1 + "_max_c" :
     )
   while
   _max_result
   "_max_list"   #
-  "_max_result" #
   "_max_result" #
   "_max_c"      #
 ) "max" ::
