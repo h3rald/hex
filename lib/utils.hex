@@ -219,41 +219,41 @@
 ;; q1 q2 -> q3
 ;; Sorts the items of q1 based on the comparison quotation q2 (must push 0x0 or 0x1 on the stack).
 (
-  "_sort_check" :
-  "_sort_list" :
-  0x0 "_sort_i" :
-  0x0 "_sort_j" :
-  0x0 "_sort_current" :
-  0x0 "_sort_next" :
-  0x0 "_sort_swapped" :
-  (_sort_i _sort_list len 0x1 - <)
+  "_sort_check"            :
+  "_sort_list"             :
+  _sort_list len "_sort_n" :
+  0x0 "_sort_i"            :
+  0x1 "_sort_swapped"      :
+  (_sort_swapped)
     (
-      0x0 "_sort_swapped" :
-      (_sort_j _sort_list len _sort_i - 0x1 - < _sort_swapped not and)
+      0x0 "_sort_swapped"    :
+      0x0 "_sort_i"          :
+      (_sort_i _sort_n 0x1 - <)
         (
-          _sort_list _sort_j get "_sort_current" :
-          _sort_list _sort_j 0x1 + get "_sort_next" :
-          (_sort_current _sort_next >)
+          _sort_list _sort_i get "_sort_current" :
+          _sort_list _sort_i 0x1 + get "_sort_next" :
+          (_sort_current _sort_next _sort_check .)
             (
               _sort_list 
-                _sort_next _sort_j set
-                _sort_current _sort_j 0x1 + set
+                _sort_current _sort_i 0x1 + set
+                _sort_next _sort_i set
               "_sort_list" :
               0x1 "_sort_swapped" :
             )
           when
-          _sort_j 0x1 + "_sort_j" :
+          _sort_i 0x1 + "_sort_i" :
+          "_sort_current" #
+          "_sort_next"    #
         )
       while
-      _sort_i 0x1 + "_sort_i" :
     )
   while
   _sort_list
-  "_sort_list" #
-  "_sort_j" #
-  "_sort_current" #
-  "_sort_next" #
-  "_sort_i" #
+  "_sort_check"     #
+  "_sort_list"      #
+  "_sort_n"         #
+  "_sort_i"         #
+  "_sort_swapped"   #
 ) "sort" ::
 
 ;;; gsub
