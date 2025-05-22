@@ -355,6 +355,13 @@
     ((0x1 0x4 0x5) max 0x5 ==)
     ;190
 
+    ("$0, $1!" ("hello" "world") intpl "hello, world!" ==)
+    (("" ("a" "b" "c" "d" "e" "f" "g" "h" "i" "j" "k" "l" "m" "n") intpl) (error) try "[symbol intpl] Only a maximum of 10 placeholders are supported" ==)
+    ("This is a $0, and another $0, and yet another $0" ("test") intpl "This is a test, and another test, and yet another test" ==)
+    ("$0, $2, $1!" ("first" "third") intpl "first, $2, third!" ==)
+    ;194
+
+
 ) "TESTS" :
 
 ; --- Run Tests

@@ -344,15 +344,19 @@
 ;; s1 q -> s2
 ;; Substitutes %:$0%% to %%$9%% placeholders in %:s1%% with items in %:q%%.
 (
-  "_intpl_s" :
   "_intpl_q" :
+  "_intpl_s" :
   0x0 "_intpl_c" :
-  (_intpl_c _intpl_s len <)
-     (
-       _intpl_s "$" _intpl_c str cat _intpl_list _intpl_c get cat gsub "_intpl_s" :
-       _intpl_c 0x1 + "_intpl_c" :
-     )
-   while
+  (_intpl_q len 0xa >)
+    ("[symbol intpl] Only a maximum of 10 placeholders are supported" throw)
+  when
+  (_intpl_c _intpl_q len <)
+    (
+      _intpl_s "$" _intpl_c str cat _intpl_q _intpl_c get gsub "_intpl_s" :
+      _intpl_c 0x1 + "_intpl_c" :
+    )
+  while
+  _intpl_s
   "_intpl_s" #
   "_intpl_q" #
   "_intpl_c" #
