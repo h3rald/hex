@@ -131,7 +131,7 @@
     ((args len 0x2 ==) ("two") ("no") if "two" ==)
     ((dup *) "square" :: 0x2 square 0x4 == "square" #)
     (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x64 ==)
+    (symbols len 0x65 ==)
     ;60
 
     ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
@@ -369,6 +369,7 @@
 
     (("a" 0x0 0x1 slice) (error) try "[symbol slice] Index out of bounds" ==)
     ("a" 0x0 0x0 slice "a" ==)
+    ("" ("-" cat) 0x5 times "-----" ==)
 
 ) "TESTS" :
 

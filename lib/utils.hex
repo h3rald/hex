@@ -390,6 +390,22 @@
   "_filter_result" #
 ) "filter" ::
 
+;;; times
+;; q i -> *
+;; Execute quotation %:q%% %:i%% times.
+(
+  "_times_i" :
+  "_times_q" :
+  (_times_i 0x0 >)
+    (
+      _times_q . 
+      _times_i 0x1 - "_times_i" :
+    )
+  while
+  "_times_q" #
+  "_times_i" #
+) "times" ::
+
 ;;; slice
 ;; s1 i1 i2 -> s2
 ;; Extracts the portion of the string between indices %:i1%% and %:i2%%.
@@ -413,4 +429,3 @@
   "_slice_str"    #
   "_slice_result" #
 ) "slice" ::
-
