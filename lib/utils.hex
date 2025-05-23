@@ -1,15 +1,18 @@
+;;;;; Standard Utilities (utils.hex)
+;;;;; This file contains a collection of standardized utility symbols extending the native symbols of the hex programming language.
+
+;;;; Input/Output Symbols
+;;;; These additional symbols are used for input and output operations.
+
 ;;; dputs
 ;; a -> a
-;; Duplicates and prints (with newline) the top item on the stack.
-(dup puts) "dputs" ::
-
-;;; when
-;; q1 q2 -> *
-;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
+;; Duplicates and prints the top item on the stack followed by a new line.
 (
-  ()
-  if
-) "when" ::
+  dup puts
+) "dputs" ::
+
+;;;; Control Flow Symbols
+;;;; These symbols are used for controlling the flow of execution in a program.
 
 ;;; unless
 ;; q1 q2 -> *
@@ -20,31 +23,16 @@
   if
 ) "unless" ::
 
-;;; push
-;; q1 a -> q2
-;; Appends %:a%% to the end of %:q1%%.
+;;; when
+;; q1 q2 -> *
+;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
 (
-  ' cat
-) "push" ::
+  ()
+  if
+) "when" ::
 
-;;; pop
-;; q1 -> q2
-;; Removes the last item at the end of %:q1%%.
-(
-  "_pop_q" :
-  () "_pop_res" :
-  0x0 "_pop_c" :
-  (_pop_c _pop_q len 0x1 - <)
-    (
-      _pop_res _pop_q _pop_c get push "_pop_res" :
-      _pop_c 0x1 + "_pop_c" :
-    )
-  while
-  _pop_res
-  "_pop_q"   #
-  "_pop_res" #
-  "_pop_c"   #
-) "pop" ::
+;;;; Quotation Symbols
+;;;; These additional symbols are used for manipulating quotations.
 
 ;;; cons
 ;; a q1 -> q2
@@ -53,88 +41,33 @@
   swap ' swap cat
 ) "cons" ::
 
-;;; uncons
-;; q1 -> a q2
-;; Removes the first item from %:q1%% and pushes it on the stack along with %:q2%% containing the rest of the items of %:q1%%.
+;;; each
+;; q1 q2 -> *
+;; Applies %:q2%% to each element of %:q1%%.
 (
-  "_uncons_list" :
-  () "_uncons_result" :
-  0x1 "_uncons_c" :
-  (_uncons_c _uncons_list len <)
-    (
-      _uncons_result _uncons_list _uncons_c get push "_uncons_result" :
-      _uncons_c 0x1 + "_uncons_c" :
-    )
-  while
-  _uncons_list 0x0 get ; Push the first item
-  _uncons_result ; Push the rest of the items
-  "_uncons_list"   #
-  "_uncons_result" #
-  "_uncons_c"      #
-) "uncons" ::
+  (0x0) cat map drop
+) "each" ::
 
-;;; swons
-;; q1 a -> q2
-;; Prepends %:a%% to the beginning of %:q1%%.
+;;; filter
+;; q1 q2-> q3
+;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
 (
-  ' swap cat
-) "swons" ::
-
-;;; unswons
-;; q1 -> q2 a
-;; Removes the first item from %:q1%% and pushes it on the stack along with %:q2%% containing the rest of the items of %:q1%%.
-(
-  "_unswons_list" :
-  () "_unswons_result" :
-  0x1 "_unswons_c" :
-  (_unswons_c _unswons_list len <)
-    (
-      _unswons_result _unswons_list _unswons_c get push "_unswons_result" :
-      _unswons_c 0x1 + "_unswons_c" :
-    )
-  while
-  _unswons_result ; Push the rest of the items
-  _unswons_list 0x0 get ; Push the first item
-  "_unswons_list"   #
-  "_unswons_result" #
-  "_unswons_c"      #
-) "unswons" ::
-
-;;; over
-;; a1 a2 -> a1 a2 a1
-;; Copies the second item on the stack and pushes it on top
-(
-  "_over_a" :
-  dup _over_a swap
-  "_over_a" #
-) "over" ::
-
-;;; dip
-;; a1 (a2) -> a2 a1
-;; Dequotes the first item on the stack and restores the second item on top.
-(
-  swap ' cat .
-) "dip" ::
-
-;;; begins
-;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
-(
-  index 0x0 ==
-) "begins" ::
-
-;;; ends
-;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
-(
-  "_ends_suffix" :
-  "_ends_s"      :
-  _ends_s _ends_suffix index 
-  _ends_s len _ends_suffix len -
-  ==
-  "_ends_suffix" #
-  "_ends_s"      #
-) "ends" ::
+  "_filter_fn" :
+  "_filter_list" :
+  () "_filter_result" :
+  _filter_list (
+    "_filter_each_item" :
+    (_filter_each_item _filter_fn .)
+      (
+        _filter_result _filter_each_item push "_filter_result" :
+      ) 
+    when
+  ) each
+  _filter_result
+  "_filter_fn"     #
+  "_filter_list"   #
+  "_filter_result" #
+) "filter" ::
 
 ;; ins
 ;; q1 a i -> q2
@@ -166,6 +99,101 @@
   "_ins_result"  #
   "_ins_len"     #
 ) "ins" ::
+
+;;; max
+;; q -> a
+;; Pushes the maximum item of q on the stack.
+(
+  "_max_list" :
+  _max_list 0x0 get "_max_result" :
+  0x1 "_max_c" :
+  (_max_c _max_list len <)
+    (
+      (_max_result _max_list _max_c get <)
+        (_max_list _max_c get "_max_result" :)
+      when
+      _max_c 0x1 + "_max_c" :
+    )
+  while
+  _max_result
+  "_max_list"   #
+  "_max_result" #
+  "_max_c"      #
+) "max" ::
+
+;;; min
+;; q -> a
+;; Pushes the minimum item of q on the stack.
+(
+  "_min_list" :
+  _min_list 0x0 get "_min_result" :
+  0x1 "_min_c" :
+  (_min_c _min_list len <)
+    (
+      (_min_result _min_list _min_c get >)
+        (_min_list _min_c get "_min_result" :)
+      when
+      _min_c 0x1 + "_min_c" :
+    )
+  while
+  _min_result
+  "_min_list"   #
+  "_min_result" #
+  "_min_c"      #
+) "min" ::
+
+;;; pop
+;; q1 -> q2
+;; Removes the last item at the end of %:q1%%.
+(
+  "_pop_q" :
+  () "_pop_res" :
+  0x0 "_pop_c" :
+  (_pop_c _pop_q len 0x1 - <)
+    (
+      _pop_res _pop_q _pop_c get push "_pop_res" :
+      _pop_c 0x1 + "_pop_c" :
+    )
+  while
+  _pop_res
+  "_pop_q"   #
+  "_pop_res" #
+  "_pop_c"   #
+) "pop" ::
+
+
+;;; push
+;; q1 a -> q2
+;; Appends %:a%% to the end of %:q1%%.
+(
+  ' cat
+) "push" ::
+
+;;; rem
+;; q1 i -> q2
+;; Removes the item at index %:i%% of %:q1%%.
+(
+  "_rem_index" :
+  "_rem_list"  :
+  () "_rem_result" :
+  (_rem_index _rem_list len >= _rem_index 0x0 < or)
+    ("[symbol rem] Index out of bounds" throw)
+  when
+  0x0 "_rem_c" :
+  (_rem_c _rem_list len <)
+    (
+      (_rem_c _rem_index !=)
+        (_rem_result _rem_list _rem_c get ' cat "_rem_result" :)
+      when
+      _rem_c 0x1 + "_rem_c" :
+    )
+  while
+  _rem_result
+  "_rem_index"   #
+  "_rem_c"       #
+  "_rem_list"    #
+  "_rem_result"  #
+) "rem" ::
 
 ;;; reverse
 ;; q1 -> q2
@@ -215,32 +243,6 @@
   "_set_result"  #
 ) "set" ::
 
-;;; rem
-;; q1 i -> q2
-;; Removes the item at index %:i%% of %:q1%%.
-(
-  "_rem_index" :
-  "_rem_list"  :
-  () "_rem_result" :
-  (_rem_index _rem_list len >= _rem_index 0x0 < or)
-    ("[symbol rem] Index out of bounds" throw)
-  when
-  0x0 "_rem_c" :
-  (_rem_c _rem_list len <)
-    (
-      (_rem_c _rem_index !=)
-        (_rem_result _rem_list _rem_c get ' cat "_rem_result" :)
-      when
-      _rem_c 0x1 + "_rem_c" :
-    )
-  while
-  _rem_result
-  "_rem_index"   #
-  "_rem_c"       #
-  "_rem_list"    #
-  "_rem_result"  #
-) "rem" ::
-
 ;;; sort
 ;; q1 q2 -> q3
 ;; Sorts the items of q1 based on the comparison quotation q2 (must push 0x0 or 0x1 on the stack).
@@ -282,63 +284,112 @@
   "_sort_swapped"   #
 ) "sort" ::
 
-;;; gsub
-;; s1 s2 s3 -> s4
-;; Replaces all occurrences of %:s2%% with %%s3%% in %:s1%%.
+;;; swons
+;; q1 a -> q2
+;; Prepends %:a%% to the beginning of %:q1%%.
 (
-  "_gsub_rep"  :
-  "_gsub_src"  :
-  "_gsub_text" :
-  (_gsub_text _gsub_src index 0x0 >=)
-    (_gsub_text _gsub_src _gsub_rep sub "_gsub_text" :)
-  while
-  _gsub_text
-  "_gsub_rep"  #
-  "_gsub_src"  #
-  "_gsub_text" #
-) "gsub" ::
+  ' swap cat
+) "swons" ::
 
-;;; min
-;; q -> a
-;; Pushes the minimum item of q on the stack.
+
+;;; times
+;; q i -> *
+;; Execute quotation %:q%% %:i%% times.
 (
-  "_min_list" :
-  _min_list 0x0 get "_min_result" :
-  0x1 "_min_c" :
-  (_min_c _min_list len <)
+  "_times_i" :
+  "_times_q" :
+  (_times_i 0x0 >)
     (
-      (_min_result _min_list _min_c get >)
-        (_min_list _min_c get "_min_result" :)
-      when
-      _min_c 0x1 + "_min_c" :
+      _times_q . 
+      _times_i 0x1 - "_times_i" :
     )
   while
-  _min_result
-  "_min_list"   #
-  "_min_result" #
-  "_min_c"      #
-) "min" ::
+  "_times_q" #
+  "_times_i" #
+) "times" ::
 
-;;; max
-;; q -> a
-;; Pushes the maximum item of q on the stack.
+;;; uncons
+;; q1 -> a q2
+;; Removes the first item from %:q1%% and pushes it on the stack along with %:q2%% containing the rest of the items of %:q1%%.
 (
-  "_max_list" :
-  _max_list 0x0 get "_max_result" :
-  0x1 "_max_c" :
-  (_max_c _max_list len <)
+  "_uncons_list" :
+  () "_uncons_result" :
+  0x1 "_uncons_c" :
+  (_uncons_c _uncons_list len <)
     (
-      (_max_result _max_list _max_c get <)
-        (_max_list _max_c get "_max_result" :)
-      when
-      _max_c 0x1 + "_max_c" :
+      _uncons_result _uncons_list _uncons_c get push "_uncons_result" :
+      _uncons_c 0x1 + "_uncons_c" :
     )
   while
-  _max_result
-  "_max_list"   #
-  "_max_result" #
-  "_max_c"      #
-) "max" ::
+  _uncons_list 0x0 get ; Push the first item
+  _uncons_result ; Push the rest of the items
+  "_uncons_list"   #
+  "_uncons_result" #
+  "_uncons_c"      #
+) "uncons" ::
+
+
+;;; unswons
+;; q1 -> q2 a
+;; Removes the first item from %:q1%% and pushes it on the stack along with %:q2%% containing the rest of the items of %:q1%%.
+(
+  "_unswons_list" :
+  () "_unswons_result" :
+  0x1 "_unswons_c" :
+  (_unswons_c _unswons_list len <)
+    (
+      _unswons_result _unswons_list _unswons_c get push "_unswons_result" :
+      _unswons_c 0x1 + "_unswons_c" :
+    )
+  while
+  _unswons_result ; Push the rest of the items
+  _unswons_list 0x0 get ; Push the first item
+  "_unswons_list"   #
+  "_unswons_result" #
+  "_unswons_c"      #
+) "unswons" ::
+
+;;;; Stack Management Symbols
+;;;; These additional symbols are used for manipulating the stack.
+
+;;; dip
+;; a1 (a2) -> a2 a1
+;; Dequotes the first item on the stack and restores the second item on top.
+(
+  swap ' cat .
+) "dip" ::
+
+;;; over
+;; a1 a2 -> a1 a2 a1
+;; Copies the second item on the stack and pushes it on top
+(
+  "_over_a" :
+  dup _over_a swap
+  "_over_a" #
+) "over" ::
+
+;;;; String Symbols
+;;;; These additional symbols are used for manipulating strings.
+
+;;; begins
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
+(
+  index 0x0 ==
+) "begins" ::
+
+;;; ends
+;; s1 s2 -> s3
+;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
+(
+  "_ends_suffix" :
+  "_ends_s"      :
+  _ends_s _ends_suffix index 
+  _ends_s len _ends_suffix len -
+  ==
+  "_ends_suffix" #
+  "_ends_s"      #
+) "ends" ::
 
 ;;; fmt
 ;; s1 q -> s2
@@ -362,49 +413,21 @@
   "_fmt_c" #
 ) "fmt" ::
 
-;;; each
-;; q1 q2 -> *
-;; Applies %:q2%% to each element of %:q1%%.
+;;; gsub
+;; s1 s2 s3 -> s4
+;; Replaces all occurrences of %:s2%% with %%s3%% in %:s1%%.
 (
-  (0x0) cat map drop
-) "each" ::
-
-;;; filter
-;; q1 q2-> q3
-;; Returns %:q3%% containing only the elements of %:q1%% that satisfy %:q2%%.
-(
-  "_filter_fn" :
-  "_filter_list" :
-  () "_filter_result" :
-  _filter_list (
-    "_filter_each_item" :
-    (_filter_each_item _filter_fn .)
-      (
-        _filter_result _filter_each_item push "_filter_result" :
-      ) 
-    when
-  ) each
-  _filter_result
-  "_filter_fn"     #
-  "_filter_list"   #
-  "_filter_result" #
-) "filter" ::
-
-;;; times
-;; q i -> *
-;; Execute quotation %:q%% %:i%% times.
-(
-  "_times_i" :
-  "_times_q" :
-  (_times_i 0x0 >)
-    (
-      _times_q . 
-      _times_i 0x1 - "_times_i" :
-    )
+  "_gsub_rep"  :
+  "_gsub_src"  :
+  "_gsub_text" :
+  (_gsub_text _gsub_src index 0x0 >=)
+    (_gsub_text _gsub_src _gsub_rep sub "_gsub_text" :)
   while
-  "_times_q" #
-  "_times_i" #
-) "times" ::
+  _gsub_text
+  "_gsub_rep"  #
+  "_gsub_src"  #
+  "_gsub_text" #
+) "gsub" ::
 
 ;;; slice
 ;; s1 i1 i2 -> s2
