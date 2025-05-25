@@ -9,7 +9,7 @@ if exists("b:current_syntax")
 endif
 
 syntax keyword          hexNativeSymbol         if while error symbols throw try dup drop swap stack and or not xor int str hex dec type 
-syntax keyword          hexNativeSymbol         cat chr len get ord index join split sub debug map puts warn print gets 
+syntax keyword          hexNativeSymbol         cat chr len get ord index join split sub timestamp map puts warn print gets 
 syntax keyword          hexNativeSymbol         read write append args exit exec run
 syntax match            hexNativeSymbol         /\v\!/
 syntax match            hexNativeSymbol         /\v\!\=/ 

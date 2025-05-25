@@ -70,18 +70,21 @@
 *\_/_/_/  v{{release}} - (c) {{year}} Fabio Cevasco
      *    
  
- USAGE
- hex [options] [file]
- 
- ARGUMENTS
- file            A .hex or .hbx file to interpret
- 
- OPTIONS
- -b, --bytecode  Generate a .hbx bytecode file.
- -d, --debug     Enable debug mode.
- -h, --help      Display this help message.
- -m, --manual    Display the manual.
- -v, --version   Display hex version.
+USAGE
+  hex [options] [file]
+
+ARGUMENTS
+  file            A .hex or .hbx file to interpret
+
+OPTIONS
+  -b, --bytecode  Generate a .hbx bytecode file.
+  -d, --debug     Enable debug mode.
+  -h, --help      Display this help message.
+  -l, --load      Load a .hex or .hbx file before interpreting
+                  the main file or starting the REPL
+                  (can be specified multiple times).
+  -m, --manual    Display the manual.
+  -v, --version   Display hex version.
     </pre>
 
         <p>If you do not specify any option or argument, a simple <abbr title="Read-Eval-Print-Loop">REPL</abbr> will be

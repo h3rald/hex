@@ -3,7 +3,7 @@
 "./lib/utils.hbx" read "utils.hbx" !
 
 "2025" "meta-year" : 
-"0.5.0" "meta-release" :
+"0.6.0" "meta-release" :
 "web/assets" "d-assets" :
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
@@ -23,7 +23,7 @@ d-templates "/page.html" cat "t-page" :
 ("map" "debug" "split" "run" "get" "puts" ":" "::" "." "#" "==" "'" 
 "swap" "dup" "while" "+" "*" "-" "each" "cat" "throw" "drop" "sub"
 "symbols" "print" "read" "dec" "write" "append" "!" 
-"<=" "if") "symbol-links" :
+"<=" "if" "timestamp") "symbol-links" :
 
 ;; Syntax highlighting
 
@@ -61,11 +61,7 @@ d-templates "/page.html" cat "t-page" :
             highlight-delimiters t-count get "t-delimiter" :
             highlight-replacements t-count get "t-replacement" :
             ; Find delimiter in text and substitute it with the corresponding replacement
-            (t-text t-delimiter index 0x0 >=)
-                (
-                    t-text t-delimiter t-replacement sub "t-text" :
-                ) 
-            while
+            t-text t-delimiter t-replacement gsub "t-text" :
             t-count 0x1 + "t-count" :
         )
     while
@@ -88,10 +84,7 @@ d-templates "/page.html" cat "t-page" :
     "pt-repl" :
     "pt-tag" :
     "pt-content" :
-    (pt-content pt-tag tag index 0x0 >=)
-        (pt-content pt-tag tag pt-repl sub "pt-content" :)
-    while 
-    pt-content
+    pt-content pt-tag tag pt-repl gsub
     "pt-repl"    #
     "pt-tag"     #
     "pt-content" #
