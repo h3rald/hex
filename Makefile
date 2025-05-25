@@ -21,7 +21,7 @@ ape: src/hex.c
 
 wasm: hex.wasm
 
-playground: web/assets/hex.wasm
+playground: web/assets/hex.wasm utils.hbx
 
 clean:
 	rm -f src/hex.c
@@ -40,3 +40,4 @@ web: playground utils.hbx hex
 
 utils.hbx: hex
 	./hex -b lib/utils.hex
+	cp lib/utils.hbx web/assets/utils.hbx
