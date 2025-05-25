@@ -2708,6 +2708,27 @@ int hex_symbol_drop(hex_context_t *ctx)
     return 0;
 }
 
+int hex_symbol_timestamp(hex_context_t *ctx)
+{
+    static int32_t timestamp[2];
+    get_unix_timestamp_sec_usec(timestamp);
+    hex_item_t **quotation = (hex_item_t **)malloc(2 * sizeof(hex_item_t));
+    if (!quotation)
+    {
+        hex_error(ctx, "[symbol timestamp] Memory allocation failed");
+        return 1;
+    }
+    quotation[0] = hex_integer_item(ctx, timestamp[0]);
+    quotation[1] = hex_integer_item(ctx, timestamp[1]);
+    if (hex_push_quotation(ctx, quotation, 2) != 0)
+    {
+        hex_error(ctx, "[symbol timestamp] An error occurred while pushing quotation");
+        hex_free_list(ctx, quotation, 2);
+        return 1;
+    }
+    return 0;
+}
+
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -2721,7 +2742,6 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
     hex_set_native_symbol(ctx, "!", hex_symbol_eval);
-    hex_set_native_symbol(ctx, "debug", hex_symbol_debug);
     hex_set_native_symbol(ctx, "puts", hex_symbol_puts);
     hex_set_native_symbol(ctx, "warn", hex_symbol_warn);
     hex_set_native_symbol(ctx, "print", hex_symbol_print);
@@ -2778,4 +2798,5 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
     hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
     hex_set_native_symbol(ctx, "drop", hex_symbol_drop);
+    hex_set_native_symbol(ctx, "timestamp", hex_symbol_timestamp);
 }

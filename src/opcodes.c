@@ -69,10 +69,6 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_QUOTE;
     }
-    else if (strcmp(symbol, "debug") == 0)
-    {
-        return HEX_OP_DEBUG;
-    }
     else if (strcmp(symbol, "+") == 0)
     {
         return HEX_OP_ADD;
@@ -261,6 +257,10 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_RUN;
     }
+    else if (strcmp(symbol, "timestamp") == 0)
+    {
+        return HEX_OP_TIMESTAMP;
+    }
     return 0;
 }
 
@@ -300,8 +300,6 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "!";
     case HEX_OP_QUOTE:
         return "'";
-    case HEX_OP_DEBUG:
-        return "debug";
     case HEX_OP_ADD:
         return "+";
     case HEX_OP_SUBTRACT:
@@ -396,6 +394,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "exec";
     case HEX_OP_RUN:
         return "run";
+    case HEX_OP_TIMESTAMP:
+        return "timestamp";
     default:
         return NULL;
     }

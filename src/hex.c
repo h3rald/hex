@@ -185,62 +185,62 @@ typedef enum hex_opcode_t
     HEX_OP_I = 0x1d,
     HEX_OP_EVAL = 0x1e,
     HEX_OP_QUOTE = 0x1f,
-    HEX_OP_DEBUG = 0x20,
 
-    HEX_OP_ADD = 0x21,
-    HEX_OP_SUBTRACT = 0x22,
-    HEX_OP_MULTIPLY = 0x23,
-    HEX_OP_DIVIDE = 0x24,
-    HEX_OP_MOD = 0x25,
+    HEX_OP_ADD = 0x20,
+    HEX_OP_SUBTRACT = 0x21,
+    HEX_OP_MULTIPLY = 0x22,
+    HEX_OP_DIVIDE = 0x23,
+    HEX_OP_MOD = 0x24,
 
-    HEX_OP_BITAND = 0x26,
-    HEX_OP_BITOR = 0x27,
-    HEX_OP_BITXOR = 0x28,
-    HEX_OP_BITNOT = 0x29,
-    HEX_OP_SHL = 0x2a,
-    HEX_OP_SHR = 0x2b,
+    HEX_OP_BITAND = 0x25,
+    HEX_OP_BITOR = 0x26,
+    HEX_OP_BITXOR = 0x27,
+    HEX_OP_BITNOT = 0x28,
+    HEX_OP_SHL = 0x29,
+    HEX_OP_SHR = 0x2a,
 
-    HEX_OP_EQUAL = 0x2c,
-    HEX_OP_NOTEQUAL = 0x2d,
-    HEX_OP_GREATER = 0x2e,
-    HEX_OP_LESS = 0x2f,
-    HEX_OP_GREATEREQUAL = 0x30,
-    HEX_OP_LESSEQUAL = 0x31,
+    HEX_OP_EQUAL = 0x2b,
+    HEX_OP_NOTEQUAL = 0x2c,
+    HEX_OP_GREATER = 0x2d,
+    HEX_OP_LESS = 0x2e,
+    HEX_OP_GREATEREQUAL = 0x2f,
+    HEX_OP_LESSEQUAL = 0x30,
 
-    HEX_OP_AND = 0x32,
-    HEX_OP_OR = 0x33,
-    HEX_OP_NOT = 0x34,
-    HEX_OP_XOR = 0x35,
+    HEX_OP_AND = 0x31,
+    HEX_OP_OR = 0x32,
+    HEX_OP_NOT = 0x33,
+    HEX_OP_XOR = 0x34,
 
-    HEX_OP_INT = 0x36,
-    HEX_OP_STR = 0x37,
-    HEX_OP_DEC = 0x38,
-    HEX_OP_HEX = 0x39,
-    HEX_OP_ORD = 0x3a,
-    HEX_OP_CHR = 0x3b,
-    HEX_OP_TYPE = 0x3c,
+    HEX_OP_INT = 0x35,
+    HEX_OP_STR = 0x36,
+    HEX_OP_DEC = 0x37,
+    HEX_OP_HEX = 0x38,
+    HEX_OP_ORD = 0x39,
+    HEX_OP_CHR = 0x3a,
+    HEX_OP_TYPE = 0x3b,
 
-    HEX_OP_CAT = 0x3d,
-    HEX_OP_LEN = 0x3e,
-    HEX_OP_GET = 0x3f,
-    HEX_OP_INDEX = 0x40,
-    HEX_OP_JOIN = 0x41,
-    HEX_OP_SPLIT = 0x42,
-    HEX_OP_SUB = 0x43,
-    HEX_OP_MAP = 0x44,
+    HEX_OP_CAT = 0x3c,
+    HEX_OP_LEN = 0x3d,
+    HEX_OP_GET = 0x3e,
+    HEX_OP_INDEX = 0x3f,
+    HEX_OP_JOIN = 0x40,
+    HEX_OP_SPLIT = 0x41,
+    HEX_OP_SUB = 0x42,
+    HEX_OP_MAP = 0x43,
 
-    HEX_OP_PUTS = 0x45,
-    HEX_OP_WARN = 0x46,
-    HEX_OP_PRINT = 0x47,
-    HEX_OP_GETS = 0x48,
+    HEX_OP_PUTS = 0x44,
+    HEX_OP_WARN = 0x45,
+    HEX_OP_PRINT = 0x46,
+    HEX_OP_GETS = 0x47,
 
-    HEX_OP_READ = 0x49,
-    HEX_OP_WRITE = 0x4A,
-    HEX_OP_APPEND = 0x4B,
-    HEX_OP_ARGS = 0x4C,
-    HEX_OP_EXIT = 0x4D,
-    HEX_OP_EXEC = 0x4E,
-    HEX_OP_RUN = 0x4F,
+    HEX_OP_READ = 0x48,
+    HEX_OP_WRITE = 0x49,
+    HEX_OP_APPEND = 0x4a,
+    HEX_OP_ARGS = 0x4b,
+    HEX_OP_EXIT = 0x4c,
+    HEX_OP_EXEC = 0x4d,
+    HEX_OP_RUN = 0x4e,
+    HEX_OP_TIMESTAMP = 0x4f,
 
 } hex_opcode_t;
 
@@ -311,6 +311,7 @@ char *hex_bytes_to_string(const uint8_t *bytes, size_t size);
 char *hex_process_string(const char *value);
 size_t hex_min_bytes_to_encode_integer(int32_t value);
 char *hex_unescape_string(const char *input);
+void get_unix_timestamp_sec_usec(int32_t result[2]);
 
 // Native symbols
 int hex_symbol_store(hex_context_t *ctx);
@@ -352,7 +353,6 @@ int hex_symbol_cat(hex_context_t *ctx);
 int hex_symbol_slice(hex_context_t *ctx);
 int hex_symbol_len(hex_context_t *ctx);
 int hex_symbol_get(hex_context_t *ctx);
-int hex_symbol_insert(hex_context_t *ctx);
 int hex_symbol_index(hex_context_t *ctx);
 int hex_symbol_join(hex_context_t *ctx);
 int hex_symbol_split(hex_context_t *ctx);
@@ -376,6 +376,7 @@ int hex_symbol_swap(hex_context_t *ctx);
 int hex_symbol_dup(hex_context_t *ctx);
 int hex_symbol_stack(hex_context_t *ctx);
 int hex_symbol_drop(hex_context_t *ctx);
+int hex_symbol_timestamp(hex_context_t *ctx);
 
 // Opcodes
 uint8_t hex_symbol_to_opcode(const char *symbol);
@@ -2018,10 +2019,6 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_QUOTE;
     }
-    else if (strcmp(symbol, "debug") == 0)
-    {
-        return HEX_OP_DEBUG;
-    }
     else if (strcmp(symbol, "+") == 0)
     {
         return HEX_OP_ADD;
@@ -2210,6 +2207,10 @@ uint8_t hex_symbol_to_opcode(const char *symbol)
     {
         return HEX_OP_RUN;
     }
+    else if (strcmp(symbol, "timestamp") == 0)
+    {
+        return HEX_OP_TIMESTAMP;
+    }
     return 0;
 }
 
@@ -2249,8 +2250,6 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "!";
     case HEX_OP_QUOTE:
         return "'";
-    case HEX_OP_DEBUG:
-        return "debug";
     case HEX_OP_ADD:
         return "+";
     case HEX_OP_SUBTRACT:
@@ -2345,6 +2344,8 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
         return "exec";
     case HEX_OP_RUN:
         return "run";
+    case HEX_OP_TIMESTAMP:
+        return "timestamp";
     default:
         return NULL;
     }
@@ -3611,6 +3612,40 @@ char *hex_unescape_string(const char *input)
     unescaped[j] = '\0'; // Null-terminate the string
     return unescaped;
 }
+
+#ifdef _WIN32
+#include <windows.h>
+#include <sysinfoapi.h>
+
+void get_unix_timestamp_sec_usec(int32_t result[2])
+{
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+
+    ULARGE_INTEGER uli;
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+
+    const uint64_t EPOCH_DIFFERENCE_100NS = 116444736000000000ULL;
+    uint64_t timestamp_100ns = uli.QuadPart - EPOCH_DIFFERENCE_100NS;
+
+    uint64_t total_microseconds = timestamp_100ns / 10;
+
+    result[0] = (int32_t)(total_microseconds / 1000000); // seconds
+    result[1] = (int32_t)(total_microseconds % 1000000); // microseconds
+}
+
+#else
+#include <sys/time.h>
+
+void get_unix_timestamp_sec_usec(int32_t result[2])
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    result[0] = (int32_t)tv.tv_sec;  // seconds
+    result[1] = (int32_t)tv.tv_usec; // microseconds
+}
+#endif
 
 /* File: src/symbols.c */
 #line 1 "src/symbols.c"
@@ -6324,6 +6359,27 @@ int hex_symbol_drop(hex_context_t *ctx)
     return 0;
 }
 
+int hex_symbol_timestamp(hex_context_t *ctx)
+{
+    static int32_t timestamp[2];
+    get_unix_timestamp_sec_usec(timestamp);
+    hex_item_t **quotation = (hex_item_t **)malloc(2 * sizeof(hex_item_t));
+    if (!quotation)
+    {
+        hex_error(ctx, "[symbol timestamp] Memory allocation failed");
+        return 1;
+    }
+    quotation[0] = hex_integer_item(ctx, timestamp[0]);
+    quotation[1] = hex_integer_item(ctx, timestamp[1]);
+    if (hex_push_quotation(ctx, quotation, 2) != 0)
+    {
+        hex_error(ctx, "[symbol timestamp] An error occurred while pushing quotation");
+        hex_free_list(ctx, quotation, 2);
+        return 1;
+    }
+    return 0;
+}
+
 ////////////////////////////////////////
 // Native Symbol Registration         //
 ////////////////////////////////////////
@@ -6337,7 +6393,6 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "type", hex_symbol_type);
     hex_set_native_symbol(ctx, ".", hex_symbol_i);
     hex_set_native_symbol(ctx, "!", hex_symbol_eval);
-    hex_set_native_symbol(ctx, "debug", hex_symbol_debug);
     hex_set_native_symbol(ctx, "puts", hex_symbol_puts);
     hex_set_native_symbol(ctx, "warn", hex_symbol_warn);
     hex_set_native_symbol(ctx, "print", hex_symbol_print);
@@ -6394,6 +6449,7 @@ void hex_register_symbols(hex_context_t *ctx)
     hex_set_native_symbol(ctx, "dup", hex_symbol_dup);
     hex_set_native_symbol(ctx, "stack", hex_symbol_stack);
     hex_set_native_symbol(ctx, "drop", hex_symbol_drop);
+    hex_set_native_symbol(ctx, "timestamp", hex_symbol_timestamp);
 }
 
 /* File: src/main.c */

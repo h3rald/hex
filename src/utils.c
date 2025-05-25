@@ -450,3 +450,37 @@ char *hex_unescape_string(const char *input)
     unescaped[j] = '\0'; // Null-terminate the string
     return unescaped;
 }
+
+#ifdef _WIN32
+#include <windows.h>
+#include <sysinfoapi.h>
+
+void get_unix_timestamp_sec_usec(int32_t result[2])
+{
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+
+    ULARGE_INTEGER uli;
+    uli.LowPart = ft.dwLowDateTime;
+    uli.HighPart = ft.dwHighDateTime;
+
+    const uint64_t EPOCH_DIFFERENCE_100NS = 116444736000000000ULL;
+    uint64_t timestamp_100ns = uli.QuadPart - EPOCH_DIFFERENCE_100NS;
+
+    uint64_t total_microseconds = timestamp_100ns / 10;
+
+    result[0] = (int32_t)(total_microseconds / 1000000); // seconds
+    result[1] = (int32_t)(total_microseconds % 1000000); // microseconds
+}
+
+#else
+#include <sys/time.h>
+
+void get_unix_timestamp_sec_usec(int32_t result[2])
+{
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    result[0] = (int32_t)tv.tv_sec;  // seconds
+    result[1] = (int32_t)tv.tv_usec; // microseconds
+}
+#endif
