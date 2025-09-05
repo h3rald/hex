@@ -21,7 +21,10 @@ ape: src/hex.c
 
 wasm: hex.wasm
 
-playground: web/assets/hex.wasm utils.hbx
+copy_libs:
+	cp lib/*.hex web/assets/
+
+playground: web/assets/hex.wasm utils.hbx copy_libs
 
 clean:
 	rm -f src/hex.c

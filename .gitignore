@@ -61,6 +61,7 @@ web/out/
 web/out2/
 web/assets/hex.js
 web/assets/hex.wasm
+web/assets/*.h[eb]x
 *.com.dbg
 hex.js
 hex.wasm

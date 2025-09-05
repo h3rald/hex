@@ -19,17 +19,54 @@ Module.printErr = (text) => {
   outputBox.textContent += text + "\n";
 };
 
+const processHexCode = (hexString) => {
+  return hexString.replace(/^#!.*?\r?\n/, '').replace(/;.*?\r?\n/gm, ' ').replace(/#\|.*?\|#/gm, '').replace(/\r?\n/mg, ' ');
+};
+
+// Function to load and evaluate utils.hex when the playground starts
+const loadUtilities = async () => {
+  try {
+    const sourceResponse = await fetch('/assets/utils.hex');
+    if (sourceResponse.ok) {
+      const utilsSourceCode = await sourceResponse.text();
+      const processedCode = processHexCode(utilsSourceCode);
+      // Try to add utils to pending_lines immediately
+      Module.pending_lines.push(processedCode);
+      Module.pending_lines.push('"lib/utils.hex loaded." puts');
+      // Also try to trigger processing if there are waiting fgets
+      if (Module.pending_fgets && Module.pending_fgets.length > 0) {
+        let resolver = Module.pending_fgets.shift();
+        resolver(Module.pending_lines.shift());
+      }
+
+    } else {
+      console.warn('Failed to load utils.hex source:', sourceResponse.status);
+    }
+  } catch (error) {
+    console.warn('Error loading utils:', error);
+  }
+};
+
+const originalOnRuntimeInitialized = Module.onRuntimeInitialized;
+
+Module.onRuntimeInitialized = () => {
+  if (originalOnRuntimeInitialized) {
+    originalOnRuntimeInitialized();
+  }
+  loadUtilities();
+}
+
 eval.addEventListener("click", (e) => {
-  const data = textarea.value.replace(/^#!.*?\n/, '').replace(/;.*?\n/g, ' ').replace(/#\|.*?\|#/mg, '').replace(/\n/mg, ' ');
+  const data = processHexCode(textarea.value);
   Module.pending_lines.push(data);
-    let resolver = Module.pending_fgets.shift();
-    resolver(Module.pending_lines.shift());
-    textarea.value = '';
-    textarea.style.display = "none";
-    eval.style.display = "none";
-    upload.style.display = "block";
-    hide.style.display = "none";
-    prompt.style.display = "flex";
+  let resolver = Module.pending_fgets.shift();
+  resolver(Module.pending_lines.shift());
+  textarea.value = '';
+  textarea.style.display = "none";
+  eval.style.display = "none";
+  upload.style.display = "block";
+  hide.style.display = "none";
+  prompt.style.display = "flex";
 });
 
 upload.addEventListener("click", () => {
@@ -52,6 +89,7 @@ hide.addEventListener("click", () => {
 inputBox.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
+
     Module.pending_lines.push(inputBox.value);
     outputBox.textContent += "> " + inputBox.value + "\n";
     inputBox.value = '';
