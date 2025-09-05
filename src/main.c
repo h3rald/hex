@@ -369,16 +369,19 @@ int main(int argc, char *argv[])
             if ((strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0))
             {
                 printf("%s\n", HEX_VERSION);
+                hex_destroy(ctx);
                 return 0;
             }
             else if ((strcmp(arg, "-h") == 0 || strcmp(arg, "--help") == 0))
             {
                 hex_print_help();
+                hex_destroy(ctx);
                 return 0;
             }
             else if ((strcmp(arg, "-m") == 0 || strcmp(arg, "--manual") == 0))
             {
                 hex_print_docs(ctx->docs);
+                hex_destroy(ctx);
                 return 0;
             }
             else if ((strcmp(arg, "-d") == 0 || strcmp(arg, "--debug") == 0))
@@ -398,11 +401,17 @@ int main(int argc, char *argv[])
                 if (i >= argc)
                 {
                     hex_error(ctx, "[load] No file specified");
+                    hex_destroy(ctx);
                     return 1;
                 }
                 char *libfile = strdup(argv[i]);
-                hex_interpret_file(ctx, libfile);
+                int load_result = hex_interpret_file(ctx, libfile);
                 free(libfile);
+                if (load_result != 0)
+                {
+                    hex_destroy(ctx);
+                    return load_result;
+                }
             }
             else
             {
@@ -433,17 +442,30 @@ int main(int argc, char *argv[])
                 if (hex_bytecode(ctx, fileContent, &bytecode, &bytecode_size, &position) != 0)
                 {
                     hex_error(ctx, "[generate bytecode] Failed to generate bytecode");
+                    free(fileContent);
+                    free(bytecode_file);
+                    hex_destroy(ctx);
                     return 1;
                 }
                 if (hex_write_bytecode_file(ctx, bytecode_file, bytecode, bytecode_size) != 0)
                 {
+                    free(fileContent);
+                    free(bytecode_file);
+                    free(bytecode);
+                    hex_destroy(ctx);
                     return 1;
                 }
+                free(fileContent);
+                free(bytecode_file);
+                free(bytecode);
+                hex_destroy(ctx);
                 return 0;
             }
             else
             {
-                return hex_interpret_file(ctx, file);
+                int result = hex_interpret_file(ctx, file);
+                hex_destroy(ctx);
+                return result;
             }
         }
     }
@@ -460,5 +482,6 @@ int main(int argc, char *argv[])
         hex_repl(ctx);
     }
 
+    hex_destroy(ctx);
     return 0;
 }

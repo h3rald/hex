@@ -484,3 +484,86 @@ void get_unix_timestamp_sec_usec(int32_t result[2])
     result[1] = (int32_t)tv.tv_usec; // microseconds
 }
 #endif
+
+void hex_destroy(hex_context_t *ctx)
+{
+    if (!ctx)
+        return;
+
+    // Clean up stack
+    if (ctx->stack)
+    {
+        // Free all items remaining on the stack
+        for (int i = 0; i <= ctx->stack->top; i++)
+        {
+            if (ctx->stack->entries[i])
+            {
+                hex_free_item(ctx, ctx->stack->entries[i]);
+                ctx->stack->entries[i] = NULL;
+            }
+        }
+        if (ctx->stack->entries)
+        {
+            free(ctx->stack->entries);
+        }
+        free(ctx->stack);
+    }
+
+    // Clean up registry
+    if (ctx->registry)
+    {
+        hex_registry_destroy(ctx);
+    }
+
+    // Clean up stack trace
+    if (ctx->stack_trace)
+    {
+        if (ctx->stack_trace->entries)
+        {
+            for (int i = 0; i < HEX_STACK_TRACE_SIZE; i++)
+            {
+                if (ctx->stack_trace->entries[i])
+                {
+                    hex_free_token(ctx->stack_trace->entries[i]);
+                }
+            }
+            free(ctx->stack_trace->entries);
+        }
+        free(ctx->stack_trace);
+    }
+
+    // Clean up symbol table
+    if (ctx->symbol_table)
+    {
+        if (ctx->symbol_table->symbols)
+        {
+            for (int i = 0; i < ctx->symbol_table->count && i < HEX_MAX_USER_SYMBOLS; i++)
+            {
+                if (ctx->symbol_table->symbols[i])
+                {
+                    free(ctx->symbol_table->symbols[i]);
+                }
+            }
+            free(ctx->symbol_table->symbols);
+        }
+        free(ctx->symbol_table);
+    }
+
+    // Clean up docs
+    if (ctx->docs)
+    {
+        if (ctx->docs->entries)
+        {
+            free(ctx->docs->entries);
+        }
+        free(ctx->docs);
+    }
+
+    // Clean up settings
+    if (ctx->settings)
+    {
+        free(ctx->settings);
+    }
+
+    free(ctx);
+}

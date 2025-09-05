@@ -1,0 +1,8 @@
+bash scripts/amalgamate.sh
+Amalgamation file created: src/hex.c
+gcc -Wall -Wextra -g  src/hex.c -o hex
+./hex -b lib/utils.hex
+cp lib/utils.hbx web/assets/utils.hbx
+./hex -b scripts/test.hex
+./hex scripts/test.hbx
+............................................................................................................................................................make: *** [makefile:35: test] Error -1073740940

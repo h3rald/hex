@@ -70,6 +70,9 @@ void hex_debug_item(hex_context_t *ctx, const char *message, hex_item_t *item)
 // Add an entry to the circular stack trace
 void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token)
 {
+    if (!token)
+        return;
+
     int index = (ctx->stack_trace->start + ctx->stack_trace->size) % HEX_STACK_TRACE_SIZE;
 
     if (ctx->stack_trace->size < HEX_STACK_TRACE_SIZE)
@@ -81,7 +84,11 @@ void add_to_stack_trace(hex_context_t *ctx, hex_token_t *token)
     else
     {
         // Buffer is full; overwrite the oldest item
-        ctx->stack_trace->entries[index] = token;
+        if (ctx->stack_trace->entries[index])
+        {
+            hex_free_token(ctx->stack_trace->entries[index]);
+        }
+        ctx->stack_trace->entries[index] = hex_copy_token(ctx, token);
         ctx->stack_trace->start = (ctx->stack_trace->start + 1) % HEX_STACK_TRACE_SIZE;
     }
 }
@@ -98,8 +105,10 @@ void print_stack_trace(hex_context_t *ctx)
     for (size_t i = 0; i < ctx->stack_trace->size; i++)
     {
         int index = (ctx->stack_trace->start + ctx->stack_trace->size - 1 - i) % HEX_STACK_TRACE_SIZE;
-        hex_token_t *token = malloc(sizeof(hex_token_t));
-        token = ctx->stack_trace->entries[index];
-        fprintf(stderr, "  %s (%s:%d:%d)\n", token->value, token->position->filename, token->position->line, token->position->column);
+        hex_token_t *token = ctx->stack_trace->entries[index];
+        if (token && token->value && token->position && token->position->filename)
+        {
+            fprintf(stderr, "  %s (%s:%d:%d)\n", token->value, token->position->filename, token->position->line, token->position->column);
+        }
     }
 }

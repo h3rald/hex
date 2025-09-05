@@ -17,7 +17,6 @@ static size_t hash_function(const char *key, size_t bucket_count)
     return hash % bucket_count;
 }
 
-
 hex_registry_t *hex_registry_create()
 {
     hex_registry_t *registry = malloc(sizeof(hex_registry_t));
@@ -41,7 +40,6 @@ hex_registry_t *hex_registry_create()
 int hex_registry_resize(hex_context_t *ctx)
 {
     hex_registry_t *registry = ctx->registry;
-    
 
     int new_bucket_count = registry->bucket_count * 2;
     hex_registry_entry_t **new_buckets = calloc(new_bucket_count, sizeof(hex_registry_entry_t *));
@@ -79,23 +77,37 @@ void hex_registry_destroy(hex_context_t *ctx)
 {
     hex_registry_t *registry = ctx->registry;
 
+    if (!registry)
+        return;
+
     for (size_t i = 0; i < registry->bucket_count; i++)
     {
         hex_registry_entry_t *entry = registry->buckets[i];
         while (entry)
         {
             hex_registry_entry_t *next = entry->next;
-            free(entry->key);
-            hex_free_item(NULL, entry->value);
+            if (entry->key)
+            {
+                free(entry->key);
+                entry->key = NULL;
+            }
+            if (entry->value)
+            {
+                hex_free_item(ctx, entry->value);
+                entry->value = NULL;
+            }
             free(entry);
             entry = next;
         }
     }
 
-    free(registry->buckets);
+    if (registry->buckets)
+    {
+        free(registry->buckets);
+        registry->buckets = NULL;
+    }
     free(registry);
 }
-
 
 int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
 {
@@ -135,13 +147,13 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
         hex_error(ctx, "[set symbol] Invalid user symbol %s", key);
         return 1;
     }
-    
+
     if (!native && hex_valid_native_symbol(ctx, key))
     {
         hex_error(ctx, "[set symbol] Cannot overwrite native symbol '%s'", key);
         return 1;
     }
-    
+
     if ((float)registry->size / registry->bucket_count > 0.75)
     {
         hex_registry_resize(ctx);
@@ -179,7 +191,6 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
 
     return 0;
 }
-
 
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 {
@@ -225,7 +236,7 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
             }
             *result = *item;
             hex_debug_item(ctx, "DONE", result);
-            return 1;                  // Success
+            return 1; // Success
         }
         entry = entry->next; // Move to the next entry in the bucket
     }

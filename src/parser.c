@@ -32,11 +32,21 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
     }
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
+    if (!token)
+        return NULL;
+
     token->value = NULL;
     token->type = HEX_TOKEN_INVALID;
+    token->quotation_size = 0;
     token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
+    if (!token->position)
+    {
+        free(token);
+        return NULL;
+    }
     token->position->line = position->line;
     token->position->column = position->column;
+    token->position->filename = position->filename ? strdup(position->filename) : NULL;
 
     if (*ptr == ';')
     {
@@ -185,14 +195,16 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
     else if (*ptr == '(')
     {
         token->type = HEX_TOKEN_QUOTATION_START;
-        token->value = strdup("(");
+        token->value = (char *)malloc(4); // Allocate extra space for safety
+        strcpy(token->value, "(");
         ptr++;
         position->column++;
     }
     else if (*ptr == ')')
     {
         token->type = HEX_TOKEN_QUOTATION_END;
-        token->value = strdup(")");
+        token->value = (char *)malloc(4); // Allocate extra space for safety
+        strcpy(token->value, ")");
         ptr++;
         position->column++;
     }
@@ -266,92 +278,123 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         if (token->type == HEX_TOKEN_QUOTATION_END)
         {
             balanced--;
+            hex_free_token(token); // Free the end token
             break;
         }
 
         if (size >= capacity)
         {
             capacity *= 2;
-            quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
-            if (!quotation)
+            hex_item_t **new_quotation = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
+            if (!new_quotation)
             {
                 hex_error(ctx, "(%d,%d), Memory allocation failed", position->line, position->column);
+                hex_free_token(token);
+                hex_free_list(ctx, quotation, size);
                 return 1;
             }
+            quotation = new_quotation;
         }
 
-        HEX_ALLOC(item);
+        hex_item_t *item = NULL;
         if (token->type == HEX_TOKEN_INTEGER)
         {
-
-            *item = *hex_integer_item(ctx, hex_parse_integer(token->value));
-            quotation[size] = item;
-            size++;
+            item = hex_integer_item(ctx, hex_parse_integer(token->value));
+            hex_free_token(token); // Token no longer needed for integers
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
-            *item = *hex_string_item(ctx, token->value);
-            quotation[size] = item;
-            size++;
+            item = hex_string_item(ctx, token->value);
+            hex_free_token(token); // Token no longer needed for strings
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
             if (hex_valid_native_symbol(ctx, token->value))
             {
-                item->type = HEX_TYPE_NATIVE_SYMBOL;
-                HEX_ALLOC(value);
-                if (hex_get_symbol(ctx, token->value, value))
+                item = malloc(sizeof(hex_item_t));
+                if (item)
                 {
-                    item->token = token;
                     item->type = HEX_TYPE_NATIVE_SYMBOL;
-                    item->data.fn_value = value->data.fn_value;
+                    hex_item_t *value = malloc(sizeof(hex_item_t));
+                    if (hex_get_symbol(ctx, token->value, value))
+                    {
+                        item->token = token;
+                        item->type = HEX_TYPE_NATIVE_SYMBOL;
+                        item->data.fn_value = value->data.fn_value;
+                        free(value); // Free the temporary value holder
+                    }
+                    else
+                    {
+                        hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s", position->line, position->column, token->value);
+                        free(item);
+                        hex_free_token(token);
+                        hex_free_list(ctx, quotation, size);
+                        return 1;
+                    }
                 }
-                else
+            }
+            else
+            {
+                item = malloc(sizeof(hex_item_t));
+                if (item)
                 {
-                    hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s", position->line, position->column, token->value);
+                    item->type = HEX_TYPE_USER_SYMBOL;
+                    item->token = token;
+                }
+            }
+            if (item && token->position && position->filename)
+            {
+                if (token->position->filename)
+                {
+                    free((void *)token->position->filename);
+                }
+                token->position->filename = strdup(position->filename);
+            }
+        }
+        else if (token->type == HEX_TOKEN_QUOTATION_START)
+        {
+            item = malloc(sizeof(hex_item_t));
+            if (item)
+            {
+                item->type = HEX_TYPE_QUOTATION;
+                if (hex_parse_quotation(ctx, input, item, position) != 0)
+                {
+                    free(item);
                     hex_free_token(token);
                     hex_free_list(ctx, quotation, size);
                     return 1;
                 }
             }
-            else
-            {
-                item->type = HEX_TYPE_USER_SYMBOL;
-            }
-            token->position->filename = strdup(position->filename);
-            item->token = token;
-            quotation[size] = item;
-            size++;
-        }
-        else if (token->type == HEX_TOKEN_QUOTATION_START)
-        {
-            item->type = HEX_TYPE_QUOTATION;
-            if (hex_parse_quotation(ctx, input, item, position) != 0)
-            {
-                hex_free_token(token);
-                hex_free_list(ctx, quotation, size);
-                return 1;
-            }
-            quotation[size] = item;
-            size++;
+            hex_free_token(token); // Token no longer needed after parsing
         }
         else if (token->type == HEX_TOKEN_COMMENT)
         {
             // Ignore comments
+            hex_free_token(token);
+            continue;
         }
         else
         {
-            hex_error(ctx, "(%d,%d) Unexpected token in quotation: %d", position->line, position->column, token->value);
+            hex_error(ctx, "(%d,%d) Unexpected token in quotation: %s", position->line, position->column, token->value);
             hex_free_token(token);
             hex_free_list(ctx, quotation, size);
             return 1;
         }
+
+        if (!item)
+        {
+            hex_error(ctx, "(%d,%d) Failed to create item", position->line, position->column);
+            hex_free_list(ctx, quotation, size);
+            return 1;
+        }
+
+        quotation[size] = item;
+        size++;
     }
 
     if (balanced != 0)
     {
         hex_error(ctx, "(%d,%d) Unterminated quotation", position->line, position->column);
-        hex_free_token(token);
         hex_free_list(ctx, quotation, size);
         return 1;
     }
@@ -359,5 +402,6 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
     result->type = HEX_TYPE_QUOTATION;
     result->data.quotation_value = quotation;
     result->quotation_size = size;
+    result->is_operator = 0;
     return 0;
 }

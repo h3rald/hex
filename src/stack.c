@@ -9,10 +9,26 @@
 // Free a token
 void hex_free_token(hex_token_t *token)
 {
-    if (token == NULL || token->value == NULL)
+    if (token == NULL)
         return;
-    free(token->value);
-    //  token->value = NULL;
+
+    if (token->value)
+    {
+        free(token->value);
+        token->value = NULL;
+    }
+
+    if (token->position)
+    {
+        if (token->position->filename)
+        {
+            free((void *)token->position->filename);
+            token->position->filename = NULL;
+        }
+        free(token->position);
+        token->position = NULL;
+    }
+
     free(token); // Free the token itself
 }
 
@@ -26,6 +42,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     }
     hex_debug_item(ctx, "PUSH", item);
     int result = 0;
+
     if (item->type == HEX_TYPE_USER_SYMBOL)
     {
         hex_item_t *value = malloc(sizeof(hex_item_t));
@@ -41,14 +58,18 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
                 add_to_stack_trace(ctx, item->token);
                 for (size_t i = 0; i < value->quotation_size; i++)
                 {
-                    if (hex_push(ctx, value->data.quotation_value[i]) != 0)
+                    // Create copies of the items to avoid ownership issues
+                    hex_item_t *copy = hex_copy_item(ctx, value->data.quotation_value[i]);
+                    if (!copy || hex_push(ctx, copy) != 0)
                     {
-                        // Cannot free the item here because it is still in use
-                        // HEX_FREE(ctx, value);
+                        if (copy)
+                            hex_free_item(ctx, copy);
+                        hex_free_item(ctx, value);
                         hex_debug_item(ctx, "FAIL", item);
                         return 1;
                     }
                 }
+                hex_free_item(ctx, value); // Free the temporary value
             }
             else
             {
@@ -58,13 +79,13 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         else
         {
             hex_error(ctx, "[push] Undefined user symbol: %s", item->token->value);
-            HEX_FREE(ctx, value);
+            hex_free_item(ctx, value);
             result = 1;
         }
     }
     else if (item->type == HEX_TYPE_NATIVE_SYMBOL)
     {
-        HEX_ALLOC(value);
+        hex_item_t *value = malloc(sizeof(hex_item_t));
         if (value == NULL)
         {
             hex_error(ctx, "[push] Failed to allocate memory for value");
@@ -79,14 +100,15 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         else
         {
             hex_error(ctx, "[push] Undefined native symbol: %s", item->token->value);
-            HEX_FREE(ctx, value);
             result = 1;
         }
+        hex_free_item(ctx, value); // Free the temporary value
     }
     else
     {
         ctx->stack->entries[++ctx->stack->top] = item;
     }
+
     if (result == 0)
     {
         hex_debug_item(ctx, "DONE", item);
@@ -207,21 +229,24 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
 // Pop function
 hex_item_t *hex_pop(hex_context_t *ctx)
 {
-    hex_item_t *item = malloc(sizeof(hex_item_t));
-    if (item == NULL)
-    {
-        hex_error(ctx, "[pop] Failed to allocate memory for item");
-        return NULL;
-    }
     if (ctx->stack->top < 0)
     {
         hex_error(ctx, "[pop] Insufficient items on the stack");
-        item->type = HEX_TYPE_INVALID;
+        hex_item_t *item = malloc(sizeof(hex_item_t));
+        if (item)
+        {
+            item->type = HEX_TYPE_INVALID;
+            item->token = NULL;
+            item->data.int_value = 0;
+        }
         return item;
     }
-    *item = *ctx->stack->entries[ctx->stack->top];
-    hex_debug_item(ctx, " POP", item);
+
+    hex_item_t *item = ctx->stack->entries[ctx->stack->top];
+    ctx->stack->entries[ctx->stack->top] = NULL; // Clear the stack reference
     ctx->stack->top--;
+
+    hex_debug_item(ctx, " POP", item);
     return item;
 }
 
@@ -232,13 +257,14 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 
     for (size_t i = 0; i < size; i++)
     {
-        printf("===> %zu \n", i);
         if (quotation[i])
         {
             hex_debug(ctx, "FREE: item #%zu", i);
             hex_free_item(ctx, quotation[i]); // Free each item
+            quotation[i] = NULL;              // Prevent double free
         }
     }
+    free(quotation); // Free the quotation array itself
     hex_debug(ctx, "FREE: quotation freed (%zu items)", size);
 }
 
@@ -256,32 +282,38 @@ void hex_free_item(hex_context_t *ctx, hex_item_t *item)
             free(item->data.str_value);
             item->data.str_value = NULL; // Set to NULL to avoid double free
         }
-        free(item); // Free the item itself
-        item = NULL;
         break;
 
     case HEX_TYPE_QUOTATION:
         if (item->data.quotation_value)
         {
             hex_debug(ctx, "FREE: freeing quotation (%zu items)", item->quotation_size);
-            // Temporarily comment out the free to avoid double free (probably need refcounting instead)
-            // This happens in case of nested quotations, e.g. a failure in a nested quotation
-            // hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
-            free(item->data.quotation_value);  // Free the array of items
+            hex_free_list(ctx, item->data.quotation_value, item->quotation_size);
             item->data.quotation_value = NULL; // Set to NULL to avoid double free
         }
-        free(item); // Free the item itself
-        item = NULL;
         break;
 
     case HEX_TYPE_NATIVE_SYMBOL:
     case HEX_TYPE_USER_SYMBOL:
-        // Cannot "free" symbols because we are not keeping track of how many times they are referenced.
+        if (item->token)
+        {
+            hex_free_token(item->token);
+            item->token = NULL;
+        }
+        break;
+
+    case HEX_TYPE_INTEGER:
+    case HEX_TYPE_INVALID:
+        // No dynamic memory to free for these types
         break;
 
     default:
+        hex_debug(ctx, "FREE: unknown item type: %d", item->type);
         break;
     }
+
+    // Always free the item itself at the end
+    free(item);
 }
 
 hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token)
@@ -445,7 +477,13 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
                 {
                     // Cleanup on failure
                     hex_error(ctx, "[copy item] Failed to copy quotation item");
-                    hex_free_item(ctx, copy);
+                    // Free already copied items
+                    for (size_t j = 0; j < i; j++)
+                    {
+                        hex_free_item(ctx, copy->data.quotation_value[j]);
+                    }
+                    free(copy->data.quotation_value);
+                    free(copy);
                     return NULL;
                 }
             }

@@ -284,6 +284,9 @@ int hex_push_string(hex_context_t *ctx, const char *value);
 int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size);
 int hex_push_symbol(hex_context_t *ctx, hex_token_t *token);
 hex_item_t *hex_pop(hex_context_t *ctx);
+void hex_free_item(hex_context_t *ctx, hex_item_t *item);
+void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size);
+void hex_free_token(hex_token_t *token);
 hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item);
 hex_token_t *hex_copy_token(hex_context_t *ctx, const hex_token_t *token);
 
@@ -406,6 +409,7 @@ hex_symbol_table_t *hex_symboltable_copy(hex_context_t *ctx);
 // REPL and initialization
 void hex_register_symbols(hex_context_t *ctx);
 hex_context_t *hex_init();
+void hex_destroy(hex_context_t *ctx);
 void hex_repl(hex_context_t *ctx);
 void hex_process_stdin(hex_context_t *ctx);
 void hex_handle_sigint(int sig);

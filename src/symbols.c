@@ -2354,8 +2354,12 @@ int hex_symbol_while(hex_context_t *ctx)
         {
             for (size_t i = 0; i < condition->quotation_size; i++)
             {
-                if (hex_push(ctx, condition->data.quotation_value[i]) != 0)
+                // Create a copy to avoid ownership issues
+                hex_item_t *copy = hex_copy_item(ctx, condition->data.quotation_value[i]);
+                if (!copy || hex_push(ctx, copy) != 0)
                 {
+                    if (copy)
+                        hex_free_item(ctx, copy);
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, condition);
                     return 1;
@@ -2364,24 +2368,32 @@ int hex_symbol_while(hex_context_t *ctx)
             HEX_POP(ctx, evalResult);
             if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value == 0)
             {
-                HEX_FREE(ctx, evalResult);
+                // Don't free evalResult here as it might be shared - let normal cleanup handle it
                 break;
             }
 
             hex_item_t *act = hex_copy_item(ctx, action);
             for (size_t i = 0; i < act->quotation_size; i++)
             {
-                if (hex_push(ctx, act->data.quotation_value[i]) != 0)
+                // Create a copy to avoid ownership issues
+                hex_item_t *copy = hex_copy_item(ctx, act->data.quotation_value[i]);
+                if (!copy || hex_push(ctx, copy) != 0)
                 {
+                    if (copy)
+                        hex_free_item(ctx, copy);
                     HEX_FREE(ctx, act);
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, condition);
                     return 1;
                 }
             }
+            HEX_FREE(ctx, act); // Free the temporary copy
         }
     }
 
+    // Clean up after successful completion
+    HEX_FREE(ctx, action);
+    HEX_FREE(ctx, condition);
     return 0;
 }
 
@@ -2577,17 +2589,7 @@ int hex_symbol_map(hex_context_t *ctx)
                     return 1;
                 }
             }
-            quotation[i] = (hex_item_t *)malloc(sizeof(hex_item_t));
-            if (!quotation[i])
-            {
-                hex_error(ctx, "[symbol map] Memory allocation failed");
-                HEX_FREE(ctx, action);
-                HEX_FREE(ctx, list);
-                HEX_FREE(ctx, act);
-                hex_free_list(ctx, quotation, i);
-                return 1;
-            }
-            *quotation[i] = *hex_copy_item(ctx, hex_pop(ctx));
+            quotation[i] = hex_copy_item(ctx, hex_pop(ctx));
         }
         if (hex_push_quotation(ctx, quotation, list->quotation_size) != 0)
         {
