@@ -4099,7 +4099,7 @@ int hex_symbol_type(hex_context_t *ctx)
         return 1;
     }
     int result = hex_push_string(ctx, hex_type(item->type));
-    // HEX_FREE(ctx, item);
+    HEX_FREE(ctx, item);
     return result;
 }
 
@@ -4124,7 +4124,7 @@ int hex_symbol_i(hex_context_t *ctx)
     {
         if (hex_push(ctx, item->data.quotation_value[i]) != 0)
         {
-            // HEX_FREE(ctx, item);
+            HEX_FREE(ctx, item);
             return 1;
         }
     }
@@ -4156,7 +4156,7 @@ int hex_symbol_eval(hex_context_t *ctx)
     if (item->type == HEX_TYPE_STRING)
     {
         int result = hex_interpret(ctx, item->data.str_value, file->data.str_value, 1, 1);
-        // HEX_FREE(ctx, item);
+        HEX_FREE(ctx, item);
         return result;
     }
     else if (item->type == HEX_TYPE_QUOTATION)
@@ -4217,7 +4217,7 @@ int hex_symbol_debug(hex_context_t *ctx)
     {
         if (hex_push(ctx, item->data.quotation_value[i]) != 0)
         {
-            // HEX_FREE(ctx, item);
+            HEX_FREE(ctx, item);
             ctx->settings->debugging_enabled = 0;
             return 1;
         }
