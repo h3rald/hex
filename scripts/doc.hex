@@ -1,0 +1,87 @@
+#!/usr/bin/env hex
+"./lib/utils.hbx" read "utils.hbx" !
+
+(args len 0x3 <) 
+    ("ERROR: no input file specified." puts 0x1 exit)
+when
+
+args 0x2 get "INFILE" : 
+
+(args len 0x4 <) 
+    ("ERROR: no output file specified." puts 0x1 exit)
+when
+
+args 0x3 get "OUTFILE" : 
+
+
+"*** Processing ${0}..." (INFILE) fmt puts 
+
+INFILE read "\n" split "LINES" :
+
+"" "PREV" :
+"" "OUT"  :
+LINES
+    (
+        "LINE" :
+        (LINE ";;;;; " begins)
+            (
+                ("h3" PREV ==)
+                    ; Paragraph after title
+                    (
+                        LINE ";;;;; " "" sub () cons "<p>${0}</p>\n" swap fmt OUT swap cat "OUT" :
+                        "p" "PREV" :
+                    )
+                    ; H3
+                    (
+                        LINE ";;;;; " "" sub () cons "<h3>${0}</h2>\n" swap fmt OUT swap cat "OUT" :
+                        "h3" "PREV" :
+                    )
+                if
+            )
+        when 
+        (LINE ";;;; " begins)
+            (
+                ("h4" PREV ==)
+                    ; Paragraph after title
+                    (
+                        LINE ";;;; " "" sub () cons "<p>${0}</p>\n" swap fmt OUT swap cat "OUT" :
+                        "p" "PREV" :
+                    )
+                    ; H4
+                    (
+                        LINE ";;;; " "" sub () cons "<h4>${0}</h3>\n" swap fmt OUT swap cat "OUT" :
+                        "h4" "PREV" :
+                    )
+                if
+            )
+        when 
+        (LINE ";;; " begins)
+            (
+                LINE ";;; " "" sub () cons "<h5 id=\"${0}-symbol\"><code><span class=\"hex-symbol\">${0}</span></code> Symbol</h5><a href=\"top\"></a>\n" swap fmt OUT swap cat "OUT" :
+                "sym" "PREV" :
+            )
+        when
+        (LINE ";; " begins "sig" PREV == and)
+            (
+                LINE ";; " "" sub () cons "<p>${0}</p>\n" swap fmt OUT swap cat "OUT" :
+                "desc" "PREV" :
+            )
+        when
+        (LINE ";; " begins "sym" PREV == and)
+            (
+                LINE ";; " "" sub () cons "<p><mark>${0}</mark></p>\n" swap fmt "->" "→" sub OUT swap cat "OUT" :
+                "sig" "PREV" :
+            )
+        when
+        "LINE" #
+    )
+each
+
+"*** Writing output to ${0}..." (OUTFILE) fmt puts
+OUT OUTFILE write
+"*** Done!" puts
+
+"OUT"       #
+"PREV"      #
+"LINES"     #
+"INFILE"      #

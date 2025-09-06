@@ -393,7 +393,7 @@
 
 ;;; fmt
 ;; s1 q -> s2
-;; Substitutes %:$0%% to %%$9%% placeholders in %:s1%% with items in %:q%%.
+;; Substitutes %:$\{0\}%% to %%$\{9\}%% placeholders in %:s1%% with items in %:q%%.
 (
   "_fmt_q" :
   "_fmt_s" :
@@ -403,7 +403,7 @@
   when
   (_fmt_c _fmt_q len <)
     (
-      _fmt_s "$" _fmt_c str cat _fmt_q _fmt_c get gsub "_fmt_s" :
+      _fmt_s "${" _fmt_c str cat "}" cat _fmt_q _fmt_c get gsub "_fmt_s" :
       _fmt_c 0x1 + "_fmt_c" :
     )
   while

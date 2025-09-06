@@ -7058,7 +7058,7 @@ int main(int argc, char *argv[])
     hex_register_symbols(ctx);
     hex_create_docs(ctx->docs);
 
-    char *file;
+    char *file = NULL;
     int generate_bytecode = 0;
 
     if (argc > 1)
@@ -7115,7 +7115,11 @@ int main(int argc, char *argv[])
             }
             else
             {
-                file = arg;
+                if (!file)
+                {
+                    file = arg;
+                }
+                // Ignore extra arguments
             }
         }
         if (file)

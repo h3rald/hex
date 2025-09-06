@@ -38,6 +38,8 @@ d-templates "/page.html" cat "t-page" :
     "$$"
     "%:"
     "%%"
+    "\{"
+    "\}"
 ) "highlight-delimiters" :
 
 (
@@ -50,6 +52,8 @@ d-templates "/page.html" cat "t-page" :
     "</span>"
     "<code>"
     "</code>"
+    "{"
+    "}"
 ) "highlight-replacements" :
 
 ; Highlight syntax in text
@@ -190,6 +194,9 @@ changelog-content highlight
 "CHANGELOG.md" write
 "*** Done!" puts
 
+; Read reference docs
+"lib/utils.html" read "lib_utils_docs" :
+
 ;;;;; Write web site contents
 "*** Generating hex web site..." puts
 0x0 "_c" :
@@ -206,6 +213,8 @@ changelog-content highlight
         "year" meta-year process-tag
         "changelog-toc" changelog-toc process-tag
         "releases" releases-content process-tag 
+        ; Replace files
+        "@@@lib/utils.html@@@" lib_utils_docs sub
         "new-content" :
         ; Replace symbols with links
         0x0 "_i" :
