@@ -37,8 +37,10 @@ test: hex utils.hbx
 	./hex -b scripts/test.hex
 	./hex scripts/test.hbx
 
-web: playground utils.hbx hex
+libdocs: hex utils.hbx
 	./hex scripts/doc.hex lib/utils.hex lib/utils.html
+
+web: playground libdocs utils.hbx hex
 	./hex -b scripts/web.hex
 	./hex scripts/web.hex
 
