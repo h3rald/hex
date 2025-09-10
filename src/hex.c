@@ -1189,17 +1189,17 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
     {
         if (strcmp(entry->key, key) == 0)
         {
-            // Key found, copy the value to result
-            HEX_ALLOC(item);
-            item = hex_copy_item(ctx, entry->value); // Copy the value structure
-            if (item == NULL)
+            // Deep copy registry value into caller-provided storage (no aliasing)
+            hex_item_t *copy = hex_copy_item(ctx, entry->value);
+            if (!copy)
             {
                 hex_error(ctx, "[get symbol] Failed to copy item for key: %s", key);
                 return 0;
             }
-            *result = *item;
+            *result = *copy; // Move struct contents
+            free(copy);      // Free wrapper; inner allocations now owned by result
             hex_debug_item(ctx, "DONE", result);
-            return 1; // Success
+            return 1;
         }
         entry = entry->next; // Move to the next entry in the bucket
     }
