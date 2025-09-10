@@ -78,7 +78,9 @@ void hex_registry_destroy(hex_context_t *ctx)
     hex_registry_t *registry = ctx->registry;
 
     if (!registry)
+    {
         return;
+    }
 
     for (size_t i = 0; i < registry->bucket_count; i++)
     {

@@ -2560,7 +2560,8 @@ int hex_symbol_map(hex_context_t *ctx)
     }
     else
     {
-        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t));
+        // Allocate result quotation (array of element pointers)
+        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error(ctx, "[symbol map] Memory allocation failed");
@@ -2570,26 +2571,47 @@ int hex_symbol_map(hex_context_t *ctx)
         }
         for (size_t i = 0; i < list->quotation_size; i++)
         {
-            if (hex_push(ctx, list->data.quotation_value[i]) != 0)
+            // Push a deep copy of the list element to avoid aliasing
+            hex_item_t *elem_copy = hex_copy_item(ctx, list->data.quotation_value[i]);
+            if (!elem_copy || hex_push(ctx, elem_copy) != 0)
             {
+                if (elem_copy)
+                {
+                    hex_free_item(ctx, elem_copy);
+                }
                 HEX_FREE(ctx, action);
                 HEX_FREE(ctx, list);
                 hex_free_list(ctx, quotation, i);
                 return 1;
             }
-            hex_item_t *act = hex_copy_item(ctx, action);
-            for (size_t j = 0; j < act->quotation_size; j++)
+            // Execute action quotation: push deep copies of its elements
+            for (size_t j = 0; j < action->quotation_size; j++)
             {
-                if (hex_push(ctx, act->data.quotation_value[j]) != 0)
+                hex_item_t *act_elem = hex_copy_item(ctx, action->data.quotation_value[j]);
+                if (!act_elem || hex_push(ctx, act_elem) != 0)
                 {
+                    if (act_elem)
+                    {
+                        hex_free_item(ctx, act_elem);
+                    }
                     HEX_FREE(ctx, action);
-                    HEX_FREE(ctx, act);
                     HEX_FREE(ctx, list);
                     hex_free_list(ctx, quotation, i);
                     return 1;
                 }
             }
-            quotation[i] = hex_copy_item(ctx, hex_pop(ctx));
+            // Pop result of action execution, copy into result quotation, free temporary
+            hex_item_t *result_item = hex_pop(ctx);
+            quotation[i] = hex_copy_item(ctx, result_item);
+            HEX_FREE(ctx, result_item);
+            if (!quotation[i])
+            {
+                hex_error(ctx, "[symbol map] Failed to copy result item");
+                HEX_FREE(ctx, action);
+                HEX_FREE(ctx, list);
+                hex_free_list(ctx, quotation, i);
+                return 1;
+            }
         }
         if (hex_push_quotation(ctx, quotation, list->quotation_size) != 0)
         {
@@ -2598,6 +2620,9 @@ int hex_symbol_map(hex_context_t *ctx)
             hex_free_list(ctx, quotation, list->quotation_size);
             return 1;
         }
+        // Free consumed inputs after success
+        HEX_FREE(ctx, action);
+        HEX_FREE(ctx, list);
     }
 
     return 0;

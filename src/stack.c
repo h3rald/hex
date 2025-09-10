@@ -10,7 +10,9 @@
 void hex_free_token(hex_token_t *token)
 {
     if (token == NULL)
+    {
         return;
+    }
 
     if (token->value)
     {
@@ -253,7 +255,9 @@ hex_item_t *hex_pop(hex_context_t *ctx)
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
     if (!quotation)
+    {
         return;
+    }
 
     for (size_t i = 0; i < size; i++)
     {
@@ -271,7 +275,9 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 void hex_free_item(hex_context_t *ctx, hex_item_t *item)
 {
     if (item == NULL)
+    {
         return;
+    }
 
     switch (item->type)
     {
