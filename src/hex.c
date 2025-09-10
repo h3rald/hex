@@ -6459,28 +6459,27 @@ int hex_symbol_throw(hex_context_t *ctx)
 int hex_symbol_q(hex_context_t *ctx)
 {
     HEX_POP(ctx, item);
-    ;
     if (item->type == HEX_TYPE_INVALID)
     {
         HEX_FREE(ctx, item);
         return 1;
     }
 
-    hex_item_t *quotation = (hex_item_t *)calloc(1, sizeof(hex_item_t));
-    if (!quotation)
+    // Deep copy the popped item to avoid aliasing its internal pointers.
+    hex_item_t *copy = hex_copy_item(ctx, item);
+    if (!copy)
     {
-        hex_error(ctx, "[symbol '] Memory allocation failed");
+        hex_error(ctx, "[symbol '] Failed to copy item");
         HEX_FREE(ctx, item);
         return 1;
     }
-
-    *quotation = *item;
 
     hex_item_t *result = (hex_item_t *)calloc(1, sizeof(hex_item_t));
     if (!result)
     {
         hex_error(ctx, "[symbol '] Memory allocation failed");
         HEX_FREE(ctx, item);
+        HEX_FREE(ctx, copy);
         return 1;
     }
 
@@ -6490,18 +6489,22 @@ int hex_symbol_q(hex_context_t *ctx)
     {
         hex_error(ctx, "[symbol '] Memory allocation failed");
         HEX_FREE(ctx, item);
+        HEX_FREE(ctx, copy);
+        HEX_FREE(ctx, result);
         return 1;
     }
 
-    result->data.quotation_value[0] = quotation;
+    result->data.quotation_value[0] = copy;
     result->quotation_size = 1;
+
+    // Original item no longer needed (we pushed a deep copy)
+    HEX_FREE(ctx, item);
 
     if (HEX_PUSH(ctx, result) != 0)
     {
-        HEX_FREE(ctx, item);
+        HEX_FREE(ctx, result); // will free contained copy via list free
         return 1;
     }
-
     return 0;
 }
 
