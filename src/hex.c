@@ -1565,14 +1565,13 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         return NULL; // End of input
     }
 
-    hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
+    hex_token_t *token = (hex_token_t *)calloc(1, sizeof(hex_token_t));
     if (!token)
+    {
         return NULL;
-
-    token->value = NULL;
-    token->type = HEX_TOKEN_INVALID;
-    token->quotation_size = 0;
-    token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
+    }
+    token->type = HEX_TOKEN_INVALID; // explicit for clarity
+    token->position = (hex_file_position_t *)calloc(1, sizeof(hex_file_position_t));
     if (!token->position)
     {
         free(token);
@@ -1799,7 +1798,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
     size_t size = 0;
     int balanced = 1;
 
-    quotation = (hex_item_t **)malloc(capacity * sizeof(hex_item_t *));
+    quotation = (hex_item_t **)calloc(capacity, sizeof(hex_item_t *));
     if (!quotation)
     {
         hex_error(ctx, "[parse quotation] Memory allocation failed");
