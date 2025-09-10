@@ -142,42 +142,19 @@ int hex_symbol_symbols(hex_context_t *ctx)
         hex_registry_entry_t *entry = ctx->registry->buckets[i];
         while (entry != NULL)
         {
-            // Duplicate the symbol ID
-            char *id = strdup(entry->key);
-            if (!id)
-            {
-                hex_error(ctx, "[symbol symbols] Memory allocation failed for ID");
-                // Free already allocated items
-                for (size_t j = 0; j < quotation_size; j++)
-                {
-                    free(quotation[j]->data.str_value); // Free string value
-                    free(quotation[j]);                 // Free hex_item_t
-                }
-                free(quotation);
-                return 1;
-            }
-
-            // Allocate a new hex_item_t
-            hex_item_t *item = (hex_item_t *)calloc(1, sizeof(hex_item_t));
+            // Build a new string item using constructor for consistency
+            hex_item_t *item = hex_string_item(ctx, entry->key);
             if (!item)
             {
-                hex_error(ctx, "[symbol symbols] Memory allocation failed for hex_item_t");
-                free(id);
+                hex_error(ctx, "[symbol symbols] Failed to allocate string item");
                 for (size_t j = 0; j < quotation_size; j++)
                 {
-                    free(quotation[j]->data.str_value);
-                    free(quotation[j]);
+                    hex_free_item(ctx, quotation[j]);
                 }
                 free(quotation);
                 return 1;
             }
-
-            // Initialize the hex_item_t as a string item
-            item->type = HEX_TYPE_STRING;
-            item->data.str_value = id;
-
-            // Add the item to the quotation
-            quotation[quotation_size++] = item;
+            quotation[quotation_size++] = item; // ownership transferred to quotation
 
             // Move to the next entry in the bucket
             entry = entry->next;
@@ -190,8 +167,7 @@ int hex_symbol_symbols(hex_context_t *ctx)
         hex_error(ctx, "[symbol symbols] Failed to push quotation onto the stack");
         for (size_t j = 0; j < quotation_size; j++)
         {
-            free(quotation[j]->data.str_value);
-            free(quotation[j]);
+            hex_free_item(ctx, quotation[j]);
         }
         free(quotation);
         return 1;
@@ -386,6 +362,7 @@ int hex_symbol_puts(hex_context_t *ctx)
     }
     hex_raw_print_item(stdout, *item);
     printf("\n");
+    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -400,6 +377,7 @@ int hex_symbol_warn(hex_context_t *ctx)
     }
     hex_raw_print_item(stderr, *item);
     printf("\n");
+    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -414,6 +392,7 @@ int hex_symbol_print(hex_context_t *ctx)
     }
     hex_raw_print_item(stdout, *item);
     fflush(stdout);
+    HEX_FREE(ctx, item);
     return 0;
 }
 
