@@ -423,6 +423,7 @@ char *hex_symboltable_get_value(hex_context_t *ctx, uint16_t index);
 int hex_decode_bytecode_symboltable(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t count);
 uint8_t *hex_encode_bytecode_symboltable(hex_context_t *ctx, size_t *out_size);
 hex_symbol_table_t *hex_symboltable_copy(hex_context_t *ctx);
+void hex_symboltable_destroy(hex_symbol_table_t *table);
 
 // REPL and initialization
 void hex_register_symbols(hex_context_t *ctx);

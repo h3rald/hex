@@ -2124,6 +2124,28 @@ hex_symbol_table_t *hex_symboltable_copy(hex_context_t *ctx)
     return copy;
 }
 
+void hex_symboltable_destroy(hex_symbol_table_t *table)
+{
+    if (!table)
+    {
+        return;
+    }
+    if (table->symbols)
+    {
+        for (uint16_t i = 0; i < table->count; ++i)
+        {
+            if (table->symbols[i])
+            {
+                free(table->symbols[i]);
+                table->symbols[i] = NULL;
+            }
+        }
+        free(table->symbols);
+        table->symbols = NULL;
+    }
+    free(table);
+}
+
 /* File: src/opcodes.c */
 #line 1 "src/opcodes.c"
 #ifndef HEX_H
@@ -4275,15 +4297,24 @@ int hex_symbol_eval(hex_context_t *ctx)
         {
             bytecode[i] = (uint8_t)item->data.quotation_value[i]->data.int_value;
         }
-        // Copy the current symbol table before evaluating the bytecode
-        hex_symbol_table_t *symbol_table_copy = hex_symboltable_copy(ctx);
+        // Sandbox current symbol table: create working copy, run, then discard mutations
+        hex_symbol_table_t *original_table = ctx->symbol_table;
+        hex_symbol_table_t *working_copy = hex_symboltable_copy(ctx);
+        if (!working_copy)
+        {
+            free(bytecode);
+            HEX_FREE(ctx, item);
+            HEX_FREE(ctx, file);
+            return 1;
+        }
+        ctx->symbol_table = working_copy;
         int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size, file->data.str_value);
-        // Restore the original symbol table
-        ctx->symbol_table = symbol_table_copy;
+        hex_symboltable_destroy(ctx->symbol_table);
+        ctx->symbol_table = original_table;
         free(bytecode);
         HEX_FREE(ctx, item);
         HEX_FREE(ctx, file);
-        return result; // NOTE: potential leak of mutated symbol table not restored (pre-existing design)
+        return result;
     }
     else
     {
@@ -7406,4 +7437,3 @@ int main(int argc, char *argv[])
     hex_destroy(ctx);
     return 0;
 }
-

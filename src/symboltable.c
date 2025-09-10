@@ -143,3 +143,25 @@ hex_symbol_table_t *hex_symboltable_copy(hex_context_t *ctx)
 
     return copy;
 }
+
+void hex_symboltable_destroy(hex_symbol_table_t *table)
+{
+    if (!table)
+    {
+        return;
+    }
+    if (table->symbols)
+    {
+        for (uint16_t i = 0; i < table->count; ++i)
+        {
+            if (table->symbols[i])
+            {
+                free(table->symbols[i]);
+                table->symbols[i] = NULL;
+            }
+        }
+        free(table->symbols);
+        table->symbols = NULL;
+    }
+    free(table);
+}
