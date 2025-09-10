@@ -2849,7 +2849,10 @@ int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
 
 int hex_debug_validate_stack(hex_context_t *ctx)
 {
-    if (!ctx || !ctx->stack) { return 0; }
+    if (!ctx || !ctx->stack)
+    {
+        return 0;
+    }
     for (int i = 0; i <= ctx->stack->top; i++)
     {
         hex_item_t *it = ctx->stack->entries[i];

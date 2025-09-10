@@ -383,8 +383,17 @@ int hex_symbol_timestamp(hex_context_t *ctx);
 int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item);
 int hex_debug_validate_stack(hex_context_t *ctx);
 #else
-static inline int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item) { (void)ctx; (void)item; return 0; }
-static inline int hex_debug_validate_stack(hex_context_t *ctx) { (void)ctx; return 0; }
+static inline int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
+{
+    (void)ctx;
+    (void)item;
+    return 0;
+}
+static inline int hex_debug_validate_stack(hex_context_t *ctx)
+{
+    (void)ctx;
+    return 0;
+}
 #endif
 
 // Opcodes
