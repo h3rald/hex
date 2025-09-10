@@ -42,6 +42,11 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         hex_error(ctx, "[push] Stack overflow");
         return 1;
     }
+    if (ctx->settings && ctx->settings->debugging_enabled)
+    {
+        // Validate existing stack before modification
+        hex_debug_validate_stack(ctx);
+    }
     hex_debug_item(ctx, "PUSH", item);
     int result = 0;
 
@@ -118,6 +123,11 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     else
     {
         hex_debug_item(ctx, "FAIL", item);
+    }
+    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
+    {
+        // Validate stack after successful push
+        hex_debug_validate_stack(ctx);
     }
     return result;
 }

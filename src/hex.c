@@ -381,6 +381,15 @@ int hex_symbol_stack(hex_context_t *ctx);
 int hex_symbol_drop(hex_context_t *ctx);
 int hex_symbol_timestamp(hex_context_t *ctx);
 
+// Debug / integrity helpers (always callable; no-op stubs in non-DEBUG builds)
+#ifdef DEBUG
+int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item);
+int hex_debug_validate_stack(hex_context_t *ctx);
+#else
+static inline int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item) { (void)ctx; (void)item; return 0; }
+static inline int hex_debug_validate_stack(hex_context_t *ctx) { (void)ctx; return 0; }
+#endif
+
 // Opcodes
 uint8_t hex_symbol_to_opcode(const char *symbol);
 const char *hex_opcode_to_symbol(uint8_t opcode);
@@ -474,6 +483,11 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         hex_error(ctx, "[push] Stack overflow");
         return 1;
     }
+    if (ctx->settings && ctx->settings->debugging_enabled)
+    {
+        // Validate existing stack before modification
+        hex_debug_validate_stack(ctx);
+    }
     hex_debug_item(ctx, "PUSH", item);
     int result = 0;
 
@@ -550,6 +564,11 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     else
     {
         hex_debug_item(ctx, "FAIL", item);
+    }
+    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
+    {
+        // Validate stack after successful push
+        hex_debug_validate_stack(ctx);
     }
     return result;
 }
@@ -6730,6 +6749,57 @@ int hex_symbol_timestamp(hex_context_t *ctx)
     }
     return 0;
 }
+
+#ifdef DEBUG
+// Recursively validate that quotations do not share element pointers with siblings.
+// Returns 0 on success, 1 if a potential aliasing issue is detected.
+int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
+{
+    (void)ctx;
+    if (!item)
+    {
+        return 0;
+    }
+    if (item->type != HEX_TYPE_QUOTATION || item->quotation_size == 0)
+    {
+        return 0;
+    }
+    // Simple O(n^2) pointer identity check among siblings; acceptable for debug.
+    for (size_t i = 0; i < item->quotation_size; i++)
+    {
+        hex_item_t *a = item->data.quotation_value[i];
+        for (size_t j = i + 1; j < item->quotation_size; j++)
+        {
+            if (a == item->data.quotation_value[j])
+            {
+                hex_error(ctx, "[integrity] Quotation has duplicated element pointer at %zu and %zu", i, j);
+                return 1;
+            }
+        }
+        // Recurse
+        if (hex_validate_quotation_integrity(ctx, a) != 0)
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int hex_debug_validate_stack(hex_context_t *ctx)
+{
+    if (!ctx || !ctx->stack) { return 0; }
+    for (int i = 0; i <= ctx->stack->top; i++)
+    {
+        hex_item_t *it = ctx->stack->entries[i];
+        if (it && hex_validate_quotation_integrity(ctx, it) != 0)
+        {
+            hex_error(ctx, "[integrity] Detected potential aliasing at stack index %d", i);
+            return 1;
+        }
+    }
+    return 0;
+}
+#endif
 
 ////////////////////////////////////////
 // Native Symbol Registration         //
