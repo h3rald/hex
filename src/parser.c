@@ -311,17 +311,16 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         {
             if (hex_valid_native_symbol(ctx, token->value))
             {
-                item = malloc(sizeof(hex_item_t));
+                item = calloc(1, sizeof(hex_item_t));
                 if (item)
                 {
-                    item->type = HEX_TYPE_NATIVE_SYMBOL;
-                    hex_item_t *value = malloc(sizeof(hex_item_t));
+                    hex_item_t *value = calloc(1, sizeof(hex_item_t));
                     if (hex_get_symbol(ctx, token->value, value))
                     {
-                        item->token = token;
                         item->type = HEX_TYPE_NATIVE_SYMBOL;
                         item->data.fn_value = value->data.fn_value;
-                        free(value); // Free the temporary value holder
+                        item->token = token;
+                        free(value); // wrapper only
                     }
                     else
                     {
@@ -335,7 +334,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
             }
             else
             {
-                item = malloc(sizeof(hex_item_t));
+                item = calloc(1, sizeof(hex_item_t));
                 if (item)
                 {
                     item->type = HEX_TYPE_USER_SYMBOL;
@@ -353,7 +352,7 @@ int hex_parse_quotation(hex_context_t *ctx, const char **input, hex_item_t *resu
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
-            item = malloc(sizeof(hex_item_t));
+            item = calloc(1, sizeof(hex_item_t));
             if (item)
             {
                 item->type = HEX_TYPE_QUOTATION;
