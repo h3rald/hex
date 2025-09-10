@@ -206,7 +206,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
 
 void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
 {
-    hex_item_t *func_item = malloc(sizeof(hex_item_t));
+    hex_item_t *func_item = calloc(1, sizeof(hex_item_t));
     if (func_item == NULL)
     {
         hex_error(ctx, "[set native symbol] Memory allocation failed for native symbol '%s'", name);
@@ -215,7 +215,7 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
     func_item->type = HEX_TYPE_NATIVE_SYMBOL;
     func_item->data.fn_value = func;
     // Need to create a fake token for native symbols as well.
-    func_item->token = malloc(sizeof(hex_token_t));
+    func_item->token = calloc(1, sizeof(hex_token_t));
     func_item->token->type = HEX_TOKEN_SYMBOL;
     func_item->token->value = strdup(name);
     func_item->token->position = NULL;

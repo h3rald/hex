@@ -153,7 +153,7 @@ int hex_symbol_symbols(hex_context_t *ctx)
             }
 
             // Allocate a new hex_item_t
-            hex_item_t *item = (hex_item_t *)malloc(sizeof(hex_item_t));
+            hex_item_t *item = (hex_item_t *)calloc(1, sizeof(hex_item_t));
             if (!item)
             {
                 hex_error(ctx, "[symbol symbols] Memory allocation failed for hex_item_t");
@@ -2532,7 +2532,7 @@ int hex_symbol_q(hex_context_t *ctx)
         return 1;
     }
 
-    hex_item_t *quotation = (hex_item_t *)malloc(sizeof(hex_item_t));
+    hex_item_t *quotation = (hex_item_t *)calloc(1, sizeof(hex_item_t));
     if (!quotation)
     {
         hex_error(ctx, "[symbol '] Memory allocation failed");
@@ -2542,7 +2542,7 @@ int hex_symbol_q(hex_context_t *ctx)
 
     *quotation = *item;
 
-    hex_item_t *result = (hex_item_t *)malloc(sizeof(hex_item_t));
+    hex_item_t *result = (hex_item_t *)calloc(1, sizeof(hex_item_t));
     if (!result)
     {
         hex_error(ctx, "[symbol '] Memory allocation failed");
