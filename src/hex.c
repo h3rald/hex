@@ -984,6 +984,19 @@ hex_item_t *hex_copy_item(hex_context_t *ctx, const hex_item_t *item)
 // Registry Implementation            //
 ////////////////////////////////////////
 
+// Helper: deep-copy an item into an existing struct (wrapper move)
+static int hex_copy_item_into(hex_context_t *ctx, const hex_item_t *src, hex_item_t *dst)
+{
+    hex_item_t *tmp = hex_copy_item(ctx, src);
+    if (!tmp)
+    {
+        return 0;
+    }
+    *dst = *tmp; // move struct fields
+    free(tmp);   // free only the wrapper
+    return 1;
+}
+
 static size_t hash_function(const char *key, size_t bucket_count)
 {
     size_t hash = 5381;
@@ -1216,15 +1229,11 @@ int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result)
     {
         if (strcmp(entry->key, key) == 0)
         {
-            // Deep copy registry value into caller-provided storage (no aliasing)
-            hex_item_t *copy = hex_copy_item(ctx, entry->value);
-            if (!copy)
+            if (!hex_copy_item_into(ctx, entry->value, result))
             {
                 hex_error(ctx, "[get symbol] Failed to copy item for key: %s", key);
                 return 0;
             }
-            *result = *copy; // Move struct contents
-            free(copy);      // Free wrapper; inner allocations now owned by result
             hex_debug_item(ctx, "DONE", result);
             return 1;
         }
