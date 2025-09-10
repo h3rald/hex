@@ -233,6 +233,11 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
+    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
+    {
+        // Validate the just-pushed quotation structure specifically
+        hex_validate_quotation_integrity(ctx, item);
+    }
     return result;
 }
 
@@ -268,6 +273,11 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     ctx->stack->top--;
 
     hex_debug_item(ctx, " POP", item);
+    if (ctx->settings && ctx->settings->debugging_enabled)
+    {
+        // Validate remaining stack after pop (helps catch corruption on removal)
+        hex_debug_validate_stack(ctx);
+    }
     return item;
 }
 

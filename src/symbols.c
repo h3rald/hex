@@ -206,6 +206,10 @@ int hex_symbol_type(hex_context_t *ctx)
         return 1;
     }
     int result = hex_push_string(ctx, hex_type(item->type));
+    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
+    {
+        hex_debug_validate_stack(ctx);
+    }
     HEX_FREE(ctx, item);
     return result;
 }
@@ -238,6 +242,10 @@ int hex_symbol_i(hex_context_t *ctx)
             }
             HEX_FREE(ctx, item);
             return 1;
+        }
+        if (ctx->settings && ctx->settings->debugging_enabled)
+        {
+            hex_debug_validate_stack(ctx);
         }
     }
     HEX_FREE(ctx, item); // free original quotation (no aliasing remains)
