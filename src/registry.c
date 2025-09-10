@@ -141,6 +141,16 @@ int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol)
     return 1;
 }
 
+/*
+ * hex_set_symbol
+ * Ownership contract:
+ *  - Caller passes a heap-allocated hex_item_t* (value).
+ *  - This function ALWAYS consumes (frees) the passed pointer, whether it succeeds or fails.
+ *  - The registry stores its own deep copy (value_copy) and becomes sole owner.
+ *  - Callers MUST NOT use or free the original pointer after calling.
+ *  - Rationale: prevents aliasing between caller's pointer and registry entry, eliminating
+ *    double free / accidental mutation risks.
+ */
 int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int native)
 {
     hex_registry_t *registry = ctx->registry;
@@ -209,11 +219,11 @@ void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
     func_item->token->type = HEX_TOKEN_SYMBOL;
     func_item->token->value = strdup(name);
     func_item->token->position = NULL;
-
+    // hex_set_symbol consumes func_item (success or failure); never free it here afterwards.
     if (hex_set_symbol(ctx, name, func_item, 1) != 0)
     {
         hex_error(ctx, "Error: Failed to register native symbol '%s'", name);
-        hex_free_item(ctx, func_item);
+        return; // func_item already freed inside hex_set_symbol
     }
 }
 
