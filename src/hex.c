@@ -442,7 +442,9 @@ char *hex_read_file(hex_context_t *ctx, const char *filename);
 void hex_free_token(hex_token_t *token)
 {
     if (token == NULL)
+    {
         return;
+    }
 
     if (token->value)
     {
@@ -685,7 +687,9 @@ hex_item_t *hex_pop(hex_context_t *ctx)
 void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 {
     if (!quotation)
+    {
         return;
+    }
 
     for (size_t i = 0; i < size; i++)
     {
@@ -703,7 +707,9 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
 void hex_free_item(hex_context_t *ctx, hex_item_t *item)
 {
     if (item == NULL)
+    {
         return;
+    }
 
     switch (item->type)
     {
@@ -1041,7 +1047,9 @@ void hex_registry_destroy(hex_context_t *ctx)
     hex_registry_t *registry = ctx->registry;
 
     if (!registry)
+    {
         return;
+    }
 
     for (size_t i = 0; i < registry->bucket_count; i++)
     {
@@ -4122,12 +4130,18 @@ int hex_symbol_i(hex_context_t *ctx)
     }
     for (size_t i = 0; i < item->quotation_size; i++)
     {
-        if (hex_push(ctx, item->data.quotation_value[i]) != 0)
+        hex_item_t *copy = hex_copy_item(ctx, item->data.quotation_value[i]);
+        if (!copy || hex_push(ctx, copy) != 0)
         {
+            if (copy)
+            {
+                hex_free_item(ctx, copy);
+            }
             HEX_FREE(ctx, item);
             return 1;
         }
     }
+    HEX_FREE(ctx, item); // free original quotation (no aliasing remains)
     return 0;
 }
 
@@ -4215,13 +4229,19 @@ int hex_symbol_debug(hex_context_t *ctx)
     ctx->settings->debugging_enabled = 1;
     for (size_t i = 0; i < item->quotation_size; i++)
     {
-        if (hex_push(ctx, item->data.quotation_value[i]) != 0)
+        hex_item_t *copy = hex_copy_item(ctx, item->data.quotation_value[i]);
+        if (!copy || hex_push(ctx, copy) != 0)
         {
+            if (copy)
+            {
+                hex_free_item(ctx, copy);
+            }
             HEX_FREE(ctx, item);
             ctx->settings->debugging_enabled = 0;
             return 1;
         }
     }
+    HEX_FREE(ctx, item);
     ctx->settings->debugging_enabled = 0;
     return 0;
 }
@@ -6469,7 +6489,9 @@ int hex_symbol_map(hex_context_t *ctx)
             if (!elem_copy || hex_push(ctx, elem_copy) != 0)
             {
                 if (elem_copy)
+                {
                     hex_free_item(ctx, elem_copy);
+                }
                 HEX_FREE(ctx, action);
                 HEX_FREE(ctx, list);
                 hex_free_list(ctx, quotation, i);
@@ -6482,7 +6504,9 @@ int hex_symbol_map(hex_context_t *ctx)
                 if (!act_elem || hex_push(ctx, act_elem) != 0)
                 {
                     if (act_elem)
+                    {
                         hex_free_item(ctx, act_elem);
+                    }
                     HEX_FREE(ctx, action);
                     HEX_FREE(ctx, list);
                     hex_free_list(ctx, quotation, i);

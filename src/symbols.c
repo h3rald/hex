@@ -229,12 +229,18 @@ int hex_symbol_i(hex_context_t *ctx)
     }
     for (size_t i = 0; i < item->quotation_size; i++)
     {
-        if (hex_push(ctx, item->data.quotation_value[i]) != 0)
+        hex_item_t *copy = hex_copy_item(ctx, item->data.quotation_value[i]);
+        if (!copy || hex_push(ctx, copy) != 0)
         {
+            if (copy)
+            {
+                hex_free_item(ctx, copy);
+            }
             HEX_FREE(ctx, item);
             return 1;
         }
     }
+    HEX_FREE(ctx, item); // free original quotation (no aliasing remains)
     return 0;
 }
 
@@ -322,13 +328,19 @@ int hex_symbol_debug(hex_context_t *ctx)
     ctx->settings->debugging_enabled = 1;
     for (size_t i = 0; i < item->quotation_size; i++)
     {
-        if (hex_push(ctx, item->data.quotation_value[i]) != 0)
+        hex_item_t *copy = hex_copy_item(ctx, item->data.quotation_value[i]);
+        if (!copy || hex_push(ctx, copy) != 0)
         {
+            if (copy)
+            {
+                hex_free_item(ctx, copy);
+            }
             HEX_FREE(ctx, item);
             ctx->settings->debugging_enabled = 0;
             return 1;
         }
     }
+    HEX_FREE(ctx, item);
     ctx->settings->debugging_enabled = 0;
     return 0;
 }
