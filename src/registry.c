@@ -32,7 +32,7 @@ static size_t hash_function(const char *key, size_t bucket_count)
 
 hex_registry_t *hex_registry_create()
 {
-    hex_registry_t *registry = malloc(sizeof(hex_registry_t));
+    hex_registry_t *registry = calloc(1, sizeof(hex_registry_t));
     if (registry == NULL)
     {
         return NULL;
@@ -201,7 +201,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
     }
 
     // Add a new entry to the bucket
-    hex_registry_entry_t *new_entry = malloc(sizeof(hex_registry_entry_t));
+    hex_registry_entry_t *new_entry = calloc(1, sizeof(hex_registry_entry_t));
     if (new_entry == NULL)
     {
         return 1; // Memory allocation failed

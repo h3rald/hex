@@ -1708,7 +1708,12 @@ int hex_symbol_split(hex_context_t *ctx)
                     {
                         capacity *= 2;
                         hex_item_t **tmp = (hex_item_t **)realloc(quotation, capacity * sizeof(hex_item_t *));
-                        if (!tmp) { hex_error(ctx, "[symbol split] Memory allocation failed"); result = 1; break; }
+                        if (!tmp)
+                        {
+                            hex_error(ctx, "[symbol split] Memory allocation failed");
+                            result = 1;
+                            break;
+                        }
                         quotation = tmp;
                         if (!quotation)
                         {
