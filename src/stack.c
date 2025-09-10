@@ -47,7 +47,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
 
     if (item->type == HEX_TYPE_USER_SYMBOL)
     {
-        hex_item_t *value = malloc(sizeof(hex_item_t));
+        hex_item_t *value = calloc(1, sizeof(hex_item_t));
         if (value == NULL)
         {
             hex_error(ctx, "[push] Failed to allocate memory for value");
@@ -87,7 +87,7 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     }
     else if (item->type == HEX_TYPE_NATIVE_SYMBOL)
     {
-        hex_item_t *value = malloc(sizeof(hex_item_t));
+        hex_item_t *value = calloc(1, sizeof(hex_item_t));
         if (value == NULL)
         {
             hex_error(ctx, "[push] Failed to allocate memory for value");
@@ -243,7 +243,7 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     if (ctx->stack->top < 0)
     {
         hex_error(ctx, "[pop] Insufficient items on the stack");
-        hex_item_t *item = malloc(sizeof(hex_item_t));
+        hex_item_t *item = calloc(1, sizeof(hex_item_t));
         if (item)
         {
             item->type = HEX_TYPE_INVALID;
