@@ -5265,7 +5265,7 @@ int hex_symbol_cat(hex_context_t *ctx)
     if (list->type == HEX_TYPE_QUOTATION && value->type == HEX_TYPE_QUOTATION)
     {
         size_t new_size = list->quotation_size + value->quotation_size;
-        hex_item_t **items = (hex_item_t **)malloc(new_size * sizeof(hex_item_t *));
+        hex_item_t **items = (hex_item_t **)calloc(new_size, sizeof(hex_item_t *));
         if (!items)
         {
             hex_error(ctx, "[symbol cat] Memory allocation failed");
@@ -6533,7 +6533,7 @@ int hex_symbol_map(hex_context_t *ctx)
     else
     {
         // Allocate result quotation (array of element pointers)
-        hex_item_t **quotation = (hex_item_t **)malloc(list->quotation_size * sizeof(hex_item_t *));
+        hex_item_t **quotation = (hex_item_t **)calloc(list->quotation_size, sizeof(hex_item_t *));
         if (!quotation)
         {
             hex_error(ctx, "[symbol map] Memory allocation failed");
