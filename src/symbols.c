@@ -1333,64 +1333,90 @@ int hex_symbol_cat(hex_context_t *ctx)
         HEX_FREE(ctx, value);
         return 1; // Failed to pop list
     }
-
-    int result = 0;
-
+    // Strategy: produce a fresh result (deep copies) and consume both inputs.
+    // This avoids aliasing between the original quotations and the new one.
     if (list->type == HEX_TYPE_QUOTATION && value->type == HEX_TYPE_QUOTATION)
     {
-        // Concatenate two quotations
-        size_t newSize = list->quotation_size + value->quotation_size;
-        hex_item_t **newQuotation = (hex_item_t **)realloc(
-            list->data.quotation_value, newSize * sizeof(hex_item_t));
-        if (!newQuotation)
+        size_t new_size = list->quotation_size + value->quotation_size;
+        hex_item_t **items = (hex_item_t **)malloc(new_size * sizeof(hex_item_t *));
+        if (!items)
         {
             hex_error(ctx, "[symbol cat] Memory allocation failed");
-            result = 1;
+            HEX_FREE(ctx, list);
+            HEX_FREE(ctx, value);
+            return 1;
         }
-        else
+        size_t k = 0;
+        for (size_t i = 0; i < list->quotation_size; i++)
         {
-            // Append items from the second quotation
-            for (size_t i = 0; i < (size_t)value->quotation_size; i++)
+            items[k] = hex_copy_item(ctx, list->data.quotation_value[i]);
+            if (!items[k])
             {
-                newQuotation[list->quotation_size + i] = value->data.quotation_value[i];
+                hex_error(ctx, "[symbol cat] Failed to copy element");
+                hex_free_list(ctx, items, k);
+                HEX_FREE(ctx, list);
+                HEX_FREE(ctx, value);
+                return 1;
             }
-
-            list->data.quotation_value = newQuotation;
-            list->quotation_size = newSize;
-            result = hex_push_quotation(ctx, list->data.quotation_value, newSize);
+            k++;
         }
+        for (size_t i = 0; i < value->quotation_size; i++)
+        {
+            items[k] = hex_copy_item(ctx, value->data.quotation_value[i]);
+            if (!items[k])
+            {
+                hex_error(ctx, "[symbol cat] Failed to copy element");
+                hex_free_list(ctx, items, k);
+                HEX_FREE(ctx, list);
+                HEX_FREE(ctx, value);
+                return 1;
+            }
+            k++;
+        }
+        if (hex_push_quotation(ctx, items, new_size) != 0)
+        {
+            hex_free_list(ctx, items, new_size);
+            HEX_FREE(ctx, list);
+            HEX_FREE(ctx, value);
+            return 1;
+        }
+        // Ownership of items array & its elements transferred; DO NOT free(items)
+        HEX_FREE(ctx, list);
+        HEX_FREE(ctx, value);
+        return 0;
     }
     else if (list->type == HEX_TYPE_STRING && value->type == HEX_TYPE_STRING)
     {
-        // Concatenate two strings
-        size_t newLength = strlen(list->data.str_value) + strlen(value->data.str_value) + 1;
-        char *newStr = (char *)malloc(newLength);
-        if (!newStr)
+        size_t new_len = strlen(list->data.str_value) + strlen(value->data.str_value) + 1;
+        char *buf = (char *)malloc(new_len);
+        if (!buf)
         {
             hex_error(ctx, "[symbol cat] Memory allocation failed");
-            result = 1;
+            HEX_FREE(ctx, list);
+            HEX_FREE(ctx, value);
+            return 1;
         }
-        else
+        strcpy(buf, list->data.str_value);
+        strcat(buf, value->data.str_value);
+        if (hex_push_string(ctx, buf) != 0)
         {
-            strcpy(newStr, list->data.str_value);
-            strcat(newStr, value->data.str_value);
-            result = hex_push_string(ctx, newStr);
+            free(buf);
+            HEX_FREE(ctx, list);
+            HEX_FREE(ctx, value);
+            return 1;
         }
+        free(buf); // temporary buffer
+        HEX_FREE(ctx, list);
+        HEX_FREE(ctx, value);
+        return 0;
     }
     else
     {
         hex_error(ctx, "[symbol cat] Two quotations or two strings required");
-        result = 1;
-    }
-
-    // Free resources if the operation fails
-    if (result != 0)
-    {
         HEX_FREE(ctx, list);
         HEX_FREE(ctx, value);
+        return 1;
     }
-
-    return result;
 }
 
 int hex_symbol_len(hex_context_t *ctx)
