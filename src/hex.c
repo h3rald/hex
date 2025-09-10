@@ -4009,6 +4009,8 @@ int hex_symbol_store(hex_context_t *ctx)
         HEX_FREE(ctx, value);
         return 1;
     }
+    // Success: registry takes ownership of 'value'. Free name only.
+    HEX_FREE(ctx, name);
     return 0;
 }
 
@@ -4050,7 +4052,8 @@ int hex_symbol_define(hex_context_t *ctx)
         HEX_FREE(ctx, value);
         return 1;
     }
-
+    // Success: registry now owns 'value'; free only the name item.
+    HEX_FREE(ctx, name);
     return 0;
 }
 
@@ -4081,6 +4084,8 @@ int hex_symbol_free(hex_context_t *ctx)
         HEX_FREE(ctx, item);
         return 1;
     }
+    // Success: free the popped symbol name item
+    HEX_FREE(ctx, item);
     return 0;
 }
 
@@ -4243,6 +4248,7 @@ int hex_symbol_eval(hex_context_t *ctx)
     {
         int result = hex_interpret(ctx, item->data.str_value, file->data.str_value, 1, 1);
         HEX_FREE(ctx, item);
+        HEX_FREE(ctx, file);
         return result;
     }
     else if (item->type == HEX_TYPE_QUOTATION)
@@ -4253,6 +4259,7 @@ int hex_symbol_eval(hex_context_t *ctx)
             {
                 hex_error(ctx, "[symbol !] Quotation must contain only integers");
                 HEX_FREE(ctx, item);
+                HEX_FREE(ctx, file);
                 return 1;
             }
         }
@@ -4273,7 +4280,10 @@ int hex_symbol_eval(hex_context_t *ctx)
         int result = hex_interpret_bytecode(ctx, bytecode, item->quotation_size, file->data.str_value);
         // Restore the original symbol table
         ctx->symbol_table = symbol_table_copy;
-        return result;
+        free(bytecode);
+        HEX_FREE(ctx, item);
+        HEX_FREE(ctx, file);
+        return result; // NOTE: potential leak of mutated symbol table not restored (pre-existing design)
     }
     else
     {
