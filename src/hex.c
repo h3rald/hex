@@ -381,24 +381,6 @@ int hex_symbol_stack(hex_context_t *ctx);
 int hex_symbol_drop(hex_context_t *ctx);
 int hex_symbol_timestamp(hex_context_t *ctx);
 
-// Debug / integrity helpers (always callable; no-op stubs in non-DEBUG builds)
-#ifdef DEBUG
-int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item);
-int hex_debug_validate_stack(hex_context_t *ctx);
-#else
-static inline int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
-{
-    (void)ctx;
-    (void)item;
-    return 0;
-}
-static inline int hex_debug_validate_stack(hex_context_t *ctx)
-{
-    (void)ctx;
-    return 0;
-}
-#endif
-
 // Opcodes
 uint8_t hex_symbol_to_opcode(const char *symbol);
 const char *hex_opcode_to_symbol(uint8_t opcode);
@@ -493,11 +475,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         hex_error(ctx, "[push] Stack overflow");
         return 1;
     }
-    if (ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate existing stack before modification
-        hex_debug_validate_stack(ctx);
-    }
     hex_debug_item(ctx, "PUSH", item);
     int result = 0;
 
@@ -574,11 +551,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     else
     {
         hex_debug_item(ctx, "FAIL", item);
-    }
-    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate stack after successful push
-        hex_debug_validate_stack(ctx);
     }
     return result;
 }
@@ -693,11 +665,6 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
-    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate the just-pushed quotation structure specifically
-        hex_validate_quotation_integrity(ctx, item);
-    }
     return result;
 }
 
@@ -742,11 +709,6 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     ctx->stack->top--;
 
     hex_debug_item(ctx, " POP", item);
-    if (ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate remaining stack after pop (helps catch corruption on removal)
-        hex_debug_validate_stack(ctx);
-    }
     return item;
 }
 
@@ -762,6 +724,7 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         if (quotation[i])
         {
             hex_debug(ctx, "FREE: item #%zu", i);
+            hex_debug_item(ctx, "- item", quotation[i]);
             hex_free_item(ctx, quotation[i]); // Free each item
             quotation[i] = NULL;              // Prevent double free
         }
@@ -3393,17 +3356,14 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
     while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
         int result = 0;
-        int token_consumed = 0; // Track whether the token was consumed by a function
-
+        
         if (token->type == HEX_TOKEN_INTEGER)
         {
             result = hex_push_integer(ctx, hex_parse_integer(token->value));
-            // Token is not consumed by hex_push_integer, we need to free it
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
             result = hex_push_string(ctx, token->value);
-            // Token is not consumed by hex_push_string, we need to free it
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
@@ -3416,14 +3376,12 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
                 token->position->filename = strdup(filename);
             }
             result = hex_push_symbol(ctx, token);
-            // hex_push_symbol now copies the token (from Patch 2), so we should free the original
-            // Token is not consumed, we need to free it
+            // hex_push_symbol copies the token (from Patch 2), so we free the original
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
             hex_error(ctx, "(%d,%d) Unexpected end of quotation", position.line, position.column);
             result = 1;
-            // Token is not consumed, we need to free it
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
@@ -3432,21 +3390,18 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
             {
                 hex_error(ctx, "(%d,%d) Failed to allocate memory for quotation", position.line, position.column);
                 result = 1;
-                // Token is not consumed, we need to free it
             }
             else if (hex_parse_quotation(ctx, &input, quotationItem, &position) != 0)
             {
                 hex_error(ctx, "(%d,%d) Failed to parse quotation", position.line, position.column);
                 free(quotationItem);
                 result = 1;
-                // Token is not consumed, we need to free it
             }
             else
             {
                 result = hex_push_quotation(ctx, quotationItem->data.quotation_value, quotationItem->quotation_size);
                 // Don't free quotationItem here as its content is now owned by the stack
                 free(quotationItem); // Only free the wrapper, not the contents
-                // Token is not consumed, we need to free it
             }
         }
 
@@ -3458,12 +3413,9 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
             return result;
         }
 
-        // Always free the token after processing since none of the above functions consume it
-        // With Patch 2, hex_push_symbol now copies tokens, so we always own the original
-        if (!token_consumed)
-        {
-            hex_free_token(token);
-        }
+        // Always free the token after processing since no function consumes it
+        // All push functions copy the token data they need, so we own the original
+        hex_free_token(token);
 
         token = hex_next_token(ctx, &input, &position);
     }
@@ -4241,10 +4193,6 @@ int hex_symbol_type(hex_context_t *ctx)
         return 1;
     }
     int result = hex_push_string(ctx, hex_type(item->type));
-    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
-    {
-        hex_debug_validate_stack(ctx);
-    }
     HEX_FREE(ctx, item);
     return result;
 }
@@ -4277,10 +4225,6 @@ int hex_symbol_i(hex_context_t *ctx)
             }
             HEX_FREE(ctx, item);
             return 1;
-        }
-        if (ctx->settings && ctx->settings->debugging_enabled)
-        {
-            hex_debug_validate_stack(ctx);
         }
     }
     HEX_FREE(ctx, item); // free original quotation (no aliasing remains)
@@ -6864,60 +6808,6 @@ int hex_symbol_timestamp(hex_context_t *ctx)
     }
     return 0;
 }
-
-#ifdef DEBUG
-// Recursively validate that quotations do not share element pointers with siblings.
-// Returns 0 on success, 1 if a potential aliasing issue is detected.
-int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
-{
-    (void)ctx;
-    if (!item)
-    {
-        return 0;
-    }
-    if (item->type != HEX_TYPE_QUOTATION || item->quotation_size == 0)
-    {
-        return 0;
-    }
-    // Simple O(n^2) pointer identity check among siblings; acceptable for debug.
-    for (size_t i = 0; i < item->quotation_size; i++)
-    {
-        hex_item_t *a = item->data.quotation_value[i];
-        for (size_t j = i + 1; j < item->quotation_size; j++)
-        {
-            if (a == item->data.quotation_value[j])
-            {
-                hex_error(ctx, "[integrity] Quotation has duplicated element pointer at %zu and %zu", i, j);
-                return 1;
-            }
-        }
-        // Recurse
-        if (hex_validate_quotation_integrity(ctx, a) != 0)
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int hex_debug_validate_stack(hex_context_t *ctx)
-{
-    if (!ctx || !ctx->stack)
-    {
-        return 0;
-    }
-    for (int i = 0; i <= ctx->stack->top; i++)
-    {
-        hex_item_t *it = ctx->stack->entries[i];
-        if (it && hex_validate_quotation_integrity(ctx, it) != 0)
-        {
-            hex_error(ctx, "[integrity] Detected potential aliasing at stack index %d", i);
-            return 1;
-        }
-    }
-    return 0;
-}
-#endif
 
 ////////////////////////////////////////
 // Native Symbol Registration         //

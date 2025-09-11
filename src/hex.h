@@ -378,24 +378,6 @@ int hex_symbol_stack(hex_context_t *ctx);
 int hex_symbol_drop(hex_context_t *ctx);
 int hex_symbol_timestamp(hex_context_t *ctx);
 
-// Debug / integrity helpers (always callable; no-op stubs in non-DEBUG builds)
-#ifdef DEBUG
-int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item);
-int hex_debug_validate_stack(hex_context_t *ctx);
-#else
-static inline int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
-{
-    (void)ctx;
-    (void)item;
-    return 0;
-}
-static inline int hex_debug_validate_stack(hex_context_t *ctx)
-{
-    (void)ctx;
-    return 0;
-}
-#endif
-
 // Opcodes
 uint8_t hex_symbol_to_opcode(const char *symbol);
 const char *hex_opcode_to_symbol(uint8_t opcode);

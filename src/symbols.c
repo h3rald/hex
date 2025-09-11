@@ -187,10 +187,6 @@ int hex_symbol_type(hex_context_t *ctx)
         return 1;
     }
     int result = hex_push_string(ctx, hex_type(item->type));
-    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
-    {
-        hex_debug_validate_stack(ctx);
-    }
     HEX_FREE(ctx, item);
     return result;
 }
@@ -223,10 +219,6 @@ int hex_symbol_i(hex_context_t *ctx)
             }
             HEX_FREE(ctx, item);
             return 1;
-        }
-        if (ctx->settings && ctx->settings->debugging_enabled)
-        {
-            hex_debug_validate_stack(ctx);
         }
     }
     HEX_FREE(ctx, item); // free original quotation (no aliasing remains)
@@ -2810,60 +2802,6 @@ int hex_symbol_timestamp(hex_context_t *ctx)
     }
     return 0;
 }
-
-#ifdef DEBUG
-// Recursively validate that quotations do not share element pointers with siblings.
-// Returns 0 on success, 1 if a potential aliasing issue is detected.
-int hex_validate_quotation_integrity(hex_context_t *ctx, const hex_item_t *item)
-{
-    (void)ctx;
-    if (!item)
-    {
-        return 0;
-    }
-    if (item->type != HEX_TYPE_QUOTATION || item->quotation_size == 0)
-    {
-        return 0;
-    }
-    // Simple O(n^2) pointer identity check among siblings; acceptable for debug.
-    for (size_t i = 0; i < item->quotation_size; i++)
-    {
-        hex_item_t *a = item->data.quotation_value[i];
-        for (size_t j = i + 1; j < item->quotation_size; j++)
-        {
-            if (a == item->data.quotation_value[j])
-            {
-                hex_error(ctx, "[integrity] Quotation has duplicated element pointer at %zu and %zu", i, j);
-                return 1;
-            }
-        }
-        // Recurse
-        if (hex_validate_quotation_integrity(ctx, a) != 0)
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-int hex_debug_validate_stack(hex_context_t *ctx)
-{
-    if (!ctx || !ctx->stack)
-    {
-        return 0;
-    }
-    for (int i = 0; i <= ctx->stack->top; i++)
-    {
-        hex_item_t *it = ctx->stack->entries[i];
-        if (it && hex_validate_quotation_integrity(ctx, it) != 0)
-        {
-            hex_error(ctx, "[integrity] Detected potential aliasing at stack index %d", i);
-            return 1;
-        }
-    }
-    return 0;
-}
-#endif
 
 ////////////////////////////////////////
 // Native Symbol Registration         //

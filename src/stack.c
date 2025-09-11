@@ -42,11 +42,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
         hex_error(ctx, "[push] Stack overflow");
         return 1;
     }
-    if (ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate existing stack before modification
-        hex_debug_validate_stack(ctx);
-    }
     hex_debug_item(ctx, "PUSH", item);
     int result = 0;
 
@@ -123,11 +118,6 @@ int hex_push(hex_context_t *ctx, hex_item_t *item)
     else
     {
         hex_debug_item(ctx, "FAIL", item);
-    }
-    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate stack after successful push
-        hex_debug_validate_stack(ctx);
     }
     return result;
 }
@@ -242,11 +232,6 @@ int hex_push_quotation(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
-    if (result == 0 && ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate the just-pushed quotation structure specifically
-        hex_validate_quotation_integrity(ctx, item);
-    }
     return result;
 }
 
@@ -291,11 +276,6 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     ctx->stack->top--;
 
     hex_debug_item(ctx, " POP", item);
-    if (ctx->settings && ctx->settings->debugging_enabled)
-    {
-        // Validate remaining stack after pop (helps catch corruption on removal)
-        hex_debug_validate_stack(ctx);
-    }
     return item;
 }
 
@@ -311,6 +291,7 @@ void hex_free_list(hex_context_t *ctx, hex_item_t **quotation, size_t size)
         if (quotation[i])
         {
             hex_debug(ctx, "FREE: item #%zu", i);
+            hex_debug_item(ctx, "- item", quotation[i]);
             hex_free_item(ctx, quotation[i]); // Free each item
             quotation[i] = NULL;              // Prevent double free
         }
