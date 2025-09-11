@@ -76,17 +76,14 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
     while (token != NULL && token->type != HEX_TOKEN_INVALID)
     {
         int result = 0;
-        int token_consumed = 0; // Track whether the token was consumed by a function
-
+        
         if (token->type == HEX_TOKEN_INTEGER)
         {
             result = hex_push_integer(ctx, hex_parse_integer(token->value));
-            // Token is not consumed by hex_push_integer, we need to free it
         }
         else if (token->type == HEX_TOKEN_STRING)
         {
             result = hex_push_string(ctx, token->value);
-            // Token is not consumed by hex_push_string, we need to free it
         }
         else if (token->type == HEX_TOKEN_SYMBOL)
         {
@@ -99,14 +96,12 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
                 token->position->filename = strdup(filename);
             }
             result = hex_push_symbol(ctx, token);
-            // hex_push_symbol now copies the token (from Patch 2), so we should free the original
-            // Token is not consumed, we need to free it
+            // hex_push_symbol copies the token (from Patch 2), so we free the original
         }
         else if (token->type == HEX_TOKEN_QUOTATION_END)
         {
             hex_error(ctx, "(%d,%d) Unexpected end of quotation", position.line, position.column);
             result = 1;
-            // Token is not consumed, we need to free it
         }
         else if (token->type == HEX_TOKEN_QUOTATION_START)
         {
@@ -115,21 +110,18 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
             {
                 hex_error(ctx, "(%d,%d) Failed to allocate memory for quotation", position.line, position.column);
                 result = 1;
-                // Token is not consumed, we need to free it
             }
             else if (hex_parse_quotation(ctx, &input, quotationItem, &position) != 0)
             {
                 hex_error(ctx, "(%d,%d) Failed to parse quotation", position.line, position.column);
                 free(quotationItem);
                 result = 1;
-                // Token is not consumed, we need to free it
             }
             else
             {
                 result = hex_push_quotation(ctx, quotationItem->data.quotation_value, quotationItem->quotation_size);
                 // Don't free quotationItem here as its content is now owned by the stack
                 free(quotationItem); // Only free the wrapper, not the contents
-                // Token is not consumed, we need to free it
             }
         }
 
@@ -141,12 +133,9 @@ int hex_interpret(hex_context_t *ctx, const char *code, const char *filename, in
             return result;
         }
 
-        // Always free the token after processing since none of the above functions consume it
-        // With Patch 2, hex_push_symbol now copies tokens, so we always own the original
-        if (!token_consumed)
-        {
-            hex_free_token(token);
-        }
+        // Always free the token after processing since no function consumes it
+        // All push functions copy the token data they need, so we own the original
+        hex_free_token(token);
 
         token = hex_next_token(ctx, &input, &position);
     }
