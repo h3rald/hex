@@ -193,8 +193,9 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
         if (strcmp(entry->key, key) == 0)
         {
             // Key already exists, update its value
-            hex_free_item(ctx, entry->value); // Free old value
-            entry->value = value;
+            hex_item_t *old_value = entry->value;
+            entry->value = value;          // Assign new value first
+            hex_free_item(ctx, old_value); // Then free old value
             return 0;
         }
         entry = entry->next;
