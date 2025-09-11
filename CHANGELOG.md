@@ -1,6 +1,7 @@
 <article>
     <h2>Changelog</h2>
     <ul>
+<li><a href="#v0.6.0">v0.6.0</a></li>
 <li><a href="#v0.5.0">v0.5.0</a></li>
 <li><a href="#v0.4.1">v0.4.1</a></li>
 <li><a href="#v0.4.0">v0.4.0</a></li>
@@ -8,13 +9,41 @@
 <li><a href="#v0.2.0">v0.2.0</a></li>
 <li><a href="#v0.1.0">v0.1.0</a></li>
 </ul>
+<h3 id="v0.6.0">v0.6.0 &mdash; 2025-11-09</h3>
+
+<h4>Breaking Changes</h4>
+<ul>
+    <li>Removed <code>debug</code> symbol.</li>
+</ul>
+
+<h4>New Features</h4>
+<ul>
+    <li>Added symbol <a href="https://hex.2c.fyi/spec#timestamp-symbol">timestamp</a>.</li>
+    <li>Implemented the possibility to load additional <code>.hex</code> or <code>.hbx</code> files at startup by using the <code>-l, --load</code>
+        option.
+    </li>
+    <li>Implemented a <code>utils.hex</code> library as part of the <a href="https://hex.2c.fyi/lib/">Standard Library</a>,
+        containing additional utility symbols (loaded automatically in the playground).</li>
+</ul>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Fixed some documentation typos and inaccuracies.</li>
+    <li>Improved memory management</li>
+</ul>
+
+<h4>Chores</h4>
+<ul>
+    <li>Added tests for <code>utils.hex</code></li>
+    <li>Implemented a basic <code>doc.hex</code> script to generate reference documentation from hex files.</li>
+</ul>
 <h3 id="v0.5.0">v0.5.0 &mdash; 2025-04-08</h3>
 
 <h4>Breaking Changes</h4>
 <ul>
     <li>Renamed <code>pop</code> to <a href="https://hex.2c.fyi/spec#drop-symbol">drop</a>.</li>
     <li>Renamed <code>replace</code> to <a href="https://hex.2c.fyi/spec#sub-symbol">sub</a>.</li>
-    <li><a href="https://hex.2c.fyi/spec#eval-symbol">!</a> now requires an extra string on the stack to be used as the file name/identifier in stack traces.
+    <li><a href="https://hex.2c.fyi/spec#eval-symbol">!</a> now requires an extra string on the stack to be used as the file name/identifier in stack traces.</li>
 </ul>
 
 <h4>Fixes</h4>
