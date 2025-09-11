@@ -1,7 +1,15 @@
-;;;;; Standard Utilities (utils.hex)
+;;;;;; utils.hex
+;;;;; Standard Utilities (utils.hex)<a name="utils.hex"></a>
 ;;;;; This file contains a collection of standardized utility symbols extending the native symbols of the hex programming language.
+;;;;; <ul>
+;;;;; <li><a href="#utils.hex_input-output">Input/Output Symbols</a></li>
+;;;;; <li><a href="#utils.hex_control-flow">Control Flow Symbols</a></li>
+;;;;; <li><a href="#utils.hex_quotation">Quotation Symbols</a></li>
+;;;;; <li><a href="#utils.hex_stack-management">Stack Management Symbols</a></li>
+;;;;; <li><a href="#utils.hex_string">String Symbols</a></li>
+;;;;; </ul>
 
-;;;; Input/Output Symbols
+;;;; <a name="utils.hex_input-output"></a>Input/Output Symbols
 ;;;; These additional symbols are used for input and output operations.
 
 ;;; dputs
@@ -11,7 +19,7 @@
   dup puts
 ) "dputs" ::
 
-;;;; Control Flow Symbols
+;;;; <a name="utils.hex_control-flow"></a>Control Flow Symbols
 ;;;; These symbols are used for controlling the flow of execution in a program.
 
 ;;; unless
@@ -31,7 +39,7 @@
   if
 ) "when" ::
 
-;;;; Quotation Symbols
+;;;; <a name="utils.hex_quotation"></a>Quotation Symbols
 ;;;; These additional symbols are used for manipulating quotations.
 
 ;;; cons
@@ -349,7 +357,7 @@
   "_unswons_c"      #
 ) "unswons" ::
 
-;;;; Stack Management Symbols
+;;;; <a name="utils.hex_stack-management"></a>Stack Management Symbols
 ;;;; These additional symbols are used for manipulating the stack.
 
 ;;; dip
@@ -368,7 +376,7 @@
   "_over_a" #
 ) "over" ::
 
-;;;; String Symbols
+;;;; <a name="utils.hex_string"></a>String Symbols
 ;;;; These additional symbols are used for manipulating strings.
 
 ;;; begins

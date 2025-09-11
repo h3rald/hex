@@ -708,6 +708,7 @@ hex_item_t *hex_pop(hex_context_t *ctx)
     ctx->stack->entries[ctx->stack->top] = NULL; // Clear the stack reference
     ctx->stack->top--;
 
+    // Copying the item to avoid ownership issues when freeing
     hex_item_t *item = hex_copy_item(ctx, orig_item);
     hex_debug_item(ctx, " POP", item);
     return item;

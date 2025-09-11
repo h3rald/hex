@@ -157,10 +157,11 @@ article textarea {
     field-sizing: content;
     color: white;
     display: flex;
-    margin: 1rem; 
+    margin: 1rem;
 }
 
-article input:focus, article textarea:focus {
+article input:focus,
+article textarea:focus {
     outline: none;
 }
 
@@ -222,11 +223,15 @@ article nav {
     font-size: 90%;
 }
 
-a[href^="#top"]::before {
+h3 [href^="#top"]::before,
+h4 [href^="#top"]::before,
+h5 [href^="#top"]::before {
     content: "↑ ";
 }
 
-a[href^="#top"] {
+h3 a[href],
+h4 a[href],
+h5 a[href] {
     font-size: 80%;
     text-decoration: none;
     vertical-align: super;

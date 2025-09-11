@@ -20,10 +20,25 @@ INFILE read "\n" split "LINES" :
 
 "" "PREV" :
 "" "OUT"  :
+"" "ID"   :
 LINES
     (
         "LINE" :
-        (LINE ";;;;; " begins)
+        (LINE ";;;;;; " begins)
+            ; ID
+            (
+                LINE ";;;;;; " "" sub "ID" :
+                "id" "PREV" :
+            )
+        when
+        (LINE ";;;;; <" begins)
+            ; TOC
+            (
+                LINE ";;;;; <" "" sub () cons "<${0}\n" swap fmt OUT swap cat "OUT" :
+                "tag" "PREV" :
+            )
+        when
+        (LINE ";;;;; " begins "tag" PREV != and)
             (
                 ("h3" PREV ==)
                     ; Paragraph after title
@@ -33,7 +48,7 @@ LINES
                     )
                     ; H3
                     (
-                        LINE ";;;;; " "" sub () cons "<h3>${0}</h2>\n" swap fmt OUT swap cat "OUT" :
+                        LINE ";;;;; " "" sub () cons "<h3>${0}</h3>\n" swap fmt OUT swap cat "OUT" :
                         "h3" "PREV" :
                     )
                 if
@@ -49,7 +64,7 @@ LINES
                     )
                     ; H4
                     (
-                        LINE ";;;; " "" sub () cons "<h4>${0}</h3>\n" swap fmt OUT swap cat "OUT" :
+                        LINE ";;;; " "" sub (ID) cons "<h4>${0}<a href=\"#${1}\">&uarr;</a></h4>\n" swap fmt OUT swap cat "OUT" :
                         "h4" "PREV" :
                     )
                 if
@@ -57,7 +72,7 @@ LINES
         when 
         (LINE ";;; " begins)
             (
-                LINE ";;; " "" sub () cons "<h5 id=\"${0}-symbol\"><code><span class=\"hex-symbol\">${0}</span></code> Symbol</h5><a href=\"top\"></a>\n" swap fmt OUT swap cat "OUT" :
+                LINE ";;; " "" sub (ID) cons "<h5 id=\"${0}-symbol\"><code><span class=\"hex-symbol\">${0}</span></code> Symbol<a href=\"#${1}\">&uarr;</a></h5>\n" swap fmt OUT swap cat "OUT" :
                 "sym" "PREV" :
             )
         when
@@ -84,4 +99,5 @@ OUT OUTFILE write
 "OUT"       #
 "PREV"      #
 "LINES"     #
-"INFILE"      #
+"INFILE"    #
+"ID"        #
