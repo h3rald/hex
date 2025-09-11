@@ -197,7 +197,16 @@ hex_item_t *hex_symbol_item(hex_context_t *ctx, hex_token_t *token)
         return NULL;
     }
     item->type = hex_valid_native_symbol(ctx, token->value) ? HEX_TYPE_NATIVE_SYMBOL : HEX_TYPE_USER_SYMBOL;
-    item->token = token;
+
+    // Make a copy of the token for this item to ensure clear ownership
+    item->token = hex_copy_token(ctx, token);
+    if (item->token == NULL)
+    {
+        hex_error(ctx, "[create symbol] Failed to copy token");
+        free(item);
+        return NULL;
+    }
+
     item->is_operator = 0;
     item->quotation_size = 0;
     return item;
@@ -249,6 +258,15 @@ int hex_push_symbol(hex_context_t *ctx, hex_token_t *token)
         return 1;
     }
     int result = HEX_PUSH(ctx, item);
+
+    // Since hex_symbol_item now copies the token, we should free the original
+    // token here to maintain clear ownership
+    if (result != 0)
+    {
+        // If push failed, we need to clean up the item we created
+        hex_free_item(ctx, item);
+    }
+
     return result;
 }
 
