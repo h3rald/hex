@@ -431,6 +431,141 @@
     )
     ;217
 
+    ;------------------------------------------------------------------------;
+    ; Refactoring-safety tests: ownership, stack, error recovery, boundaries ;
+    ;------------------------------------------------------------------------;
+
+    ; --- Group 1: Quotation ownership & deep-copy correctness
+
+    ; A: map with quotation-typed results — copies action results into new quotation
+    ((0x1 0x2) (') map ((0x1) (0x2)) ==)
+    ; B: if then-branch — copies string items from thenBlock quotation
+    (("hello" len 0x3 >) ("yes") ("no") if "yes" ==)
+    ; C: if else-branch — copies string items from elseBlock quotation
+    (("hi" len 0xa >) ("yes") ("no") if "no" ==)
+    ; D: while building a quotation — copy cycle across iterations
+    (
+        () "_wd_q" :
+        0x0 "_wd_i" :
+        (_wd_i 0x5 <)
+        (
+            _wd_q _wd_i ' cat "_wd_q" :
+            _wd_i 0x1 + "_wd_i" :
+        )
+        while
+        _wd_q (0x0 0x1 0x2 0x3 0x4) == "_wd_q" # "_wd_i" #
+    )
+    ;221
+
+    ; E: nested while loops — copy+free cycle across nested iterations (3x3=9)
+    (
+        0x0 "_we_sum" :
+        0x0 "_we_i" :
+        (_we_i 0x3 <)
+        (
+            0x0 "_we_j" :
+            (_we_j 0x3 <)
+            (
+                _we_sum 0x1 + "_we_sum" :
+                _we_j 0x1 + "_we_j" :
+            )
+            while
+            "_we_j" #
+            _we_i 0x1 + "_we_i" :
+        )
+        while
+        _we_sum 0x9 == "_we_sum" # "_we_i" #
+    )
+    ; F: user-defined operator (::) body — hex_push copies operator body items
+    (
+        (' cat) "_wrapcat" ::
+        (0x1) 0x2 _wrapcat (0x1 0x2) == "_wrapcat" #
+    )
+    ; G: each on heterogeneous quotation (int + string + nested quotation)
+    (
+        0x0 "_eg_count" :
+        ("hello" 0x2a (0x1 0x2)) (drop _eg_count 0x1 + "_eg_count" :) each
+        _eg_count 0x3 == "_eg_count" #
+    )
+    ; H: filter retaining quotation-typed elements
+    ((() (0x1) (0x1 0x2)) (len 0x0 >) filter ((0x1) (0x1 0x2)) ==)
+    ;225
+
+    ; I: get returning a quotation from a nested structure — returned item is owned independently
+    (((0x1 0x2) (0x3 0x4)) 0x1 get (0x3 0x4) ==)
+    ; J: cat of nested quotations — result owns deep copies of both sources
+    (((0x1) (0x2)) ((0x3)) cat ((0x1) (0x2) (0x3)) ==)
+    ;227
+
+    ; --- Group 2: Stack manipulation with complex types
+
+    ; K: swap two quotations — both independently owned after swap
+    ((0x1 0x2) (0x3 0x4) swap (0x1 0x2) == swap (0x3 0x4) == and)
+    ; L: quote + dup + dequote — dup produces independent deep copy
+    (0x1 ' dup . swap . and)
+    ; M: 4-level nested quotation dequote chain — recursive hex_copy_item
+    (((((0x2a)))) . . . . 0x2a ==)
+    ; N: variable re-binding inside loop — : doesn't alias old and new values
+    (
+        (0x1) "_vr_v" :
+        0x0 "_vr_i" :
+        (_vr_i 0x3 <)
+        (
+            _vr_v _vr_i ' cat "_vr_v" :
+            _vr_i 0x1 + "_vr_i" :
+        )
+        while
+        _vr_v (0x1 0x0 0x1 0x2) == "_vr_v" # "_vr_i" #
+    )
+    ;231
+
+    ; --- Group 3: Error recovery paths
+
+    ; O: try inside while, error thrown mid-loop, loop resumes after catch
+    (
+        0x0 "_to_i" :
+        (_to_i 0x3 <)
+        (
+            ((_to_i 0x2 ==) ("found-2" throw) when)
+            (error drop)
+            try
+            _to_i 0x1 + "_to_i" :
+        )
+        while
+        _to_i 0x3 == "_to_i" #
+    )
+    ; P: throw with dynamically-built error message — string ownership through throw/error
+    (("error-" "42" cat throw) (error) try "error-42" ==)
+    ; Q: sequential try blocks have independent error state
+    (
+        ("first" throw) (error) try "first" ==
+        ("second" throw) (error) try "second" ==
+        and
+    )
+    ;234
+
+    ; --- Group 4: Boundary conditions and untested symbols
+
+    ; R: timestamp returns a 2-element quotation of integers (seconds + microseconds)
+    (timestamp type "quotation" ==)
+    ; S: timestamp seconds element is non-negative
+    (timestamp 0x0 get 0x0 >=)
+    ; T: 256-element quotation at HEX_STACK_SIZE boundary
+    (
+        () "_bq_q" :
+        0x0 "_bq_i" :
+        (_bq_i 0x100 <)
+        (
+            _bq_q _bq_i ' cat "_bq_q" :
+            _bq_i 0x1 + "_bq_i" :
+        )
+        while
+        _bq_q len 0x100 == "_bq_q" # "_bq_i" #
+    )
+    ; U: split where delimiter not found — returns single-element quotation
+    ("abc" "x" split ("abc") ==)
+    ;238
+
 ) "TESTS" :
 
 ; --- Run Tests
