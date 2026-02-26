@@ -2640,6 +2640,7 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         return 1;
     }
     hex_debug(ctx, "PUSHST[02]: \"%s\"", str);
+    free(str); // only needed for debug output
     size_t len = strlen(value);
     // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
     if (*size + len + 1 + 4 > *capacity)
@@ -2661,7 +2662,6 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         if ((value[i] & 0x80) != 0)
         {
             hex_error(ctx, "[add bytecode string] Multi-byte characters are not supported - Cannot encode string: \"%s\"", value);
-            free(str);
             return 1;
         }
     }
@@ -2912,9 +2912,14 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *size -= length;
 
     hex_debug(ctx, ">> PUSHIN[01]: 0x%x", value);
-    HEX_ALLOC(item)
-    item = hex_integer_item(ctx, value);
+    hex_item_t *item = hex_integer_item(ctx, value);
+    if (!item)
+    {
+        hex_error(ctx, "[interpret bytecode integer] Failed to allocate integer item");
+        return 1;
+    }
     *result = *item;
+    free(item);
     return 0;
 }
 
@@ -2931,11 +2936,14 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
             hex_error(ctx, "[interpret bytecode string] Bytecode size too small to contain a string length");
             return 1;
         }
-        length |= ((**bytecode & 0x7F) << shift);
-        shift += 7;
+        uint8_t b = **bytecode;
         (*bytecode)++;
         (*size)--;
-    } while (**bytecode & 0x80);
+        length |= ((b & 0x7F) << shift);
+        shift += 7;
+        if (!(b & 0x80))
+            break;
+    } while (1);
 
     if (*size < length)
     {
@@ -2954,16 +2962,16 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     *bytecode += length;
     *size -= length;
 
-    HEX_ALLOC(item);
-    item = hex_string_item(ctx, value);
-    *result = *item;
-    char *str = hex_process_string(value);
-    if (!str)
+    hex_item_t *item = hex_string_item(ctx, value);
+    free(value); // raw buffer no longer needed after string item is created
+    if (!item)
     {
-        hex_error(ctx, "[interpret bytecode string] Memory allocation failed");
+        hex_error(ctx, "[interpret bytecode string] Failed to allocate string item");
         return 1;
     }
-    hex_debug(ctx, ">> PUSHST[02]: \"%s\"", str);
+    *result = *item;
+    free(item); // free wrapper only; str_value is now owned by result
+    hex_debug(ctx, ">> PUSHST[02]: \"%s\"", result->data.str_value);
     return 0;
 }
 
@@ -2977,9 +2985,20 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         return 1;
     }
 
-    HEX_ALLOC(item);
+    hex_item_t *item = calloc(1, sizeof(hex_item_t));
+    if (!item)
+    {
+        hex_error(ctx, "[interpret bytecode native symbol] Memory allocation failed");
+        return 1;
+    }
     item->type = HEX_TYPE_NATIVE_SYMBOL;
-    HEX_ALLOC(value);
+    hex_item_t *value = calloc(1, sizeof(hex_item_t));
+    if (!value)
+    {
+        hex_error(ctx, "[interpret bytecode native symbol] Memory allocation failed");
+        free(item);
+        return 1;
+    }
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = strdup(symbol);
     token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
@@ -2991,29 +3010,33 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         item->token = token;
         item->type = HEX_TYPE_NATIVE_SYMBOL;
         item->data.fn_value = value->data.fn_value;
+        hex_free_item(ctx, value); // free the registry copy (including its token)
     }
     else
     {
         hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s (bytecode)", token->position->line, token->position->column, token->value);
         hex_free_token(token);
+        free(value); // just wrapper; get_symbol did not fill it
+        free(item);
         return 1;
     }
     hex_debug(ctx, ">> NATSYM[%02x]: %s", opcode, token->value);
     *result = *item;
+    free(item); // free wrapper only; token/fn_value now owned by result
     return 0;
 }
 
 int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, const char *filename, hex_item_t *result)
 {
-    // Get the index of the symbol (one byte)
-    if (*size == 0)
+    // Get the 2-byte little-endian index of the symbol
+    if (*size < 2)
     {
-        hex_error(ctx, "[interpret bytecode user symbol] Bytecode size too small to contain a symbol length");
+        hex_error(ctx, "[interpret bytecode user symbol] Bytecode size too small to contain a symbol index");
         return 1;
     }
-    size_t index = **bytecode;
-    (*bytecode)++;
-    (*size)--;
+    uint16_t index = (uint16_t)((*bytecode)[0]) | ((uint16_t)((*bytecode)[1]) << 8);
+    (*bytecode) += 2;
+    (*size) -= 2;
 
     if (index >= ctx->symbol_table->count)
     {
@@ -3021,16 +3044,13 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
         return 1;
     }
     char *value = hex_symboltable_get_value(ctx, index);
-    size_t length = strlen(value);
 
     if (!value)
     {
         hex_error(ctx, "[interpret bytecode user symbol] Memory allocation failed");
         return 1;
     }
-
-    *bytecode += 1;
-    *size -= 1;
+    size_t length = strlen(value);
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
 
@@ -4914,6 +4934,8 @@ static int hex_equal(hex_item_t *a, hex_item_t *b)
     }
     if (a->type == HEX_TYPE_NATIVE_SYMBOL || a->type == HEX_TYPE_USER_SYMBOL)
     {
+        if (b->type != HEX_TYPE_NATIVE_SYMBOL && b->type != HEX_TYPE_USER_SYMBOL)
+            return 0;
         return (strcmp(a->token->value, b->token->value) == 0);
     }
     if (a->type != b->type)
@@ -5472,7 +5494,7 @@ int hex_symbol_get(hex_context_t *ctx)
         return 1;
     }
     int result = 0;
-    hex_item_t *copy = calloc(1, sizeof(hex_item_t));
+    hex_item_t *copy = NULL;
     if (list->type == HEX_TYPE_QUOTATION)
     {
         if (index->type != HEX_TYPE_INTEGER)
@@ -6079,7 +6101,7 @@ int hex_symbol_args(hex_context_t *ctx)
         {
             quotation[i] = (hex_item_t *)calloc(1, sizeof(hex_item_t));
             quotation[i]->type = HEX_TYPE_STRING;
-            quotation[i]->data.str_value = ctx->argv[i];
+            quotation[i]->data.str_value = strdup(ctx->argv[i]);
         }
         if (hex_push_quotation(ctx, quotation, ctx->argc) != 0)
         {
@@ -6147,9 +6169,34 @@ int hex_symbol_run(hex_context_t *ctx)
         return 1;
     }
 
-    char output[8192] = "";
-    char error[8192] = "";
+    size_t output_len = 0, output_cap = 4096;
+    size_t error_len = 0, error_cap = 4096;
+    char *output = (char *)malloc(output_cap);
+    char *error_buf = (char *)malloc(error_cap);
+    if (!output || !error_buf)
+    {
+        free(output);
+        free(error_buf);
+        hex_error(ctx, "[symbol run] Memory allocation failed");
+        HEX_FREE(ctx, command);
+        return 1;
+    }
+    output[0] = '\0';
+    error_buf[0] = '\0';
     int return_code = 0;
+
+/* helper macro: append chunk to a dynamic buffer */
+#define RUN_APPEND(buf, buf_len, buf_cap, chunk, chunk_len)                              \
+    do {                                                                                  \
+        while ((buf_len) + (chunk_len) + 1 > (buf_cap))                                 \
+        {                                                                                 \
+            (buf_cap) *= 2;                                                              \
+            char *_tmp = (char *)realloc((buf), (buf_cap));                             \
+            if (!_tmp) { free(buf); (buf) = NULL; break; }                              \
+            (buf) = _tmp;                                                                \
+        }                                                                                \
+        if (buf) { memcpy((buf) + (buf_len), (chunk), (chunk_len)); (buf_len) += (chunk_len); (buf)[(buf_len)] = '\0'; } \
+    } while (0)
 
 #ifdef _WIN32
     // Windows implementation
@@ -6168,6 +6215,8 @@ int hex_symbol_run(hex_context_t *ctx)
     if (!CreatePipe(&hOutputRead, &hOutputWrite, &sa, 0) || !CreatePipe(&hErrorRead, &hErrorWrite, &sa, 0))
     {
         hex_error(ctx, "[symbol run] Failed to create pipes");
+        free(output);
+        free(error_buf);
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -6183,6 +6232,8 @@ int hex_symbol_run(hex_context_t *ctx)
     if (!CreateProcess(NULL, command->data.str_value, NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi))
     {
         hex_error(ctx, "[symbol run] Failed to create process");
+        free(output);
+        free(error_buf);
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -6197,14 +6248,14 @@ int hex_symbol_run(hex_context_t *ctx)
     while (ReadFile(hOutputRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0)
     {
         buffer[bytesRead] = '\0';
-        strcat(output, buffer);
+        RUN_APPEND(output, output_len, output_cap, buffer, bytesRead);
     }
 
     // Read stderr
     while (ReadFile(hErrorRead, buffer, sizeof(buffer) - 1, &bytesRead, NULL) && bytesRead > 0)
     {
         buffer[bytesRead] = '\0';
-        strcat(error, buffer);
+        RUN_APPEND(error_buf, error_len, error_cap, buffer, bytesRead);
     }
 
     // Wait for the child process to finish and get the return code
@@ -6224,6 +6275,8 @@ int hex_symbol_run(hex_context_t *ctx)
     if (pipe(stdout_pipe) != 0 || pipe(stderr_pipe) != 0)
     {
         hex_error(ctx, "[symbol run] Failed to create pipes");
+        free(output);
+        free(error_buf);
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -6232,6 +6285,8 @@ int hex_symbol_run(hex_context_t *ctx)
     if (pid == -1)
     {
         hex_error(ctx, "[symbol run] Failed to fork process");
+        free(output);
+        free(error_buf);
         HEX_FREE(ctx, command);
         return 1;
     }
@@ -6256,7 +6311,8 @@ int hex_symbol_run(hex_context_t *ctx)
         char path[1035];
         while (fgets(path, sizeof(path), stdout_fp) != NULL)
         {
-            strcat(output, path);
+            size_t chunk_len = strlen(path);
+            RUN_APPEND(output, output_len, output_cap, path, chunk_len);
         }
         fclose(stdout_fp);
 
@@ -6264,7 +6320,8 @@ int hex_symbol_run(hex_context_t *ctx)
         FILE *stderr_fp = fdopen(stderr_pipe[0], "r");
         while (fgets(path, sizeof(path), stderr_fp) != NULL)
         {
-            strcat(error, path);
+            size_t chunk_len = strlen(path);
+            RUN_APPEND(error_buf, error_len, error_cap, path, chunk_len);
         }
         fclose(stderr_fp);
 
@@ -6274,6 +6331,16 @@ int hex_symbol_run(hex_context_t *ctx)
         return_code = WEXITSTATUS(status);
     }
 #endif
+#undef RUN_APPEND
+
+    if (!output || !error_buf)
+    {
+        free(output);
+        free(error_buf);
+        hex_error(ctx, "[symbol run] Memory allocation failed while reading output");
+        HEX_FREE(ctx, command);
+        return 1;
+    }
 
     // Push the return code, output, and error as a quotation
     hex_item_t **quotation = (hex_item_t **)calloc(3, sizeof(hex_item_t *));
@@ -6283,12 +6350,13 @@ int hex_symbol_run(hex_context_t *ctx)
 
     quotation[1] = (hex_item_t *)calloc(1, sizeof(hex_item_t));
     quotation[1]->type = HEX_TYPE_STRING;
-    quotation[1]->data.str_value = strdup(output);
+    quotation[1]->data.str_value = output; // transfer ownership
 
     quotation[2] = (hex_item_t *)calloc(1, sizeof(hex_item_t));
     quotation[2]->type = HEX_TYPE_STRING;
-    quotation[2]->data.str_value = strdup(error);
+    quotation[2]->data.str_value = error_buf; // transfer ownership
 
+    HEX_FREE(ctx, command);
     return hex_push_quotation(ctx, quotation, 3);
 }
 
@@ -6333,8 +6401,11 @@ int hex_symbol_if(hex_context_t *ctx)
     {
         for (size_t i = 0; i < condition->quotation_size; i++)
         {
-            if (hex_push(ctx, condition->data.quotation_value[i]) != 0)
+            hex_item_t *copy = hex_copy_item(ctx, condition->data.quotation_value[i]);
+            if (!copy || hex_push(ctx, copy) != 0)
             {
+                if (copy)
+                    hex_free_item(ctx, copy);
                 HEX_FREE(ctx, condition);
                 HEX_FREE(ctx, thenBlock);
                 HEX_FREE(ctx, elseBlock);
@@ -6342,13 +6413,15 @@ int hex_symbol_if(hex_context_t *ctx)
             }
         }
         HEX_POP(ctx, evalResult);
-        ;
         if (evalResult->type == HEX_TYPE_INTEGER && evalResult->data.int_value > 0)
         {
             for (size_t i = 0; i < thenBlock->quotation_size; i++)
             {
-                if (hex_push(ctx, thenBlock->data.quotation_value[i]) != 0)
+                hex_item_t *copy = hex_copy_item(ctx, thenBlock->data.quotation_value[i]);
+                if (!copy || hex_push(ctx, copy) != 0)
                 {
+                    if (copy)
+                        hex_free_item(ctx, copy);
                     HEX_FREE(ctx, condition);
                     HEX_FREE(ctx, thenBlock);
                     HEX_FREE(ctx, elseBlock);
@@ -6361,8 +6434,11 @@ int hex_symbol_if(hex_context_t *ctx)
         {
             for (size_t i = 0; i < elseBlock->quotation_size; i++)
             {
-                if (hex_push(ctx, elseBlock->data.quotation_value[i]) != 0)
+                hex_item_t *copy = hex_copy_item(ctx, elseBlock->data.quotation_value[i]);
+                if (!copy || hex_push(ctx, copy) != 0)
                 {
+                    if (copy)
+                        hex_free_item(ctx, copy);
                     HEX_FREE(ctx, condition);
                     HEX_FREE(ctx, thenBlock);
                     HEX_FREE(ctx, elseBlock);
@@ -6371,6 +6447,10 @@ int hex_symbol_if(hex_context_t *ctx)
                 }
             }
         }
+        HEX_FREE(ctx, evalResult);
+        HEX_FREE(ctx, condition);
+        HEX_FREE(ctx, thenBlock);
+        HEX_FREE(ctx, elseBlock);
     }
     return 0;
 }
@@ -6454,7 +6534,9 @@ int hex_symbol_error(hex_context_t *ctx)
 
     char *message = strdup(ctx->error);
     ctx->error[0] = '\0';
-    return hex_push_string(ctx, message);
+    int result = hex_push_string(ctx, message);
+    free(message);
+    return result;
 }
 
 int hex_symbol_try(hex_context_t *ctx)
@@ -6489,9 +6571,13 @@ int hex_symbol_try(hex_context_t *ctx)
         ctx->settings->errors_enabled = 0;
         for (size_t i = 0; i < try_block->quotation_size; i++)
         {
-            if (hex_push(ctx, try_block->data.quotation_value[i]) != 0)
+            hex_item_t *copy = hex_copy_item(ctx, try_block->data.quotation_value[i]);
+            if (!copy || hex_push(ctx, copy) != 0)
             {
+                if (copy)
+                    hex_free_item(ctx, copy);
                 ctx->settings->errors_enabled = 1;
+                // continue to allow catch block to handle the error
             }
         }
         ctx->settings->errors_enabled = 1;
@@ -6501,8 +6587,11 @@ int hex_symbol_try(hex_context_t *ctx)
             hex_debug(ctx, "[symbol try] Handling error: %s", ctx->error);
             for (size_t i = 0; i < catch_block->quotation_size; i++)
             {
-                if (hex_push(ctx, catch_block->data.quotation_value[i]) != 0)
+                hex_item_t *copy = hex_copy_item(ctx, catch_block->data.quotation_value[i]);
+                if (!copy || hex_push(ctx, copy) != 0)
                 {
+                    if (copy)
+                        hex_free_item(ctx, copy);
                     HEX_FREE(ctx, catch_block);
                     HEX_FREE(ctx, try_block);
                     return 1;
@@ -6511,6 +6600,8 @@ int hex_symbol_try(hex_context_t *ctx)
         }
 
         strncpy(ctx->error, prevError, sizeof(ctx->error));
+        HEX_FREE(ctx, catch_block);
+        HEX_FREE(ctx, try_block);
     }
     return 0;
 }
@@ -7252,7 +7343,7 @@ int main(int argc, char *argv[])
     {
         for (int i = 1; i < argc; i++)
         {
-            char *arg = strdup(argv[i]);
+            char *arg = argv[i];
             if ((strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0))
             {
                 printf("%s\n", HEX_VERSION);
@@ -7304,7 +7395,7 @@ int main(int argc, char *argv[])
             {
                 if (!file)
                 {
-                    file = arg;
+                    file = strdup(argv[i]);
                 }
                 // Ignore extra arguments
             }
@@ -7335,6 +7426,7 @@ int main(int argc, char *argv[])
                     hex_error(ctx, "[generate bytecode] Failed to generate bytecode");
                     free(fileContent);
                     free(bytecode_file);
+                    free(file);
                     hex_destroy(ctx);
                     return 1;
                 }
@@ -7343,18 +7435,21 @@ int main(int argc, char *argv[])
                     free(fileContent);
                     free(bytecode_file);
                     free(bytecode);
+                    free(file);
                     hex_destroy(ctx);
                     return 1;
                 }
                 free(fileContent);
                 free(bytecode_file);
                 free(bytecode);
+                free(file);
                 hex_destroy(ctx);
                 return 0;
             }
             else
             {
                 int result = hex_interpret_file(ctx, file);
+                free(file);
                 hex_destroy(ctx);
                 return result;
             }

@@ -22,7 +22,7 @@
     <li>Implemented the possibility to load additional <code>.hex</code> or <code>.hbx</code> files at startup by using the <code>-l, --load</code>
         option.
     </li>
-    <li>Implemented a <code>utils.hex</code> library as part of the <a href="https://hex.2c.fyi/lib/">Standard Library</a>,
+    <li>Implemented a <code>utils.hex</code> library as part of the new <a href="https://hex.2c.fyi/lib/">Standard Library</a>,
         containing additional utility symbols (loaded automatically in the playground).</li>
 </ul>
 
@@ -34,7 +34,7 @@
 
 <h4>Chores</h4>
 <ul>
-    <li>Added tests for <code>utils.hex</code></li>
+    <li>Added tests for <code>utils.hex</code>.</li>
     <li>Implemented a basic <code>doc.hex</code> script to generate reference documentation from hex files.</li>
 </ul>
 <h3 id="v0.5.0">v0.5.0 &mdash; 2025-04-08</h3>
