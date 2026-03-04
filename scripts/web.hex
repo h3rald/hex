@@ -2,8 +2,8 @@
 
 "./lib/utils.hbx" read "utils.hbx" !
 
-"2025" "meta-year" : 
-"0.6.0" "meta-release" :
+"2026" "meta-year" : 
+"0.7.0" "meta-release" :
 "web/assets" "d-assets" :
 "web/templates" "d-templates" :
 "web/contents" "d-contents" :
@@ -22,7 +22,7 @@ d-templates "/page.html" cat "t-page" :
 ; Symbols to substitute with the corresponding links 
 ("map" "debug" "split" "run" "get" "puts" ":" "::" "." "#" "==" "'" 
 "swap" "dup" "while" "+" "*" "-" "each" "cat" "throw" "drop" "sub"
-"symbols" "print" "read" "dec" "write" "append" "!" 
+"symbols" "print" "read" "dec" "write" "append" "!" "try" "error" "args"
 "<=" "if" "timestamp") "symbol-links" :
 
 ;; Syntax highlighting
@@ -102,6 +102,7 @@ d-templates "/page.html" cat "t-page" :
     t-symbol "t-href" :
     ; Handle "special" symbols
     (t-symbol ":" ==)("store" "t-href" :) when
+    (t-symbol "==" ==)("equal" "t-href" :) when
     (t-symbol "<=" ==)("lessthanequal" "t-href" :) when
     (t-symbol "." ==)("i" "t-href" :) when
     (t-symbol "." ==)("i" "t-href" :) when

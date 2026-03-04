@@ -1,0 +1,17 @@
+<h3 id="v0.7.0">v0.7.0 &mdash; 2026-03-04</h3>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Fixed several memory leaks in the {{sym-if}}, {{sym-try}}, {{sym-error}}, {{sym-args}}, {{sym-get}}, and {{sym-run}} symbols.</li>
+    <li>Fixed memory leaks in bytecode interpretation of integers, strings, and native symbols.</li>
+    <li>Fixed memory leaks in CLI argument handling.</li>
+    <li>Fixed a potential crash in {{sym-==}} when comparing symbols with non-symbol types.</li>
+    <li>Fixed the {{sym-run}} symbol to use dynamically allocated buffers instead of fixed-size buffers for command output.</li>
+    <li>Fixed bytecode string length decoding loop.</li>
+    <li>Fixed bytecode user symbol index to use 2-byte little-endian encoding.</li>
+</ul>
+
+<h4>Chores</h4>
+<ul>
+    <li>Increased test coverage.</li>
+</ul>

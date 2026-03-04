@@ -1,6 +1,7 @@
 <article>
     <h2>Changelog</h2>
     <ul>
+<li><a href="#v0.7.0">v0.7.0</a></li>
 <li><a href="#v0.6.0">v0.6.0</a></li>
 <li><a href="#v0.5.0">v0.5.0</a></li>
 <li><a href="#v0.4.1">v0.4.1</a></li>
@@ -8,6 +9,23 @@
 <li><a href="#v0.3.0">v0.3.0</a></li>
 <li><a href="#v0.2.0">v0.2.0</a></li>
 <li><a href="#v0.1.0">v0.1.0</a></li>
+</ul>
+<h3 id="v0.7.0">v0.7.0 &mdash; 2026-03-04</h3>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Fixed several memory leaks in the <a href="https://hex.2c.fyi/spec#if-symbol">if</a>, <a href="https://hex.2c.fyi/spec#try-symbol">try</a>, <a href="https://hex.2c.fyi/spec#error-symbol">error</a>, <a href="https://hex.2c.fyi/spec#args-symbol">args</a>, <a href="https://hex.2c.fyi/spec#get-symbol">get</a>, and <a href="https://hex.2c.fyi/spec#run-symbol">run</a> symbols.</li>
+    <li>Fixed memory leaks in bytecode interpretation of integers, strings, and native symbols.</li>
+    <li>Fixed memory leaks in CLI argument handling.</li>
+    <li>Fixed a potential crash in <a href="https://hex.2c.fyi/spec#equal-symbol">==</a> when comparing symbols with non-symbol types.</li>
+    <li>Fixed the <a href="https://hex.2c.fyi/spec#run-symbol">run</a> symbol to use dynamically allocated buffers instead of fixed-size buffers for command output.</li>
+    <li>Fixed bytecode string length decoding loop.</li>
+    <li>Fixed bytecode user symbol index to use 2-byte little-endian encoding.</li>
+</ul>
+
+<h4>Chores</h4>
+<ul>
+    <li>Increased test coverage.</li>
 </ul>
 <h3 id="v0.6.0">v0.6.0 &mdash; 2025-11-09</h3>
 
