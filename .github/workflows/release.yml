@@ -28,7 +28,7 @@ jobs:
             # Detects OS and provide Nim-friendly OS identifiers
             - name: Detect current OS
               id: os
-              run:  echo "os=${{matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-latest' && 'macos' || matrix.os == 'macos-13' && 'macos' || matrix.os == 'windows-latest' && 'windows'}}" >> $GITHUB_OUTPUT
+              run:  echo "os=${{matrix.os == 'ubuntu-latest' && 'linux' || matrix.os == 'macos-latest' && 'macos' || matrix.os == 'macos-14' && 'macos' || matrix.os == 'windows-latest' && 'windows'}}" >> $GITHUB_OUTPUT
 
             # Checks out the repository
             - uses: actions/checkout@v2
@@ -71,7 +71,7 @@ jobs:
             # Package the resulting Linux/macOS binary
             - name: Create artifact (Linux, macOS)
               run: zip hex_${{steps.current-release.outputs.tag_name}}_${{steps.os.outputs.os}}_x86_64.zip hex lib/utils.hbx
-              if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-13'
+              if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-14'
 
             # Package the resulting macOs latest binary
             - name: Create artifact (Linux, macOS)
