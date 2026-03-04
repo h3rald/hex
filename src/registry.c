@@ -218,7 +218,7 @@ int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int n
     return 0;
 }
 
-void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)())
+void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)(hex_context_t *))
 {
     hex_item_t *func_item = calloc(1, sizeof(hex_item_t));
     if (func_item == NULL)

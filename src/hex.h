@@ -260,7 +260,7 @@ void hex_registry_destroy(hex_context_t *ctx);
 int hex_valid_user_symbol(hex_context_t *ctx, const char *symbol);
 int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol);
 int hex_set_symbol(hex_context_t *ctx, const char *key, hex_item_t *value, int native);
-void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)());
+void hex_set_native_symbol(hex_context_t *ctx, const char *name, int (*func)(hex_context_t *));
 int hex_get_symbol(hex_context_t *ctx, const char *key, hex_item_t *result);
 int hex_delete_symbol(hex_context_t *ctx, const char *key);
 
