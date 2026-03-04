@@ -4,27 +4,27 @@
 
 ; --- Globals
 
-0x0 "TEST-COUNT"  :
-0x0 "SUCCESSES"   :
-0x0 "FAILURES"    :
+$0 "TEST-COUNT"  :
+$0 "SUCCESSES"   :
+$0 "FAILURES"    :
 ()  "ERRORS"      :
 ()  "FAILS"       :
-0x0 "RESULT"      :
+$0 "RESULT"      :
 
 ; --- Utilities
 
 (
     "_test_current" :
-    TEST-COUNT 0x1 + "TEST-COUNT" :
+    TEST-COUNT $1 + "TEST-COUNT" :
     (
         (_test_current .)
             (
                 "." print 
-                SUCCESSES 0x1 + "SUCCESSES" :
+                SUCCESSES $1 + "SUCCESSES" :
             )
             (
                 "x" print
-                FAILURES 0x1 + "FAILURES" :
+                FAILURES $1 + "FAILURES" :
                 FAILS TEST-COUNT dec ' cat "FAILS" :
             )
         if
@@ -33,7 +33,7 @@
             ; Store error
             ERRORS " - Test #" TEST-COUNT dec cat ": " cat error cat ' cat "ERRORS" :  
             "x" print
-            FAILURES 0x1 + "FAILURES" :
+            FAILURES $1 + "FAILURES" :
             FAILS TEST-COUNT dec ' cat "FAILS" :
         )
     try
@@ -43,76 +43,76 @@
 ; --- Test Definitions
 
 (
-    (0x1 "a" : a 0x1 ==)
-    ("a" # 0x1)
-    ("aaa" type "string" == 0x1 type "integer" == () type "quotation" == and and)
-    ((0x1 0x2 +) . 0x3 ==)
+    ($1 "a" : a $1 ==)
+    ("a" # $1)
+    ("aaa" type "string" == $1 type "integer" == () type "quotation" == and and)
+    (($1 $2 +) . $3 ==)
     ;4
 
-    ("0x2 0x2 -" "test.hex" ! 0x0 ==)
-    (0x4 0x5 + 0x9 ==)
-    (0x5 0x3 - 0x2 ==)
-    (0x5 0x2 * 0xa ==)
+    ("$2 $2 -" "test.hex" ! $0 ==)
+    ($4 $5 + $9 ==)
+    ($5 $3 - $2 ==)
+    ($5 $2 * $a ==)
     ;8
 
-    (0x5 0x2 / 0x2 ==)
-    (0x4 0x2 % 0x0 ==)
-    (0x10101 0x01010 & 0x0 ==)
-    (0x10111 0x01000 | 0x11111 ==)
+    ($5 $2 / $2 ==)
+    ($4 $2 % $0 ==)
+    ($10101 $01010 & $0 ==)
+    ($10111 $01000 | $11111 ==)
     ;12
 
 
-    (0x1 0x1 ^ 0x0 ==)
-    (0x1 ~ 0xfffffffe ==)
-    (0x1 0x4 << 0x10 ==)
-    (0x10 0x4 >> 0x1 ==)
+    ($1 $1 ^ $0 ==)
+    ($1 ~ $fffffffe ==)
+    ($1 $4 << $10 ==)
+    ($10 $4 >> $1 ==)
     ;16
 
-    ("10" int 0x10 ==)
-    (0x10 str "10" ==)
-    (0xa dec "10" ==)
-    ("10" hex 0xa ==)
+    ("10" int $10 ==)
+    ($10 str "10" ==)
+    ($a dec "10" ==)
+    ("10" hex $a ==)
     ;20
 
     ("aaa" "aaa" ==)
-    (0x20 0x20 ==)
-    (0x21 0x22 !=)
+    ($20 $20 ==)
+    ($21 $22 !=)
     ("abba" "aaa" !=)
     ;24
 
-    (0x2 0x1 >)
-    (0x2 0x2 >=)
-    (0x2 0x3 <)
-    (0x3 0x3 <=)
+    ($2 $1 >)
+    ($2 $2 >=)
+    ($2 $3 <)
+    ($3 $3 <=)
     ;28
 
-    (0x2 0x3 and)
-    (0x1 0x0 or)
-    (0x1 0x0 xor)
-    (0x1 0x1 xor not)
+    ($2 $3 and)
+    ($1 $0 or)
+    ($1 $0 xor)
+    ($1 $1 xor not)
     ;32
 
     ((() not) (error) try "[symbol not] Integer required" ==)
-    ((() 0x1 xor) (error) try "[symbol xor] Two integers required" ==)
-    ("aaaaa" len 0x5 ==)
+    ((() $1 xor) (error) try "[symbol xor] Two integers required" ==)
+    ("aaaaa" len $5 ==)
     ("hello" " world" cat "hello world" ==)
     ;36
 
-    ((0x1 "a") ("b") cat (0x1 "a" "b") ==)
-    ((0x1 0x3 puts "aaa") len 0x4 ==)
-    ((0x2 0x3 0x4) 0x2 get 0x4 ==)
-    ("abcde" 0x1 get "b" ==)
+    (($1 "a") ("b") cat ($1 "a" "b") ==)
+    (($1 $3 puts "aaa") len $4 ==)
+    (($2 $3 $4) $2 get $4 ==)
+    ("abcde" $1 get "b" ==)
     ;40
 
-    ("a/b/c" "t-path" : (t-path "/" index 0x0 >=) (t-path "/" "\\" sub "t-path" :) while t-path "a\\b\\c" == "t-path" #)
+    ("a/b/c" "t-path" : (t-path "/" index $0 >=) (t-path "/" "\\" sub "t-path" :) while t-path "a\\b\\c" == "t-path" #)
     ("assets\"" "\"" "/" sub "assets/" ==)
     (("" () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
-    ((0x4 len) (error) try "[symbol len] Quotation or string required" ==)
+    (($4 len) (error) try "[symbol len] Quotation or string required" ==)
     ;44
 
-    ("this is a test" "is" index 0x2 ==)
-    (("a" 0x1 "b") "b" index 0x2 ==)
-    ("abc" "d" index 0xffffffff ==)
+    ("this is a test" "is" index $2 ==)
+    (("a" $1 "b") "b" index $2 ==)
+    ("abc" "d" index $ffffffff ==)
     (("0" "0" "0" "0") "." join "0.0.0.0"==)
     ;48
 
@@ -122,104 +122,104 @@
     ("!" "test.txt" append "test.txt" read "test!" ==)
     ;52
 
-    ("rm test.txt" exec 0x0 ==)
-    ("rm test.txt" run 0x0 get 0x1 ==)
-    ("ls web/contents" run 0x1 get "\n" split len 0x8 ==)
-    (args 0x1 get "scripts/test.hbx" ==)
+    ("rm test.txt" exec $0 ==)
+    ("rm test.txt" run $0 get $1 ==)
+    ("ls web/contents" run $1 get "\n" split len $8 ==)
+    (args $1 get "scripts/test.hbx" ==)
     ;56
 
-    ((args len 0x2 ==) ("two") ("no") if "two" ==)
-    ((dup *) "square" :: 0x2 square 0x4 == "square" #)
-    (0x1 "tmp-a" : (tmp-a 0x3 <) (tmp-a 0x1 + "tmp-a" :) while tmp-a 0x3 ==)
-    (symbols len 0x65 ==)
+    ((args len $2 ==) ("two") ("no") if "two" ==)
+    ((dup *) "square" :: $2 square $4 == "square" #)
+    ($1 "tmp-a" : (tmp-a $3 <) (tmp-a $1 + "tmp-a" :) while tmp-a $3 ==)
+    (symbols len $65 ==)
     ;60
 
-    ((0x2 0x0 /) (error "[symbol /] Division by zero" ==) try)
+    (($2 $0 /) (error "[symbol /] Division by zero" ==) try)
     (error "" ==)
     ("a" ' ' ' ((("a"))) ==)
-    ((0x1 0x2 0x3) (dup dup * *) map (0x1 0x8 0x1b) ==)
+    (($1 $2 $3) (dup dup * *) map ($1 $8 $1b) ==)
     ;64
 
-    (0x2 dup stack (0x2 0x2) ==)
-    ((dup *) "square" :: 0x3 square 0x9 == "square" #)
+    ($2 dup stack ($2 $2) ==)
+    ((dup *) "square" :: $3 square $9 == "square" #)
     (("test" throw) (error "test" ==) try)
-    (0x1 0x2 swap drop drop drop stack (0x2) == swap drop) ; Also make sure to clear the stack polluted with #65
+    ($1 $2 swap drop drop drop stack ($2) == swap drop) ; Also make sure to clear the stack polluted with #65
     ;68
 
     (("aaa" "puts" :) (error) try "[symbol :] Failed to store symbol 'puts'" ==)
     (("puts" #) (error) try "[symbol #] Cannot free native symbol 'puts'" ==)
-    (("aaa" 0x2 :) (error) try "[symbol :] Symbol name must be a string" ==)
-    ((0x2 #) (error) try "[symbol #] Symbol name must be a string" ==)
+    (("aaa" $2 :) (error) try "[symbol :] Symbol name must be a string" ==)
+    (($2 #) (error) try "[symbol #] Symbol name must be a string" ==)
     ;72
 
     (("puts" .) (error) try "[symbol .] Quotation required" ==)
     (((puts) "test.hex" !) (error) try "[symbol !] Quotation must contain only integers" ==)
-    (("3" 0x3 +) (error) try "[symbol +] Two integers required" ==)
-    (("3" 0x3 -) (error) try "[symbol -] Two integers required" ==)
+    (("3" $3 +) (error) try "[symbol +] Two integers required" ==)
+    (("3" $3 -) (error) try "[symbol -] Two integers required" ==)
     ;76
 
-    ((0x2 0x3 0x3) (0x2 0x3) > 0x1 ==)
-    ((0x2 0x3) (0x2 0x1) > 0x1 ==)
-    ((test abc) (test cde) < 0x1 ==)
-    (("test" "abc") ("test" "abc") <= 0x1 ==)
+    (($2 $3 $3) ($2 $3) > $1 ==)
+    (($2 $3) ($2 $1) > $1 ==)
+    ((test abc) (test cde) < $1 ==)
+    (("test" "abc") ("test" "abc") <= $1 ==)
     ;80
 
     ("hello" "" split ("h" "e" "l" "l" "o") ==)
-    (("3" 0x3 /) (error) try "[symbol /] Two integers required" ==)
-    ((0x4 0x0 %) (error) try "[symbol %] Division by zero" ==)
-    ((() 0x3 %) (error) try "[symbol %] Two integers required" ==)
+    (("3" $3 /) (error) try "[symbol /] Two integers required" ==)
+    (($4 $0 %) (error) try "[symbol %] Division by zero" ==)
+    ((() $3 %) (error) try "[symbol %] Two integers required" ==)
     ;84
 
-    ((() 0x3 &) (error) try "[symbol &] Two integers required" ==)
-    ((0x2 "" |) (error) try "[symbol |] Two integers required" ==)
+    ((() $3 &) (error) try "[symbol &] Two integers required" ==)
+    (($2 "" |) (error) try "[symbol |] Two integers required" ==)
     ((() "" ^) (error) try "[symbol ^] Two integers required" ==)
-    ((() 0x1 >>) (error) try "[symbol >>] Two integers required" ==)
+    ((() $1 >>) (error) try "[symbol >>] Two integers required" ==)
     ;88
 
-    ((() 0x1 <<) (error) try "[symbol <<] Two integers required" ==)
+    ((() $1 <<) (error) try "[symbol <<] Two integers required" ==)
     (("" ~) (error) try "[symbol ~] Integer required" ==)
-    ((0x5 int) (error) try "[symbol int] String representing a hexadecimal integer required" ==)
-    (((0x3) int) (error) try "[symbol int] String representing a hexadecimal integer required" ==)
+    (($5 int) (error) try "[symbol int] String representing a hexadecimal integer required" ==)
+    ((($3) int) (error) try "[symbol int] String representing a hexadecimal integer required" ==)
     ;92
 
     (("5" str) (error) try "[symbol str] Integer required" ==)
     ((("aaa") str) (error) try "[symbol str] Integer required" ==)
     (("10" dec) (error) try "[symbol dec] Integer required" ==)
-    ((0x5 hex) (error) try "[symbol hex] String representing a decimal integer required" ==)
+    (($5 hex) (error) try "[symbol hex] String representing a decimal integer required" ==)
     ;96
 
-    ("0x2" 0x2 == 0x0 ==)
-    ("0x2" (0x2) !=)
-    ((0x3 "aaa") ("aaa" 0x5) > 0x0 ==)
-    (("aaa" 0x5) ("aaa" 0x5 0x4) >= 0x0 ==)
+    ("$2" $2 == $0 ==)
+    ("$2" ($2) !=)
+    (($3 "aaa") ("aaa" $5) > $0 ==)
+    (("aaa" $5) ("aaa" $5 $4) >= $0 ==)
     ;100
 
-    ((test "aaa") (test "aaa" 0x5) < 0x1 ==) 
-    (("aaa" 0x5) ("" "aaa" 0x5) <= 0x1 ==)
+    ((test "aaa") (test "aaa" $5) < $1 ==) 
+    (("aaa" $5) ("" "aaa" $5) <= $1 ==)
     (("a" "b" and) (error) try "[symbol and] Two integers required" ==)
-    ((0x1 "a" or) (error) try "[symbol or] Two integers required" ==)
+    (($1 "a" or) (error) try "[symbol or] Two integers required" ==)
     ;104
 
-    (("abc" 0x3 get) (error) try "[symbol get] Index out of range" ==)
-    (((0x2) 0x2 get) (error) try "[symbol get] Index out of range" ==)
-    ((() 0x0 get) (error) try "[symbol get] Index out of range" ==)
-    ((0x4 0x4 get) (error) try "[symbol get] Quotation or string required" ==)
+    (("abc" $3 get) (error) try "[symbol get] Index out of range" ==)
+    ((($2) $2 get) (error) try "[symbol get] Index out of range" ==)
+    ((() $0 get) (error) try "[symbol get] Index out of range" ==)
+    (($4 $4 get) (error) try "[symbol get] Quotation or string required" ==)
     ;108
 
     (("abc" "b" get) (error) try "[symbol get] Index must be an integer" ==)
-    (((0x4 "aa" test) "b" get) (error) try "[symbol get] Index must be an integer" ==)
-    ("a" ord 0x61 ==)
-    (0x61 chr "a" ==)
+    ((($4 "aa" test) "b" get) (error) try "[symbol get] Index must be an integer" ==)
+    ("a" ord $61 ==)
+    ($61 chr "a" ==)
     ;112
 
-    ("=" ord 0x3d ==)
-    (0x3d chr "=" ==)
-    (0xffffffff dec "-1" ==)
-    (0x80 chr "" ==)
+    ("=" ord $3d ==)
+    ($3d chr "=" ==)
+    ($ffffffff dec "-1" ==)
+    ($80 chr "" ==)
     ;116
 
-    ("abc" ord 0xffffffff ==)
-    ((0x56 ord) (error) try "[symbol ord] String required" ==)
+    ("abc" ord $ffffffff ==)
+    (($56 ord) (error) try "[symbol ord] String required" ==)
     (("t" chr) (error) try "[symbol chr] Integer required" ==)
     ((() chr) (error) try "[symbol chr] Integer required" ==)
     ;120
@@ -231,62 +231,62 @@
       "rm test1.txt" exec drop
     )
     (("a" not) (error) try "[symbol not] Integer required" ==)
-    ((0x1 () xor) (error) try "[symbol xor] Two integers required" ==)
+    (($1 () xor) (error) try "[symbol xor] Two integers required" ==)
     ((() "aaa" cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
     ;124
 
-    ((0x4 () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
-    ((0x4 len) (error) try "[symbol len] Quotation or string required" ==)
-    ((0x1 0x4 index) (error) try "[symbol index] Quotation or string required" ==)
-    ((("a" 0x2 "b") "-" join) (error) try "[symbol join] Quotation must contain only strings" ==)
+    (($4 () cat) (error) try "[symbol cat] Two quotations or two strings required" ==)
+    (($4 len) (error) try "[symbol len] Quotation or string required" ==)
+    (($1 $4 index) (error) try "[symbol index] Quotation or string required" ==)
+    ((("a" $2 "b") "-" join) (error) try "[symbol join] Quotation must contain only strings" ==)
     ;128
 
-    ((("a" "b" "c") 0x1 join) (error) try "[symbol join] Quotation and string required" ==)
-    (("a" 0x1 split) (error) try "[symbol split] Two strings required" ==)
+    ((("a" "b" "c") $1 join) (error) try "[symbol join] Quotation and string required" ==)
+    (("a" $1 split) (error) try "[symbol split] Two strings required" ==)
     ((("aaa") "a" "b" sub) (error) try "[symbol sub] Three strings required" ==)
-    ((0x1 read) (error) try "[symbol read] String required" ==)
+    (($1 read) (error) try "[symbol read] String required" ==)
     ;132
 
     (("invalid-file.txt" read) (error) try "[symbol read] Could not open file for reading: invalid-file.txt" ==)
     (("test" "invalid-file//" write) (error) try "[symbol write] Could not open file for writing: invalid-file//" ==)
-    (((0x2 0x4 "a") "test.txt" write) (error) try "[symbol write] Quotation must contain only integers" == "rm test.txt" exec drop)
-    ((0x2 "test.txt" write) (error) try "[symbol write] String or quotation of integers required" ==)
+    ((($2 $4 "a") "test.txt" write) (error) try "[symbol write] Quotation must contain only integers" == "rm test.txt" exec drop)
+    (($2 "test.txt" write) (error) try "[symbol write] String or quotation of integers required" ==)
     ;136
 
     (("a" () write) (error) try "[symbol write] String required" ==)
     (("aaa" "invalid-file//" append) (error) try "[symbol append] Could not open file for appending: invalid-file//" ==)
-    (((0x2 "" 0x5) "test.txt" append) (error) try "[symbol append] Quotation must contain only integers" == "rm test.txt" exec drop)
-    ((0x2 "test.txt" append) (error) try "[symbol append] String or quotation of integers required" ==)
+    ((($2 "" $5) "test.txt" append) (error) try "[symbol append] Quotation must contain only integers" == "rm test.txt" exec drop)
+    (($2 "test.txt" append) (error) try "[symbol append] String or quotation of integers required" ==)
     ;140
 
-    (("a" 0x1 append) (error) try "[symbol append] String required" ==)
+    (("a" $1 append) (error) try "[symbol append] String required" ==)
     (("error" exit) (error) try "[symbol exit] Integer required" ==)
-    ((0x1 exec) (error) try "[symbol exec] String required" ==)
+    (($1 exec) (error) try "[symbol exec] String required" ==)
     ((() run) (error) try "[symbol run] String required" ==)
     ;144
     
     ((() () "" if) (error) try "[symbol if] Three quotations required" ==)
     ((() "" while) (error) try "[symbol while] Two quotations required" ==)
-    ((() 0x1 try) (error) try "[symbol try] Two quotations required" ==)
-    ((0x1 throw) (error) try "[symbol throw] String required" ==)
+    ((() $1 try) (error) try "[symbol try] Two quotations required" ==)
+    (($1 throw) (error) try "[symbol throw] String required" ==)
     ;148
 
-    ((() 0x1 map) (error) try "[symbol map] Two quotations required" ==)
+    ((() $1 map) (error) try "[symbol map] Two quotations required" ==)
     (
       (
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
-        0x1 0x2 "a" () "c" 0xf4 0xffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
+        $1 $2 "a" () "c" $f4 $ffffffff "d" "eeeee" "test \n aaa"
       ) len "130" hex ==
     )
     ;150
@@ -295,22 +295,22 @@
     ; utils.hex tests                                                        ;
     ;------------------------------------------------------------------------;
 
-    (0x2 (0x1) (0x1) when 0x1 == swap drop)
-    (0x2 (0x0) (0x1) when 0x2 ==)
+    ($2 ($1) ($1) when $1 == swap drop)
+    ($2 ($0) ($1) when $2 ==)
     ("ccc" ("aaa") ("bbb") when "ccc" ==)
-    ((0x1) ("yes") ("no") unless "no" == swap drop) 
+    (($1) ("yes") ("no") unless "no" == swap drop) 
     ;154
 
-    (() 0x1 push (0x1) ==)
-    ((0x1 0x2 0x3) pop (0x1 0x2) ==)
-    (0x0 (0x1 0x2 0x3) cons (0x0 0x1 0x2 0x3) ==)
-    ((0x1 0x2 0x3) uncons stack (0x1 (0x2 0x3)) == swap drop swap drop)
+    (() $1 push ($1) ==)
+    (($1 $2 $3) pop ($1 $2) ==)
+    ($0 ($1 $2 $3) cons ($0 $1 $2 $3) ==)
+    (($1 $2 $3) uncons stack ($1 ($2 $3)) == swap drop swap drop)
     ;158
     
-    ((0x1 0x2 0x3) 0x0 swons (0x0 0x1 0x2 0x3) ==)
-    ((0x1 0x2 0x3) unswons stack ((0x2 0x3) 0x1) == swap drop swap drop)
+    (($1 $2 $3) $0 swons ($0 $1 $2 $3) ==)
+    (($1 $2 $3) unswons stack (($2 $3) $1) == swap drop swap drop)
     ("a" "b" over stack "_r" : drop drop drop ("a" "b" "a") _r == "_r" #)
-    (0x1 (0x2) dip stack "_r" : (0x2 0x1) _r == "_r" # drop drop)
+    ($1 ($2) dip stack "_r" : ($2 $1) _r == "_r" # drop drop)
     ;162
 
     ("This is a test" "This" begins)
@@ -319,40 +319,40 @@
     ("This is a test" "Test" ends not)
     ;166
 
-    ((0x1 0x2 0x3 0x5 0x6) "a" 0x3 ins (0x1 0x2 0x3 "a" 0x5 0x6) ==)
-    ((0x1 0x2 0x3 0x5 0x6) "a" 0x0 ins ("a" 0x1 0x2 0x3 0x5 0x6) ==)
-    ((0x1 0x2 0x3 0x5 0x6) "a" 0x4 ins (0x1 0x2 0x3 0x5 "a" 0x6) ==)
-    ((0x1 0x2 0x3 0x5 0x6) "a" 0x1 ins (0x1 "a" 0x2 0x3 0x5 0x6) ==)
+    (($1 $2 $3 $5 $6) "a" $3 ins ($1 $2 $3 "a" $5 $6) ==)
+    (($1 $2 $3 $5 $6) "a" $0 ins ("a" $1 $2 $3 $5 $6) ==)
+    (($1 $2 $3 $5 $6) "a" $4 ins ($1 $2 $3 $5 "a" $6) ==)
+    (($1 $2 $3 $5 $6) "a" $1 ins ($1 "a" $2 $3 $5 $6) ==)
     ;170
 
-    ((0x4 0x3 "c" 0x2 "b" 0x1 "a") reverse ("a" 0x1 "b" 0x2 "c" 0x3 0x4) ==)
-    ((0x1) reverse (0x1) ==)
-    ((0x1 0x2) reverse (0x2 0x1) ==)
+    (($4 $3 "c" $2 "b" $1 "a") reverse ("a" $1 "b" $2 "c" $3 $4) ==)
+    (($1) reverse ($1) ==)
+    (($1 $2) reverse ($2 $1) ==)
     (() reverse () ==)
     ;174
 
-    ((0x2 0x3 0x4) "a" 0x1 set (0x2 "a" 0x4) ==)
-    ((0x2 0x3 0x4) "a" 0x0 set ("a" 0x3 0x4) ==)
-    ((0x2 0x3 0x4) "a" 0x2 set (0x2 0x3 "a") ==)
-    ((0x2 0x3 0x4 0x5) "a" 0x3 set (0x2 0x3 0x4 "a") ==)
+    (($2 $3 $4) "a" $1 set ($2 "a" $4) ==)
+    (($2 $3 $4) "a" $0 set ("a" $3 $4) ==)
+    (($2 $3 $4) "a" $2 set ($2 $3 "a") ==)
+    (($2 $3 $4 $5) "a" $3 set ($2 $3 $4 "a") ==)
     ;178
 
-    ((0x3 0x5 0x2 0x1 0x4) (>) sort (0x1 0x2 0x3 0x4 0x5) ==)
-    ((0x3 0x5 0x2 0x1 0x4) (<) sort (0x5 0x4 0x3 0x2 0x1) ==)
+    (($3 $5 $2 $1 $4) (>) sort ($1 $2 $3 $4 $5) ==)
+    (($3 $5 $2 $1 $4) (<) sort ($5 $4 $3 $2 $1) ==)
     (("a" "c" "b") (>) sort ("a" "b" "c") ==)
     (("a" "c" "b") (<) sort ("c" "b" "a") ==)
     ;182
 
-    ((0x1 0x2 0x3 0x4) 0x2 rem (0x1 0x2 0x4) ==)
-    (((0x1 0x2 0x3 0x4) 0x4 rem) (error) try "[symbol rem] Index out of bounds" ==)
-    ((0x1 0x2 0x3 0x4) 0x0 rem (0x2 0x3 0x4) ==)
-    ((0x1 0x2 0x3 0x4) 0x3 rem (0x1 0x2 0x3) ==)
+    (($1 $2 $3 $4) $2 rem ($1 $2 $4) ==)
+    ((($1 $2 $3 $4) $4 rem) (error) try "[symbol rem] Index out of bounds" ==)
+    (($1 $2 $3 $4) $0 rem ($2 $3 $4) ==)
+    (($1 $2 $3 $4) $3 rem ($1 $2 $3) ==)
     ;186
 
     ("This is a test! And another test" "test" "sample" gsub "This is a sample! And another sample" ==)
     ("This is a test! And another test" "sample" "test" gsub "This is a test! And another test" ==)
-    ((0x1 0x4 0x5) min 0x1 ==)
-    ((0x1 0x4 0x5) max 0x5 ==)
+    (($1 $4 $5) min $1 ==)
+    (($1 $4 $5) max $5 ==)
     ;190
 
     ("${0}, ${1}!" ("hello" "world") fmt "hello, world!" ==)
@@ -361,26 +361,221 @@
     ("${0}, ${2}, ${1}!" ("first" "third") fmt "first, ${2}, third!" ==)
     ;194
 
-    (0x0 "_a" : (0x1 0x2 0x3) (_a + "_a" :) each _a 0x6 == "_a" #)
-    ((0x1 0x2 0x3 0x4) (0x2 % 0x0 ==) filter (0x2 0x4) ==)
-    ("Testing" 0x1 0x3 slice "est" ==)
-    (("a" 0xffffffff 0x0 slice) (error) try "[symbol slice] Index out of bounds" ==)
+    ($0 "_a" : ($1 $2 $3) (_a + "_a" :) each _a $6 == "_a" #)
+    (($1 $2 $3 $4) ($2 % $0 ==) filter ($2 $4) ==)
+    ("Testing" $1 $3 slice "est" ==)
+    (("a" $ffffffff $0 slice) (error) try "[symbol slice] Index out of bounds" ==)
     ;198
 
-    (("a" 0x0 0x1 slice) (error) try "[symbol slice] Index out of bounds" ==)
-    ("a" 0x0 0x0 slice "a" ==)
-    ("" ("-" cat) 0x5 times "-----" ==)
+    (("a" $0 $1 slice) (error) try "[symbol slice] Index out of bounds" ==)
+    ("a" $0 $0 slice "a" ==)
+    ("" ("-" cat) $5 times "-----" ==)
+    ;201
+
+    ; --- Edge cases: empty string operations
+    ("" len $0 ==)
+    ("" "" cat "" ==)
+    ;203
+
+    ; --- Edge cases: negative integer arithmetic
+    ($ffffffff $1 + $0 ==)
+    ($0 $1 - $ffffffff ==)
+    ($ffffffff dec "-1" ==)
+    ($0 $1 - dec "-1" ==)
+    ;207
+
+    ; --- Empty quotation operations
+    (() len $0 ==)
+    (() () cat () ==)
+    (() () == $1 ==)
+    (() ($1) == $0 ==)
+    ;211
+
+    ; --- Nested try blocks: inner error caught, outer still works
+    (
+        (
+            ("error-inner" throw) (error) try
+        )
+        (error)
+        try
+        "error-inner" ==
+    )
+    ; try with no error: body executes, catch block skipped
+    (
+        $0 "try-result" :
+        ($1 "try-result" :) () try
+        try-result $1 == "try-result" #
+    )
+    ;213
+
+    ; --- Symbol equality: comparing symbols to non-symbol types
+    ($1 $2 == $0 ==)
+    ("abc" "abc" == $1 ==)
+    ("abc" "xyz" == $0 ==)
+    ;216
+
+    ; --- Large quotation: create and measure
+    (
+        (
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+            $1 $2 $3 $4 $5 $6 $7 $8 $9 $a
+        ) len "100" hex ==
+    )
+    ;217
+
+    ;------------------------------------------------------------------------;
+    ; Refactoring-safety tests: ownership, stack, error recovery, boundaries ;
+    ;------------------------------------------------------------------------;
+
+    ; --- Group 1: Quotation ownership & deep-copy correctness
+
+    ; A: map with quotation-typed results — copies action results into new quotation
+    (($1 $2) (') map (($1) ($2)) ==)
+    ; B: if then-branch — copies string items from thenBlock quotation
+    (("hello" len $3 >) ("yes") ("no") if "yes" ==)
+    ; C: if else-branch — copies string items from elseBlock quotation
+    (("hi" len $a >) ("yes") ("no") if "no" ==)
+    ; D: while building a quotation — copy cycle across iterations
+    (
+        () "_wd_q" :
+        $0 "_wd_i" :
+        (_wd_i $5 <)
+        (
+            _wd_q _wd_i ' cat "_wd_q" :
+            _wd_i $1 + "_wd_i" :
+        )
+        while
+        _wd_q ($0 $1 $2 $3 $4) == "_wd_q" # "_wd_i" #
+    )
+    ;221
+
+    ; E: nested while loops — copy+free cycle across nested iterations (3x3=9)
+    (
+        $0 "_we_sum" :
+        $0 "_we_i" :
+        (_we_i $3 <)
+        (
+            $0 "_we_j" :
+            (_we_j $3 <)
+            (
+                _we_sum $1 + "_we_sum" :
+                _we_j $1 + "_we_j" :
+            )
+            while
+            "_we_j" #
+            _we_i $1 + "_we_i" :
+        )
+        while
+        _we_sum $9 == "_we_sum" # "_we_i" #
+    )
+    ; F: user-defined operator (::) body — hex_push copies operator body items
+    (
+        (' cat) "_wrapcat" ::
+        ($1) $2 _wrapcat ($1 $2) == "_wrapcat" #
+    )
+    ; G: each on heterogeneous quotation (int + string + nested quotation)
+    (
+        $0 "_eg_count" :
+        ("hello" $2a ($1 $2)) (drop _eg_count $1 + "_eg_count" :) each
+        _eg_count $3 == "_eg_count" #
+    )
+    ; H: filter retaining quotation-typed elements
+    ((() ($1) ($1 $2)) (len $0 >) filter (($1) ($1 $2)) ==)
+    ;225
+
+    ; I: get returning a quotation from a nested structure — returned item is owned independently
+    ((($1 $2) ($3 $4)) $1 get ($3 $4) ==)
+    ; J: cat of nested quotations — result owns deep copies of both sources
+    ((($1) ($2)) (($3)) cat (($1) ($2) ($3)) ==)
+    ;227
+
+    ; --- Group 2: Stack manipulation with complex types
+
+    ; K: swap two quotations — both independently owned after swap
+    (($1 $2) ($3 $4) swap ($1 $2) == swap ($3 $4) == and)
+    ; L: quote + dup + dequote — dup produces independent deep copy
+    ($1 ' dup . swap . and)
+    ; M: 4-level nested quotation dequote chain — recursive hex_copy_item
+    ((((($2a)))) . . . . $2a ==)
+    ; N: variable re-binding inside loop — : doesn't alias old and new values
+    (
+        ($1) "_vr_v" :
+        $0 "_vr_i" :
+        (_vr_i $3 <)
+        (
+            _vr_v _vr_i ' cat "_vr_v" :
+            _vr_i $1 + "_vr_i" :
+        )
+        while
+        _vr_v ($1 $0 $1 $2) == "_vr_v" # "_vr_i" #
+    )
+    ;231
+
+    ; --- Group 3: Error recovery paths
+
+    ; O: try inside while, error thrown mid-loop, loop resumes after catch
+    (
+        $0 "_to_i" :
+        (_to_i $3 <)
+        (
+            ((_to_i $2 ==) ("found-2" throw) when)
+            (error drop)
+            try
+            _to_i $1 + "_to_i" :
+        )
+        while
+        _to_i $3 == "_to_i" #
+    )
+    ; P: throw with dynamically-built error message — string ownership through throw/error
+    (("error-" "42" cat throw) (error) try "error-42" ==)
+    ; Q: sequential try blocks have independent error state
+    (
+        ("first" throw) (error) try "first" ==
+        ("second" throw) (error) try "second" ==
+        and
+    )
+    ;234
+
+    ; --- Group 4: Boundary conditions and untested symbols
+
+    ; R: timestamp returns a 2-element quotation of integers (seconds + microseconds)
+    (timestamp type "quotation" ==)
+    ; S: timestamp seconds element is non-negative
+    (timestamp $0 get $0 >=)
+    ; T: 256-element quotation at HEX_STACK_SIZE boundary
+    (
+        () "_bq_q" :
+        $0 "_bq_i" :
+        (_bq_i $100 <)
+        (
+            _bq_q _bq_i ' cat "_bq_q" :
+            _bq_i $1 + "_bq_i" :
+        )
+        while
+        _bq_q len $100 == "_bq_q" # "_bq_i" #
+    )
+    ; U: split where delimiter not found — returns single-element quotation
+    ("abc" "x" split ("abc") ==)
+    ;238
 
 ) "TESTS" :
 
 ; --- Run Tests
 
-0x0 "_c" :
+$0 "_c" :
 (_c TESTS len <)
   (
     TESTS _c get
     test
-    _c 0x1 + "_c" :
+    _c $1 + "_c" :
   )
 while
 "_c" #
@@ -389,26 +584,26 @@ while
 
 "\nSuccessful Tests: " print SUCCESSES dec print "/" print SUCCESSES FAILURES + dec puts
 
-(ERRORS len 0x0 >)
+(ERRORS len $0 >)
     (
         "Errors:" warn
-        0x0 "_c" :
+        $0 "_c" :
         (_c ERRORS len <)
           (
             ERRORS _c get
             warn
-            _c 0x1 + "_c" :
+            _c $1 + "_c" :
           )
         while
         "_c" #
-        0x1 "RESULT" :
+        $1 "RESULT" :
     )
 when
 
-(FAILS len 0x0 >)
+(FAILS len $0 >)
     (
         "Failed Tests: " FAILS ", " join cat warn
-        0x1 "RESULT" :
+        $1 "RESULT" :
     )
 when
 

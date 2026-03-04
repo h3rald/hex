@@ -79,12 +79,12 @@
         comments.</p>
     <p>This is an example of a simple hex program:</p>
     <pre><code>    $; Filters a quotation to keep only the even numbers$$
-    ($0x2$$ $0x3$$ $0x4$$ $0x5$$ $0x6$$) ($0x2$$ $:%$$ $0x0$$ $:==$$) $:filter$$</code></pre>
+    ($!2$$ $!3$$ $!4$$ $!5$$ $!6$$) ($!2$$ $:%$$ $!0$$ $:==$$) $:filter$$</code></pre>
     <p>This example includes:</p>
     <ul>
         <li>One single-line comment: <code>$; Filters a quotation to keep only the even numbers$$</code></li>
-        <li>Two quotations: <code>($0x2$$ $0x3$$ $0x4$$ $0x5$$ $0x6$$)</code> and
-            <code>($0x2$$ $:%$$ $0x0$$ $:==$$)</code>
+        <li>Two quotations: <code>($!2$$ $!3$$ $!4$$ $!5$$ $!6$$)</code> and
+            <code>($!2$$ $:%$$ $!0$$ $:==$$)</code>
         </li>
         <li>Three symbols: <code>$:%$$</code>, <code>$:==$$</code>, and <code>$:filter$$</code></li>
     </ul>
@@ -98,7 +98,7 @@
         after the semicolon is ignored.</p>
     <p>Example:</p>
     <pre><code>    $; This is a single-line comment$$
-    $0x2$$ $0x3$$ $:+$$ $; This adds 0x2 and 0x3$</code></pre>
+    $!2$$ $!3$$ $:+$$ $; This adds $2 and $3$</code></pre>
 
     <h5 id="multi-line-comments">Multi-line Comments<a href="#top"></a></h5>
     <p>Multi-line comments start with <code>#|</code> and end with <code>|#</code>. Everything between these markers is
@@ -108,9 +108,9 @@
       This is a multi-line comment
       It can span multiple lines
     |#$
-    $0x2$$ $0x3$$ $:+$$ $#| This adds 0x2 and 0x3 |#$</code></pre>
+    $!2$$ $!3$$ $:+$$ $#| This adds $2 and $3 |#$</code></pre>
     <h4 id="integer-literals">Integer Literals<a href="#top"></a></h4>
-    <p>Integer literals in hex are always written in hexadecimal form, prefixed with <code>0x</code>. They can contain
+    <p>Integer literals in hex are always written in hexadecimal form, prefixed with <code>$</code>. They can contain
         up to 8 hexadecimal digits, representing 32-bit integers. Hexadecimal digits include the numbers
         <code>0-9</code> and the letters <code>>a-f</code> (or <code>A-F</code>), which correspond to the decimal values
         10-15.
@@ -120,10 +120,10 @@
         For more information on two's complement, see .</p>
     <p>Examples:</p>
     <ul>
-        <li><code>$0x1$$</code> represents the decimal value 1.</li>
-        <li><code>$0xa$$</code> represents the decimal value 10.</li>
-        <li><code>$0x1f$$</code> represents the decimal value 31.</li>
-        <li><code>$0xffffffff$$</code> represents the decimal value -1 (in two's complement).</li>
+        <li><code>$!1$$</code> represents the decimal value 1.</li>
+        <li><code>$!a$$</code> represents the decimal value 10.</li>
+        <li><code>$!1f$$</code> represents the decimal value 31.</li>
+        <li><code>$!ffffffff$$</code> represents the decimal value -1 (in two's complement).</li>
     </ul>
     <p>Integers are case-insensitive; typically, lowercase letters are preferred but not mandatory.</p>
     <h4 id="string-literals">String Literals<a href="#top"></a></h4>
@@ -148,8 +148,8 @@
         even other quotations, allowing for nested structures.</p>
     <p>Examples:</p>
     <ul>
-        <li><code>($0x1$$ $0x2$$ $0x3$$)</code> - A quotation containing three integer literals.</li>
-        <li><code>($0x1$$ $"hello"$$ ($0x2$$ $0x3$$))</code> - A nested quotation containing an integer, a string, and
+        <li><code>($!1$$ $!2$$ $!3$$)</code> - A quotation containing three integer literals.</li>
+        <li><code>($!1$$ $"hello"$$ ($!2$$ $!3$$))</code> - A nested quotation containing an integer, a string, and
             another
             quotation.</li>
     </ul>
@@ -157,7 +157,7 @@
         structures and control flow mechanisms.</p>
     <h4 id="symbol-identifiers">Symbol Identifiers<a href="#top"></a></h4>
     <p>Symbol identifiers in hex are used to represent built-in native symbols and user-defined symbols.</p>
-    <p>There are 0x40 (64) <a href="#native-symbols">native symbols</a> in hex, and some of them contain special
+    <p>There are $40 (64) <a href="#native-symbols">native symbols</a> in hex, and some of them contain special
         characters like <code>==</code> or <code>.</code></p>
     <p>Instead, user-defined symbols:</p>
     <ul>
@@ -180,19 +180,19 @@
         two's complement), and range from <code>-2,147,483,647</code> (<code>-2<sup>31</sup></code>) and
         <code>2,147,483,647</code> (<code>2<sup>31</sup> - 1</code>)
     </p>
-    <p>Integers are written using the prefix <code>$0x$$</code> followed by up to 8 hexadecimal digits.</p>
-    <p>hex integers are case-insensitive, meaning that <code>$0x1f$$</code> and
-        <code><span class="hex-integer">0X1F</span></code> are equivalent
+    <p>Integers are written using the prefix <code>$</code> followed by up to 8 hexadecimal digits.</p>
+    <p>hex integers are case-insensitive, meaning that <code>$!1f$$</code> and
+        <code><span class="hex-integer">$1F</span></code> are equivalent
         (however, lowercase letters are preferred).
     </p>
     computations.</p>
-    <p>Because hex has no boolean data type, $0x0$$ is assumed to be false, and any other integer value is assumed to be
+    <p>Because hex has no boolean data type, $!0$$ is assumed to be false, and any other integer value is assumed to be
         true.</p>
     <p>Examples:</p>
     <ul>
-        <li><code>$0x1$$</code> &mdash; Represents the decimal value 1.</li>
-        <li><code>$0xffffffff$$</code> &mdash; Represents the decimal value -1.</li>
-        <li><code>$0x10$$</code> &mdash; Represents the decimal value 16.</li>
+        <li><code>$!1$$</code> &mdash; Represents the decimal value 1.</li>
+        <li><code>$!ffffffff$$</code> &mdash; Represents the decimal value -1.</li>
+        <li><code>$!10$$</code> &mdash; Represents the decimal value 16.</li>
     </ul>
     <h4 id="strings">Strings<a href="#top"></a></h4>
     <p>Strings in hex are sequences of characters delimited by double quotes (<code>"</code>). They can contain any
@@ -215,17 +215,17 @@
         quotation effectively acts as code blocks, holding code that can be executed later on using appropriate
         dequoting symbols.</p>
     <p>Consider the following example:</p>
-    <pre><code>    $0x0$$ $"t-count"$$ $::$$
-    ($:t-count$$ $0xa$$ $:&lt;$$)
+    <pre><code>    $!0$$ $"t-count"$$ $::$$
+    ($:t-count$$ $!a$$ $:&lt;$$)
         (
             $:t-count$$ $:puts$$
-            $:t-count$$ $0x1$$ $:+$$ $"t-count"$$ $::$$
+            $:t-count$$ $!1$$ $:+$$ $"t-count"$$ $::$$
         )
     $:while$$
     $"t-count"$$ $:#$$</code></pre>
     <p>This example defines a symbol <code>$:t-count$$</code> that counts from 0 to 9 and prints each number to the
         standard
-        output. The quotation <code>($:t-count$$ $0xa$$ $:&lt;$$)</code> is used to check if the count is less than 10,
+        output. The quotation <code>($:t-count$$ $!a$$ $:&lt;$$)</code> is used to check if the count is less than 10,
         and the
         <code>$:while$$</code> symbol repeats the process until the condition is no longer met.
     </p>
@@ -235,7 +235,7 @@
     <p>In hex there native symbols and user-defined symbols. Native symbols are
         built-in functions that perform specific operations, while user-defined symbols are created by the user to store
         values or define custom behavior.</p>
-    <p>hex provides 64 ($0x40$$) native symbols that cover a wide range of functionality, including arithmetic
+    <p>hex provides 64 ($!40$$) native symbols that cover a wide range of functionality, including arithmetic
         operations, control flow, I/O operations, file manipulation, and stack manipulation.</p>
     <p>You can think of symbols as both functions that manipulate the <a href="#stack">stack</a>, or
         variables that can be used to store literal values.</p>
@@ -262,9 +262,9 @@
     </p>
     <p>Examples:</p>
     <ul>
-        <li><code>$0x1$$</code> &mdash; Pushes the integer 1 onto the stack.</li>
+        <li><code>$!1$$</code> &mdash; Pushes the integer 1 onto the stack.</li>
         <li><code>$"Hello, World!"$$</code> &mdash; Pushes the string <code>Hello, World!</code> onto the stack.</li>
-        <li><code>($0x1$$ $0x2$$ $0x3$$)</code> &mdash; Pushes the quotation <code>($0x1$$ $0x2$$ $0x3$$)</code> onto
+        <li><code>($!1$$ $!2$$ $!3$$)</code> &mdash; Pushes the quotation <code>($!1$$ $!2$$ $!3$$)</code> onto
             the stack.
         </li>
     </ul>
@@ -282,20 +282,20 @@
         on the stack, one by one.</p>
     <p>Consider the following example hex program:</p>
     <pre><code>    ($:dup$$ $:*$$ $:*$$) $"square"$$ $::$$
-    $0x3$$ $:square$$ $:.$$ $:puts$$ $; prints 9$$</code></pre>
+    $!3$$ $:square$$ $:.$$ $:puts$$ $; prints 9$$</code></pre>
     <p>This program defines a symbol $:square$$ that can be used to calculate the square value of an integer, using the
         symbol {{sym-:}}. From then on, if $:square$$ is found anywhere in the same hex program, it
         will be substituted with <code>($:*$$ $:*$$)</code>. However, this is not enough to calculate the square value,
         because the logic to do so is in a quotation. To "execute" (dequote) a quotation, you must use the {{sym-.}}
         symbol, which pushes all the items in the quotation on the stack, which is equivalent
         to the following program:</p>
-    <pre><code>    $0x3$$ $:dup$$ $:*$$ $:*$$ $:puts$$ $; prints 9$$</code></pre>
+    <pre><code>    $!3$$ $:dup$$ $:*$$ $:*$$ $:puts$$ $; prints 9$$</code></pre>
     <p>While the {{sym-:}} symbol can be used to store quotations that can then be dequoted later using {{sym-.}},
         typically you want to define operators which are <em>immediately dequoted</em> when pushed on the stack, thus
         behaving in a similar way as their native counterparts.</p>
     <p>You can achieve this using the {{sym-::}} symbol, and the previous example can be rewritten as follows:</p>
     <pre><code>    ($:dup$$ $:*$$ $:*$$) $"square"$$ $:::$$
-    $0x3$$ $:square$$ $:puts$$ $; prints 9$$</code></pre>
+    $!3$$ $:square$$ $:puts$$ $; prints 9$$</code></pre>
     <p>In this case, you no longer need to explicitly dequote $:square$$ using $:.$$, because it has been stored as an
         <em>operator</em> and hex knows it has to be immediately dequoted when pushed on the stack.
     </p>
@@ -391,9 +391,9 @@
         <li>Four bytes representing the signed integer value using two's complement, in little-endian format.</li>
     </ul>
 
-    <p>For example, the sequence <code>01 04 fe ff ff ff</code> represents the integer <code>-2</code> ($0xfffffe$$),
+    <p>For example, the sequence <code>01 04 fe ff ff ff</code> represents the integer <code>-2</code> ($!fffffe$$),
         and
-        the sequence <code>01 01 10</code> represents the integer 16 ($0x10$).</p>
+        the sequence <code>01 01 10</code> represents the integer 16 ($$10$).</p>
 
     <h5 id="pushstr">02 - PUSHST<a href="#top"></a></h5>
     <p>The <code>02</code> (PUSHST) opcode is used to push a string value onto the stack. The <code>02</code> opcode is
@@ -428,19 +428,19 @@
     <p>
         <code>03 05 02 04 74 65 73 74 01 01 01 38 3d 45</code>
     </p>
-    <p>represents the quotation <code>($"test"$$ $0x1$$ $:dec$$ $:cat$$ $:puts$$)</code></p>
+    <p>represents the quotation <code>($"test"$$ $!1$$ $:dec$$ $:cat$$ $:puts$$)</code></p>
 
     <h4 id="bytecode-example">Full Bytecode Example<a href="#top"></a></h4>
     <p>Consider the following hex program:</p>
     <pre><code>(
   $"_n"$$ $:$$
-  ($:_n$$ $0x0$$ $:&lt;=$$)
-    ($0x1$$)
-    ($:_n$$ $:dup$$ $0x1$$ $:-$$ $:factorial$$ $:*$$)
+  ($:_n$$ $!0$$ $:&lt;=$$)
+    ($!1$$)
+    ($:_n$$ $:dup$$ $!1$$ $:-$$ $:factorial$$ $:*$$)
   $:if$$
   $"_n"$$ $:#$$
 ) $"factorial"$$ $:::$$
-$0x5$$ $:factorial$$ $:dec$$ $:puts$$</code></pre>
+$!5$$ $:factorial$$ $:dec$$ $:puts$$</code></pre>
 
     <p>This gets compiled to the following bytecode:</p>
 
@@ -470,19 +470,19 @@ $; Push quotation of seven items$$
    03 03 
       $; Lookup first symbol (_n)$$
       00 00 00 
-      $; Push integer 0x0$$
+      $; Push integer $0$$
       01 01 00 
       30 $; Symbol <=$$
    $; Push quotation of one item$$
    03 01 
-      $; Push integer 0x1$$
+      $; Push integer $1$$
       01 01 01 
    $; Push quotation of six items$$
    03 06 
       $; Lookup first symbol (_n)$$
       00 00 00 
       19 $; Symbol dup$$
-      $; Push integer 0x1$$
+      $; Push integer $1$$
       01 01 01 
       21 $; symbol -$$
       $; Lookup second symbol (factorial)$$
@@ -502,7 +502,7 @@ $; Lookup second symbol (factorial)$$
 44 $; Symbol puts$$</code></pre>
 
     <h3 id="native-symbols">Native Symbol Reference<a href="#top"></a></h3>
-    <p>hex provides a set of 64 ($0x40$$) native symbols that are built-in and pre-defined in the registry. The
+    <p>hex provides a set of 64 ($!40$$) native symbols that are built-in and pre-defined in the registry. The
         following section provides details on each of these symbols, including a signature illustrating how each
         symbol
         manipulates the stack.</p>
@@ -666,63 +666,63 @@ $; Lookup second symbol (factorial)$$
     <h5 id="equal-symbol"><code>$:==$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a1 a2 &rarr; i</mark></p>
     <aside>OPCODE: <code>2b</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are equal, or
-        <code>0x0</code>
+    <p>Pushes <code>$1</code> on the stack if <code>a1</code> and <code>a2</code> are equal, or
+        <code>$0</code>
         otherwise.
     </p>
     <h5 id="notequal-symbol"><code>$:!=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2c</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>a1</code> and <code>a2</code> are not equal, or
-        <code>0x0</code>
+    <p>Pushes <code>$1</code> on the stack if <code>a1</code> and <code>a2</code> are not equal, or
+        <code>$0</code>
         otherwise.
     </p>
     <h5 id="greaterthan-symbol"><code>$:&gt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2d</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or
-        <code>0x0</code>
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> is greater than <code>i2</code>, or
+        <code>$0</code>
         otherwise.
     </p>
     <h5 id="lessthan-symbol"><code>$:&lt;$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2e</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is less than <code>i2</code>, or <code>0x0</code>
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> is less than <code>i2</code>, or <code>$0</code>
         otherwise.</p>
     <h5 id="greaterthanequal-symbol"><code>$:&gt;=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 12 &rarr; i</mark></p>
     <aside>OPCODE: <code>2f</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is greater than or equal to <code>i2</code>, or
-        <code>0x0</code> otherwise.
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> is greater than or equal to <code>i2</code>, or
+        <code>$0</code> otherwise.
     </p>
     <h5 id="lessthanequal-symbol"><code>$:&lt;=$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <aside>OPCODE: <code>30</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> is less than or equal to <code>i2</code>, or
-        <code>0x0</code> otherwise.
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> is less than or equal to <code>i2</code>, or
+        <code>$0</code> otherwise.
     </p>
     <h4 id="boolean-logic-symbols">Boolean Logic Symbols<a href="#top"></a></h4>
     <h5 id="and-symbol"><code>$:and$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <aside>OPCODE: <code>31</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are non-zero integers, or
-        <code>0x0</code> otherwise.
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> and <code>i2</code> are non-zero integers, or
+        <code>$0</code> otherwise.
     </p>
     <h5 id="or-symbol"><code>$:or$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <aside>OPCODE: <code>32</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> or <code>i2</code> are non-zero integers, or
-        <code>0x0</code> otherwise.
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> or <code>i2</code> are non-zero integers, or
+        <code>$0</code> otherwise.
     </p>
     <h5 id="not-symbol"><code>$:not$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; i</mark></p>
     <aside>OPCODE: <code>33</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i</code> is zero, or <code>0x0</code> otherwise.</p>
+    <p>Pushes <code>$1</code> on the stack if <code>i</code> is zero, or <code>$0</code> otherwise.</p>
     <h5 id="xor-symbol"><code>$:xor$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i1 i2 &rarr; i</mark></p>
     <aside>OPCODE: <code>34</code></aside>
-    <p>Pushes <code>0x1</code> on the stack if <code>i1</code> and <code>i2</code> are different, or
-        <code>0x0</code>
+    <p>Pushes <code>$1</code> on the stack if <code>i1</code> and <code>i2</code> are different, or
+        <code>$0</code>
         otherwise.
     </p>
     <h4 id="type-checking-and-conversion-symbols">Type Checking and Conversion Symbols<a href="#top"></a></h4>
@@ -757,14 +757,14 @@ $; Lookup second symbol (factorial)$$
     <aside>OPCODE: <code>39</code></aside>
     <p>Pushes the ASCII value of the string <code>s</code> on the stack.</p>
     <p>If <code>s</code> is longer than 1 character or if it is not representable using an ASCII code between
-        $0x0$$
+        $!0$$
         and
-        $0x7f$$, <code>$0xffffffff$$</code> is pushed on the stack.</p>
+        $!7f$$, <code>$!ffffffff$$</code> is pushed on the stack.</p>
     <h5 id="chr-symbol"><code>$:chr$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> i &rarr; s</mark></p>
     <aside>OPCODE: <code>3a</code></aside>
     <p>Pushes the ASCII character represented by the integer <code>i</code> on the stack.</p>
-    <p>If <code>i</code> is not between $0x0$$ and $0x7f$$, an empty string is pushed on the stack.</p>
+    <p>If <code>i</code> is not between $!0$$ and $!7f$$, an empty string is pushed on the stack.</p>
     <h5 id="type-symbol"><code>$:type$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> a &rarr; s</mark></p>
     <aside>OPCODE: <code>3b</code></aside>
@@ -790,7 +790,7 @@ $; Lookup second symbol (factorial)$$
     <aside>OPCODE: <code>3f</code></aside>
     <p>Pushes the index of the first occurrence of the literal <code>a</code> in a string or a quotation on the
         stack.
-        If <code>a</code> is not found, <code>$0xffffffff$$</code> is pushed on the stack.</p>
+        If <code>a</code> is not found, <code>$!ffffffff$$</code> is pushed on the stack.</p>
     <h5 id="join-symbol"><code>$:join$$</code> Symbol<a href="#top"></a></h5>
     <p><mark> q s1 &rarr; s2</mark></p>
     <aside>OPCODE: <code>40</code></aside>

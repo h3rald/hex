@@ -1,6 +1,7 @@
 <article>
     <h2>Changelog</h2>
     <ul>
+<li><a href="#v0.7.0">v0.7.0</a></li>
 <li><a href="#v0.6.0">v0.6.0</a></li>
 <li><a href="#v0.5.0">v0.5.0</a></li>
 <li><a href="#v0.4.1">v0.4.1</a></li>
@@ -8,6 +9,28 @@
 <li><a href="#v0.3.0">v0.3.0</a></li>
 <li><a href="#v0.2.0">v0.2.0</a></li>
 <li><a href="#v0.1.0">v0.1.0</a></li>
+</ul>
+<h3 id="v0.7.0">v0.7.0 &mdash; 2026-03-04</h3>
+
+<h4>Breaking Changes</h4>
+<ul>
+    <li>Changed integer literal notation from <code>0x</code> prefix to <code>$</code> prefix (e.g., <code>$1f</code> instead of <code>0x1f</code>).</li>
+</ul>
+
+<h4>Fixes</h4>
+<ul>
+    <li>Fixed several memory leaks in the <a href="https://hex.2c.fyi/spec#if-symbol">if</a>, <a href="https://hex.2c.fyi/spec#try-symbol">try</a>, <a href="https://hex.2c.fyi/spec#error-symbol">error</a>, <a href="https://hex.2c.fyi/spec#args-symbol">args</a>, <a href="https://hex.2c.fyi/spec#get-symbol">get</a>, and <a href="https://hex.2c.fyi/spec#run-symbol">run</a> symbols.</li>
+    <li>Fixed memory leaks in bytecode interpretation of integers, strings, and native symbols.</li>
+    <li>Fixed memory leaks in CLI argument handling.</li>
+    <li>Fixed a potential crash in <a href="https://hex.2c.fyi/spec#equal-symbol">==</a> when comparing symbols with non-symbol types.</li>
+    <li>Fixed the <a href="https://hex.2c.fyi/spec#run-symbol">run</a> symbol to use dynamically allocated buffers instead of fixed-size buffers for command output.</li>
+    <li>Fixed bytecode string length decoding loop.</li>
+    <li>Fixed bytecode user symbol index to use 2-byte little-endian encoding.</li>
+</ul>
+
+<h4>Chores</h4>
+<ul>
+    <li>Increased test coverage.</li>
 </ul>
 <h3 id="v0.6.0">v0.6.0 &mdash; 2025-11-09</h3>
 
@@ -22,7 +45,7 @@
     <li>Implemented the possibility to load additional <code>.hex</code> or <code>.hbx</code> files at startup by using the <code>-l, --load</code>
         option.
     </li>
-    <li>Implemented a <code>utils.hex</code> library as part of the <a href="https://hex.2c.fyi/lib/">Standard Library</a>,
+    <li>Implemented a <code>utils.hex</code> library as part of the new <a href="https://hex.2c.fyi/lib/">Standard Library</a>,
         containing additional utility symbols (loaded automatically in the playground).</li>
 </ul>
 
@@ -34,7 +57,7 @@
 
 <h4>Chores</h4>
 <ul>
-    <li>Added tests for <code>utils.hex</code></li>
+    <li>Added tests for <code>utils.hex</code>.</li>
     <li>Implemented a basic <code>doc.hex</code> script to generate reference documentation from hex files.</li>
 </ul>
 <h3 id="v0.5.0">v0.5.0 &mdash; 2025-04-08</h3>
@@ -148,7 +171,7 @@
     <li>Integrated REPL.</li>
     <li>Integrated help and manual.</li>
     <li>Debug mode.</li>
-    <li>0x40 (64) native symbols.</li>
+    <li>$40 (64) native symbols.</li>
     <li>Support for 32bit hexadecimal integers, strings, and quotations (lists).</li>
     <li>A complete <a href="https://hex.2c.fyi">web site</a> with more documentation and even an interactive playground.
     </li>

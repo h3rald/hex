@@ -24,7 +24,7 @@
 
 ;;; unless
 ;; q1 q2 -> *
-;; If %:q1%% pushes 0x0 on the stack, dequotes %:q2%%.
+;; If %:q1%% pushes $0 on the stack, dequotes %:q2%%.
 (
   ()
   swap
@@ -33,7 +33,7 @@
 
 ;;; when
 ;; q1 q2 -> *
-;; If %:q1%% pushes 0x1 on the stack, dequotes %:q2%%.
+;; If %:q1%% pushes $1 on the stack, dequotes %:q2%%.
 (
   ()
   if
@@ -53,7 +53,7 @@
 ;; q1 q2 -> *
 ;; Applies %:q2%% to each element of %:q1%%.
 (
-  (0x0) cat map drop
+  ($0) cat map drop
 ) "each" ::
 
 ;;; filter
@@ -84,10 +84,10 @@
   "_ins_index" :
   "_ins_item" :
   "_ins_list" :
-  0x0 "_ins_c" :
+  $0 "_ins_c" :
   () "_ins_result" :
   _ins_list len "_ins_len" :
-  (_ins_index _ins_len >= _ins_index 0x0 < or)
+  (_ins_index _ins_len >= _ins_index $0 < or)
     ("[symbol ins] Index out of bounds" throw)
   when
   (_ins_c _ins_len <)
@@ -96,7 +96,7 @@
         (_ins_result _ins_item ' cat "_ins_result" :)
       when
       _ins_result _ins_list  _ins_c get ' cat "_ins_result" :
-      _ins_c 0x1 + "_ins_c" :
+      _ins_c $1 + "_ins_c" :
     )
   while
   _ins_result
@@ -113,14 +113,14 @@
 ;; Pushes the maximum item of q on the stack.
 (
   "_max_list" :
-  _max_list 0x0 get "_max_result" :
-  0x1 "_max_c" :
+  _max_list $0 get "_max_result" :
+  $1 "_max_c" :
   (_max_c _max_list len <)
     (
       (_max_result _max_list _max_c get <)
         (_max_list _max_c get "_max_result" :)
       when
-      _max_c 0x1 + "_max_c" :
+      _max_c $1 + "_max_c" :
     )
   while
   _max_result
@@ -134,14 +134,14 @@
 ;; Pushes the minimum item of q on the stack.
 (
   "_min_list" :
-  _min_list 0x0 get "_min_result" :
-  0x1 "_min_c" :
+  _min_list $0 get "_min_result" :
+  $1 "_min_c" :
   (_min_c _min_list len <)
     (
       (_min_result _min_list _min_c get >)
         (_min_list _min_c get "_min_result" :)
       when
-      _min_c 0x1 + "_min_c" :
+      _min_c $1 + "_min_c" :
     )
   while
   _min_result
@@ -156,11 +156,11 @@
 (
   "_pop_q" :
   () "_pop_res" :
-  0x0 "_pop_c" :
-  (_pop_c _pop_q len 0x1 - <)
+  $0 "_pop_c" :
+  (_pop_c _pop_q len $1 - <)
     (
       _pop_res _pop_q _pop_c get push "_pop_res" :
-      _pop_c 0x1 + "_pop_c" :
+      _pop_c $1 + "_pop_c" :
     )
   while
   _pop_res
@@ -184,16 +184,16 @@
   "_rem_index" :
   "_rem_list"  :
   () "_rem_result" :
-  (_rem_index _rem_list len >= _rem_index 0x0 < or)
+  (_rem_index _rem_list len >= _rem_index $0 < or)
     ("[symbol rem] Index out of bounds" throw)
   when
-  0x0 "_rem_c" :
+  $0 "_rem_c" :
   (_rem_c _rem_list len <)
     (
       (_rem_c _rem_index !=)
         (_rem_result _rem_list _rem_c get ' cat "_rem_result" :)
       when
-      _rem_c 0x1 + "_rem_c" :
+      _rem_c $1 + "_rem_c" :
     )
   while
   _rem_result
@@ -208,12 +208,12 @@
 ;; Reverses the order of the items in a quotation.
 (
   "_reverse_list" :
-  _reverse_list len 0x1 - "_reverse_c" : 
+  _reverse_list len $1 - "_reverse_c" : 
   () "_reverse_result" :
-  (_reverse_c 0x0 >=)
+  (_reverse_c $0 >=)
     (
        _reverse_result _reverse_list _reverse_c get ' cat "_reverse_result" :
-       _reverse_c 0x1 - "_reverse_c" :
+       _reverse_c $1 - "_reverse_c" :
     )
   while
   _reverse_result
@@ -230,17 +230,17 @@
   "_set_item"  :
   "_set_list"  :
   () "_set_result" :
-  (_set_index _set_list len >= _set_index 0x0 < or)
+  (_set_index _set_list len >= _set_index $0 < or)
     ("[symbol set] Index out of bounds" throw)
   when
-  0x0 "_set_c" :
+  $0 "_set_c" :
   (_set_c _set_list len <)
     (
       (_set_c _set_index ==)
         (_set_result _set_item ' cat "_set_result" :)
         (_set_result _set_list  _set_c get ' cat "_set_result" :)
       if
-      _set_c 0x1 + "_set_c" :
+      _set_c $1 + "_set_c" :
     )
   while
   _set_result
@@ -253,31 +253,31 @@
 
 ;;; sort
 ;; q1 q2 -> q3
-;; Sorts the items of q1 based on the comparison quotation q2 (must push 0x0 or 0x1 on the stack).
+;; Sorts the items of q1 based on the comparison quotation q2 (must push $0 or $1 on the stack).
 (
   "_sort_check"            :
   "_sort_list"             :
   _sort_list len "_sort_n" :
-  0x0 "_sort_i"            :
-  0x1 "_sort_swapped"      :
+  $0 "_sort_i"            :
+  $1 "_sort_swapped"      :
   (_sort_swapped)
     (
-      0x0 "_sort_swapped"    :
-      0x0 "_sort_i"          :
-      (_sort_i _sort_n 0x1 - <)
+      $0 "_sort_swapped"    :
+      $0 "_sort_i"          :
+      (_sort_i _sort_n $1 - <)
         (
           _sort_list _sort_i get "_sort_current" :
-          _sort_list _sort_i 0x1 + get "_sort_next" :
+          _sort_list _sort_i $1 + get "_sort_next" :
           (_sort_current _sort_next _sort_check .)
             (
               _sort_list 
-                _sort_current _sort_i 0x1 + set
+                _sort_current _sort_i $1 + set
                 _sort_next _sort_i set
               "_sort_list" :
-              0x1 "_sort_swapped" :
+              $1 "_sort_swapped" :
             )
           when
-          _sort_i 0x1 + "_sort_i" :
+          _sort_i $1 + "_sort_i" :
           "_sort_current" #
           "_sort_next"    #
         )
@@ -306,10 +306,10 @@
 (
   "_times_i" :
   "_times_q" :
-  (_times_i 0x0 >)
+  (_times_i $0 >)
     (
       _times_q . 
-      _times_i 0x1 - "_times_i" :
+      _times_i $1 - "_times_i" :
     )
   while
   "_times_q" #
@@ -322,14 +322,14 @@
 (
   "_uncons_list" :
   () "_uncons_result" :
-  0x1 "_uncons_c" :
+  $1 "_uncons_c" :
   (_uncons_c _uncons_list len <)
     (
       _uncons_result _uncons_list _uncons_c get push "_uncons_result" :
-      _uncons_c 0x1 + "_uncons_c" :
+      _uncons_c $1 + "_uncons_c" :
     )
   while
-  _uncons_list 0x0 get ; Push the first item
+  _uncons_list $0 get ; Push the first item
   _uncons_result ; Push the rest of the items
   "_uncons_list"   #
   "_uncons_result" #
@@ -343,15 +343,15 @@
 (
   "_unswons_list" :
   () "_unswons_result" :
-  0x1 "_unswons_c" :
+  $1 "_unswons_c" :
   (_unswons_c _unswons_list len <)
     (
       _unswons_result _unswons_list _unswons_c get push "_unswons_result" :
-      _unswons_c 0x1 + "_unswons_c" :
+      _unswons_c $1 + "_unswons_c" :
     )
   while
   _unswons_result ; Push the rest of the items
-  _unswons_list 0x0 get ; Push the first item
+  _unswons_list $0 get ; Push the first item
   "_unswons_list"   #
   "_unswons_result" #
   "_unswons_c"      #
@@ -381,14 +381,14 @@
 
 ;;; begins
 ;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% begins with %:s2%%, or $0x0$$ otherwise.
+;; Pushes $!1$$ on the stack if %:s1%% begins with %:s2%%, or $!0$$ otherwise.
 (
-  index 0x0 ==
+  index $0 ==
 ) "begins" ::
 
 ;;; ends
 ;; s1 s2 -> s3
-;; Pushes $0x1$$ on the stack if %:s1%% ends with %:s2%%, or $0x0$$ otherwise.
+;; Pushes $!1$$ on the stack if %:s1%% ends with %:s2%%, or $!0$$ otherwise.
 (
   "_ends_suffix" :
   "_ends_s"      :
@@ -405,14 +405,14 @@
 (
   "_fmt_q" :
   "_fmt_s" :
-  0x0 "_fmt_c" :
-  (_fmt_q len 0xa >)
+  $0 "_fmt_c" :
+  (_fmt_q len $a >)
     ("[symbol fmt] Only a maximum of 10 placeholders are supported" throw)
   when
   (_fmt_c _fmt_q len <)
     (
       _fmt_s "${" _fmt_c str cat "}" cat _fmt_q _fmt_c get gsub "_fmt_s" :
-      _fmt_c 0x1 + "_fmt_c" :
+      _fmt_c $1 + "_fmt_c" :
     )
   while
   _fmt_s
@@ -428,7 +428,7 @@
   "_gsub_rep"  :
   "_gsub_src"  :
   "_gsub_text" :
-  (_gsub_text _gsub_src index 0x0 >=)
+  (_gsub_text _gsub_src index $0 >=)
     (_gsub_text _gsub_src _gsub_rep sub "_gsub_text" :)
   while
   _gsub_text
@@ -445,13 +445,13 @@
   "_slice_start" :
   "_slice_str" :
   "" "_slice_result" :
-  (_slice_end _slice_str len >= _slice_start 0x0 < or)
+  (_slice_end _slice_str len >= _slice_start $0 < or)
     ("[symbol slice] Index out of bounds" throw)
   when
   (_slice_start _slice_end <=)
     (
       _slice_result _slice_str _slice_start get cat "_slice_result" : 
-      _slice_start 0x1 + "_slice_start" :
+      _slice_start $1 + "_slice_start" :
     )
   while
   _slice_result

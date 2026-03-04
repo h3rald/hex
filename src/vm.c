@@ -8,7 +8,7 @@
 
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
-    hex_debug(ctx, "PUSHIN[01]: 0x%x", value);
+    hex_debug(ctx, "PUSHIN[01]: $%x", value);
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
@@ -65,6 +65,7 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         return 1;
     }
     hex_debug(ctx, "PUSHST[02]: \"%s\"", str);
+    free(str); // only needed for debug output
     size_t len = strlen(value);
     // Check if we need to resize the buffer (size + strlen + opcode (1) + max encoded length (4))
     if (*size + len + 1 + 4 > *capacity)
@@ -86,7 +87,6 @@ int hex_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t *size, si
         if ((value[i] & 0x80) != 0)
         {
             hex_error(ctx, "[add bytecode string] Multi-byte characters are not supported - Cannot encode string: \"%s\"", value);
-            free(str);
             return 1;
         }
     }
@@ -336,10 +336,15 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, ">> PUSHIN[01]: 0x%x", value);
-    HEX_ALLOC(item)
-    item = hex_integer_item(ctx, value);
+    hex_debug(ctx, ">> PUSHIN[01]: $%x", value);
+    hex_item_t *item = hex_integer_item(ctx, value);
+    if (!item)
+    {
+        hex_error(ctx, "[interpret bytecode integer] Failed to allocate integer item");
+        return 1;
+    }
     *result = *item;
+    free(item);
     return 0;
 }
 
@@ -356,11 +361,14 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
             hex_error(ctx, "[interpret bytecode string] Bytecode size too small to contain a string length");
             return 1;
         }
-        length |= ((**bytecode & 0x7F) << shift);
-        shift += 7;
+        uint8_t b = **bytecode;
         (*bytecode)++;
         (*size)--;
-    } while (**bytecode & 0x80);
+        length |= ((b & 0x7F) << shift);
+        shift += 7;
+        if (!(b & 0x80))
+            break;
+    } while (1);
 
     if (*size < length)
     {
@@ -379,16 +387,16 @@ int hex_interpret_bytecode_string(hex_context_t *ctx, uint8_t **bytecode, size_t
     *bytecode += length;
     *size -= length;
 
-    HEX_ALLOC(item);
-    item = hex_string_item(ctx, value);
-    *result = *item;
-    char *str = hex_process_string(value);
-    if (!str)
+    hex_item_t *item = hex_string_item(ctx, value);
+    free(value); // raw buffer no longer needed after string item is created
+    if (!item)
     {
-        hex_error(ctx, "[interpret bytecode string] Memory allocation failed");
+        hex_error(ctx, "[interpret bytecode string] Failed to allocate string item");
         return 1;
     }
-    hex_debug(ctx, ">> PUSHST[02]: \"%s\"", str);
+    *result = *item;
+    free(item); // free wrapper only; str_value is now owned by result
+    hex_debug(ctx, ">> PUSHST[02]: \"%s\"", result->data.str_value);
     return 0;
 }
 
@@ -402,9 +410,20 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         return 1;
     }
 
-    HEX_ALLOC(item);
+    hex_item_t *item = calloc(1, sizeof(hex_item_t));
+    if (!item)
+    {
+        hex_error(ctx, "[interpret bytecode native symbol] Memory allocation failed");
+        return 1;
+    }
     item->type = HEX_TYPE_NATIVE_SYMBOL;
-    HEX_ALLOC(value);
+    hex_item_t *value = calloc(1, sizeof(hex_item_t));
+    if (!value)
+    {
+        hex_error(ctx, "[interpret bytecode native symbol] Memory allocation failed");
+        free(item);
+        return 1;
+    }
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
     token->value = strdup(symbol);
     token->position = (hex_file_position_t *)malloc(sizeof(hex_file_position_t));
@@ -416,29 +435,33 @@ int hex_interpret_bytecode_native_symbol(hex_context_t *ctx, uint8_t opcode, siz
         item->token = token;
         item->type = HEX_TYPE_NATIVE_SYMBOL;
         item->data.fn_value = value->data.fn_value;
+        hex_free_item(ctx, value); // free the registry copy (including its token)
     }
     else
     {
         hex_error(ctx, "(%d,%d) Unable to reference native symbol: %s (bytecode)", token->position->line, token->position->column, token->value);
         hex_free_token(token);
+        free(value); // just wrapper; get_symbol did not fill it
+        free(item);
         return 1;
     }
     hex_debug(ctx, ">> NATSYM[%02x]: %s", opcode, token->value);
     *result = *item;
+    free(item); // free wrapper only; token/fn_value now owned by result
     return 0;
 }
 
 int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t position, const char *filename, hex_item_t *result)
 {
-    // Get the index of the symbol (one byte)
-    if (*size == 0)
+    // Get the 2-byte little-endian index of the symbol
+    if (*size < 2)
     {
-        hex_error(ctx, "[interpret bytecode user symbol] Bytecode size too small to contain a symbol length");
+        hex_error(ctx, "[interpret bytecode user symbol] Bytecode size too small to contain a symbol index");
         return 1;
     }
-    size_t index = **bytecode;
-    (*bytecode)++;
-    (*size)--;
+    uint16_t index = (uint16_t)((*bytecode)[0]) | ((uint16_t)((*bytecode)[1]) << 8);
+    (*bytecode) += 2;
+    (*size) -= 2;
 
     if (index >= ctx->symbol_table->count)
     {
@@ -446,16 +469,13 @@ int hex_interpret_bytecode_user_symbol(hex_context_t *ctx, uint8_t **bytecode, s
         return 1;
     }
     char *value = hex_symboltable_get_value(ctx, index);
-    size_t length = strlen(value);
 
     if (!value)
     {
         hex_error(ctx, "[interpret bytecode user symbol] Memory allocation failed");
         return 1;
     }
-
-    *bytecode += 1;
-    *size -= 1;
+    size_t length = strlen(value);
 
     hex_token_t *token = (hex_token_t *)malloc(sizeof(hex_token_t));
 

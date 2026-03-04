@@ -1,17 +1,17 @@
 #!/usr/bin/env hex
 "./lib/utils.hbx" read "utils.hbx" !
 
-(args len 0x3 <) 
-    ("ERROR: no input file specified." puts 0x1 exit)
+(args len $3 <) 
+    ("ERROR: no input file specified." puts $1 exit)
 when
 
-args 0x2 get "INFILE" : 
+args $2 get "INFILE" : 
 
-(args len 0x4 <) 
-    ("ERROR: no output file specified." puts 0x1 exit)
+(args len $4 <) 
+    ("ERROR: no output file specified." puts $1 exit)
 when
 
-args 0x3 get "OUTFILE" : 
+args $3 get "OUTFILE" :
 
 
 "*** Processing ${0}..." (INFILE) fmt puts 

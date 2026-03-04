@@ -107,7 +107,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
     switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item.data.int_value);
+        fprintf(stream, "$%x", item.data.int_value);
         break;
     case HEX_TYPE_STRING:
         fprintf(stream, "%s", item.data.str_value);
@@ -215,7 +215,7 @@ void hex_print_item(FILE *stream, hex_item_t *item)
     switch (item->type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item->data.int_value);
+        fprintf(stream, "$%x", item->data.int_value);
         break;
 
     case HEX_TYPE_STRING:

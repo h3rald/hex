@@ -259,7 +259,7 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
            "  quotations are not evaluated until the contents of the quotation are pushed on the stack.\n"
            "  You can define your own symbols using the symbol ':' and execute a quotation with '.'.\n"
            "\n"
-           "  Oh, and of course all integers are in hexadecimal format! ;)\n"
+            "  Oh, and of course all integers are in hexadecimal format, prefixed with '$'! ;)\n"
            "\n"
            "SYMBOLS\n"
            "  +---------+----------------------------+--------------------------------------------------------------------+\n"
@@ -365,7 +365,7 @@ int main(int argc, char *argv[])
     {
         for (int i = 1; i < argc; i++)
         {
-            char *arg = strdup(argv[i]);
+            char *arg = argv[i];
             if ((strcmp(arg, "-v") == 0 || strcmp(arg, "--version") == 0))
             {
                 printf("%s\n", HEX_VERSION);
@@ -417,7 +417,7 @@ int main(int argc, char *argv[])
             {
                 if (!file)
                 {
-                    file = arg;
+                    file = strdup(argv[i]);
                 }
                 // Ignore extra arguments
             }
@@ -448,6 +448,7 @@ int main(int argc, char *argv[])
                     hex_error(ctx, "[generate bytecode] Failed to generate bytecode");
                     free(fileContent);
                     free(bytecode_file);
+                    free(file);
                     hex_destroy(ctx);
                     return 1;
                 }
@@ -456,18 +457,21 @@ int main(int argc, char *argv[])
                     free(fileContent);
                     free(bytecode_file);
                     free(bytecode);
+                    free(file);
                     hex_destroy(ctx);
                     return 1;
                 }
                 free(fileContent);
                 free(bytecode_file);
                 free(bytecode);
+                free(file);
                 hex_destroy(ctx);
                 return 0;
             }
             else
             {
                 int result = hex_interpret_file(ctx, file);
+                free(file);
                 hex_destroy(ctx);
                 return result;
             }
