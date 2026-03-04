@@ -12,6 +12,11 @@
 </ul>
 <h3 id="v0.7.0">v0.7.0 &mdash; 2026-03-04</h3>
 
+<h4>Breaking Changes</h4>
+<ul>
+    <li>Changed integer literal notation from <code>0x</code> prefix to <code>$</code> prefix (e.g., <code>$1f</code> instead of <code>0x1f</code>).</li>
+</ul>
+
 <h4>Fixes</h4>
 <ul>
     <li>Fixed several memory leaks in the <a href="https://hex.2c.fyi/spec#if-symbol">if</a>, <a href="https://hex.2c.fyi/spec#try-symbol">try</a>, <a href="https://hex.2c.fyi/spec#error-symbol">error</a>, <a href="https://hex.2c.fyi/spec#args-symbol">args</a>, <a href="https://hex.2c.fyi/spec#get-symbol">get</a>, and <a href="https://hex.2c.fyi/spec#run-symbol">run</a> symbols.</li>
@@ -166,7 +171,7 @@
     <li>Integrated REPL.</li>
     <li>Integrated help and manual.</li>
     <li>Debug mode.</li>
-    <li>0x40 (64) native symbols.</li>
+    <li>$40 (64) native symbols.</li>
     <li>Support for 32bit hexadecimal integers, strings, and quotations (lists).</li>
     <li>A complete <a href="https://hex.2c.fyi">web site</a> with more documentation and even an interactive playground.
     </li>

@@ -11,7 +11,7 @@
 "releases" "d-releases" :
 
 ; Get all files from a directory
-("ls " swap cat run 0x1 get "\n" split) "ls" ::
+("ls " swap cat run $1 get "\n" split) "ls" ::
 
 ; Get relevant files
 d-contents ls "contents" :
@@ -33,7 +33,7 @@ d-templates "/page.html" cat "t-page" :
     "$#|" 
     "|#$" 
     "$\"" 
-    "$0x" 
+    "$!" 
     "$:" 
     "$$"
     "%:"
@@ -47,7 +47,7 @@ d-templates "/page.html" cat "t-page" :
     "<span class=\"hex-comment\">#|" 
     "|#</span>" 
     "<span class=\"hex-string\">\""
-    "<span class=\"hex-integer\">0x"
+    "<span class=\"hex-integer\">$"
     "<span class=\"hex-symbol\">"
     "</span>"
     "<code>"
@@ -59,14 +59,14 @@ d-templates "/page.html" cat "t-page" :
 ; Highlight syntax in text
 (
     "t-text" :
-    0x0 "t-count" :
+    $0 "t-count" :
     (t-count highlight-delimiters len <)
         (
             highlight-delimiters t-count get "t-delimiter" :
             highlight-replacements t-count get "t-replacement" :
             ; Find delimiter in text and substitute it with the corresponding replacement
             t-text t-delimiter t-replacement gsub "t-text" :
-            t-count 0x1 + "t-count" :
+            t-count $1 + "t-count" :
         )
     while
     ; Push highlighted text on the stack
@@ -130,12 +130,12 @@ d-templates "/page.html" cat "t-page" :
 (
     releases len "_releases_count" :
     ; Reverse releases order
-    (_releases_count 0x0 >)
+    (_releases_count $0 >)
         (
-            releases _releases_count 0x1 - get "id-release" :
+            releases _releases_count $1 - get "id-release" :
             ; Update releases-content
             d-releases "/" id-release cat cat read releases-content swap cat "releases-content" : 
-            _releases_count 0x1 - "_releases_count" :
+            _releases_count $1 - "_releases_count" :
         )
     while
     "_releases_count"   #
@@ -147,14 +147,14 @@ d-templates "/page.html" cat "t-page" :
     "" "changelog-toc" : ; external
     releases len "_gct_count" :
     ; Reverse releases order
-    (_gct_count 0x0 >)
+    (_gct_count $0 >)
         (
-            releases _gct_count 0x1 - get ".html" "" sub "id-release" :
+            releases _gct_count $1 - get ".html" "" sub "id-release" :
             changelog-toc
             ("<li><a href=\"#v" id-release "\">v" id-release "</a></li>\n") () map "" join 
             cat
             "changelog-toc" :
-            _gct_count 0x1 - "_gct_count" :
+            _gct_count $1 - "_gct_count" :
         )
     while
     "<ul>\n"
@@ -181,11 +181,11 @@ d-contents "/" "changelog.html" cat cat read
 "releases" releases-content process-tag
 "changelog-content" :
 
-0x0 "_c" :
+$0 "_c" :
 (_c symbol-links len <)
     (
         changelog-content symbol-links _c get process-symbol "changelog-content" :
-        _c 0x1 + "_c" :
+        _c $1 + "_c" :
     )
 while
 "_c" #
@@ -200,7 +200,7 @@ changelog-content highlight
 
 ;;;;; Write web site contents
 "*** Generating hex web site..." puts
-0x0 "_c" :
+$0 "_c" :
 (_c contents len <)
     (
         contents _c get "fn-content" :
@@ -218,11 +218,11 @@ changelog-content highlight
         "@@@lib/utils.html@@@" lib_utils_docs sub
         "new-content" :
         ; Replace symbols with links
-        0x0 "_i" :
+        $0 "_i" :
         (_i symbol-links len <)
             (
                 new-content symbol-links _i get process-symbol "new-content" :
-                _i 0x1 + "_i" :
+                _i $1 + "_i" :
             )
         while
         "_i" #
@@ -240,7 +240,7 @@ changelog-content highlight
         if
         "  - Writing: " dst-file cat puts
         new-content dst-file write
-        _c 0x1 + "_c" :
+        _c $1 + "_c" :
     )
 while
 "_c" #
@@ -248,7 +248,7 @@ while
 
 ; Write assets
 ("sh -c \"mkdir -p " d-out "/assets\"") () map ""  join exec
-0x0 "_c" :
+$0 "_c" :
 (_c assets len <)
     (
         assets _c get "fn-asset" :
@@ -259,7 +259,7 @@ while
         (d-assets fn-asset) () map "/" join "src-file" :
         "  - Writing: " dst-file cat puts
         ("cp" src-file dst-file) () map " " join exec  
-        _c 0x1 + "_c" :
+        _c $1 + "_c" :
     )
 while
 "_c" #

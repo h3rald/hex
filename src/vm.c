@@ -8,7 +8,7 @@
 
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
-    hex_debug(ctx, "PUSHIN[01]: 0x%x", value);
+    hex_debug(ctx, "PUSHIN[01]: $%x", value);
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
@@ -336,7 +336,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, ">> PUSHIN[01]: 0x%x", value);
+    hex_debug(ctx, ">> PUSHIN[01]: $%x", value);
     hex_item_t *item = hex_integer_item(ctx, value);
     if (!item)
     {

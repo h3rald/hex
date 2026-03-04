@@ -259,7 +259,7 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
            "  quotations are not evaluated until the contents of the quotation are pushed on the stack.\n"
            "  You can define your own symbols using the symbol ':' and execute a quotation with '.'.\n"
            "\n"
-           "  Oh, and of course all integers are in hexadecimal format! ;)\n"
+            "  Oh, and of course all integers are in hexadecimal format, prefixed with '$'! ;)\n"
            "\n"
            "SYMBOLS\n"
            "  +---------+----------------------------+--------------------------------------------------------------------+\n"

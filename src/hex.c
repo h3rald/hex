@@ -1469,8 +1469,8 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, "symbols", "", "q", "Pushes a quotation containing all registered symbols on the stack.");
 
     // Control flow
-    hex_set_doc(docs, "if", "q q q", "*", "If 'q1' is not 0x0, executes 'q2', else 'q3'.");
-    hex_set_doc(docs, "while", "q1 q2", "*", "While 'q1' is not 0x0, executes 'q2'.");
+    hex_set_doc(docs, "if", "q q q", "*", "If 'q1' is not $0, executes 'q2', else 'q3'.");
+    hex_set_doc(docs, "while", "q1 q2", "*", "While 'q1' is not $0, executes 'q2'.");
     hex_set_doc(docs, "error", "", "s", "Returns the last error message.");
     hex_set_doc(docs, "try", "q1 q2", "*", "If 'q1' fails, executes 'q2'.");
     hex_set_doc(docs, "throw", "s", "", "Throws error 's'.");
@@ -1503,18 +1503,18 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, ">>", "i1 12", "i", "Shifts 'i1' by 'i2' bytes to the right.");
 
     // Comparison
-    hex_set_doc(docs, "==", "a1 a2", "i", "Returns 0x1 if 'a1' == 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, "!=", "a1 a2", "i", "Returns 0x1 if 'a1' != 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, ">", "a1 a2", "i", "Returns 0x1 if 'a1' > 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, "<", "a1 a2", "i", "Returns 0x1 if 'a1' < 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, ">=", "a1 a2", "i", "Returns 0x1 if 'a1' >= 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, "<=", "a1 a2", "i", "Returns 0x1 if 'a1' <= 'a2', 0x0 otherwise.");
+    hex_set_doc(docs, "==", "a1 a2", "i", "Returns $1 if 'a1' == 'a2', $0 otherwise.");
+    hex_set_doc(docs, "!=", "a1 a2", "i", "Returns $1 if 'a1' != 'a2', $0 otherwise.");
+    hex_set_doc(docs, ">", "a1 a2", "i", "Returns $1 if 'a1' > 'a2', $0 otherwise.");
+    hex_set_doc(docs, "<", "a1 a2", "i", "Returns $1 if 'a1' < 'a2', $0 otherwise.");
+    hex_set_doc(docs, ">=", "a1 a2", "i", "Returns $1 if 'a1' >= 'a2', $0 otherwise.");
+    hex_set_doc(docs, "<=", "a1 a2", "i", "Returns $1 if 'a1' <= 'a2', $0 otherwise.");
 
     // Logical
-    hex_set_doc(docs, "and", "i1 i2", "i", "Returns 0x1 if both 'i1' and 'i2' are not 0x0.");
-    hex_set_doc(docs, "or", "i1 i2", "i", "Returns 0x1 if either 'i1' or 'i2' are not 0x0.");
-    hex_set_doc(docs, "not", "i", "i", "Returns 0x1 if 'i' is 0x0, 0x0 otherwise.");
-    hex_set_doc(docs, "xor", "i1 i2", "i", "Returns 0x1 if only one item is not 0x0.");
+    hex_set_doc(docs, "and", "i1 i2", "i", "Returns $1 if both 'i1' and 'i2' are not $0.");
+    hex_set_doc(docs, "or", "i1 i2", "i", "Returns $1 if either 'i1' or 'i2' are not $0.");
+    hex_set_doc(docs, "not", "i", "i", "Returns $1 if 'i' is $0, $0 otherwise.");
+    hex_set_doc(docs, "xor", "i1 i2", "i", "Returns $1 if only one item is not $0.");
 
     // Type
     hex_set_doc(docs, "int", "s", "i", "Converts a string to a hex integer.");
@@ -1731,12 +1731,12 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         position->column++;
         token->type = HEX_TOKEN_STRING;
     }
-    else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0)
+    else if (*ptr == '$')
     {
         // Hexadecimal integer token
         const char *start = ptr;
-        ptr += 2; // Skip the "0x" prefix
-        position->column += 2;
+        ptr++; // Skip the "$" prefix
+        position->column++;
         while (isxdigit(*ptr))
         {
             ptr++;
@@ -1807,8 +1807,10 @@ int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol)
 
 int32_t hex_parse_integer(const char *hex_str)
 {
+    // Skip the "$" prefix
+    const char *digits = hex_str + 1;
     // Parse the hexadecimal string as an unsigned 32-bit integer
-    uint32_t unsigned_value = (uint32_t)strtoul(hex_str, NULL, 16);
+    uint32_t unsigned_value = (uint32_t)strtoul(digits, NULL, 16);
 
     // Cast the unsigned value to a signed 32-bit integer
     return (int32_t)unsigned_value;
@@ -2583,7 +2585,7 @@ const char *hex_opcode_to_symbol(uint8_t opcode)
 
 int hex_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_t *size, size_t *capacity, int32_t value)
 {
-    hex_debug(ctx, "PUSHIN[01]: 0x%x", value);
+    hex_debug(ctx, "PUSHIN[01]: $%x", value);
     // Check if we need to resize the buffer (size + int32_t size + opcode (1) + max encoded length (4))
     if (*size + sizeof(int32_t) + 1 + 4 > *capacity)
     {
@@ -2911,7 +2913,7 @@ int hex_interpret_bytecode_integer(hex_context_t *ctx, uint8_t **bytecode, size_
     *bytecode += length;
     *size -= length;
 
-    hex_debug(ctx, ">> PUSHIN[01]: 0x%x", value);
+    hex_debug(ctx, ">> PUSHIN[01]: $%x", value);
     hex_item_t *item = hex_integer_item(ctx, value);
     if (!item)
     {
@@ -3563,7 +3565,7 @@ void hex_raw_print_item(FILE *stream, hex_item_t item)
     switch (item.type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item.data.int_value);
+        fprintf(stream, "$%x", item.data.int_value);
         break;
     case HEX_TYPE_STRING:
         fprintf(stream, "%s", item.data.str_value);
@@ -3671,7 +3673,7 @@ void hex_print_item(FILE *stream, hex_item_t *item)
     switch (item->type)
     {
     case HEX_TYPE_INTEGER:
-        fprintf(stream, "0x%x", item->data.int_value);
+        fprintf(stream, "$%x", item->data.int_value);
         break;
 
     case HEX_TYPE_STRING:
@@ -7237,7 +7239,7 @@ void hex_print_docs(hex_doc_dictionary_t *docs)
            "  quotations are not evaluated until the contents of the quotation are pushed on the stack.\n"
            "  You can define your own symbols using the symbol ':' and execute a quotation with '.'.\n"
            "\n"
-           "  Oh, and of course all integers are in hexadecimal format! ;)\n"
+            "  Oh, and of course all integers are in hexadecimal format, prefixed with '$'! ;)\n"
            "\n"
            "SYMBOLS\n"
            "  +---------+----------------------------+--------------------------------------------------------------------+\n"

@@ -43,8 +43,8 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, "symbols", "", "q", "Pushes a quotation containing all registered symbols on the stack.");
 
     // Control flow
-    hex_set_doc(docs, "if", "q q q", "*", "If 'q1' is not 0x0, executes 'q2', else 'q3'.");
-    hex_set_doc(docs, "while", "q1 q2", "*", "While 'q1' is not 0x0, executes 'q2'.");
+    hex_set_doc(docs, "if", "q q q", "*", "If 'q1' is not $0, executes 'q2', else 'q3'.");
+    hex_set_doc(docs, "while", "q1 q2", "*", "While 'q1' is not $0, executes 'q2'.");
     hex_set_doc(docs, "error", "", "s", "Returns the last error message.");
     hex_set_doc(docs, "try", "q1 q2", "*", "If 'q1' fails, executes 'q2'.");
     hex_set_doc(docs, "throw", "s", "", "Throws error 's'.");
@@ -77,18 +77,18 @@ void hex_create_docs(hex_doc_dictionary_t *docs)
     hex_set_doc(docs, ">>", "i1 12", "i", "Shifts 'i1' by 'i2' bytes to the right.");
 
     // Comparison
-    hex_set_doc(docs, "==", "a1 a2", "i", "Returns 0x1 if 'a1' == 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, "!=", "a1 a2", "i", "Returns 0x1 if 'a1' != 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, ">", "a1 a2", "i", "Returns 0x1 if 'a1' > 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, "<", "a1 a2", "i", "Returns 0x1 if 'a1' < 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, ">=", "a1 a2", "i", "Returns 0x1 if 'a1' >= 'a2', 0x0 otherwise.");
-    hex_set_doc(docs, "<=", "a1 a2", "i", "Returns 0x1 if 'a1' <= 'a2', 0x0 otherwise.");
+    hex_set_doc(docs, "==", "a1 a2", "i", "Returns $1 if 'a1' == 'a2', $0 otherwise.");
+    hex_set_doc(docs, "!=", "a1 a2", "i", "Returns $1 if 'a1' != 'a2', $0 otherwise.");
+    hex_set_doc(docs, ">", "a1 a2", "i", "Returns $1 if 'a1' > 'a2', $0 otherwise.");
+    hex_set_doc(docs, "<", "a1 a2", "i", "Returns $1 if 'a1' < 'a2', $0 otherwise.");
+    hex_set_doc(docs, ">=", "a1 a2", "i", "Returns $1 if 'a1' >= 'a2', $0 otherwise.");
+    hex_set_doc(docs, "<=", "a1 a2", "i", "Returns $1 if 'a1' <= 'a2', $0 otherwise.");
 
     // Logical
-    hex_set_doc(docs, "and", "i1 i2", "i", "Returns 0x1 if both 'i1' and 'i2' are not 0x0.");
-    hex_set_doc(docs, "or", "i1 i2", "i", "Returns 0x1 if either 'i1' or 'i2' are not 0x0.");
-    hex_set_doc(docs, "not", "i", "i", "Returns 0x1 if 'i' is 0x0, 0x0 otherwise.");
-    hex_set_doc(docs, "xor", "i1 i2", "i", "Returns 0x1 if only one item is not 0x0.");
+    hex_set_doc(docs, "and", "i1 i2", "i", "Returns $1 if both 'i1' and 'i2' are not $0.");
+    hex_set_doc(docs, "or", "i1 i2", "i", "Returns $1 if either 'i1' or 'i2' are not $0.");
+    hex_set_doc(docs, "not", "i", "i", "Returns $1 if 'i' is $0, $0 otherwise.");
+    hex_set_doc(docs, "xor", "i1 i2", "i", "Returns $1 if only one item is not $0.");
 
     // Type
     hex_set_doc(docs, "int", "s", "i", "Converts a string to a hex integer.");

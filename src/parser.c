@@ -174,12 +174,12 @@ hex_token_t *hex_next_token(hex_context_t *ctx, const char **input, hex_file_pos
         position->column++;
         token->type = HEX_TOKEN_STRING;
     }
-    else if (strncmp(ptr, "0x", 2) == 0 || strncmp(ptr, "0X", 2) == 0)
+    else if (*ptr == '$')
     {
         // Hexadecimal integer token
         const char *start = ptr;
-        ptr += 2; // Skip the "0x" prefix
-        position->column += 2;
+        ptr++; // Skip the "$" prefix
+        position->column++;
         while (isxdigit(*ptr))
         {
             ptr++;
@@ -250,8 +250,10 @@ int hex_valid_native_symbol(hex_context_t *ctx, const char *symbol)
 
 int32_t hex_parse_integer(const char *hex_str)
 {
+    // Skip the "$" prefix
+    const char *digits = hex_str + 1;
     // Parse the hexadecimal string as an unsigned 32-bit integer
-    uint32_t unsigned_value = (uint32_t)strtoul(hex_str, NULL, 16);
+    uint32_t unsigned_value = (uint32_t)strtoul(digits, NULL, 16);
 
     // Cast the unsigned value to a signed 32-bit integer
     return (int32_t)unsigned_value;
